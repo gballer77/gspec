@@ -1,0 +1,19 @@
+{
+    "name": "gspec",
+    "version": "1.0.0",
+    "description": "gspec command line tool",
+    "main": "bin/gspec.js",
+    "type": "module",
+    "bin": {
+        "gspec": "bin/gspec.js"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "chalk": "^5.6.2",
+        "commander": "^11.1.0"
+    }
+}
