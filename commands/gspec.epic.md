@@ -8,7 +8,7 @@ Take the provided epic description (a large body of work) and break it down into
 
 ## Guidelines
 
-- Identify 3-7 distinct features that make up the epic
+- Identify distinct features that make up the epic
 - Ask clarifying questions when essential information is missing rather than guessing
 - When asking questions, offer 2-3 specific suggestions to guide the discussion
 - Ensure features can be built incrementally and independently when possible
