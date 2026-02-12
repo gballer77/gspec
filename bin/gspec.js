@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
-import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readdir, readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import chalk from 'chalk';
@@ -12,17 +12,17 @@ const DIST_DIR = join(__dirname, '..', 'dist');
 const TARGETS = {
   claude: {
     sourceDir: join(DIST_DIR, 'claude'),
-    installDir: '.claude/commands',
+    installDir: '.claude/skills',
     label: 'Claude Code',
   },
   // cursor: {
   //   sourceDir: join(DIST_DIR, 'cursor'),
-  //   installDir: '.cursor/commands',
+  //   installDir: '.cursor/skills',
   //   label: 'Cursor',
   // },
   // antigravity: {
   //   sourceDir: join(DIST_DIR, 'antigravity'),
-  //   installDir: '.antigravity/commands',
+  //   installDir: '.antigravity/skills',
   //   label: 'Antigravity',
   // },
 };
@@ -35,35 +35,45 @@ async function install(targetName, cwd) {
     process.exit(1);
   }
 
-  const destDir = join(cwd, target.installDir);
-  await mkdir(destDir, { recursive: true });
-
-  let files;
+  let entries;
   try {
-    files = (await readdir(target.sourceDir)).filter(f => f.endsWith('.md'));
+    entries = await readdir(target.sourceDir);
   } catch {
     console.error(chalk.red(`No built files found for target "${targetName}".`));
     console.error('Run the build first: npm run build');
     process.exit(1);
   }
 
-  if (files.length === 0) {
-    console.error(chalk.red(`No command files found in dist/${targetName}/`));
+  // Filter to skill directories (each contains SKILL.md)
+  const skills = [];
+  for (const entry of entries) {
+    const entryPath = join(target.sourceDir, entry);
+    const info = await stat(entryPath);
+    if (info.isDirectory()) {
+      skills.push(entry);
+    }
+  }
+
+  if (skills.length === 0) {
+    console.error(chalk.red(`No skills found in dist/${targetName}/`));
     process.exit(1);
   }
 
-  console.log(chalk.bold(`\nInstalling gspec commands for ${target.label}...\n`));
+  console.log(chalk.bold(`\nInstalling gspec skills for ${target.label}...\n`));
 
-  for (const file of files) {
-    const content = await readFile(join(target.sourceDir, file), 'utf-8');
-    const destPath = join(destDir, file);
+  for (const skill of skills) {
+    const srcPath = join(target.sourceDir, skill, 'SKILL.md');
+    const destDir = join(cwd, target.installDir, skill);
+    const destPath = join(destDir, 'SKILL.md');
+
+    await mkdir(destDir, { recursive: true });
+    const content = await readFile(srcPath, 'utf-8');
     await writeFile(destPath, content, 'utf-8');
 
-    const commandName = file.replace(/\.md$/, '');
-    console.log(`  ${chalk.green('+')} ${commandName}`);
+    console.log(`  ${chalk.green('+')} ${skill}`);
   }
 
-  console.log(chalk.bold(`\n${files.length} commands installed to ${target.installDir}/\n`));
+  console.log(chalk.bold(`\n${skills.length} skills installed to ${target.installDir}/\n`));
 }
 
 program
