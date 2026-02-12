@@ -1,14 +1,21 @@
 {
     "name": "gspec",
     "version": "1.0.0",
-    "description": "gspec command line tool",
+    "description": "Install gspec specification commands for Claude Code, Cursor, and other AI tools",
     "main": "bin/gspec.js",
     "type": "module",
     "bin": {
         "gspec": "bin/gspec.js"
     },
+    "files": [
+        "bin/",
+        "dist/",
+        "commands/"
+    ],
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "build": "node scripts/build.js",
+        "build:claude": "node scripts/build.js claude",
+        "prepublishOnly": "npm run build"
     },
     "author": "",
     "license": "ISC",
