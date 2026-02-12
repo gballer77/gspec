@@ -11,6 +11,7 @@ This directory contains slash commands for generating project specification docu
 | `gspec.style` | UI/UX Designer | `gspec/style.md` | Visual style guide, design tokens, and component patterns |
 | `gspec.stack` | Software Architect | `gspec/stack.md` | Technology stack, frameworks, infrastructure, and tooling |
 | `gspec.practices` | Engineering Lead | `gspec/practices.md` | Development practices, code quality standards, and workflows |
+| `gspec.implement` | Senior Engineer / Tech Lead | Code files | Reads gspec docs, identifies gaps, plans and builds the software |
 
 ## Recommended Order of Operations
 
@@ -21,6 +22,7 @@ Run the commands in this order for the best results:
 3. **`gspec.style`** — Define the visual design language and design system
 4. **`gspec.stack`** — Define the technology choices and architecture
 5. **`gspec.practices`** — Define the development standards and engineering practices
+6. **`gspec.implement`** — Implement the software using all generated gspec documents
 
 > Each command is self-contained and will ask clarifying questions when essential information is missing.
 

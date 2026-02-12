@@ -23,8 +23,8 @@ You should:
   - Priority or urgency is unspecified
 - **When asking questions**, offer 2-3 specific suggestions to guide the discussion
 - Avoid deep system architecture or low-level implementation
+- Avoid detailed workflows or step-by-step descriptions of how the feature functions
 - No code blocks except where examples add clarity
-- Clear acceptance criteria are required
 - Make tradeoffs and scope explicit
 
 ---
@@ -53,26 +53,20 @@ You should:
 - Assumptions
 - Open questions (non-blocking)
 
-### 6. Functional Requirements
-- Numbered requirements
-- Written in user-focused language
-- Clear acceptance criteria
-- **Priority level** for each requirement (P0 = must-have, P1 = should-have, P2 = nice-to-have)
+### 6. Capabilities
+- What the feature provides to users
+- **Priority level** for each capability (P0 = must-have, P1 = should-have, P2 = nice-to-have)
+- Focus on *what* users can do, not *how* they do it
 
-### 7. User Experience Requirements
-- UX principles
-- Key flows (high level)
-- Empty and error states
-
-### 8. Success Metrics
+### 7. Success Metrics
 - How success is measured
 - Leading vs lagging indicators
 
-### 9. Risks & Mitigations
+### 8. Risks & Mitigations
 - Product or delivery risks
 - Mitigation strategies
 
-### 10. Future Considerations
+### 9. Future Considerations
 - Explicitly deferred ideas
 
 ---
