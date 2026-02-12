@@ -44,30 +44,59 @@ const COMMANDS = {
   },
 };
 
-function buildFrontmatter(meta) {
+function buildFrontmatter(fields) {
   const lines = ['---'];
-  for (const [key, value] of Object.entries(meta)) {
+  for (const [key, value] of Object.entries(fields)) {
     lines.push(`${key}: ${value}`);
   }
   lines.push('---');
   return lines.join('\n');
 }
 
+// Each target defines how to emit files and transform content
 const targets = {
   claude: {
     outDir: join(DIST_DIR, 'claude'),
-    transform(content, meta) {
+    // .claude/skills/<name>/SKILL.md
+    async emit(outDir, content, meta) {
       const frontmatter = buildFrontmatter({
         name: meta.name,
         description: meta.description,
       });
       const body = content.replace(PLACEHOLDER_RE, '$ARGUMENTS');
-      return frontmatter + '\n\n' + body;
+      const skillDir = join(outDir, meta.name);
+      await mkdir(skillDir, { recursive: true });
+      await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
     },
   },
-  // Future targets:
-  // cursor: { outDir: join(DIST_DIR, 'cursor'), transform(content, meta) { ... } },
-  // antigravity: { outDir: join(DIST_DIR, 'antigravity'), transform(content, meta) { ... } },
+  cursor: {
+    outDir: join(DIST_DIR, 'cursor'),
+    // .cursor/commands/<name>.mdc (flat file)
+    async emit(outDir, content, meta) {
+      const frontmatter = buildFrontmatter({
+        description: meta.description,
+      });
+      // Cursor has no $ARGUMENTS convention; strip the placeholder lines
+      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      await mkdir(outDir, { recursive: true });
+      await writeFile(join(outDir, `${meta.name}.mdc`), frontmatter + '\n\n' + body, 'utf-8');
+    },
+  },
+  antigravity: {
+    outDir: join(DIST_DIR, 'antigravity'),
+    // .agent/skills/<name>/SKILL.md
+    async emit(outDir, content, meta) {
+      const frontmatter = buildFrontmatter({
+        name: meta.name,
+        description: meta.description,
+      });
+      // Antigravity uses natural language invocation; strip the placeholder lines
+      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      const skillDir = join(outDir, meta.name);
+      await mkdir(skillDir, { recursive: true });
+      await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
+    },
+  },
 };
 
 async function build(targetNames) {
@@ -80,6 +109,7 @@ async function build(targetNames) {
       process.exit(1);
     }
 
+    let count = 0;
     for (const file of files) {
       const meta = COMMANDS[file];
       if (!meta) {
@@ -87,16 +117,12 @@ async function build(targetNames) {
         continue;
       }
 
-      // Claude skills live in <skill-name>/SKILL.md
-      const skillDir = join(target.outDir, meta.name);
-      await mkdir(skillDir, { recursive: true });
-
       const content = await readFile(join(COMMANDS_DIR, file), 'utf-8');
-      const transformed = target.transform(content, meta);
-      await writeFile(join(skillDir, 'SKILL.md'), transformed, 'utf-8');
+      await target.emit(target.outDir, content, meta);
+      count++;
     }
 
-    console.log(`Built ${files.length} skills → dist/${targetName}/`);
+    console.log(`Built ${count} skills → dist/${targetName}/`);
   }
 }
 

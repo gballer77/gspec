@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
-import { readdir, readFile, writeFile, mkdir, stat } from 'node:fs/promises';
+import { readdir, readFile, writeFile, mkdir, stat, cp } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import chalk from 'chalk';
@@ -14,18 +14,60 @@ const TARGETS = {
     sourceDir: join(DIST_DIR, 'claude'),
     installDir: '.claude/skills',
     label: 'Claude Code',
+    // Skills are directories containing SKILL.md
+    layout: 'directory',
   },
-  // cursor: {
-  //   sourceDir: join(DIST_DIR, 'cursor'),
-  //   installDir: '.cursor/skills',
-  //   label: 'Cursor',
-  // },
-  // antigravity: {
-  //   sourceDir: join(DIST_DIR, 'antigravity'),
-  //   installDir: '.antigravity/skills',
-  //   label: 'Antigravity',
-  // },
+  cursor: {
+    sourceDir: join(DIST_DIR, 'cursor'),
+    installDir: '.cursor/commands',
+    label: 'Cursor',
+    // Commands are flat .mdc files
+    layout: 'flat',
+  },
+  antigravity: {
+    sourceDir: join(DIST_DIR, 'antigravity'),
+    installDir: '.agent/skills',
+    label: 'Antigravity',
+    // Skills are directories containing SKILL.md
+    layout: 'directory',
+  },
 };
+
+async function installDirectory(target, cwd) {
+  const entries = await readdir(target.sourceDir);
+  const skills = [];
+  for (const entry of entries) {
+    const info = await stat(join(target.sourceDir, entry));
+    if (info.isDirectory()) skills.push(entry);
+  }
+
+  for (const skill of skills) {
+    const srcPath = join(target.sourceDir, skill, 'SKILL.md');
+    const destDir = join(cwd, target.installDir, skill);
+    await mkdir(destDir, { recursive: true });
+    const content = await readFile(srcPath, 'utf-8');
+    await writeFile(join(destDir, 'SKILL.md'), content, 'utf-8');
+    console.log(`  ${chalk.green('+')} ${skill}`);
+  }
+
+  return skills.length;
+}
+
+async function installFlat(target, cwd) {
+  const entries = await readdir(target.sourceDir);
+  const files = entries.filter(f => f.endsWith('.mdc'));
+  const destDir = join(cwd, target.installDir);
+  await mkdir(destDir, { recursive: true });
+
+  for (const file of files) {
+    const content = await readFile(join(target.sourceDir, file), 'utf-8');
+    await writeFile(join(destDir, file), content, 'utf-8');
+    const name = file.replace(/\.mdc$/, '');
+    console.log(`  ${chalk.green('+')} ${name}`);
+  }
+
+  return files.length;
+}
 
 async function install(targetName, cwd) {
   const target = TARGETS[targetName];
@@ -44,36 +86,18 @@ async function install(targetName, cwd) {
     process.exit(1);
   }
 
-  // Filter to skill directories (each contains SKILL.md)
-  const skills = [];
-  for (const entry of entries) {
-    const entryPath = join(target.sourceDir, entry);
-    const info = await stat(entryPath);
-    if (info.isDirectory()) {
-      skills.push(entry);
-    }
-  }
-
-  if (skills.length === 0) {
+  if (entries.length === 0) {
     console.error(chalk.red(`No skills found in dist/${targetName}/`));
     process.exit(1);
   }
 
   console.log(chalk.bold(`\nInstalling gspec skills for ${target.label}...\n`));
 
-  for (const skill of skills) {
-    const srcPath = join(target.sourceDir, skill, 'SKILL.md');
-    const destDir = join(cwd, target.installDir, skill);
-    const destPath = join(destDir, 'SKILL.md');
+  const count = target.layout === 'flat'
+    ? await installFlat(target, cwd)
+    : await installDirectory(target, cwd);
 
-    await mkdir(destDir, { recursive: true });
-    const content = await readFile(srcPath, 'utf-8');
-    await writeFile(destPath, content, 'utf-8');
-
-    console.log(`  ${chalk.green('+')} ${skill}`);
-  }
-
-  console.log(chalk.bold(`\n${skills.length} skills installed to ${target.installDir}/\n`));
+  console.log(chalk.bold(`\n${count} skills installed to ${target.installDir}/\n`));
 }
 
 program
