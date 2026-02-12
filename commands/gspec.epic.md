@@ -129,7 +129,7 @@ For each feature, create a separate file in `gspec/features/[feature-name].md` w
 
 1. **Analyze the epic description** and identify logical feature boundaries
 2. **Ask clarifying questions** if the epic scope, users, or goals are unclear
-3. **Break down into 3-7 features** that:
+3. **Break down into features** that:
    - Can be built and shipped incrementally
    - Deliver independent user value (when possible)
    - Have clear boundaries and responsibilities
