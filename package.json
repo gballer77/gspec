@@ -1,6 +1,6 @@
 {
     "name": "gspec",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Install gspec specification commands for Claude Code, Cursor, and other AI tools",
     "main": "bin/gspec.js",
     "type": "module",
@@ -20,7 +20,7 @@
         "prepublishOnly": "npm run build"
     },
     "author": "",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "chalk": "^5.6.2",
         "commander": "^11.1.0"

@@ -65,7 +65,8 @@ Systematically evaluate which gspec documents need updating. Apply this decision
 | New technology or dependency added | `gspec/stack.md` | Add to appropriate section with rationale |
 | Technology or dependency removed | `gspec/stack.md` | Remove and note why |
 | Technology version changed | `gspec/stack.md` | Update version |
-| Visual design change (colors, typography, spacing, components) | `gspec/style.md` | Update affected tokens, components, or patterns |
+| Visual design change — generic (colors, typography, spacing, base component patterns) | `gspec/style.md` | Update affected tokens or base component patterns. Only include changes that are reusable and not tied to a specific feature or domain |
+| Visual design change — feature-specific (a component unique to a feature, domain-specific visual treatment) | `gspec/features/<relevant>.md` | Document the visual details in the feature PRD's capabilities or a dedicated "Visual Design" subsection |
 | Development practice change (testing, code org, conventions) | `gspec/practices.md` | Update affected practice |
 | Product scope or direction change | `gspec/profile.md` | Update affected sections (Product Description, Use Cases, Roadmap, etc.) |
 | Feature dependency change | `gspec/epics/<relevant>.md` | Update dependency map and phasing |
@@ -142,6 +143,8 @@ After writing spec updates:
 **Priority levels.** When adding or modifying capabilities in a feature PRD, assign appropriate priority levels (P0/P1/P2) consistent with the existing document's priority scheme.
 
 **Traceability without clutter.** A brief note about why something changed is valuable for future readers. A changelog at the bottom of every file is not. Use judgment.
+
+**Keep `style.md` generic and reusable.** The style guide defines the design system — colors, typography, spacing, base component patterns, and tokens that could apply to any product. Do not add feature-specific or domain-specific content to `style.md` (e.g., "recipe card layout", "playlist item styling"). Feature-specific visual details belong in the relevant feature PRD. If you are unsure whether a visual change is generic or feature-specific, ask the user.
 
 **When to create vs. update.** If a change adds a small capability that fits naturally within an existing feature PRD, update that PRD. If a change introduces a wholly new product area that does not belong in any existing PRD, create a new feature PRD. When in doubt, ask the user.
 

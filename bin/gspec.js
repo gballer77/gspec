@@ -9,19 +9,20 @@ import chalk from 'chalk';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = join(__dirname, '..', 'dist');
+const pkg = JSON.parse(await readFile(join(__dirname, '..', 'package.json'), 'utf-8'));
 
 const BANNER = `
-  ${chalk.cyan('╔══════════════════════════════════════════╗')}
-  ${chalk.cyan('║')}                                          ${chalk.cyan('║')}
-  ${chalk.cyan('║')}   ${chalk.bold.white(' ██████  ███████ ██████  ███████  ██████')}  ${chalk.cyan('║')}
-  ${chalk.cyan('║')}   ${chalk.bold.white('██       ██      ██   ██ ██      ██      ')} ${chalk.cyan('║')}
-  ${chalk.cyan('║')}   ${chalk.bold.white('██   ███ ███████ ██████  █████   ██      ')} ${chalk.cyan('║')}
-  ${chalk.cyan('║')}   ${chalk.bold.white('██    ██      ██ ██      ██      ██      ')} ${chalk.cyan('║')}
-  ${chalk.cyan('║')}   ${chalk.bold.white(' ██████  ███████ ██      ███████  ██████')}  ${chalk.cyan('║')}
-  ${chalk.cyan('║')}                                          ${chalk.cyan('║')}
-  ${chalk.cyan('║')}   ${chalk.dim('AI-powered project specification tools')}   ${chalk.cyan('║')}
-  ${chalk.cyan('║')}                                          ${chalk.cyan('║')}
-  ${chalk.cyan('╚══════════════════════════════════════════╝')}
+  ${chalk.cyan('╔══════════════════════════════════════════════╗')}
+  ${chalk.cyan('║')}                                              ${chalk.cyan('║')}
+  ${chalk.cyan('║')}   ${chalk.bold.white(' ██████  ███████ ██████  ███████  ██████')}   ${chalk.cyan('║')}
+  ${chalk.cyan('║')}   ${chalk.bold.white('██       ██      ██   ██ ██      ██      ')}  ${chalk.cyan('║')}
+  ${chalk.cyan('║')}   ${chalk.bold.white('██   ███ ███████ ██████  █████   ██      ')}  ${chalk.cyan('║')}
+  ${chalk.cyan('║')}   ${chalk.bold.white('██    ██      ██ ██      ██      ██      ')}  ${chalk.cyan('║')}
+  ${chalk.cyan('║')}   ${chalk.bold.white(' ██████  ███████ ██      ███████  ██████')}   ${chalk.cyan('║')}
+  ${chalk.cyan('║')}                                              ${chalk.cyan('║')}
+  ${chalk.cyan('║')}    ${chalk.dim('AI-powered project specification tools')}    ${chalk.cyan('║')}
+  ${chalk.cyan('║')}                                              ${chalk.cyan('║')}
+  ${chalk.cyan('╚══════════════════════════════════════════════╝')}
 `;
 
 const TARGETS = {
@@ -96,8 +97,9 @@ async function findExistingFiles(target, cwd) {
 
   try {
     await stat(destBase);
-  } catch {
-    return existing;
+  } catch (e) {
+    if (e.code === 'ENOENT') return existing;
+    throw e;
   }
 
   if (target.layout === 'flat') {
@@ -106,7 +108,9 @@ async function findExistingFiles(target, cwd) {
       try {
         await stat(join(destBase, file));
         existing.push(file);
-      } catch { /* doesn't exist */ }
+      } catch (e) {
+        if (e.code !== 'ENOENT') throw e;
+      }
     }
   } else {
     const srcEntries = await readdir(target.sourceDir);
@@ -116,7 +120,9 @@ async function findExistingFiles(target, cwd) {
       try {
         await stat(join(destBase, entry, 'SKILL.md'));
         existing.push(`${entry}/SKILL.md`);
-      } catch { /* doesn't exist */ }
+      } catch (e) {
+        if (e.code !== 'ENOENT') throw e;
+      }
     }
   }
 
@@ -207,7 +213,7 @@ async function install(targetName, cwd) {
 program
   .name('gspec')
   .description('Install gspec specification commands')
-  .version('1.0.0')
+  .version(pkg.version)
   .option('-t, --target <target>', 'target platform (claude, cursor, antigravity)')
   .action(async (opts) => {
     console.log(BANNER);

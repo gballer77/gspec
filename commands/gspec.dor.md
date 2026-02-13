@@ -58,6 +58,17 @@ Execute the code changes:
 5. **Surface new issues as they arise** — If implementation reveals new ambiguities, pause and consult the user rather than making silent assumptions
 6. **Track spec implications as you work** — As you implement, mentally note which gspec documents will need updating based on what you are changing
 
+### Phase 3.5: Validate — Ensure Tests Pass
+
+Before updating any specs, verify the code changes are sound:
+
+1. **Check for existing tests** — Look for a test suite, test runner configuration, or test scripts in `package.json`, `Makefile`, or equivalent
+2. **If tests exist, run them** — Execute the project's test suite and confirm all tests pass
+3. **If tests fail** — Fix the failing tests before proceeding. Do not move to spec updates with a broken test suite
+4. **If no tests exist** — Note this and proceed. Do not create a test suite unless the user requests one or `gspec/practices.md` requires it
+
+This gate ensures specs are only updated to reflect working, validated code — never broken implementations.
+
 ### Phase 4: Assess — Determine Spec Impact
 
 After code changes are complete, systematically evaluate which gspec documents need updating. Apply this decision matrix:
@@ -70,7 +81,8 @@ After code changes are complete, systematically evaluate which gspec documents n
 | New technology or dependency added | `gspec/stack.md` | Add to appropriate section with rationale |
 | Technology or dependency removed | `gspec/stack.md` | Remove and note why |
 | Technology version changed | `gspec/stack.md` | Update version |
-| Visual design change (colors, typography, spacing, components) | `gspec/style.md` | Update affected tokens, components, or patterns |
+| Visual design change — generic (colors, typography, spacing, base component patterns) | `gspec/style.md` | Update affected tokens or base component patterns. Only include changes that are reusable and not tied to a specific feature or domain |
+| Visual design change — feature-specific (a component unique to a feature, domain-specific visual treatment) | `gspec/features/<relevant>.md` | Document the visual details in the feature PRD's capabilities or a dedicated "Visual Design" subsection |
 | Development practice change (testing, code org, conventions) | `gspec/practices.md` | Update affected practice |
 | Product scope or direction change | `gspec/profile.md` | Update affected sections (Product Description, Use Cases, Roadmap, etc.) |
 | Feature dependency change | `gspec/epics/<relevant>.md` | Update dependency map and phasing |
@@ -149,6 +161,8 @@ After writing spec updates:
 **Priority levels.** When adding or modifying capabilities in a feature PRD, assign appropriate priority levels (P0/P1/P2) consistent with the existing document's priority scheme.
 
 **Traceability without clutter.** A brief note about why something changed is valuable for future readers. A changelog at the bottom of every file is not. Use judgment. For small, obvious changes, no annotation may be needed. For significant scope changes, a parenthetical note aids understanding.
+
+**Keep `style.md` generic and reusable.** The style guide defines the design system — colors, typography, spacing, base component patterns, and tokens that could apply to any product. Do not add feature-specific or domain-specific content to `style.md` (e.g., "recipe card layout", "playlist item styling"). Feature-specific visual details belong in the relevant feature PRD. If you are unsure whether a visual change is generic or feature-specific, ask the user.
 
 **When to create vs. update.** If a change adds a small capability that fits naturally within an existing feature PRD, update that PRD. If a change introduces a wholly new product area that does not belong in any existing PRD, create a new feature PRD. When in doubt, ask the user.
 
