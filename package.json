@@ -1,6 +1,6 @@
 {
     "name": "gspec",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Install gspec specification commands for Claude Code, Cursor, and other AI tools",
     "main": "bin/gspec.js",
     "type": "module",
