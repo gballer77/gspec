@@ -23,6 +23,7 @@ const BANNER = `
   ${chalk.cyan('║')}    ${chalk.dim('AI-powered project specification tools')}    ${chalk.cyan('║')}
   ${chalk.cyan('║')}                                              ${chalk.cyan('║')}
   ${chalk.cyan('╚══════════════════════════════════════════════╝')}
+  ${chalk.white('═════════════════════════════baller.software═══')}
 `;
 
 const TARGETS = {
