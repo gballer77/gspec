@@ -1,3 +1,8 @@
+---
+name: gspec-epic
+description: Break down a large epic into multiple focused feature PRDs with dependency mapping
+---
+
 You are a senior Product Manager at a high-performing software company.
 
 Generate multiple Product Requirements Documents (PRDs) from a high-level epic description.
@@ -69,7 +74,7 @@ Create a file at `gspec/epics/[epic-name].md` with:
 - Target timeline or phases
 
 ### 2. Features Breakdown
-- List of all features with links to their PRDs, **using unchecked markdown checkboxes** (e.g., `- [ ] **P0**: [Feature Name](../features/feature-name.md) — Brief description`). The `gspec-implement` command will check these off (`- [x]`) as features are fully implemented, allowing incremental runs.
+- List of all features with links to their PRDs
 - Brief description of each feature
 - Priority level (P0, P1, P2)
 - Estimated sequencing/dependencies
@@ -123,7 +128,6 @@ For each feature, create a separate file in `gspec/features/[feature-name].md` w
 - Written in user-focused language
 - Clear acceptance criteria
 - **Priority level** for each requirement (P0 = must-have, P1 = should-have, P2 = nice-to-have)
-- **Use unchecked markdown checkboxes** for each requirement to enable implementation tracking (e.g., `- [ ] **P0**: FR-1 — User can create an account`). The `gspec-implement` command will check these off (`- [x]`) as requirements are implemented.
 
 ### 7. User Experience Requirements
 - UX principles
@@ -165,4 +169,3 @@ For each feature, create a separate file in `gspec/features/[feature-name].md` w
 - Designed to be skimmed
 - Consistent across all generated documents
 
-<<<EPIC_DESCRIPTION>>>

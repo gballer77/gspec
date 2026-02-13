@@ -1,3 +1,7 @@
+---
+description: Generate a product requirements document (PRD) for an individual feature
+---
+
 You are a senior Product Manager at a high-performing software company.
 
 Your task is to take the provided feature description (which may be vague or detailed) and produce a **Product Requirements Document (PRD)** that clearly defines *what* is being built and *why*, without deep technical or architectural implementation details.
@@ -75,7 +79,6 @@ If these files don't exist, proceed without them — they are optional context, 
 - What the feature provides to users
 - **Priority level** for each capability (P0 = must-have, P1 = should-have, P2 = nice-to-have)
 - Focus on *what* users can do, not *how* they do it
-- **Use unchecked markdown checkboxes** for each capability to enable implementation tracking (e.g., `- [ ] **P0**: User can sign in with email and password`). The `gspec-implement` command will check these off (`- [x]`) as capabilities are implemented, allowing incremental runs.
 
 ### 7. Success Metrics
 - How success is measured
@@ -100,4 +103,3 @@ If these files don't exist, proceed without them — they are optional context, 
 
 ## Input Feature Description
 
-<<<FEATURE_DESCRIPTION>>>

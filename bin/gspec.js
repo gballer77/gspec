@@ -1,37 +1,127 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
-import { readdir, readFile, writeFile, mkdir, stat, cp } from 'node:fs/promises';
+import { readdir, readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createInterface } from 'node:readline';
 import chalk from 'chalk';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = join(__dirname, '..', 'dist');
+
+const BANNER = `
+  ${chalk.cyan('╔══════════════════════════════════════════╗')}
+  ${chalk.cyan('║')}                                          ${chalk.cyan('║')}
+  ${chalk.cyan('║')}   ${chalk.bold.white(' ██████  ███████ ██████  ███████  ██████')}  ${chalk.cyan('║')}
+  ${chalk.cyan('║')}   ${chalk.bold.white('██       ██      ██   ██ ██      ██      ')} ${chalk.cyan('║')}
+  ${chalk.cyan('║')}   ${chalk.bold.white('██   ███ ███████ ██████  █████   ██      ')} ${chalk.cyan('║')}
+  ${chalk.cyan('║')}   ${chalk.bold.white('██    ██      ██ ██      ██      ██      ')} ${chalk.cyan('║')}
+  ${chalk.cyan('║')}   ${chalk.bold.white(' ██████  ███████ ██      ███████  ██████')}  ${chalk.cyan('║')}
+  ${chalk.cyan('║')}                                          ${chalk.cyan('║')}
+  ${chalk.cyan('║')}   ${chalk.dim('AI-powered project specification tools')}   ${chalk.cyan('║')}
+  ${chalk.cyan('║')}                                          ${chalk.cyan('║')}
+  ${chalk.cyan('╚══════════════════════════════════════════╝')}
+`;
 
 const TARGETS = {
   claude: {
     sourceDir: join(DIST_DIR, 'claude'),
     installDir: '.claude/skills',
     label: 'Claude Code',
-    // Skills are directories containing SKILL.md
     layout: 'directory',
   },
   cursor: {
     sourceDir: join(DIST_DIR, 'cursor'),
     installDir: '.cursor/commands',
     label: 'Cursor',
-    // Commands are flat .mdc files
     layout: 'flat',
   },
   antigravity: {
     sourceDir: join(DIST_DIR, 'antigravity'),
     installDir: '.agent/skills',
     label: 'Antigravity',
-    // Skills are directories containing SKILL.md
     layout: 'directory',
   },
 };
+
+const TARGET_CHOICES = [
+  { key: '1', name: 'claude', label: 'Claude Code' },
+  { key: '2', name: 'cursor', label: 'Cursor' },
+  { key: '3', name: 'antigravity', label: 'Antigravity' },
+];
+
+function promptTarget() {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+
+  console.log(chalk.bold('\nWhich application are you installing gspec for?\n'));
+  for (const choice of TARGET_CHOICES) {
+    console.log(`  ${chalk.cyan(choice.key)}) ${choice.label}`);
+  }
+  console.log();
+
+  return new Promise((resolve) => {
+    rl.question(chalk.bold('  Select [1-3]: '), (answer) => {
+      rl.close();
+      const trimmed = answer.trim().toLowerCase();
+
+      // Accept by number
+      const byNumber = TARGET_CHOICES.find(c => c.key === trimmed);
+      if (byNumber) return resolve(byNumber.name);
+
+      // Accept by name
+      const byName = TARGET_CHOICES.find(c => c.name === trimmed || c.label.toLowerCase() === trimmed);
+      if (byName) return resolve(byName.name);
+
+      console.error(chalk.red(`\nInvalid selection: "${answer.trim()}"`));
+      console.error(`Valid options: 1, 2, 3, claude, cursor, antigravity`);
+      process.exit(1);
+    });
+  });
+}
+
+function promptConfirm(message) {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(message, (answer) => {
+      rl.close();
+      resolve(answer.trim().toLowerCase().startsWith('y'));
+    });
+  });
+}
+
+async function findExistingFiles(target, cwd) {
+  const existing = [];
+  const destBase = join(cwd, target.installDir);
+
+  try {
+    await stat(destBase);
+  } catch {
+    return existing;
+  }
+
+  if (target.layout === 'flat') {
+    const srcEntries = await readdir(target.sourceDir);
+    for (const file of srcEntries.filter(f => f.endsWith('.mdc'))) {
+      try {
+        await stat(join(destBase, file));
+        existing.push(file);
+      } catch { /* doesn't exist */ }
+    }
+  } else {
+    const srcEntries = await readdir(target.sourceDir);
+    for (const entry of srcEntries) {
+      const info = await stat(join(target.sourceDir, entry));
+      if (!info.isDirectory()) continue;
+      try {
+        await stat(join(destBase, entry, 'SKILL.md'));
+        existing.push(`${entry}/SKILL.md`);
+      } catch { /* doesn't exist */ }
+    }
+  }
+
+  return existing;
+}
 
 async function installDirectory(target, cwd) {
   const entries = await readdir(target.sourceDir);
@@ -91,6 +181,20 @@ async function install(targetName, cwd) {
     process.exit(1);
   }
 
+  const existing = await findExistingFiles(target, cwd);
+  if (existing.length > 0) {
+    console.log(chalk.yellow(`\nThe following files already exist and will be overwritten:\n`));
+    for (const file of existing) {
+      console.log(`  ${chalk.yellow('!')} ${target.installDir}/${file}`);
+    }
+    console.log();
+    const confirmed = await promptConfirm(chalk.bold('  Continue and overwrite? [y/N]: '));
+    if (!confirmed) {
+      console.log(chalk.dim('\nInstallation cancelled.\n'));
+      process.exit(0);
+    }
+  }
+
   console.log(chalk.bold(`\nInstalling gspec skills for ${target.label}...\n`));
 
   const count = target.layout === 'flat'
@@ -104,9 +208,17 @@ program
   .name('gspec')
   .description('Install gspec specification commands')
   .version('1.0.0')
-  .option('-t, --target <target>', 'target platform (claude, cursor, antigravity)', 'claude')
+  .option('-t, --target <target>', 'target platform (claude, cursor, antigravity)')
   .action(async (opts) => {
-    await install(opts.target, process.cwd());
+    console.log(BANNER);
+
+    let targetName = opts.target;
+
+    if (!targetName) {
+      targetName = await promptTarget();
+    }
+
+    await install(targetName, process.cwd());
   });
 
 program.parse();

@@ -42,6 +42,14 @@ const COMMANDS = {
     name: 'gspec-implement',
     description: 'Read gspec documents, research competitors, identify gaps, and implement the software',
   },
+  'gspec.dor.md': {
+    name: 'gspec-dor',
+    description: 'Make code changes and update gspec specification documents to reflect what changed',
+  },
+  'gspec.record.md': {
+    name: 'gspec-record',
+    description: 'Update gspec specification documents to reflect changes, decisions, or context from the conversation',
+  },
 };
 
 function buildFrontmatter(fields) {

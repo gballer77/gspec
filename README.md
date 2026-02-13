@@ -2,6 +2,28 @@
 
 This directory contains slash commands for generating project specification documents. Each command produces a standalone Markdown document in the `gspec/` folder.
 
+## Installation
+
+Run from your project root:
+
+```bash
+npx gspec
+```
+
+The CLI will ask which platform you're installing for:
+
+| Platform | Install path |
+|---|---|
+| Claude Code | `.claude/skills/` |
+| Cursor | `.cursor/commands/` |
+| Antigravity | `.agent/skills/` |
+
+You can also skip the prompt by passing a target directly:
+
+```bash
+npx gspec --target cursor
+```
+
 ## Commands
 
 | Command | Role | Output | Description |
@@ -13,18 +35,35 @@ This directory contains slash commands for generating project specification docu
 | `gspec.stack` | Software Architect | `gspec/stack.md` | Technology stack, frameworks, infrastructure, and tooling |
 | `gspec.practices` | Engineering Lead | `gspec/practices.md` | Development practices, code quality standards, and workflows |
 | `gspec.implement` | Senior Engineer / Tech Lead | Code files | Reads gspec docs, identifies gaps, plans and builds the software |
+| `gspec.dor` | Engineer + Doc Lead | Code files + `gspec/*.md` | Makes code changes and updates gspec specs to keep documentation in sync |
+| `gspec.record` | Doc Lead | `gspec/*.md` | Updates gspec specs to reflect changes, decisions, or context — no code changes |
 
-## Recommended Order of Operations
+## Workflow
 
-Run the commands in this order for the best results:
+### 1. Fundamentals
 
-1. **`gspec.profile`** — Define *what* the product is, who it's for, and why it exists
-2. **`gspec.feature`** — Define individual features and requirements (run once per feature)
-3. **`gspec.epic`** — Break down a large body of work into multiple feature PRDs with dependencies and phasing
-4. **`gspec.style`** — Define the visual design language and design system
-5. **`gspec.stack`** — Define the technology choices and architecture
-6. **`gspec.practices`** — Define the development standards and engineering practices
-7. **`gspec.implement`** — Implement the software using all generated gspec documents
+Define the foundation that drives how your entire application is built.
+
+- **`gspec.profile`** — Define *what* the product is, who it's for, and why it exists
+- **`gspec.style`** — Define the visual design language and design system
+- **`gspec.stack`** — Define the technology choices and architecture
+- **`gspec.practices`** — Define the development standards and engineering practices
+
+### 2. Pre-Build
+
+Define *what* to build.
+
+- **`gspec.epic`** — Break down a large body of work into multiple feature PRDs with dependencies and phasing
+- **`gspec.feature`** — Define individual features and requirements (run once per feature)
+
+### 3. Build
+
+- **`gspec.implement`** — Implement the software using all generated gspec documents
+
+### 4. Iterate
+
+- **`gspec.dor`** — Make code changes and update gspec specs to keep documentation in sync
+- **`gspec.record`** — Record decisions, changes, or context to gspec specs without touching code
 
 > Each command is self-contained and will ask clarifying questions when essential information is missing.
 
