@@ -22,3 +22,14 @@ Thumbs.db
 .vscode
 *.swp
 *.swo
+
+# Secrets and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.db
+.npmrc
+secrets.*
+credentials.*
