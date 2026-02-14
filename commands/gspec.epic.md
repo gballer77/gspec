@@ -182,30 +182,24 @@ For each feature, create a separate file in `gspec/features/[feature-name].md` w
     - Weak password → inline validation shows password requirements
   ```
 
-### 7. Data Entities
-- **Key data objects** the feature introduces or depends on
-- For each entity: name, essential fields, and relationships to other entities
-- Keep it lightweight — this is not a database schema, it's a conceptual model so the implementing agent builds consistent data structures
-- If the feature shares entities with other features in the epic, define them once and reference them from other feature PRDs
-
-### 8. User Experience Requirements
+### 7. User Experience Requirements
 - UX principles
 - Key flows (high level)
 - Empty and error states
 
-### 9. Success Metrics
+### 8. Success Metrics
 - How success is measured
 - Leading vs lagging indicators
 
-### 10. Dependencies
+### 9. Dependencies
 - Dependencies on other features in this epic
 - External dependencies
 
-### 11. Risks & Mitigations
+### 10. Risks & Mitigations
 - Product or delivery risks
 - Mitigation strategies
 
-### 12. Future Considerations
+### 11. Future Considerations
 - Explicitly deferred ideas
 
 ## Workflow

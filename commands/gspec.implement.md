@@ -28,9 +28,10 @@ Before writing any code, read all available gspec documents in this order:
 1. `gspec/profile.md` — Understand what the product is and who it's for
 2. `gspec/epics/*.md` — Understand the big picture and feature dependencies
 3. `gspec/features/*.md` — Understand individual feature requirements
-4. `gspec/stack.md` — Understand the technology choices and architecture
+4. `gspec/stack.md` — Understand the technology choices
 5. `gspec/style.md` — Understand the visual design language
 6. `gspec/practices.md` — Understand development standards and conventions
+7. `gspec/architecture.md` — Understand the technical architecture: project structure, data model, API design, component architecture, and environment setup. **This is the primary reference for how to scaffold and structure the codebase.** If this file is missing, note the gap and suggest the user run `gspec-architect` first — but do not block on it.
 
 If any of these files are missing, note what's missing and proceed with what's available.
 
@@ -162,7 +163,7 @@ After reading the specs (and completing competitor research if the user opted in
    - Missing edge cases or error handling scenarios
    - Unspecified user flows or interactions
    - Ambiguous or missing acceptance criteria on capabilities
-   - Undefined data models or API contracts (check the "Data Entities" section of each feature PRD — if entities are defined, use them as the basis for your data layer; if they are missing or incomplete, flag the gap)
+   - Undefined data models or API contracts (check `gspec/architecture.md`'s "Data Model" and "API Design" sections — if defined, use them as the basis for your data layer and API routes; if missing or incomplete, flag the gap)
    - Integration points that aren't fully described
    - Missing or unclear state management patterns
    - *If competitor research was conducted:* Patterns that differ from established competitor conventions without clear rationale — users may have ingrained expectations from competitor products
@@ -213,7 +214,6 @@ For each approved feature that doesn't already have a PRD in `gspec/features/`:
    - Users & Use Cases
    - Assumptions & Open Questions
    - Capabilities (with P0/P1/P2 priority levels, using **unchecked checkboxes** `- [ ]` for each capability, each with 2-4 **acceptance criteria** as a sub-list)
-   - Data Entities (key data objects the feature introduces or depends on)
    - Dependencies (on other features or external services)
    - Success Metrics
    - Risks & Mitigations
@@ -251,12 +251,13 @@ Before implementing any feature logic, ensure the project foundation exists. **S
 
 For greenfield projects:
 
-1. **Initialize the project** using the commands and tools specified in `gspec/stack.md`'s "Project Initialization" section (e.g., `npx create-next-app`, `npm init`, etc.)
-2. **Install core dependencies** listed in the stack document, organized by category (framework, database, testing, styling, etc.)
-3. **Create the directory structure** matching the layout defined in `gspec/stack.md`'s "Project Structure" section and `gspec/practices.md`'s "Code Organization" section
-4. **Set up configuration files** as listed in `gspec/stack.md`'s "Environment & Configuration" section — create `.env.example`, framework configs, linting/formatting configs, etc.
+1. **Initialize the project** using the setup commands from `gspec/architecture.md`'s "Project Setup" section (e.g., `npx create-next-app`, `npm init`, etc.). Fall back to `gspec/stack.md` if no architecture document exists.
+2. **Install core dependencies** listed in the architecture or stack document, organized by category (framework, database, testing, styling, etc.)
+3. **Create the directory structure** matching the layout defined in `gspec/architecture.md`'s "Project Structure" section — this is the canonical reference for where all files go
+4. **Set up configuration files** as listed in `gspec/architecture.md`'s "Environment & Configuration" section — create `.env.example`, framework configs, linting/formatting configs, etc.
 5. **Apply design tokens** — if `gspec/style.md` includes a CSS custom properties block (Design Tokens section), create the global stylesheet or theme configuration file with those exact values
-6. **Verify the scaffold builds and runs** — run the dev server or build command to confirm the empty project compiles without errors before adding feature code
+6. **Create the data layer** — if `gspec/architecture.md` defines a "Data Model" section, use it to set up initial database schemas/models, migration files, and type definitions
+7. **Verify the scaffold builds and runs** — run the dev server or build command to confirm the empty project compiles without errors before adding feature code
 
 Present a brief scaffold summary to the user before proceeding to feature implementation.
 
@@ -373,7 +374,7 @@ The user's prompt takes priority for scoping. Use it to determine focus, and ref
 - Reference specific gspec documents and section numbers when discussing requirements
 - When proposing gap-fills, clearly distinguish between "the spec says X" and "I'm proposing Y"
 - *If competitor research was conducted:* When referencing findings, clearly attribute them — "Competitor X does Y" not "the industry does Y"
-- Create files following the project structure conventions from `gspec/stack.md` and `gspec/practices.md`
+- Create files following the project structure defined in `gspec/architecture.md` (or `gspec/stack.md` and `gspec/practices.md` if no architecture document exists)
 - Write code that is production-quality, not prototypical — unless the user requests otherwise
 - Include tests as defined by `gspec/practices.md` testing standards
 

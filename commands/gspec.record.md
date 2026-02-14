@@ -25,9 +25,10 @@ Before proposing any updates, read all available gspec documents in this order:
 1. `gspec/profile.md` — Product identity and scope
 2. `gspec/epics/*.md` — Epic structure and feature dependencies
 3. `gspec/features/*.md` — Individual feature requirements
-4. `gspec/stack.md` — Technology choices and architecture
-5. `gspec/style.md` — Visual design system
-6. `gspec/practices.md` — Development standards and conventions
+4. `gspec/stack.md` — Technology choices
+5. `gspec/architecture.md` — Technical architecture: project structure, data model, API design, component architecture, environment setup
+6. `gspec/style.md` — Visual design system
+7. `gspec/practices.md` — Development standards and conventions
 
 If any files are missing, note what is missing and proceed with what is available. You only update specs that exist. Do not create new spec files (profile, stack, style, practices) unless the user explicitly asks. You may create a new feature PRD only when what needs recording constitutes an entirely new feature.
 
@@ -65,6 +66,10 @@ Systematically evaluate which gspec documents need updating. Apply this decision
 | New technology or dependency added | `gspec/stack.md` | Add to appropriate section with rationale |
 | Technology or dependency removed | `gspec/stack.md` | Remove and note why |
 | Technology version changed | `gspec/stack.md` | Update version |
+| New data entity or changed data model | `gspec/architecture.md` | Update Data Model section with new/changed entities |
+| New API endpoint or changed route | `gspec/architecture.md` | Update API Design section with new/changed routes |
+| Project structure change (new directory, reorganization) | `gspec/architecture.md` | Update Project Structure section |
+| Environment variable added or changed | `gspec/architecture.md` | Update Environment & Configuration section |
 | Visual design change — generic (colors, typography, spacing, base component patterns) | `gspec/style.md` | Update affected tokens or base component patterns. Only include changes that are reusable and not tied to a specific feature or domain |
 | Visual design change — feature-specific (a component unique to a feature, domain-specific visual treatment) | `gspec/features/<relevant>.md` | Document the visual details in the feature PRD's capabilities or a dedicated "Visual Design" subsection |
 | Development practice change (testing, code org, conventions) | `gspec/practices.md` | Update affected practice |
@@ -117,12 +122,12 @@ After approval, write the spec updates:
    - Users & Use Cases
    - Assumptions & Open Questions
    - Capabilities (with P0/P1/P2 priority levels, each with 2-4 **acceptance criteria** as a sub-list)
-   - Data Entities (key data objects the feature introduces or depends on)
    - Dependencies (on other features or external services)
    - Success Metrics
    - Risks & Mitigations
    - Future Considerations
    - Note in the Assumptions section that this feature was recorded during iterative development
+   - **Also update `gspec/architecture.md`** if the new feature introduces data entities, API endpoints, or new components — add them to the appropriate architecture sections
 
 ### Phase 6: Verify — Confirm Consistency
 

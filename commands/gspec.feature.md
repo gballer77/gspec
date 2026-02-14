@@ -131,32 +131,20 @@ This separation allows the same feature spec to be implemented using different t
     - Empty fields → inline validation prevents submission
   ```
 
-### 7. Data Entities
-- **Key data objects** the feature introduces or depends on
-- For each entity: name, essential fields, and relationships to other entities
-- Keep it lightweight — this is not a database schema, it's a conceptual model so the implementing agent builds consistent data structures
-- If the feature only uses entities defined in other feature PRDs, list them as references rather than redefining them
-- Example format:
-  ```
-  - **User**: email, hashed password, display name, created timestamp
-    - Has many → Sessions
-  - **Session**: user reference, token, expiry timestamp, device info
-  ```
-
-### 8. Dependencies
+### 7. Dependencies
 - Dependencies on other features (link to their PRDs if they exist)
 - External dependencies (third-party services, APIs, data sources)
 - If none, state "None"
 
-### 9. Success Metrics
+### 8. Success Metrics
 - How success is measured
 - Leading vs lagging indicators
 
-### 10. Risks & Mitigations
+### 9. Risks & Mitigations
 - Product or delivery risks
 - Mitigation strategies
 
-### 11. Future Considerations
+### 10. Future Considerations
 - Explicitly deferred ideas
 
 ---

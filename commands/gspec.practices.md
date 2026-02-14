@@ -56,25 +56,9 @@ You should:
 
 #### Code Organization
 - File and folder structure conventions
-- Naming conventions (files, functions, variables, types/interfaces)
+- Naming conventions (files, functions, variables)
 - Module/component boundaries
 - Separation of concerns
-- **Include a concrete example directory tree** showing the expected project structure for this project's architecture style (e.g., feature-based, layer-based, or hybrid). The implementing agent uses this as the canonical reference for where to put new files. Example:
-  ```
-  src/
-  ├── components/       # Shared UI components
-  │   ├── Button.tsx
-  │   └── Button.test.tsx
-  ├── features/         # Feature modules
-  │   └── auth/
-  │       ├── components/
-  │       ├── hooks/
-  │       ├── services/
-  │       └── types.ts
-  ├── lib/              # Shared utilities
-  └── styles/           # Global styles and tokens
-  ```
-- **Test file location convention** — specify whether tests live alongside source files (`Button.test.tsx` next to `Button.tsx`), in a separate `__tests__/` directory, or in a top-level `tests/` directory. Be explicit — this is one of the most common sources of inconsistency when an agent implements code across multiple sessions.
 
 ### 3. Version Control & Collaboration
 

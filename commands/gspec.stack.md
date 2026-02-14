@@ -27,7 +27,6 @@ You should:
 - Include rationale for major technology choices
 - Focus on technologies that directly impact the project
 - Avoid listing every minor dependency
-- **The Project Structure and Environment & Configuration sections are critical** — these are the primary reference for how the implementing agent scaffolds and organizes the codebase. Be specific and concrete, not abstract.
 - **Mark sections as "Not Applicable"** when they don't apply to this project (e.g., no backend, no message queue, etc.)
 - **Do NOT include development practices** — this is documented separately in `gspec/practices.md`
 
@@ -227,49 +226,7 @@ You should:
 - Development database
 - Hot reload / watch mode tools
 
-### 13. Project Structure
-
-#### Directory Layout
-- Top-level directory tree (show 2-3 levels deep)
-- Where source code lives (e.g., `src/`, `app/`, `lib/`)
-- Where tests live relative to source files
-- Where static assets, public files, and styles live
-- Where configuration files live
-- Where gspec documents live (always `gspec/`)
-
-#### Key File Locations
-- Entry point(s) (e.g., `src/index.ts`, `app/main.py`)
-- Router/route definitions
-- Database schema/migration files
-- Environment configuration files
-- Build and deployment configuration
-
-#### Module Organization
-- How to organize feature modules (by feature, by layer, or hybrid)
-- Shared/common code location
-- Where types/interfaces/models are defined
-- Naming conventions for files and directories (e.g., kebab-case, PascalCase)
-
-### 14. Environment & Configuration
-
-#### Environment Variables
-- Required environment variables with descriptions
-- Example `.env` file structure (use `.env.example` conventions)
-- Which variables differ between development, staging, and production
-- Secrets vs. non-secret configuration
-
-#### Configuration Files
-- List of configuration files the project needs (e.g., `tsconfig.json`, `tailwind.config.js`, `.eslintrc`)
-- Key settings in each configuration file
-- Framework-specific configuration (e.g., `next.config.js`, `vite.config.ts`)
-
-#### Project Initialization
-- Commands to initialize the project (e.g., `npx create-next-app`, `npm init`)
-- Key packages to install (list the core dependencies by category)
-- Post-init setup steps (database setup, env file creation, etc.)
-- Local development startup command (e.g., `npm run dev`)
-
-### 15. Migration & Compatibility
+### 13. Migration & Compatibility
 
 #### Legacy System Integration (if applicable)
 - Integration approach
@@ -281,7 +238,7 @@ You should:
 - Breaking change management
 - Deprecation timeline
 
-### 16. Technology Decisions & Tradeoffs
+### 14. Technology Decisions & Tradeoffs
 
 #### Key Architectural Decisions
 - Major technology choices and why
