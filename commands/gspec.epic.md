@@ -172,9 +172,15 @@ For each feature, create a separate file in `gspec/features/[feature-name].md` w
 ### 6. Functional Requirements
 - Numbered requirements
 - Written in user-focused language
-- Clear acceptance criteria
 - **Priority level** for each requirement (P0 = must-have, P1 = should-have, P2 = nice-to-have)
 - **Use unchecked markdown checkboxes** for each requirement to enable implementation tracking (e.g., `- [ ] **P0**: FR-1 — User can create an account`). The `gspec-implement` command will check these off (`- [x]`) as requirements are implemented.
+- **Each requirement MUST include brief acceptance criteria** — 2-4 testable conditions that define "done" for that requirement. These tell the implementing agent exactly when a requirement is satisfied and give test writers concrete assertions. Format as a sub-list under each requirement:
+  ```
+  - [ ] **P0**: FR-1 — User can create an account
+    - Valid email + strong password → account is created and confirmation is sent
+    - Duplicate email → error message explains email is taken
+    - Weak password → inline validation shows password requirements
+  ```
 
 ### 7. User Experience Requirements
 - UX principles

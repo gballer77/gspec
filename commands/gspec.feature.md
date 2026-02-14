@@ -123,16 +123,28 @@ This separation allows the same feature spec to be implemented using different t
 - **Priority level** for each capability (P0 = must-have, P1 = should-have, P2 = nice-to-have)
 - Focus on *what* users can do, not *how* they do it
 - **Use unchecked markdown checkboxes** for each capability to enable implementation tracking (e.g., `- [ ] **P0**: User can sign in with email and password`). The `gspec-implement` command will check these off (`- [x]`) as capabilities are implemented, allowing incremental runs.
+- **Each capability MUST include brief acceptance criteria** — 2-4 testable conditions that define "done" for that capability. These tell the implementing agent exactly when a capability is complete and give test writers concrete assertions. Format as a sub-list under each capability:
+  ```
+  - [ ] **P0**: User can sign in with email and password
+    - Valid credentials → user is redirected to dashboard and session is created
+    - Invalid credentials → error message is shown, no session is created
+    - Empty fields → inline validation prevents submission
+  ```
 
-### 7. Success Metrics
+### 7. Dependencies
+- Dependencies on other features (link to their PRDs if they exist)
+- External dependencies (third-party services, APIs, data sources)
+- If none, state "None"
+
+### 8. Success Metrics
 - How success is measured
 - Leading vs lagging indicators
 
-### 8. Risks & Mitigations
+### 9. Risks & Mitigations
 - Product or delivery risks
 - Mitigation strategies
 
-### 9. Future Considerations
+### 10. Future Considerations
 - Explicitly deferred ideas
 
 ---

@@ -38,6 +38,10 @@ const COMMANDS = {
     name: 'gspec-practices',
     description: 'Define development practices, code quality standards, and engineering workflows',
   },
+  'gspec.architect.md': {
+    name: 'gspec-architect',
+    description: 'Define the technical architecture: project structure, data model, API design, and environment setup',
+  },
   'gspec.implement.md': {
     name: 'gspec-implement',
     description: 'Read gspec documents, research competitors, identify gaps, and implement the software',
