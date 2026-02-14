@@ -103,14 +103,54 @@ All of these provide essential context. If any are missing, note the gap and mak
 
 ### 3. Data Model
 
-#### Entities
-For each data entity the system needs (derived from feature capabilities), define:
-- **Entity name**
-- **Fields** with types and constraints (required, unique, default values)
-- **Relationships** to other entities (one-to-many, many-to-many, etc.)
-- **Which feature(s)** introduced or depend on this entity
+#### Entity Relationship Diagram
+- **Output a Mermaid `erDiagram`** showing all entities, their fields with types, and the relationships between them. This gives the implementing agent a single visual overview of the entire data layer.
+- Include field types and key constraints directly in the diagram using Mermaid's attribute syntax.
+- Example format:
+  ```mermaid
+  erDiagram
+      User ||--o{ Session : "has many"
+      User ||--o{ Post : "has many"
+      Post ||--o{ Comment : "has many"
+      User ||--o{ Comment : "has many"
 
-Use a consistent format — tables work well:
+      User {
+          UUID id PK
+          string email "unique, indexed"
+          string password "hashed"
+          string displayName
+          timestamp createdAt
+          timestamp updatedAt
+      }
+      Session {
+          UUID id PK
+          UUID userId FK
+          string token "unique"
+          string deviceInfo
+          timestamp expiresAt
+      }
+      Post {
+          UUID id PK
+          UUID authorId FK
+          string title
+          text body
+          enum status "draft, published, archived"
+          timestamp createdAt
+          timestamp updatedAt
+      }
+      Comment {
+          UUID id PK
+          UUID postId FK
+          UUID authorId FK
+          text body
+          timestamp createdAt
+      }
+  ```
+
+#### Entity Details
+For each entity in the diagram, provide a detail table that captures constraints the diagram cannot express — required fields, defaults, validation rules, and indexing strategy. Also note which feature(s) introduced or depend on the entity.
+
+Example format:
 ```
 ### User
 | Field       | Type      | Constraints                 |
@@ -122,16 +162,12 @@ Use a consistent format — tables work well:
 | createdAt   | timestamp | Auto-set                    |
 | updatedAt   | timestamp | Auto-updated                |
 
-Relationships:
-- Has many → Sessions
-- Has many → Posts
-
 Introduced by: [User Authentication](../features/user-authentication.md)
 ```
 
-#### Entity Relationship Summary
-- A concise list or diagram showing how all entities relate
-- Note any polymorphic relationships, junction tables, or complex patterns
+#### Relationship Notes
+- Document any patterns that need extra explanation: polymorphic associations, junction/join tables for many-to-many relationships, soft deletes, or tenant-scoping
+- Note any entities that are shared across multiple features — these are integration points the implementing agent should build carefully
 
 ### 4. API Design
 **Mark as N/A if no API layer exists**
@@ -172,7 +208,18 @@ Introduced by: [User Authentication](../features/user-authentication.md)
 #### Page Map
 - List of pages/routes in the application with their purpose
 - Which feature each page belongs to
-- Layout nesting (which layouts wrap which pages)
+- **Output a Mermaid `graph`** showing layout nesting and page hierarchy so the implementing agent can see how routes and layouts compose at a glance:
+  ```mermaid
+  graph TD
+      RootLayout["Root Layout (app/layout.tsx)"]
+      RootLayout --> AuthLayout["Auth Layout (app/(auth)/layout.tsx)"]
+      RootLayout --> AppLayout["App Layout (app/(app)/layout.tsx)"]
+      AuthLayout --> Login["/login"]
+      AuthLayout --> Register["/register"]
+      AppLayout --> Dashboard["/dashboard"]
+      AppLayout --> Settings["/settings"]
+      AppLayout --> PostDetail["/posts/:id"]
+  ```
 
 #### Shared Components
 - List of reusable UI components the application needs (derived from style guide and feature requirements)
@@ -205,11 +252,27 @@ Introduced by: [User Authentication](../features/user-authentication.md)
 ### 7. Authentication & Authorization Architecture
 **Mark as N/A if no auth required**
 
-- Auth flow (signup → verify → login → session)
 - Session/token management approach
 - Route/endpoint protection pattern
 - Role/permission model (if applicable)
 - Where auth checks happen in the code (middleware, guards, decorators, etc.)
+- **Output a Mermaid `sequenceDiagram` or `flowchart`** showing the primary auth flow so the implementing agent can see the full sequence of steps, redirects, and token exchanges:
+  ```mermaid
+  sequenceDiagram
+      actor U as User
+      participant C as Client
+      participant A as API
+      participant DB as Database
+
+      U->>C: Submit login form
+      C->>A: POST /api/auth/login
+      A->>DB: Look up user by email
+      DB-->>A: User record
+      A->>A: Verify password hash
+      A->>DB: Create session
+      A-->>C: Set session cookie + return user
+      C-->>U: Redirect to /dashboard
+  ```
 
 ### 8. Environment & Configuration
 
