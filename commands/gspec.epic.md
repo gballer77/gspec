@@ -172,28 +172,40 @@ For each feature, create a separate file in `gspec/features/[feature-name].md` w
 ### 6. Functional Requirements
 - Numbered requirements
 - Written in user-focused language
-- Clear acceptance criteria
 - **Priority level** for each requirement (P0 = must-have, P1 = should-have, P2 = nice-to-have)
 - **Use unchecked markdown checkboxes** for each requirement to enable implementation tracking (e.g., `- [ ] **P0**: FR-1 — User can create an account`). The `gspec-implement` command will check these off (`- [x]`) as requirements are implemented.
+- **Each requirement MUST include brief acceptance criteria** — 2-4 testable conditions that define "done" for that requirement. These tell the implementing agent exactly when a requirement is satisfied and give test writers concrete assertions. Format as a sub-list under each requirement:
+  ```
+  - [ ] **P0**: FR-1 — User can create an account
+    - Valid email + strong password → account is created and confirmation is sent
+    - Duplicate email → error message explains email is taken
+    - Weak password → inline validation shows password requirements
+  ```
 
-### 7. User Experience Requirements
+### 7. Data Entities
+- **Key data objects** the feature introduces or depends on
+- For each entity: name, essential fields, and relationships to other entities
+- Keep it lightweight — this is not a database schema, it's a conceptual model so the implementing agent builds consistent data structures
+- If the feature shares entities with other features in the epic, define them once and reference them from other feature PRDs
+
+### 8. User Experience Requirements
 - UX principles
 - Key flows (high level)
 - Empty and error states
 
-### 8. Success Metrics
+### 9. Success Metrics
 - How success is measured
 - Leading vs lagging indicators
 
-### 9. Dependencies
+### 10. Dependencies
 - Dependencies on other features in this epic
 - External dependencies
 
-### 10. Risks & Mitigations
+### 11. Risks & Mitigations
 - Product or delivery risks
 - Mitigation strategies
 
-### 11. Future Considerations
+### 12. Future Considerations
 - Explicitly deferred ideas
 
 ## Workflow

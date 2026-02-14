@@ -116,7 +116,9 @@ After approval, write the spec updates:
    - Goals & Non-Goals
    - Users & Use Cases
    - Assumptions & Open Questions
-   - Capabilities (with P0/P1/P2 priority levels)
+   - Capabilities (with P0/P1/P2 priority levels, each with 2-4 **acceptance criteria** as a sub-list)
+   - Data Entities (key data objects the feature introduces or depends on)
+   - Dependencies (on other features or external services)
    - Success Metrics
    - Risks & Mitigations
    - Future Considerations

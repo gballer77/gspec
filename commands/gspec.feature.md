@@ -123,16 +123,40 @@ This separation allows the same feature spec to be implemented using different t
 - **Priority level** for each capability (P0 = must-have, P1 = should-have, P2 = nice-to-have)
 - Focus on *what* users can do, not *how* they do it
 - **Use unchecked markdown checkboxes** for each capability to enable implementation tracking (e.g., `- [ ] **P0**: User can sign in with email and password`). The `gspec-implement` command will check these off (`- [x]`) as capabilities are implemented, allowing incremental runs.
+- **Each capability MUST include brief acceptance criteria** — 2-4 testable conditions that define "done" for that capability. These tell the implementing agent exactly when a capability is complete and give test writers concrete assertions. Format as a sub-list under each capability:
+  ```
+  - [ ] **P0**: User can sign in with email and password
+    - Valid credentials → user is redirected to dashboard and session is created
+    - Invalid credentials → error message is shown, no session is created
+    - Empty fields → inline validation prevents submission
+  ```
 
-### 7. Success Metrics
+### 7. Data Entities
+- **Key data objects** the feature introduces or depends on
+- For each entity: name, essential fields, and relationships to other entities
+- Keep it lightweight — this is not a database schema, it's a conceptual model so the implementing agent builds consistent data structures
+- If the feature only uses entities defined in other feature PRDs, list them as references rather than redefining them
+- Example format:
+  ```
+  - **User**: email, hashed password, display name, created timestamp
+    - Has many → Sessions
+  - **Session**: user reference, token, expiry timestamp, device info
+  ```
+
+### 8. Dependencies
+- Dependencies on other features (link to their PRDs if they exist)
+- External dependencies (third-party services, APIs, data sources)
+- If none, state "None"
+
+### 9. Success Metrics
 - How success is measured
 - Leading vs lagging indicators
 
-### 8. Risks & Mitigations
+### 10. Risks & Mitigations
 - Product or delivery risks
 - Mitigation strategies
 
-### 9. Future Considerations
+### 11. Future Considerations
 - Explicitly deferred ideas
 
 ---

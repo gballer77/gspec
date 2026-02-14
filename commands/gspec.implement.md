@@ -161,8 +161,8 @@ After reading the specs (and completing competitor research if the user opted in
 3. **Identify gaps** in the specified features — areas where the specs don't fully specify behavior:
    - Missing edge cases or error handling scenarios
    - Unspecified user flows or interactions
-   - Ambiguous acceptance criteria
-   - Undefined data models or API contracts
+   - Ambiguous or missing acceptance criteria on capabilities
+   - Undefined data models or API contracts (check the "Data Entities" section of each feature PRD — if entities are defined, use them as the basis for your data layer; if they are missing or incomplete, flag the gap)
    - Integration points that aren't fully described
    - Missing or unclear state management patterns
    - *If competitor research was conducted:* Patterns that differ from established competitor conventions without clear rationale — users may have ingrained expectations from competitor products
@@ -212,7 +212,9 @@ For each approved feature that doesn't already have a PRD in `gspec/features/`:
    - Goals & Non-Goals
    - Users & Use Cases
    - Assumptions & Open Questions
-   - Capabilities (with P0/P1/P2 priority levels, using **unchecked checkboxes** `- [ ]` for each capability)
+   - Capabilities (with P0/P1/P2 priority levels, using **unchecked checkboxes** `- [ ]` for each capability, each with 2-4 **acceptance criteria** as a sub-list)
+   - Data Entities (key data objects the feature introduces or depends on)
+   - Dependencies (on other features or external services)
    - Success Metrics
    - Risks & Mitigations
    - Future Considerations
@@ -241,7 +243,22 @@ After all approved features are codified as PRDs, **enter plan mode** and create
 
 ### Phase 4: Implementation — Build It
 
-Once the implementation plan is approved, execute it **phase by phase**:
+Once the implementation plan is approved, execute it **phase by phase**.
+
+#### Phase 0 (if needed): Project Scaffolding
+
+Before implementing any feature logic, ensure the project foundation exists. **Skip this step entirely if the project is already initialized** (i.e., a `package.json`, `pyproject.toml`, `go.mod`, or equivalent exists and dependencies are installed).
+
+For greenfield projects:
+
+1. **Initialize the project** using the commands and tools specified in `gspec/stack.md`'s "Project Initialization" section (e.g., `npx create-next-app`, `npm init`, etc.)
+2. **Install core dependencies** listed in the stack document, organized by category (framework, database, testing, styling, etc.)
+3. **Create the directory structure** matching the layout defined in `gspec/stack.md`'s "Project Structure" section and `gspec/practices.md`'s "Code Organization" section
+4. **Set up configuration files** as listed in `gspec/stack.md`'s "Environment & Configuration" section — create `.env.example`, framework configs, linting/formatting configs, etc.
+5. **Apply design tokens** — if `gspec/style.md` includes a CSS custom properties block (Design Tokens section), create the global stylesheet or theme configuration file with those exact values
+6. **Verify the scaffold builds and runs** — run the dev server or build command to confirm the empty project compiles without errors before adding feature code
+
+Present a brief scaffold summary to the user before proceeding to feature implementation.
 
 #### For each phase in the approved plan:
 
@@ -271,7 +288,7 @@ Once the implementation plan is approved, execute it **phase by phase**:
 After implementation:
 
 1. **Walk through each functional requirement** from the feature PRD (if available) or the approved implementation plan and confirm it's satisfied
-2. **Review against acceptance criteria** — Does the implementation meet every stated criterion or approved goal?
+2. **Review against acceptance criteria** — For each capability in the feature PRDs, check that every acceptance criterion listed under it is satisfied. These sub-listed conditions are the definition of "done" for each capability. If any criterion is not met, the capability should not be marked `[x]`.
 3. **Check the Definition of Done** from `gspec/practices.md`
 4. *If competitor research was conducted:* **Verify competitive positioning** — Does the implemented feature meet table-stakes expectations? Does it deliver on the product's stated differentiation?
 5. **Note any deferred items** — Requirements that were intentionally postponed or descoped during implementation
