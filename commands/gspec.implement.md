@@ -208,16 +208,13 @@ After the user approves proposed features (whether from gap analysis, competitor
 For each approved feature that doesn't already have a PRD in `gspec/features/`:
 
 1. **Generate a feature PRD** following the same structure used by the `gspec-feature` command:
-   - Overview (name, summary, objective)
-   - Problem & Context
-   - Goals & Non-Goals
+   - Overview (name, summary, problem being solved and why it matters now)
    - Users & Use Cases
-   - Assumptions & Open Questions
+   - Scope (in-scope goals, out-of-scope items, deferred ideas)
    - Capabilities (with P0/P1/P2 priority levels, using **unchecked checkboxes** `- [ ]` for each capability, each with 2-4 **acceptance criteria** as a sub-list)
    - Dependencies (on other features or external services)
+   - Assumptions & Risks (assumptions, open questions, key risks and mitigations)
    - Success Metrics
-   - Risks & Mitigations
-   - Future Considerations
 2. **Name the file** descriptively based on the feature (e.g., `gspec/features/onboarding-wizard.md`, `gspec/features/export-csv.md`)
 3. **Ground the PRD in existing gspec context** — reference the product profile's target users, align success metrics with established metrics, and respect stated non-goals
 4. **Keep the PRD product-focused** — describe *what* and *why*, not *how*. Implementation details belong in the code, not the PRD.
