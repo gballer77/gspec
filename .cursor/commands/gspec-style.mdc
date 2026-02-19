@@ -200,9 +200,37 @@ You should:
 ### 12. Design Tokens
 
 #### Token Structure
-- Naming conventions
-- Token categories
-- Example token definitions (CSS variables, JSON, etc.)
+- Naming conventions (e.g., `--color-primary-500`, `--spacing-md`, `--font-size-lg`)
+- Token categories (color, typography, spacing, shadow, border-radius, animation)
+
+#### Token Definitions
+- **Output a complete, machine-parseable token map** as a CSS custom properties code block that the implementing agent can copy directly into the codebase. This is the single source of truth for all design values — every color, spacing value, font size, shadow, and radius defined in earlier sections must appear here as a named token.
+- Example format:
+  ```css
+  :root {
+    /* Colors — Primary */
+    --color-primary-50: #eff6ff;
+    --color-primary-500: #3b82f6;
+    --color-primary-900: #1e3a5f;
+    /* Colors — Semantic */
+    --color-success: #22c55e;
+    --color-error: #ef4444;
+    /* Typography */
+    --font-family-heading: 'Inter', sans-serif;
+    --font-size-h1: 2.25rem;
+    --font-weight-bold: 700;
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    /* Border Radius */
+    --radius-md: 0.375rem;
+  }
+  ```
+- If the project uses a utility-first CSS framework (check `gspec/stack.md` if it exists), also provide the framework-specific configuration (e.g., Tailwind `theme.extend` values) that maps to these tokens
+- For dark mode, provide the overridden token values under a separate selector or media query
 
 ### 13. Usage Examples
 

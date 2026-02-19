@@ -78,7 +78,7 @@ If these files don't exist, proceed without them — they are optional context, 
   - Links to each individual feature PRD
 - Avoid deep system architecture or low-level implementation
 - No code blocks except where examples add clarity
-- Clear acceptance criteria are required for each feature
+- Clear acceptance criteria are required for each capability
 - Make tradeoffs and scope explicit
 
 ### Technology Agnosticism
@@ -147,60 +147,44 @@ For each feature, create a separate file in `gspec/features/[feature-name].md` w
 
 ### 1. Overview
 - Feature name
-- Summary
-- Objective
+- Summary (1-2 sentences)
+- Problem being solved and why it matters now
 - **Parent Epic** (link to epic summary)
 
-### 2. Problem & Context
-- User problem
-- Why this matters now
-- Current pain points
-- How this fits into the larger epic
-
-### 3. Goals & Non-Goals
-- In-scope goals
-- Explicitly out-of-scope items
-
-### 4. Users & Use Cases
+### 2. Users & Use Cases
 - Primary users
-- Key use cases
+- Key use cases (3-4 scenarios showing how users benefit)
 
-### 5. Assumptions & Open Questions
-- Assumptions
-- Open questions (non-blocking)
+### 3. Scope
+- In-scope goals
+- Out-of-scope items (things this feature explicitly won't do)
+- Deferred ideas (things we may do later, but not now)
 
-### 6. Functional Requirements
-- Numbered requirements
-- Written in user-focused language
-- **Priority level** for each requirement (P0 = must-have, P1 = should-have, P2 = nice-to-have)
-- **Use unchecked markdown checkboxes** for each requirement to enable implementation tracking (e.g., `- [ ] **P0**: FR-1 — User can create an account`). The `gspec-implement` command will check these off (`- [x]`) as requirements are implemented.
-- **Each requirement MUST include brief acceptance criteria** — 2-4 testable conditions that define "done" for that requirement. These tell the implementing agent exactly when a requirement is satisfied and give test writers concrete assertions. Format as a sub-list under each requirement:
+### 4. Capabilities
+- What the feature provides to users, written in user-focused language
+- **Priority level** for each capability (P0 = must-have, P1 = should-have, P2 = nice-to-have)
+- Focus on *what* users can do, not *how* they do it — include UX expectations (empty states, error handling, key flows) as acceptance criteria on the relevant capabilities
+- **Use unchecked markdown checkboxes** for each capability to enable implementation tracking (e.g., `- [ ] **P0**: User can create an account`). The `gspec-implement` command will check these off (`- [x]`) as capabilities are implemented, allowing incremental runs.
+- **Each capability MUST include brief acceptance criteria** — 2-4 testable conditions that define "done" for that capability. These tell the implementing agent exactly when a capability is complete and give test writers concrete assertions. Format as a sub-list under each capability:
   ```
-  - [ ] **P0**: FR-1 — User can create an account
+  - [ ] **P0**: User can create an account
     - Valid email + strong password → account is created and confirmation is sent
     - Duplicate email → error message explains email is taken
     - Weak password → inline validation shows password requirements
   ```
 
-### 7. User Experience Requirements
-- UX principles
-- Key flows (high level)
-- Empty and error states
-
-### 8. Success Metrics
-- How success is measured
-- Leading vs lagging indicators
-
-### 9. Dependencies
+### 5. Dependencies
 - Dependencies on other features in this epic
 - External dependencies
+- If none, state "None"
 
-### 10. Risks & Mitigations
-- Product or delivery risks
-- Mitigation strategies
+### 6. Assumptions & Risks
+- Assumptions (what we're taking as true)
+- Open questions (non-blocking unknowns to resolve during implementation)
+- Key risks and mitigations (brief bullet points — focus on risks that could affect implementation scope or approach)
 
-### 11. Future Considerations
-- Explicitly deferred ideas
+### 7. Success Metrics
+- 2-4 measurable outcomes that define whether this feature is working
 
 ## Workflow
 

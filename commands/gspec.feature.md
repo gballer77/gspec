@@ -98,27 +98,19 @@ This separation allows the same feature spec to be implemented using different t
 
 ### 1. Overview
 - Feature name
-- Summary
-- Objective
+- Summary (1-2 sentences)
+- Problem being solved and why it matters now
 
-### 2. Problem & Context
-- User problem
-- Why this matters now
-- Current pain points
-
-### 3. Goals & Non-Goals
-- In-scope goals
-- Explicitly out-of-scope items
-
-### 4. Users & Use Cases
+### 2. Users & Use Cases
 - Primary users
-- Key use cases
+- Key use cases (3-4 scenarios showing how users benefit)
 
-### 5. Assumptions & Open Questions
-- Assumptions
-- Open questions (non-blocking)
+### 3. Scope
+- In-scope goals
+- Out-of-scope items (things this feature explicitly won't do)
+- Deferred ideas (things we may do later, but not now)
 
-### 6. Capabilities
+### 4. Capabilities
 - What the feature provides to users
 - **Priority level** for each capability (P0 = must-have, P1 = should-have, P2 = nice-to-have)
 - Focus on *what* users can do, not *how* they do it
@@ -131,21 +123,18 @@ This separation allows the same feature spec to be implemented using different t
     - Empty fields → inline validation prevents submission
   ```
 
-### 7. Dependencies
+### 5. Dependencies
 - Dependencies on other features (link to their PRDs if they exist)
 - External dependencies (third-party services, APIs, data sources)
 - If none, state "None"
 
-### 8. Success Metrics
-- How success is measured
-- Leading vs lagging indicators
+### 6. Assumptions & Risks
+- Assumptions (what we're taking as true)
+- Open questions (non-blocking unknowns to resolve during implementation)
+- Key risks and mitigations (brief bullet points — focus on risks that could affect implementation scope or approach)
 
-### 9. Risks & Mitigations
-- Product or delivery risks
-- Mitigation strategies
-
-### 10. Future Considerations
-- Explicitly deferred ideas
+### 7. Success Metrics
+- 2-4 measurable outcomes that define whether this feature is working
 
 ---
 
