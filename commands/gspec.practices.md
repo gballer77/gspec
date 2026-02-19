@@ -17,6 +17,13 @@ You should:
 
 - Output **ONLY** a single Markdown document
 - Save the file as `gspec/practices.md` in the root of the project, create the `gspec` folder if it doesn't exist
+- Begin the file with YAML frontmatter containing the gspec version:
+  ```
+  ---
+  gspec-version: <<<VERSION>>>
+  ---
+  ```
+  The frontmatter must be the very first content in the file, before the main heading.
 - **Before generating the document**, ask clarifying questions if:
   - Team size or experience level is unclear
   - Development timeline constraints are unspecified

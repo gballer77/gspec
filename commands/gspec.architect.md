@@ -34,6 +34,13 @@ All of these provide essential context. If any are missing, note the gap and mak
 
 - Output **ONLY** a single Markdown document
 - Save the file as `gspec/architecture.md` in the root of the project, create the `gspec` folder if it doesn't exist
+- Begin the file with YAML frontmatter containing the gspec version:
+  ```
+  ---
+  gspec-version: <<<VERSION>>>
+  ---
+  ```
+  The frontmatter must be the very first content in the file, before the main heading.
 - **Before generating the document**, ask clarifying questions if:
   - Feature requirements suggest conflicting data models
   - The stack leaves ambiguous choices that affect architecture (e.g., REST vs GraphQL not decided)

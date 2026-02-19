@@ -64,6 +64,13 @@ If these files don't exist, proceed without them — they are optional context, 
 - Output **multiple** Markdown documents (one per feature)
 - Save each file to the `gspec/features/` folder in the root of the project (create if it doesn't exist)
 - Name each file based on the feature (e.g., `user-authentication.md`, `dashboard-analytics.md`)
+- Begin every output file (both epic summary and individual feature PRDs) with YAML frontmatter containing the gspec version:
+  ```
+  ---
+  gspec-version: <<<VERSION>>>
+  ---
+  ```
+  The frontmatter must be the very first content in the file, before the main heading.
 - **Before generating the documents**, ask clarifying questions if:
   - The target users are unclear
   - The scope or boundaries of the epic are ambiguous

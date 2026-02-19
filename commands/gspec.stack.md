@@ -17,6 +17,13 @@ You should:
 
 - Output **ONLY** a single Markdown document
 - Save the file as `gspec/stack.md` in the root of the project, create the `gspec` folder if it doesn't exist
+- Begin the file with YAML frontmatter containing the gspec version:
+  ```
+  ---
+  gspec-version: <<<VERSION>>>
+  ---
+  ```
+  The frontmatter must be the very first content in the file, before the main heading.
 - **Before generating the document**, ask clarifying questions if:
   - The project type is unclear (web app, mobile, API, CLI, etc.)
   - Scale requirements are not specified

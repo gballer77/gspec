@@ -8,6 +8,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const COMMANDS_DIR = join(ROOT, 'commands');
 const DIST_DIR = join(ROOT, 'dist');
+const pkg = JSON.parse(await readFile(join(ROOT, 'package.json'), 'utf-8'));
+
+// Version placeholder — replaced before platform-specific transforms
+const VERSION_RE = /<<<VERSION>>>/g;
 
 // Placeholder pattern used in generic command files
 const PLACEHOLDER_RE = /<<<\w+>>>/g;
@@ -53,6 +57,10 @@ const COMMANDS = {
   'gspec.record.md': {
     name: 'gspec-record',
     description: 'Update gspec specification documents to reflect changes, decisions, or context from the conversation',
+  },
+  'gspec.migrate.md': {
+    name: 'gspec-migrate',
+    description: 'Migrate existing gspec files to the current format when upgrading to a new gspec version',
   },
 };
 
@@ -129,7 +137,8 @@ async function build(targetNames) {
         continue;
       }
 
-      const content = await readFile(join(COMMANDS_DIR, file), 'utf-8');
+      const raw = await readFile(join(COMMANDS_DIR, file), 'utf-8');
+      const content = raw.replace(VERSION_RE, pkg.version);
       await target.emit(target.outDir, content, meta);
       count++;
     }

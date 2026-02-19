@@ -139,6 +139,7 @@ After approval, write the spec updates:
    - Dependencies (on other features or external services)
    - Assumptions & Risks (assumptions, open questions, key risks and mitigations — note in assumptions that this feature was identified during iterative development)
    - Success Metrics
+   - Begin the file with YAML frontmatter: `---\ngspec-version: <<<VERSION>>>\n---`
    - **Also update `gspec/architecture.md`** if the new feature introduces data entities, API endpoints, or new components — add them to the appropriate architecture sections
 
 ### Phase 7: Verify — Confirm Consistency
@@ -170,6 +171,8 @@ After writing spec updates:
 **When to create vs. update.** If a change adds a small capability that fits naturally within an existing feature PRD, update that PRD. If a change introduces a wholly new product area that does not belong in any existing PRD, create a new feature PRD. When in doubt, ask the user.
 
 **Implementation checkboxes.** Feature PRDs use markdown checkboxes (`- [ ]` / `- [x]`) on capabilities to track implementation status for `gspec-implement`. When DOR adds new capabilities, use unchecked checkboxes (`- [ ]`). When modifying a capability that was already checked (`- [x]`) and the code change reflects the modification, keep it checked. When creating a new feature PRD, use unchecked checkboxes for all capabilities. Do not check off capabilities that DOR did not implement in the current session.
+
+**Version frontmatter.** When updating existing gspec files, preserve the `gspec-version` YAML frontmatter at the top of the file. If a file lacks frontmatter, add `---\ngspec-version: <<<VERSION>>>\n---` as the very first content before the main heading.
 
 ---
 

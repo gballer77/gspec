@@ -123,6 +123,7 @@ After approval, write the spec updates:
    - Dependencies (on other features or external services)
    - Assumptions & Risks (assumptions, open questions, key risks and mitigations — note in assumptions that this feature was recorded during iterative development)
    - Success Metrics
+   - Begin the file with YAML frontmatter: `---\ngspec-version: <<<VERSION>>>\n---`
    - **Also update `gspec/architecture.md`** if the new feature introduces data entities, API endpoints, or new components — add them to the appropriate architecture sections
 
 ### Phase 6: Verify — Confirm Consistency
@@ -150,6 +151,8 @@ After writing spec updates:
 **Keep `style.md` generic and reusable.** The style guide defines the design system — colors, typography, spacing, base component patterns, and tokens that could apply to any product. Do not add feature-specific or domain-specific content to `style.md` (e.g., "recipe card layout", "playlist item styling"). Feature-specific visual details belong in the relevant feature PRD. If you are unsure whether a visual change is generic or feature-specific, ask the user.
 
 **When to create vs. update.** If a change adds a small capability that fits naturally within an existing feature PRD, update that PRD. If a change introduces a wholly new product area that does not belong in any existing PRD, create a new feature PRD. When in doubt, ask the user.
+
+**Version frontmatter.** When updating existing gspec files, preserve the `gspec-version` YAML frontmatter at the top of the file. If a file lacks frontmatter, add `---\ngspec-version: <<<VERSION>>>\n---` as the very first content before the main heading.
 
 **No code changes.** This command never creates, modifies, or deletes code files. If the user needs code changes alongside spec updates, suggest using `gspec-dor` instead.
 

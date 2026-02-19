@@ -17,6 +17,13 @@ You should:
 
 - Output **ONLY** a single Markdown document
 - Save the file as `gspec/style.md` in the root of the project, create the `gspec` folder if it doesn't exist
+- Begin the file with YAML frontmatter containing the gspec version:
+  ```
+  ---
+  gspec-version: <<<VERSION>>>
+  ---
+  ```
+  The frontmatter must be the very first content in the file, before the main heading.
 - **Before generating the document**, ask clarifying questions if:
   - The brand personality or visual direction is unclear
   - Existing brand assets or guidelines are not mentioned (logos, colors, fonts)

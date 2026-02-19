@@ -211,6 +211,88 @@ async function install(targetName, cwd) {
   console.log(chalk.bold(`\n${count} skills installed to ${target.installDir}/\n`));
 }
 
+const MIGRATE_COMMANDS = {
+  claude: '/gspec-migrate',
+  cursor: '/gspec-migrate',
+  antigravity: '/gspec-migrate',
+};
+
+function parseGspecVersion(content) {
+  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!match) return null;
+  const versionMatch = match[1].match(/^gspec-version:\s*(.+)$/m);
+  return versionMatch ? versionMatch[1].trim() : null;
+}
+
+async function collectGspecFiles(gspecDir) {
+  const files = [];
+
+  const topEntries = await readdir(gspecDir);
+  for (const entry of topEntries) {
+    if (entry.endsWith('.md')) {
+      files.push({ path: join(gspecDir, entry), label: `gspec/${entry}` });
+    }
+  }
+
+  for (const subdir of ['features', 'epics']) {
+    try {
+      const entries = await readdir(join(gspecDir, subdir));
+      for (const entry of entries) {
+        if (entry.endsWith('.md')) {
+          files.push({ path: join(gspecDir, subdir, entry), label: `gspec/${subdir}/${entry}` });
+        }
+      }
+    } catch (e) {
+      if (e.code !== 'ENOENT') throw e;
+    }
+  }
+
+  return files;
+}
+
+async function checkGspecFiles(cwd, targetName) {
+  const gspecDir = join(cwd, 'gspec');
+
+  try {
+    await stat(gspecDir);
+  } catch (e) {
+    if (e.code === 'ENOENT') return;
+    throw e;
+  }
+
+  const files = await collectGspecFiles(gspecDir);
+  if (files.length === 0) return;
+
+  const outdated = [];
+  for (const file of files) {
+    const content = await readFile(file.path, 'utf-8');
+    const version = parseGspecVersion(content);
+    if (version === pkg.version) continue;
+    outdated.push({
+      label: file.label,
+      version,
+    });
+  }
+
+  if (outdated.length === 0) return;
+
+  console.log(chalk.yellow(`  Found existing gspec files that may need updating:\n`));
+  for (const file of outdated) {
+    const status = file.version
+      ? `version ${file.version} (current: ${pkg.version})`
+      : `no version (pre-${pkg.version})`;
+    console.log(`    ${chalk.yellow('!')} ${file.label} — ${status}`);
+  }
+  console.log();
+
+  const confirmed = await promptConfirm(chalk.bold('  Update existing gspec files to the current format? [y/N]: '));
+  if (!confirmed) return;
+
+  const cmd = MIGRATE_COMMANDS[targetName] || '/gspec-migrate';
+  console.log(chalk.bold(`\n  To update your files, run the following command in ${TARGETS[targetName].label}:\n`));
+  console.log(`    ${chalk.cyan(cmd)}\n`);
+}
+
 program
   .name('gspec')
   .description('Install gspec specification commands')
@@ -226,6 +308,7 @@ program
     }
 
     await install(targetName, process.cwd());
+    await checkGspecFiles(process.cwd(), targetName);
   });
 
 program.parse();

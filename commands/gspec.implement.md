@@ -215,6 +215,7 @@ For each approved feature that doesn't already have a PRD in `gspec/features/`:
    - Dependencies (on other features or external services)
    - Assumptions & Risks (assumptions, open questions, key risks and mitigations)
    - Success Metrics
+   - Begin the file with YAML frontmatter: `---\ngspec-version: <<<VERSION>>>\n---`
 2. **Name the file** descriptively based on the feature (e.g., `gspec/features/onboarding-wizard.md`, `gspec/features/export-csv.md`)
 3. **Ground the PRD in existing gspec context** — reference the product profile's target users, align success metrics with established metrics, and respect stated non-goals
 4. **Keep the PRD product-focused** — describe *what* and *why*, not *how*. Implementation details belong in the code, not the PRD.
@@ -267,7 +268,7 @@ Present a brief scaffold summary to the user before proceeding to feature implem
    c. **Follow the style** — Apply the design system, tokens, and component patterns from `gspec/style.md`
    d. **Satisfy the requirements** — Trace each piece of code back to a functional requirement in the feature PRD (if available) or to the user's stated goals and the approved implementation plan
    e. *If competitor research was conducted:* **Leverage competitor insights** — When making UX or interaction design decisions not fully specified in the style guide, consider established patterns from competitor research. Don't blindly copy, but don't ignore proven conventions either.
-3. **Mark capabilities as implemented** — After successfully implementing each capability, immediately update the feature PRD by changing its checkbox from `- [ ]` to `- [x]`. Do this incrementally as each capability is completed, not in a batch at the end. If a capability line did not have a checkbox prefix, add one as `- [x]`. This ensures that if the session is interrupted, progress is not lost.
+3. **Mark capabilities as implemented** — After successfully implementing each capability, immediately update the feature PRD by changing its checkbox from `- [ ]` to `- [x]`. Do this incrementally as each capability is completed, not in a batch at the end. If a capability line did not have a checkbox prefix, add one as `- [x]`. This ensures that if the session is interrupted, progress is not lost. When updating gspec files, preserve existing `gspec-version` YAML frontmatter. If a file lacks frontmatter, add `---\ngspec-version: <<<VERSION>>>\n---` at the top.
 4. **Update epic status** — When all capabilities in a feature PRD are checked, update the corresponding feature's checkbox in the epic summary file (if one exists) from `- [ ]` to `- [x]`.
 5. **Run tests** — Execute the tests defined for this phase (and any existing tests to catch regressions). Fix any failures before proceeding.
 6. **Surface new gaps** — If implementation reveals new ambiguities, pause and consult the user rather than making silent assumptions
