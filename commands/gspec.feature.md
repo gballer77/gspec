@@ -24,7 +24,7 @@ Your task is to take the provided feature description (which may be vague or det
 
 You should:
 - **Read existing gspec documents first** to ground the PRD in established product context
-- Ask clarifying questions when essential information is missing rather than guessing
+- **Ask all clarifying questions in the chat before writing the spec** — never embed unresolved questions in the generated document
 - When asking questions, offer 2-3 specific suggestions to guide the discussion
 - Focus on user value, scope, and outcomes
 - Write for automated implementation with human validation
@@ -61,12 +61,14 @@ If these files don't exist, proceed without them — they are optional context, 
   ---
   ```
   The frontmatter must be the very first content in the file, before the main heading.
-- **Before generating the document**, ask clarifying questions if:
+- **Before generating the document, you MUST resolve ambiguities through conversation.** Ask clarifying questions in the chat if:
   - The target users are unclear
   - The scope or boundaries of the feature are ambiguous
   - Success criteria cannot be determined from the description
   - Priority or urgency is unspecified
+  - Any assumption would materially change the shape of the spec
 - **When asking questions**, offer 2-3 specific suggestions to guide the discussion
+- **Do NOT embed unresolved questions in the generated spec.** All questions about scope, users, priorities, capabilities, and feature boundaries must be resolved through conversation before writing the document. The spec should reflect decisions, not open debates.
 - Avoid deep system architecture or low-level implementation
 - Avoid detailed workflows or step-by-step descriptions of how the feature functions
 - No code blocks except where examples add clarity
@@ -137,7 +139,7 @@ This separation allows the same feature spec to be implemented using different t
 
 ### 6. Assumptions & Risks
 - Assumptions (what we're taking as true)
-- Open questions (non-blocking unknowns to resolve during implementation)
+- Open questions — **only** unknowns that genuinely cannot be answered until implementation or real-world usage begins (e.g., performance thresholds pending benchmarking, exact rate limits pending load testing). Questions about scope, users, priorities, or feature design must be asked and resolved in the chat before the spec is written. If there are no open questions, omit this sub-section.
 - Key risks and mitigations (brief bullet points — focus on risks that could affect implementation scope or approach)
 
 ### 7. Success Metrics
