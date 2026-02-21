@@ -23,7 +23,13 @@ These documents become the shared context for all subsequent AI interactions. Wh
 
 ### The Workflow
 
+The only commands you *need* are the four fundamentals and `implement`. Everything else exists to help when your project calls for it.
+
+The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `implement` can take a plain-language description and start building. The remaining commands — `feature`, `epic`, `architect`, `dor`, and `record` — add structure and rigor when the scope or complexity warrants it.
+
 ```
+Define → Build
+Define → Specify → Build
 Define → Specify → Architect → Build → Iterate
 ```
 
@@ -36,18 +42,22 @@ Define → Specify → Architect → Build → Iterate
 | `gspec.stack` | Software Architect | Technology stack, frameworks, infrastructure, architecture |
 | `gspec.practices` | Engineering Lead | Development standards, code quality, testing, workflows |
 
-**2. Specify What to Build** — Define features and requirements.
+**2. Specify What to Build** *(optional)* — Define features and requirements.
 
 | Command | Role | What it produces |
 |---|---|---|
 | `gspec.feature` | Product Manager | PRD for a single feature with prioritized capabilities |
 | `gspec.epic` | Product Manager | Breaks a large epic into multiple feature PRDs with dependency mapping |
 
-**3. Architect** — Translate specs into a concrete technical blueprint.
+Use `feature` when you want a detailed PRD with prioritized capabilities and acceptance criteria before building. Use `epic` when a body of work is large enough to need decomposition into multiple features with dependency mapping. For smaller tasks or rapid prototyping, you can skip straight to `implement` with a plain-language description.
+
+**3. Architect** *(optional)* — Translate specs into a concrete technical blueprint.
 
 | Command | Role | What it produces |
 |---|---|---|
 | `gspec.architect` | Senior Architect | Technical architecture document with data models, API design, project structure, auth flows, and Mermaid diagrams |
+
+Use `architect` when your feature involves significant technical complexity — new data models, service boundaries, auth flows, or integration points that benefit from upfront design. For straightforward features, `implement` can make sound architectural decisions on its own using your `stack` and `practices` specs.
 
 **4. Build** — Implement with full context.
 
@@ -55,12 +65,14 @@ Define → Specify → Architect → Build → Iterate
 |---|---|---|
 | `gspec.implement` | Senior Engineer | Reads all specs, identifies gaps, researches competitors, plans and builds |
 
-**5. Iterate** — Keep specs and code in sync as the project evolves.
+**5. Iterate** *(optional)* — Keep specs and code in sync as the project evolves.
 
 | Command | Role | What it does |
 |---|---|---|
 | `gspec.dor` | Engineer + Doc Lead | Makes code changes and updates specs to match |
 | `gspec.record` | Doc Lead | Updates specs to reflect decisions or changes — no code modifications |
+
+Use `dor` and `record` when you want your specification documents to stay accurate as the project evolves. If you're moving fast and specs are secondary, you can skip them — but as a project matures, keeping specs in sync prevents the context drift that degrades AI output over time.
 
 **Maintenance** — Keep specs up to date with the latest gspec format.
 
