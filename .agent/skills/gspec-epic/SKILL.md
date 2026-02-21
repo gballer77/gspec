@@ -38,7 +38,7 @@ Take the provided epic description (a large body of work) and break it down into
 
 - **Read existing gspec documents first** to ground the epic and its features in established product context
 - Identify distinct features that make up the epic
-- Ask clarifying questions when essential information is missing rather than guessing
+- **Ask all clarifying questions in the chat before writing specs** — never embed unresolved questions in the generated documents
 - When asking questions, offer 2-3 specific suggestions to guide the discussion
 - Ensure features can be built incrementally and independently when possible
 - Consider dependencies between features
@@ -69,13 +69,22 @@ If these files don't exist, proceed without them — they are optional context, 
 - Output **multiple** Markdown documents (one per feature)
 - Save each file to the `gspec/features/` folder in the root of the project (create if it doesn't exist)
 - Name each file based on the feature (e.g., `user-authentication.md`, `dashboard-analytics.md`)
-- **Before generating the documents**, ask clarifying questions if:
+- Begin every output file (both epic summary and individual feature PRDs) with YAML frontmatter containing the gspec version:
+  ```
+  ---
+  gspec-version: 1.1.1
+  ---
+  ```
+  The frontmatter must be the very first content in the file, before the main heading.
+- **Before generating the documents, you MUST resolve ambiguities through conversation.** Ask clarifying questions in the chat if:
   - The target users are unclear
   - The scope or boundaries of the epic are ambiguous
   - The breakdown into features is not obvious
   - Success criteria cannot be determined from the description
   - Priority or sequencing is unclear
+  - Any assumption would materially change the shape of the specs
 - **When asking questions**, offer 2-3 specific suggestions to guide the discussion
+- **Do NOT embed unresolved questions in the generated specs.** All questions about scope, users, priorities, capabilities, feature boundaries, and sequencing must be resolved through conversation before writing the documents. The specs should reflect decisions, not open debates.
 - Create an epic summary document at `gspec/epics/[epic-name].md` that:
   - Lists all features in the epic
   - Shows dependencies between features
@@ -185,7 +194,7 @@ For each feature, create a separate file in `gspec/features/[feature-name].md` w
 
 ### 6. Assumptions & Risks
 - Assumptions (what we're taking as true)
-- Open questions (non-blocking unknowns to resolve during implementation)
+- Open questions — **only** unknowns that genuinely cannot be answered until implementation or real-world usage begins (e.g., performance thresholds pending benchmarking, exact rate limits pending load testing). Questions about scope, users, priorities, or feature design must be asked and resolved in the chat before the specs are written. If there are no open questions, omit this sub-section.
 - Key risks and mitigations (brief bullet points — focus on risks that could affect implementation scope or approach)
 
 ### 7. Success Metrics
@@ -194,7 +203,7 @@ For each feature, create a separate file in `gspec/features/[feature-name].md` w
 ## Workflow
 
 1. **Analyze the epic description** and identify logical feature boundaries
-2. **Ask clarifying questions** if the epic scope, users, or goals are unclear
+2. **Ask clarifying questions in the chat** and wait for answers before proceeding — do not generate specs with embedded questions
 3. **Break down into features** that:
    - Can be built and shipped incrementally
    - Deliver independent user value (when possible)
