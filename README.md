@@ -24,7 +24,7 @@ These documents become the shared context for all subsequent AI interactions. Wh
 ### The Workflow
 
 ```
-Define → Specify → Build → Iterate
+Define → Specify → Architect → Build → Iterate
 ```
 
 **1. Define the Fundamentals** — Establish the foundation that drives every decision.
@@ -43,18 +43,30 @@ Define → Specify → Build → Iterate
 | `gspec.feature` | Product Manager | PRD for a single feature with prioritized capabilities |
 | `gspec.epic` | Product Manager | Breaks a large epic into multiple feature PRDs with dependency mapping |
 
-**3. Build** — Implement with full context.
+**3. Architect** — Translate specs into a concrete technical blueprint.
+
+| Command | Role | What it produces |
+|---|---|---|
+| `gspec.architect` | Senior Architect | Technical architecture document with data models, API design, project structure, auth flows, and Mermaid diagrams |
+
+**4. Build** — Implement with full context.
 
 | Command | Role | What it does |
 |---|---|---|
 | `gspec.implement` | Senior Engineer | Reads all specs, identifies gaps, researches competitors, plans and builds |
 
-**4. Iterate** — Keep specs and code in sync as the project evolves.
+**5. Iterate** — Keep specs and code in sync as the project evolves.
 
 | Command | Role | What it does |
 |---|---|---|
 | `gspec.dor` | Engineer + Doc Lead | Makes code changes and updates specs to match |
 | `gspec.record` | Doc Lead | Updates specs to reflect decisions or changes — no code modifications |
+
+**Maintenance** — Keep specs up to date with the latest gspec format.
+
+| Command | Role | What it does |
+|---|---|---|
+| `gspec.migrate` | Migration Specialist | Updates existing gspec documents to the current format when you upgrade gspec, preserving all content |
 
 Each command is self-contained and will ask clarifying questions when essential information is missing.
 
@@ -95,6 +107,7 @@ project-root/
     ├── style.md            # Visual design language
     ├── stack.md            # Technology stack and architecture
     ├── practices.md        # Development standards
+    ├── architecture.md     # Technical architecture blueprint
     ├── epics/
     │   └── onboarding-flow.md
     └── features/
