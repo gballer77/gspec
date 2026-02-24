@@ -28,6 +28,7 @@ Before writing any code, read all available gspec documents in this order:
 1. `gspec/profile.md` — Understand what the product is and who it's for
 2. `gspec/epics/*.md` — Understand the big picture and feature dependencies
 3. `gspec/features/*.md` — Understand individual feature requirements
+   > **Note:** Feature PRDs are designed to be portable and project-agnostic. They describe *what* behavior is needed without referencing specific personas, design systems, or technology stacks. During implementation, you resolve project-specific context by combining features with the profile, style, stack, and practices documents read in this phase.
 4. `gspec/stack.md` — Understand the technology choices
 5. `gspec/style.md` — Understand the visual design language
 6. `gspec/practices.md` — Understand development standards and conventions
@@ -217,7 +218,7 @@ For each approved feature that doesn't already have a PRD in `gspec/features/`:
    - Success Metrics
    - Begin the file with YAML frontmatter: `---\ngspec-version: <<<VERSION>>>\n---`
 2. **Name the file** descriptively based on the feature (e.g., `gspec/features/onboarding-wizard.md`, `gspec/features/export-csv.md`)
-3. **Ground the PRD in existing gspec context** — reference the product profile's target users, align success metrics with established metrics, and respect stated non-goals
+3. **Keep the PRD portable** — use generic role descriptions (not project-specific persona names), define success metrics in terms of the feature's own outcomes (not project-level KPIs), and describe UX behavior generically (not tied to a specific design system). The PRD should be reusable across projects; project-specific context is resolved when `gspec-implement` reads all gspec documents at implementation time.
 4. **Keep the PRD product-focused** — describe *what* and *why*, not *how*. Implementation details belong in the code, not the PRD.
 5. **Note the feature's origin** — in the Assumptions section, note that this feature was identified and approved during implementation planning (e.g., from competitor research, gap analysis, or user direction)
 
@@ -242,6 +243,20 @@ After all approved features are codified as PRDs, **enter plan mode** and create
 ### Phase 4: Implementation — Build It
 
 Once the implementation plan is approved, execute it **phase by phase**.
+
+#### Pre-Implementation: Git Checkpoint
+
+Before writing any code, create a git commit to establish a clean rollback point:
+
+1. **Check for uncommitted changes** — Run `git status` to see if there are staged or unstaged changes in the working tree
+2. **If uncommitted changes exist**, stage and commit them:
+   - `git add -A`
+   - Commit with the message: `chore: pre-implement checkpoint`
+   - Inform the user: *"I've committed your existing changes as a checkpoint. If you need to roll back the implementation, you can return to this commit."*
+3. **If the working tree is clean**, inform the user: *"Working tree is clean — no checkpoint commit needed."*
+4. **If the project is not a git repository**, skip this step and note that no rollback point was created
+
+This step is not optional. A clean checkpoint ensures the user can always `git reset` or `git diff` against the pre-implementation state.
 
 #### Phase 0 (if needed): Project Scaffolding
 

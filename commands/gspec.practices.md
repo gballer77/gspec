@@ -33,8 +33,8 @@ You should:
 - Include code examples where they add clarity
 - Focus on practices that matter for this specific project
 - Avoid generic advice that doesn't apply
-- **Do NOT include technology stack information** — this is documented separately in `gspec/stack.md`
-- **Do NOT prescribe specific testing frameworks or tools** — reference the technology stack for tool choices; focus on *how* to use them, not *which* to use
+- **Do NOT include technology stack information** — this is documented separately
+- **Do NOT prescribe specific testing frameworks, tools, or libraries** — focus on testing principles, patterns, and practices, not which tools to use
 - **Mark sections as "Not Applicable"** when they don't apply to this project
 
 ---
@@ -42,7 +42,6 @@ You should:
 ## Required Sections
 
 ### 1. Overview
-- Project/feature name
 - Team context (size, experience level)
 - Development timeline constraints
 

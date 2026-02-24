@@ -31,7 +31,7 @@ Take the provided epic description (a large body of work) and break it down into
 
 ## Guidelines
 
-- **Read existing gspec documents first** to ground the epic and its features in established product context
+- **Read existing feature PRDs and epics** in `gspec/features/` and `gspec/epics/` to understand already-specified work and avoid overlap
 - Identify distinct features that make up the epic
 - **Ask all clarifying questions in the chat before writing specs** — never embed unresolved questions in the generated documents
 - When asking questions, offer 2-3 specific suggestions to guide the discussion
@@ -43,21 +43,27 @@ Take the provided epic description (a large body of work) and break it down into
 
 ---
 
-## Context Discovery
+## Portability
 
-Before generating epic and feature documents, check for and read any existing gspec documents in the project root's `gspec/` folder. These provide established product context that should inform the breakdown:
+Epic summaries and the feature PRDs they produce are designed to be **portable across projects**. A feature spec written for one project should be reusable in a different project with a different profile, design system, tech stack, and development practices. Project-specific context is resolved at implementation time by `gspec-implement`, which reads all gspec documents (profile, style, stack, practices) alongside the feature PRDs.
 
-1. **`gspec/profile.md`** — Product identity, target audience, value proposition, market context, and competitive landscape. Use this to align the epic with the product's mission, ensure features target the right users, and understand what's table-stakes vs. differentiating.
-2. **`gspec/style.md`** — Visual design language, component patterns, and UX principles. Use this to inform UX requirements in individual feature PRDs and ensure consistency with the established design system.
-3. **`gspec/stack.md`** — Technology choices and architecture. Use this to understand technical constraints that may affect feature scoping, sequencing, and dependency mapping.
-4. **`gspec/practices.md`** — Development standards and conventions. Use this to understand delivery constraints, quality expectations, and testing requirements that may influence phasing.
+**To maintain portability, DO NOT read or incorporate context from:**
+- `gspec/profile.md` — Do not reference project-specific personas, competitive landscape, or positioning
+- `gspec/style.md` — Do not reference a specific design system or component library
+- `gspec/stack.md` — Do not reference specific technologies (already covered by Technology Agnosticism)
+- `gspec/practices.md` — Do not reference project-specific development standards
 
-If these files don't exist, proceed without them — they are optional context, not blockers. When they do exist, incorporate their context naturally:
-- Reference the product's target users and personas from the profile rather than defining them from scratch
-- Align epic and feature success metrics with metrics already established in the profile
-- Ensure feature boundaries and UX requirements respect the established design system
-- Let the competitive landscape inform priority levels and MVE scope
-- Use technical stack constraints to inform realistic dependency mapping and sequencing
+**DO read existing feature PRDs and epics** in `gspec/features/` and `gspec/epics/` to:
+- Avoid duplicating or contradicting already-specified features
+- Identify cross-feature and cross-epic dependencies
+- Ensure consistent scope boundaries and terminology
+
+**Write in generic, portable terms:**
+- Use relative role descriptions ("primary users", "administrators", "content creators") not project-specific persona names
+- Justify priorities based on intrinsic user value and technical dependencies, not competitive landscape
+- Describe desired UX behavior generically ("clear error feedback", "responsive layout") without referencing a specific design system
+- Define success metrics in terms of each feature's own outcomes, not project-level KPIs
+- Sequence features based on logical dependencies, not project-specific stack constraints
 
 ## Output Rules
 
@@ -113,7 +119,7 @@ If these files don't exist, proceed without them — they are optional context, 
 - ❌ S3, GCS, Azure Blob Storage
 - ❌ Kafka, RabbitMQ, SQS
 
-This separation allows the same epic and feature specs to be implemented using different technology stacks by swapping the Stack file.
+This separation — combined with the portability principles above — allows the same epic and feature specs to be reused across projects with different technology stacks, design systems, and product contexts.
 
 ## Epic Summary Document Structure
 
@@ -161,7 +167,7 @@ For each feature, create a separate file in `gspec/features/[feature-name].md` w
 - **Parent Epic** (link to epic summary)
 
 ### 2. Users & Use Cases
-- Primary users
+- Primary users (use generic role descriptions like "end users", "administrators", "content managers" — not project-specific persona names)
 - Key use cases (3-4 scenarios showing how users benefit)
 
 ### 3. Scope
@@ -194,6 +200,10 @@ For each feature, create a separate file in `gspec/features/[feature-name].md` w
 
 ### 7. Success Metrics
 - 2-4 measurable outcomes that define whether this feature is working
+
+### 8. Implementation Context
+- Include the following standard note verbatim:
+  > This feature PRD is portable and project-agnostic. During implementation, consult the project's `gspec/profile.md` (target users, positioning), `gspec/style.md` (design system), `gspec/stack.md` (technology choices), and `gspec/practices.md` (development standards) to resolve project-specific context.
 
 ## Workflow
 

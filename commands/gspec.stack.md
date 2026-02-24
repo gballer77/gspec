@@ -6,8 +6,8 @@ You should:
 - Make informed technology choices based on project requirements
 - Ask clarifying questions when critical information is missing rather than guessing
 - When asking questions, offer 2-3 specific suggestions with pros/cons
-- Consider scalability, maintainability, and team expertise
-- Balance modern best practices with pragmatic constraints
+- Consider scalability and maintainability
+- Balance modern best technologies with pragmatic constraints
 - Provide clear rationale for each major technology decision
 - Be specific and actionable
 
@@ -27,7 +27,6 @@ You should:
 - **Before generating the document**, ask clarifying questions if:
   - The project type is unclear (web app, mobile, API, CLI, etc.)
   - Scale requirements are not specified
-  - Team expertise/constraints are unknown
   - Multiple technology options are equally viable
 - **When asking questions**, offer 2-3 specific suggestions with brief pros/cons
 - Be specific about versions where it matters
@@ -35,14 +34,14 @@ You should:
 - Focus on technologies that directly impact the project
 - Avoid listing every minor dependency
 - **Mark sections as "Not Applicable"** when they don't apply to this project (e.g., no backend, no message queue, etc.)
-- **Do NOT include development practices** — this is documented separately in `gspec/practices.md`
+- **Do NOT include general development practices** (code review, git workflow, refactoring guidelines) — these are documented separately
+- **DO include technology-specific practices in the designated section** that are inherent to the chosen stack (e.g., framework-specific conventions, ORM usage patterns, CSS framework token mapping, recommended library configurations)
 
 ---
 
 ## Required Sections
 
 ### 1. Overview
-- Project/feature name
 - Architecture style (monolith, microservices, serverless, etc.)
 - Deployment target (cloud, on-premise, hybrid)
 - Scale and performance requirements
@@ -90,7 +89,8 @@ You should:
 - CSS framework/library (Tailwind, Styled Components, CSS Modules, Sass, etc.)
 - CSS-in-JS approach (if applicable)
 - Responsive design tooling
-- **Note**: Visual design style (colors, typography, spacing) is documented separately in `gspec/style.md`
+
+- **Note**: Visual design values (colors, typography, spacing) are documented separately as framework-agnostic design tokens; include here how the chosen CSS framework maps to those tokens
 
 ### 5. Backend Stack
 **Mark as N/A if this is a frontend-only or static site project**
@@ -256,6 +256,29 @@ You should:
 - Technology risks identified
 - Mitigation strategies
 - Fallback options
+
+### 15. Technology-Specific Practices
+**Practices that are inherent to the chosen stack — not general engineering practices (those are documented separately)**
+
+#### Framework Conventions & Patterns
+- Idiomatic patterns for the chosen frameworks (e.g., React component patterns, Django app structure, Spring Bean lifecycle)
+- Framework-specific file/folder conventions
+- Recommended and discouraged framework APIs or features
+
+#### Library Usage Patterns
+- ORM/query builder conventions and query patterns
+- CSS framework token mapping and utility class conventions
+- State management patterns specific to the chosen library
+- Recommended library configurations and defaults
+
+#### Language Idioms
+- Language-specific idioms and best practices for the chosen stack (e.g., TypeScript strict mode conventions, Python type hinting patterns, Go error handling)
+- Import organization and module resolution patterns
+
+#### Stack-Specific Anti-Patterns
+- Known pitfalls with the chosen technologies
+- Common misuse patterns to avoid
+- Performance traps specific to the stack
 
 ---
 
