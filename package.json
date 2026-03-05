@@ -1,6 +1,6 @@
 {
     "name": "gspec",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "description": "Install gspec specification commands for Claude Code, Cursor, and other AI tools",
     "main": "bin/gspec.js",
     "type": "module",
@@ -17,6 +17,7 @@
         "build:claude": "node scripts/build.js claude",
         "build:cursor": "node scripts/build.js cursor",
         "build:antigravity": "node scripts/build.js antigravity",
+        "build:codex": "node scripts/build.js codex",
         "prepublishOnly": "npm run build"
     },
     "author": "Baller Software",

@@ -142,6 +142,7 @@ The CLI will ask which platform you're installing for:
 | Claude Code | `.claude/skills/` |
 | Cursor | `.cursor/commands/` |
 | Antigravity | `.agent/skills/` |
+| Codex | `.agents/skills/` |
 
 You can skip the prompt by passing a target directly:
 
@@ -149,6 +150,7 @@ You can skip the prompt by passing a target directly:
 npx gspec --target claude
 npx gspec --target cursor
 npx gspec --target antigravity
+npx gspec --target codex
 ```
 
 That's it. The commands are immediately available in your AI tool.
@@ -188,7 +190,7 @@ These are standard Markdown files. They live in your repo, are version-controlle
 
 **Competitive research.** The `research` command analyzes competitors named in your product profile, identifying table-stakes features you might be missing and opportunities for differentiation. Its output is saved to `gspec/research.md` and automatically used by `implement` when present.
 
-**Platform-agnostic.** A single set of source commands builds for Claude Code, Cursor, and Antigravity. The build system handles platform-specific formatting so the commands stay consistent across tools.
+**Platform-agnostic.** A single set of source commands builds for Claude Code, Cursor, Antigravity, and Codex. The build system handles platform-specific formatting so the commands stay consistent across tools.
 
 ## Supported Platforms
 
@@ -197,6 +199,7 @@ These are standard Markdown files. They live in your repo, are version-controlle
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Skills format | Supported |
 | [Cursor](https://www.cursor.com/) | Commands format | Supported |
 | [Antigravity](https://www.antigravity.dev/) | Skills format | Supported |
+| [Codex](https://developers.openai.com/codex/cli/) | Skills format | Supported |
 
 ## Project Status
 

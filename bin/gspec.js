@@ -45,12 +45,19 @@ const TARGETS = {
     label: 'Antigravity',
     layout: 'directory',
   },
+  codex: {
+    sourceDir: join(DIST_DIR, 'codex'),
+    installDir: '.agents/skills',
+    label: 'Codex',
+    layout: 'directory',
+  },
 };
 
 const TARGET_CHOICES = [
   { key: '1', name: 'claude', label: 'Claude Code' },
   { key: '2', name: 'cursor', label: 'Cursor' },
   { key: '3', name: 'antigravity', label: 'Antigravity' },
+  { key: '4', name: 'codex', label: 'Codex' },
 ];
 
 function promptTarget() {
@@ -63,7 +70,7 @@ function promptTarget() {
   console.log();
 
   return new Promise((resolve) => {
-    rl.question(chalk.bold('  Select [1-3]: '), (answer) => {
+    rl.question(chalk.bold('  Select [1-4]: '), (answer) => {
       rl.close();
       const trimmed = answer.trim().toLowerCase();
 
@@ -76,7 +83,7 @@ function promptTarget() {
       if (byName) return resolve(byName.name);
 
       console.error(chalk.red(`\nInvalid selection: "${answer.trim()}"`));
-      console.error(`Valid options: 1, 2, 3, claude, cursor, antigravity`);
+      console.error(`Valid options: 1, 2, 3, 4, claude, cursor, antigravity, codex`);
       process.exit(1);
     });
   });
@@ -215,6 +222,7 @@ const MIGRATE_COMMANDS = {
   claude: '/gspec-migrate',
   cursor: '/gspec-migrate',
   antigravity: '/gspec-migrate',
+  codex: '/gspec-migrate',
 };
 
 function parseGspecVersion(content) {
@@ -297,7 +305,7 @@ program
   .name('gspec')
   .description('Install gspec specification commands')
   .version(pkg.version)
-  .option('-t, --target <target>', 'target platform (claude, cursor, antigravity)')
+  .option('-t, --target <target>', 'target platform (claude, cursor, antigravity, codex)')
   .action(async (opts) => {
     console.log(BANNER);
 
