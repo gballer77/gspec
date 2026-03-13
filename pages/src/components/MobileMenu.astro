@@ -1,10 +1,11 @@
 ---
+const base = import.meta.env.BASE_URL;
 const currentPath = Astro.url.pathname;
 
 const links = [
-  { href: '/', label: 'Home' },
-  { href: '/getting-started/', label: 'Getting Started' },
-  { href: '/docs/', label: 'Docs' },
+  { href: base, label: 'Home' },
+  { href: `${base}getting-started/`, label: 'Getting Started' },
+  { href: `${base}docs/`, label: 'Docs' },
 ];
 ---
 

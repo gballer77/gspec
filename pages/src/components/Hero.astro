@@ -17,7 +17,7 @@ import CopyButton from './CopyButton.astro';
         <CopyButton text="npx gspec" />
       </div>
       <a
-        href="/getting-started/"
+        href={`${import.meta.env.BASE_URL}getting-started/`}
         class="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-[var(--text-body)] border border-[var(--border-default)] hover:border-neutral-600 hover:bg-[var(--bg-surface-raised)] transition-all duration-200"
       >
         Get Started

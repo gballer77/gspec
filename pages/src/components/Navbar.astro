@@ -2,18 +2,19 @@
 import ThemeToggle from './ThemeToggle.astro';
 import MobileMenu from './MobileMenu.astro';
 
+const base = import.meta.env.BASE_URL;
 const currentPath = Astro.url.pathname;
 
 const links = [
-  { href: '/', label: 'Home' },
-  { href: '/getting-started/', label: 'Getting Started' },
-  { href: '/docs/', label: 'Docs' },
+  { href: base, label: 'Home' },
+  { href: `${base}getting-started/`, label: 'Getting Started' },
+  { href: `${base}docs/`, label: 'Docs' },
 ];
 ---
 
 <header class="fixed top-0 left-0 right-0 z-40 h-16 border-b border-[var(--border-subtle)] bg-[var(--bg-page)]/80 backdrop-blur-[12px]">
   <div class="max-w-[1152px] mx-auto h-full flex items-center justify-between px-4 lg:px-8">
-    <a href="/" class="text-[var(--text-primary)] font-semibold text-lg tracking-tight">
+    <a href={import.meta.env.BASE_URL} class="text-[var(--text-primary)] font-semibold text-lg tracking-tight">
       gspec
     </a>
 

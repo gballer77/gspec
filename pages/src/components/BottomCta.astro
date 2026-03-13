@@ -16,7 +16,7 @@ import CopyButton from './CopyButton.astro';
       <CopyButton text="npx gspec" />
     </div>
     <p class="text-sm text-[var(--text-muted)]">
-      Then follow the <a href="/getting-started/" class="text-primary-400 hover:text-primary-300 underline decoration-primary-400/30 hover:decoration-primary-400/60 transition-colors duration-200">Getting Started guide</a> to define your first spec.
+      Then follow the <a href={`${import.meta.env.BASE_URL}getting-started/`} class="text-primary-400 hover:text-primary-300 underline decoration-primary-400/30 hover:decoration-primary-400/60 transition-colors duration-200">Getting Started guide</a> to define your first spec.
     </p>
   </div>
 </section>
