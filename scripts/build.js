@@ -58,15 +58,7 @@ const COMMANDS = {
     name: 'gspec-implement',
     description: 'Read gspec documents, identify gaps, and implement the software',
   },
-  'gspec.dor.md': {
-    name: 'gspec-dor',
-    description: 'Make code changes and update gspec specification documents to reflect what changed',
-  },
-  'gspec.record.md': {
-    name: 'gspec-record',
-    description: 'Update gspec specification documents to reflect changes, decisions, or context from the conversation',
-  },
-  'gspec.migrate.md': {
+'gspec.migrate.md': {
     name: 'gspec-migrate',
     description: 'Migrate existing gspec files to the current format when upgrading to a new gspec version',
   },

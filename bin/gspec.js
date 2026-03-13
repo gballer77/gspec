@@ -99,6 +99,16 @@ function promptConfirm(message) {
   });
 }
 
+function promptConfirmNo(message) {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(message, (answer) => {
+      rl.close();
+      resolve(answer.trim().toLowerCase().startsWith('n'));
+    });
+  });
+}
+
 async function findExistingFiles(target, cwd) {
   const existing = [];
   const destBase = join(cwd, target.installDir);
@@ -225,6 +235,78 @@ async function install(targetName, cwd) {
   console.log(chalk.bold(`  Created gspec/ directory with README.md\n`));
 }
 
+// Spec-sync instructions: platform-specific config for "always-on" agent rules
+const SPEC_SYNC = {
+  claude: {
+    file: 'CLAUDE.md',
+    mode: 'append', // append to existing file or create new
+    wrap: (content) => content,
+  },
+  cursor: {
+    file: '.cursor/rules/gspec.mdc',
+    mode: 'create', // dedicated rule file, safe to overwrite
+    wrap: (content) => `---\ndescription: gspec specification sync — keeps living specs in sync with code changes\nalwaysApply: true\n---\n\n${content}`,
+  },
+  antigravity: {
+    file: '.agent/rules/gspec.mdc',
+    mode: 'create',
+    wrap: (content) => `---\ndescription: gspec specification sync — keeps living specs in sync with code changes\nalwaysApply: true\n---\n\n${content}`,
+  },
+  codex: {
+    file: 'AGENTS.md',
+    mode: 'append',
+    wrap: (content) => content,
+  },
+};
+
+const GSPEC_SECTION_MARKER = '<!-- gspec:spec-sync -->';
+
+async function installSpecSync(targetName, cwd) {
+  const config = SPEC_SYNC[targetName];
+  if (!config) return;
+
+  const templatePath = join(__dirname, '..', 'templates', 'spec-sync.md');
+  const template = await readFile(templatePath, 'utf-8');
+  const wrapped = config.wrap(template);
+  const destPath = join(cwd, config.file);
+
+  if (config.mode === 'append') {
+    // For CLAUDE.md / AGENTS.md: append with a marker so we can detect and replace on re-install
+    let existing = '';
+    try {
+      existing = await readFile(destPath, 'utf-8');
+    } catch (e) {
+      if (e.code !== 'ENOENT') throw e;
+    }
+
+    const markedContent = `${GSPEC_SECTION_MARKER}\n${wrapped}\n${GSPEC_SECTION_MARKER}`;
+
+    if (existing.includes(GSPEC_SECTION_MARKER)) {
+      // Replace existing gspec section
+      const updated = existing.replace(
+        new RegExp(`${GSPEC_SECTION_MARKER}[\\s\\S]*?${GSPEC_SECTION_MARKER}`),
+        markedContent,
+      );
+      await writeFile(destPath, updated, 'utf-8');
+      console.log(`  ${chalk.green('~')} Updated gspec section in ${config.file}`);
+    } else if (existing.length > 0) {
+      // Append to existing file
+      const separator = existing.endsWith('\n') ? '\n' : '\n\n';
+      await writeFile(destPath, existing + separator + markedContent + '\n', 'utf-8');
+      console.log(`  ${chalk.green('+')} Appended gspec section to ${config.file}`);
+    } else {
+      // New file
+      await writeFile(destPath, markedContent + '\n', 'utf-8');
+      console.log(`  ${chalk.green('+')} Created ${config.file}`);
+    }
+  } else {
+    // For .mdc rule files: create/overwrite the dedicated file
+    await mkdir(dirname(destPath), { recursive: true });
+    await writeFile(destPath, wrapped, 'utf-8');
+    console.log(`  ${chalk.green('+')} Created ${config.file}`);
+  }
+}
+
 const MIGRATE_COMMANDS = {
   claude: '/gspec-migrate',
   cursor: '/gspec-migrate',
@@ -323,6 +405,12 @@ program
     }
 
     await install(targetName, process.cwd());
+
+    const skipSync = await promptConfirmNo(chalk.bold('  Enable automatic spec sync? (keeps gspec specs up to date as code changes) [Y/n]: '));
+    if (!skipSync) {
+      await installSpecSync(targetName, process.cwd());
+    }
+
     await checkGspecFiles(process.cwd(), targetName);
   });
 
