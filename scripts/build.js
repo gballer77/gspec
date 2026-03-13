@@ -44,7 +44,7 @@ const COMMANDS = {
   },
   'gspec.architect.md': {
     name: 'gspec-architect',
-    description: 'Define the technical architecture: project structure, data model, API design, and environment setup',
+    description: 'Define the technical architecture project structure, data model, API design, and environment setup',
   },
   'gspec.analyze.md': {
     name: 'gspec-analyze',
