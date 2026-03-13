@@ -1,0 +1,60 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+import MobileMenu from './MobileMenu.astro';
+
+const currentPath = Astro.url.pathname;
+
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/getting-started/', label: 'Getting Started' },
+  { href: '/docs/', label: 'Docs' },
+];
+---
+
+<header class="fixed top-0 left-0 right-0 z-40 h-16 border-b border-[var(--border-subtle)] bg-[var(--bg-page)]/80 backdrop-blur-[12px]">
+  <div class="max-w-[1152px] mx-auto h-full flex items-center justify-between px-4 lg:px-8">
+    <a href="/" class="text-[var(--text-primary)] font-semibold text-lg tracking-tight">
+      gspec
+    </a>
+
+    <!-- Desktop nav -->
+    <nav class="hidden md:flex items-center gap-1">
+      {links.map((link) => (
+        <a
+          href={link.href}
+          class:list={[
+            'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200',
+            currentPath === link.href
+              ? 'text-primary-400'
+              : 'text-neutral-300 hover:text-[var(--text-primary)]',
+          ]}
+        >
+          {link.label}
+        </a>
+      ))}
+      <div class="ml-2">
+        <ThemeToggle />
+      </div>
+    </nav>
+
+    <!-- Mobile controls -->
+    <div class="flex items-center gap-1 md:hidden">
+      <ThemeToggle />
+      <button
+        type="button"
+        class="w-10 h-10 flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-raised)] transition-colors duration-200"
+        data-mobile-menu-open
+        aria-label="Open menu"
+      >
+        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<MobileMenu />
+
+<!-- Spacer for fixed header -->
+<div class="h-16"></div>

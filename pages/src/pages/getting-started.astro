@@ -1,0 +1,192 @@
+---
+import SidebarLayout from '../layouts/SidebarLayout.astro';
+import SidebarNav from '../components/SidebarNav.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+import CopyButton from '../components/CopyButton.astro';
+
+const sections = [
+  { id: 'intro', label: 'Introduction' },
+  { id: 'install', label: 'Install' },
+  { id: 'profile', label: 'Profile' },
+  { id: 'style', label: 'Style' },
+  { id: 'stack', label: 'Stack' },
+  { id: 'practices', label: 'Practices' },
+  { id: 'feature', label: 'Feature' },
+  { id: 'implement', label: 'Implement' },
+  { id: 'next-steps', label: 'Next Steps' },
+];
+
+const headings = sections.map((s) => ({ id: s.id, label: s.label, level: 2 }));
+---
+
+<SidebarLayout title="Getting Started — gspec" description="Learn how to use gspec by walking through a complete example project.">
+  <SidebarNav sections={sections} slot="sidebar" />
+  <TableOfContents headings={headings} slot="toc" />
+
+  <h1>Getting Started</h1>
+  <p class="text-lg text-[var(--text-secondary)] !mt-2 !mb-12">
+    Walk through the full gspec workflow using a fictional task management app called <strong>TaskFlow</strong>.
+  </p>
+
+  <!-- Introduction -->
+  <section id="intro">
+    <h2>Introduction</h2>
+    <p>
+      <strong>TaskFlow</strong> is a lightweight task management app for small teams. We'll use it as our example project to walk through every core gspec command — from defining your product profile to implementing features with full AI context.
+    </p>
+    <p>
+      By the end of this guide, you'll have a complete mental model of how gspec works and how each spec builds on the last. You can follow along with your own project or just read through to understand the flow.
+    </p>
+  </section>
+
+  <!-- Install -->
+  <section id="install">
+    <h2>Install</h2>
+    <p>
+      Run a single command to install gspec into your AI coding tool:
+    </p>
+    <CodeBlock code="npx gspec" lang="shell" />
+    <p>
+      The CLI will prompt you to select your platform — <strong>Claude Code</strong>, <strong>Cursor</strong>, <strong>Antigravity</strong>, or <strong>Codex</strong>. It installs structured specification skills as slash commands in your tool of choice.
+    </p>
+    <p>
+      That's it. No accounts, no config files, no dependencies. The skills are plain Markdown files installed into your project.
+    </p>
+  </section>
+
+  <!-- Profile -->
+  <section id="profile">
+    <h2>Profile</h2>
+    <p>
+      The profile command defines <em>what your product is, who it serves, and why it exists</em>. It adopts the perspective of a Business Strategist and asks you about your product's identity, target audience, and value proposition.
+    </p>
+    <CodeBlock code="/profile" lang="command" />
+    <p>
+      The command guides you through a conversation about your product. For TaskFlow, we'd describe it as a task management app for small dev teams. Here's a condensed excerpt of what it produces:
+    </p>
+    <CodeBlock code={`# TaskFlow — Product Profile
+
+## Product Overview
+- **Product Name:** TaskFlow
+- **Tagline:** Simple task management for teams that ship.
+- **Category:** Project management / productivity
+
+## Target Audience
+- Small development teams (2–10 people)
+- Pain points: existing tools are bloated, context-switching
+  between project management and development tools
+
+## Value Proposition
+Lightweight task management that lives close to the code.
+No enterprise overhead, no learning curve.`} lang="markdown" />
+    <p>
+      The profile becomes the foundation that all other specs reference. Your AI tools now know who you're building for and why.
+    </p>
+  </section>
+
+  <!-- Style -->
+  <section id="style">
+    <h2>Style</h2>
+    <p>
+      The style command generates a <em>visual design system</em> — colors, typography, spacing, component patterns, and design tokens. It adopts the perspective of a UI Designer.
+    </p>
+    <CodeBlock code="/style" lang="command" />
+    <p>
+      It reads your profile first, then asks about your design vision, target platforms, and visual personality. The output is a comprehensive style guide with hex colors, font stacks, spacing scales, and component specifications.
+    </p>
+    <p>
+      Your AI coding tools can now make UI decisions that match your intended design language — consistent colors, proper spacing, correct typography.
+    </p>
+  </section>
+
+  <!-- Stack -->
+  <section id="stack">
+    <h2>Stack</h2>
+    <p>
+      The stack command defines your <em>technology choices</em> — frameworks, languages, infrastructure, and architectural patterns. It adopts the perspective of a Solutions Architect.
+    </p>
+    <CodeBlock code="/stack" lang="command" />
+    <p>
+      It asks about your runtime, frontend/backend frameworks, database, hosting, and key libraries. The output documents every technology decision with rationale.
+    </p>
+    <p>
+      For TaskFlow, we might choose Next.js, PostgreSQL, and Vercel. Now when your AI writes code, it uses the right frameworks, follows the right patterns, and imports the right libraries — without you repeating this in every prompt.
+    </p>
+  </section>
+
+  <!-- Practices -->
+  <section id="practices">
+    <h2>Practices</h2>
+    <p>
+      The practices command establishes <em>development standards</em> — testing conventions, code quality rules, git workflow, and error handling patterns. It adopts the perspective of an Engineering Lead.
+    </p>
+    <CodeBlock code="/practices" lang="command" />
+    <p>
+      It asks about your team size, testing philosophy, code review process, and deployment workflow. The output covers everything from naming conventions to your definition of done.
+    </p>
+    <p>
+      This means your AI produces code that follows <em>your</em> standards — right test framework, right patterns, right commit message format. No more AI-generated code that uses Jest when you're a Vitest team.
+    </p>
+  </section>
+
+  <!-- Feature -->
+  <section id="feature">
+    <h2>Feature</h2>
+    <p>
+      The feature command writes a <em>product requirements document (PRD)</em> for an individual feature. It adopts the perspective of a Product Manager and produces prioritized capabilities with acceptance criteria.
+    </p>
+    <CodeBlock code='/feature "Task board with drag-and-drop columns"' lang="command" />
+    <p>
+      The command engages you in a conversation — asking about user stories, scope boundaries, and edge cases. It then generates a structured PRD with P0/P1/P2 prioritized capabilities, each with testable acceptance criteria.
+    </p>
+    <p>
+      This gives your AI implementation clear, scoped requirements to build against — not a vague description, but a structured spec with explicit success criteria.
+    </p>
+  </section>
+
+  <!-- Implement -->
+  <section id="implement">
+    <h2>Implement</h2>
+    <p>
+      The implement command reads <em>all existing specs</em> — profile, style, stack, practices, features, and architecture — and builds your software with the full picture.
+    </p>
+    <CodeBlock code="/implement" lang="command" />
+    <p>
+      It doesn't just read one spec — it synthesizes them all. It knows your audience (profile), your design language (style), your technology choices (stack), your code standards (practices), and your feature requirements. Here's a condensed view of what it does:
+    </p>
+    <CodeBlock code={`Reading specs...
+  ✓ profile.md — TaskFlow, task management for small teams
+  ✓ style.md — Design tokens, component patterns
+  ✓ stack.md — Next.js, PostgreSQL, Vercel
+  ✓ practices.md — Vitest, trunk-based, conventional commits
+  ✓ features/task-board.md — 8 capabilities, 3 P0
+
+Building task-board feature...
+  ✓ Created src/components/TaskBoard.tsx
+  ✓ Created src/components/TaskColumn.tsx
+  ✓ Created src/components/TaskCard.tsx
+  ✓ Updated capabilities: [x] P0: Board displays columns
+  ✓ Updated capabilities: [x] P0: Drag task between columns`} lang="output" />
+    <p>
+      As it builds, it checks off capabilities in your feature PRD — giving you a clear picture of progress.
+    </p>
+  </section>
+
+  <!-- Next Steps -->
+  <section id="next-steps">
+    <h2>Next Steps</h2>
+    <p>
+      You've seen the core workflow: <strong>Define</strong> → <strong>Feature</strong> → <strong>Implement</strong>. But gspec offers more depth for projects that need it.
+    </p>
+    <ul>
+      <li><a href="/docs/#research"><code>research</code></a> — Analyze competitors and identify feature gaps before committing to a roadmap</li>
+      <li><a href="/docs/#epic"><code>epic</code></a> — Break down large initiatives into multiple focused feature PRDs</li>
+      <li><a href="/docs/#architect"><code>architect</code></a> — Design a technical blueprint with data models, APIs, and project structure</li>
+      <li><a href="/docs/#analyze"><code>analyze</code></a> — Cross-reference all specs and resolve contradictions before implementing</li>
+    </ul>
+    <p>
+      Explore the <a href="/docs/">full documentation</a> for detailed coverage of every command. Or start with your own project — run <code>npx gspec</code> and build your first spec.
+    </p>
+  </section>
+</SidebarLayout>

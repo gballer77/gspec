@@ -1,0 +1,31 @@
+---
+const platforms = [
+  { name: 'Claude Code', icon: 'terminal' },
+  { name: 'Cursor', icon: 'cursor' },
+  { name: 'Antigravity', icon: 'rocket' },
+  { name: 'Codex', icon: 'code' },
+];
+---
+
+<section class="py-16 lg:py-24">
+  <div class="max-w-[1152px] mx-auto px-4 lg:px-8 text-center">
+    <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
+      One install, every platform
+    </h2>
+    <p class="text-[var(--text-secondary)] mb-10 max-w-xl mx-auto">
+      gspec works with the AI coding tools you already use. Same specs, consistent context, everywhere.
+    </p>
+    <div class="flex flex-wrap justify-center gap-4 sm:gap-6">
+      {platforms.map((platform) => (
+        <div class="flex items-center gap-3 px-5 py-3 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)]">
+          <div class="w-8 h-8 rounded-md bg-primary-900/30 flex items-center justify-center">
+            <svg class="w-4 h-4 text-primary-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
+            </svg>
+          </div>
+          <span class="text-sm font-medium text-[var(--text-primary)]">{platform.name}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,395 @@
+---
+import SidebarLayout from '../layouts/SidebarLayout.astro';
+import SidebarNav from '../components/SidebarNav.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import CommandSection from '../components/CommandSection.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+
+const sections = [
+  { id: 'workflow', label: 'Workflow Overview' },
+  { id: 'profile', label: 'profile', group: 'Define' },
+  { id: 'style', label: 'style', group: 'Define' },
+  { id: 'stack', label: 'stack', group: 'Define' },
+  { id: 'practices', label: 'practices', group: 'Define' },
+  { id: 'research', label: 'research', group: 'Research' },
+  { id: 'feature', label: 'feature', group: 'Specify' },
+  { id: 'epic', label: 'epic', group: 'Specify' },
+  { id: 'architect', label: 'architect', group: 'Architect' },
+  { id: 'analyze', label: 'analyze', group: 'Analyze' },
+  { id: 'implement', label: 'implement', group: 'Build' },
+];
+
+const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group ? 3 : 2 }));
+---
+
+<SidebarLayout title="Documentation — gspec" description="Complete command reference for gspec — workflow overview and detailed documentation for all 11 commands.">
+  <SidebarNav sections={sections} slot="sidebar" />
+  <TableOfContents headings={headings} slot="toc" />
+
+  <h1>Documentation</h1>
+  <p class="text-lg text-[var(--text-secondary)] !mt-2 !mb-12">
+    Complete reference for the gspec workflow and all 11 commands.
+  </p>
+
+  <!-- Workflow Overview -->
+  <section id="workflow">
+    <h2>Workflow Overview</h2>
+    <p>
+      gspec organizes product specification into a structured workflow. Each stage builds on the previous, giving your AI coding tools progressively deeper context.
+    </p>
+
+    <div class="not-prose my-8">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {[
+          { name: 'Define', desc: 'profile, style, stack, practices', required: true },
+          { name: 'Research', desc: 'research', required: false },
+          { name: 'Specify', desc: 'feature, epic', required: false },
+          { name: 'Architect', desc: 'architect', required: false },
+          { name: 'Analyze', desc: 'analyze', required: false },
+          { name: 'Build', desc: 'implement', required: true },
+        ].map((stage) => (
+          <div class:list={[
+            'rounded-lg border p-3 text-center text-sm',
+            stage.required
+              ? 'border-primary-500/40 bg-primary-900/20'
+              : 'border-[var(--border-default)] bg-[var(--bg-surface)]',
+          ]}>
+            <div class:list={['font-semibold mb-1', stage.required ? 'text-primary-400' : 'text-[var(--text-primary)]']}>
+              {stage.name}
+              {stage.required && <span class="text-[9px] ml-1 text-primary-300 uppercase">req</span>}
+            </div>
+            <div class="text-xs text-[var(--text-secondary)] font-mono">{stage.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <p>
+      Only <strong>Define</strong> and <strong>Build</strong> are required. The four Define commands (profile, style, stack, practices) establish your product foundation. The implement command reads all specs and builds software. Everything in between adds optional depth — use what your project needs.
+    </p>
+    <p>
+      All specs are Markdown files stored in a <code>gspec/</code> directory in your repository. They're version-controlled, human-readable, and automatically kept in sync through gspec's spec-sync system.
+    </p>
+  </section>
+
+  <!-- Define Stage -->
+  <CommandSection
+    id="profile"
+    name="profile"
+    role="Business Strategist"
+    description="Defines what your product is, who it serves, and why it exists. This is the foundational spec that all other commands reference — it establishes product identity, target audience, value proposition, and market positioning."
+    produces="A comprehensive product profile saved to gspec/profile.md. Includes product overview, target audience with pain points, value proposition, use cases, competitive landscape, and key messaging."
+    invocation="/profile"
+    questions={[
+      'Product name, tagline, and category',
+      'Target audience and their pain points',
+      'Core value proposition and differentiation',
+      'Key use cases and scenarios',
+      'Market context and competitive landscape',
+    ]}
+    bestPractices={[
+      'Run this first — it\'s the foundation everything else builds on',
+      'Be specific about your target audience; vague audiences produce vague specs',
+      'Include real pain points you\'ve observed, not hypothetical ones',
+      'Keep the tagline under 10 words and the elevator pitch under 2 sentences',
+    ]}
+    pitfalls={[
+      'Skipping the profile and jumping to style or stack — downstream specs lack context',
+      'Being too broad with the target audience (\"all developers\" tells the AI nothing)',
+      'Filling in aspirational features as if they exist today',
+    ]}
+    related={[
+      { name: 'style', relation: 'Reads profile to align design with brand personality' },
+      { name: 'stack', relation: 'Reads profile to recommend technology appropriate for the audience' },
+      { name: 'research', relation: 'Uses profile to identify competitors and market gaps' },
+    ]}
+  />
+
+  <CommandSection
+    id="style"
+    name="style"
+    role="UI Designer"
+    description="Generates a visual design system with colors, typography, spacing, component patterns, and design tokens. Adopts the perspective of a UI Designer to create a cohesive visual language for your product."
+    produces="A comprehensive style guide saved to gspec/style.md. Includes color palette with hex/RGB/HSL values, typography scale, spacing system, component specifications (buttons, cards, forms), theme tokens for dark/light mode, and accessibility guidelines."
+    invocation="/style"
+    questions={[
+      'Design vision and visual personality (minimal, bold, playful, etc.)',
+      'Target platforms (web, mobile, desktop)',
+      'Brand colors or color preferences',
+      'Typography preferences',
+      'Dark mode, light mode, or both',
+    ]}
+    bestPractices={[
+      'Run profile first so the style command can align design with brand personality',
+      'Provide a clear visual personality direction — \"clean and minimal\" produces better results than \"nice\"',
+      'Review the generated color palette for accessibility compliance (WCAG AA contrast ratios)',
+      'The style guide is consumed by implement — keep it structured and specific',
+    ]}
+    pitfalls={[
+      'Generating a style guide without a profile — the design won\'t reflect your product\'s personality',
+      'Over-specifying in the conversation and constraining the Designer role too much',
+      'Ignoring accessibility requirements in the output — check contrast ratios',
+    ]}
+    related={[
+      { name: 'profile', relation: 'Style reads profile for brand personality and audience context' },
+      { name: 'implement', relation: 'Implement reads style for all UI decisions (colors, spacing, components)' },
+    ]}
+  />
+
+  <CommandSection
+    id="stack"
+    name="stack"
+    role="Solutions Architect"
+    description="Defines your technology choices — frameworks, languages, runtime, database, hosting, and key libraries. Documents every decision with rationale so your AI tools make consistent technology choices."
+    produces="A technology stack definition saved to gspec/stack.md. Includes core languages, runtime environment, frontend and backend frameworks, database, hosting, CI/CD, package management, and technology-specific practices."
+    invocation="/stack"
+    questions={[
+      'Programming languages and runtime environment',
+      'Frontend framework and styling approach',
+      'Backend framework and API style',
+      'Database and data storage',
+      'Hosting, deployment, and CI/CD',
+      'Key libraries and third-party integrations',
+    ]}
+    bestPractices={[
+      'Run profile first — the stack should match your audience and scale requirements',
+      'Document the \"why\" behind each technology choice, not just the \"what\"',
+      'Include version constraints (e.g., \"Node 20 LTS\") to prevent AI tools from using incompatible versions',
+      'Note anti-patterns specific to your stack (e.g., \"Don\'t use CSS-in-JS alongside Tailwind\")',
+    ]}
+    pitfalls={[
+      'Listing technologies without rationale — the AI can\'t make good tradeoff decisions without context',
+      'Forgetting to specify development tools (linters, formatters) that affect code style',
+      'Not mentioning infrastructure constraints that impact architecture decisions',
+    ]}
+    related={[
+      { name: 'profile', relation: 'Stack reads profile for scale and audience context' },
+      { name: 'architect', relation: 'Architect reads stack for technology constraints' },
+      { name: 'implement', relation: 'Implement reads stack for framework and library choices' },
+    ]}
+  />
+
+  <CommandSection
+    id="practices"
+    name="practices"
+    role="Engineering Lead"
+    description="Establishes development standards — testing conventions, code quality rules, git workflow, error handling, documentation requirements, and your definition of done. Ensures your AI produces code that meets your team's standards."
+    produces="A development practices guide saved to gspec/practices.md. Includes testing standards (unit, E2E, when to write tests), code quality rules, naming conventions, git practices, error handling patterns, security practices, and definition of done."
+    invocation="/practices"
+    questions={[
+      'Team size and collaboration model',
+      'Testing philosophy and frameworks',
+      'Code review process and standards',
+      'Git branching strategy and commit conventions',
+      'Error handling and logging patterns',
+      'Security practices and vulnerability prevention',
+    ]}
+    bestPractices={[
+      'Be specific about testing expectations — \"test important logic\" is less useful than \"unit test all non-trivial functions, E2E for critical user flows\"',
+      'Include naming conventions for files, variables, and functions',
+      'Document your definition of done as a checklist the AI can reference',
+      'Mention what NOT to test — this prevents the AI from over-testing trivial code',
+    ]}
+    pitfalls={[
+      'Writing aspirational practices that your team doesn\'t actually follow',
+      'Being too vague — \"write good tests\" gives the AI no guidance',
+      'Forgetting to mention your error handling philosophy (fail fast vs. graceful degradation)',
+    ]}
+    related={[
+      { name: 'stack', relation: 'Practices references stack for testing framework and tooling choices' },
+      { name: 'implement', relation: 'Implement reads practices for code quality, testing, and git standards' },
+    ]}
+  />
+
+  <!-- Research Stage -->
+  <CommandSection
+    id="research"
+    name="research"
+    role="Market Analyst"
+    description="Analyzes competitors based on your product profile and produces a competitive analysis with feature matrix, strengths/weaknesses, and gap identification. Helps you understand the landscape before committing to features."
+    produces="A competitive analysis saved to gspec/research.md. Includes competitor profiles, feature comparison matrix, strengths/weaknesses analysis, market gaps, and strategic recommendations."
+    invocation="/research"
+    questions={[
+      'Known competitors or similar products',
+      'Specific areas to investigate (features, pricing, market positioning)',
+      'Your product\'s intended differentiation',
+    ]}
+    bestPractices={[
+      'Run profile first — research uses your product identity to identify relevant competitors',
+      'Name specific competitors if you know them; the AI will also discover others',
+      'Focus the research on your product\'s differentiating areas, not every possible feature',
+      'Use research findings to inform feature prioritization',
+    ]}
+    pitfalls={[
+      'Running research without a profile — the AI doesn\'t know what market you\'re in',
+      'Taking the competitive analysis as exhaustive truth — verify key claims',
+      'Feature-stuffing your roadmap based on what competitors have rather than what your audience needs',
+    ]}
+    related={[
+      { name: 'profile', relation: 'Research reads profile for product identity and market context' },
+      { name: 'feature', relation: 'Research findings can inform feature PRD priorities' },
+    ]}
+  />
+
+  <!-- Specify Stage -->
+  <CommandSection
+    id="feature"
+    name="feature"
+    role="Product Manager"
+    description="Writes a product requirements document (PRD) for an individual feature. Produces prioritized capabilities (P0/P1/P2) with testable acceptance criteria, scope boundaries, and dependency mapping."
+    produces="A feature PRD saved to gspec/features/<feature-name>.md. Includes overview, user stories, scope (in/out/deferred), prioritized capabilities with acceptance criteria, dependencies, assumptions and risks, and success metrics."
+    invocation={'/feature "Task board with drag-and-drop columns"'}
+    questions={[
+      'Feature description and user need it addresses',
+      'Target users and their workflows',
+      'Scope boundaries — what\'s in and what\'s explicitly out',
+      'Edge cases and error scenarios',
+      'Dependencies on other features or systems',
+    ]}
+    bestPractices={[
+      'Describe the user need, not the solution — let the Product Manager role shape the requirements',
+      'Be explicit about scope boundaries to prevent feature creep',
+      'P0 capabilities should be the minimum for the feature to be useful',
+      'Keep individual features focused — use epic to break down large initiatives',
+    ]}
+    pitfalls={[
+      'Describing implementation details instead of user needs in the feature description',
+      'Making everything P0 — if everything is critical, nothing is prioritized',
+      'Writing features that are too large — if it has more than 10-12 capabilities, consider using epic instead',
+    ]}
+    related={[
+      { name: 'epic', relation: 'Use epic instead when a feature is too large to specify in one PRD' },
+      { name: 'architect', relation: 'Architect reads feature PRDs to design the technical blueprint' },
+      { name: 'implement', relation: 'Implement builds against feature PRD capabilities and checks them off' },
+    ]}
+  />
+
+  <CommandSection
+    id="epic"
+    name="epic"
+    role="Product Manager"
+    description="Breaks down a large initiative into multiple focused feature PRDs with dependency mapping. Use this when a body of work is too large for a single feature PRD."
+    produces="Multiple feature PRDs saved to gspec/features/, plus an epic overview document. Each generated feature PRD follows the same structure as a standalone feature command output."
+    invocation={'/epic "Complete user authentication system with OAuth, email/password, and role-based access control"'}
+    questions={[
+      'The overall initiative and its goals',
+      'How the initiative should be decomposed into features',
+      'Dependencies between the resulting features',
+      'Priority ordering for implementation',
+    ]}
+    bestPractices={[
+      'Use epic when your initiative naturally decomposes into 3+ distinct features',
+      'Provide context about the overall goal, not just a list of features you want',
+      'Review the generated dependency map before implementing — build dependencies first',
+      'Each generated feature PRD can be independently implemented with /implement',
+    ]}
+    pitfalls={[
+      'Using epic for something that\'s really just one feature — you\'ll get artificially split PRDs',
+      'Not reviewing the dependency mapping — implementing features out of order causes rework',
+      'Trying to specify everything at epic level instead of letting each feature PRD handle its own details',
+    ]}
+    related={[
+      { name: 'feature', relation: 'Epic generates multiple feature PRDs' },
+      { name: 'architect', relation: 'Run architect after epic to design the technical blueprint across all features' },
+      { name: 'implement', relation: 'Implement each generated feature PRD individually' },
+    ]}
+  />
+
+  <!-- Architect Stage -->
+  <CommandSection
+    id="architect"
+    name="architect"
+    role="Technical Architect"
+    description="Designs the technical architecture — project structure, data model, API design, component architecture, and environment configuration. Reads your stack, practices, and feature PRDs to produce a comprehensive blueprint."
+    produces="A technical architecture document saved to gspec/architecture.md. Includes project structure with directory layout, data model, API design, component architecture, environment configuration, CI/CD setup, and a technical gap analysis."
+    invocation="/architect"
+    questions={[
+      'Architectural patterns and preferences',
+      'Data model requirements',
+      'API style and endpoint structure',
+      'Component organization and relationships',
+      'Deployment and environment concerns',
+    ]}
+    bestPractices={[
+      'Run after defining features — the architect needs requirements to design against',
+      'Run after stack — the architect needs technology constraints',
+      'Review the gap analysis section carefully — it identifies contradictions between specs',
+      'The architecture document is the most influential spec for implement — invest time reviewing it',
+    ]}
+    pitfalls={[
+      'Running architect before feature PRDs exist — produces a generic architecture',
+      'Skipping the gap analysis review — contradictions between specs cause confused implementation',
+      'Over-constraining the architecture for a simple project — not every project needs a detailed data model',
+    ]}
+    related={[
+      { name: 'stack', relation: 'Architect reads stack for technology constraints and patterns' },
+      { name: 'feature', relation: 'Architect reads feature PRDs to design the technical structure' },
+      { name: 'analyze', relation: 'Run analyze after architect to catch cross-spec contradictions' },
+      { name: 'implement', relation: 'Implement reads architecture for project structure, data model, and APIs' },
+    ]}
+  />
+
+  <!-- Analyze Stage -->
+  <CommandSection
+    id="analyze"
+    name="analyze"
+    role="Quality Analyst"
+    description="Cross-references all existing gspec documents and identifies contradictions, gaps, and inconsistencies between them. Run this before implement to ensure your specs tell a coherent story."
+    produces="An analysis report highlighting contradictions between specs, missing information, and recommended resolutions. Updates are applied directly to the relevant spec files."
+    invocation="/analyze"
+    questions={[
+      'This command is non-interactive — it reads all specs and produces findings automatically',
+    ]}
+    bestPractices={[
+      'Run after architect and before implement for the most comprehensive analysis',
+      'Review findings and accept or reject each recommendation',
+      'Re-run after making significant changes to any spec',
+      'Especially useful when multiple people have contributed to different specs',
+    ]}
+    pitfalls={[
+      'Running analyze with only one or two specs — it needs multiple specs to find cross-references',
+      'Blindly accepting all suggestions without reviewing context',
+      'Skipping analyze when specs were written at different times — drift is common',
+    ]}
+    related={[
+      { name: 'architect', relation: 'Analyze catches contradictions between architecture and other specs' },
+      { name: 'implement', relation: 'Run analyze before implement to ensure specs are consistent' },
+    ]}
+  />
+
+  <!-- Build Stage -->
+  <CommandSection
+    id="implement"
+    name="implement"
+    role="Senior Developer"
+    description="Reads all existing gspec documents and implements your software with full project context. Synthesizes profile, style, stack, practices, architecture, and feature PRDs to produce code that matches your specifications."
+    produces="Working code committed to your repository. Updates feature PRD capability checkboxes from [ ] to [x] as each capability is implemented. Produces code that follows your stack, practices, and style specifications."
+    invocation="/implement"
+    questions={[
+      'Which feature(s) to implement (if multiple exist)',
+      'Any additional context or constraints for this implementation session',
+    ]}
+    bestPractices={[
+      'At minimum, have the four Define specs (profile, style, stack, practices) before running implement',
+      'Feature PRDs give the best results — implement works from prioritized capabilities, not vague descriptions',
+      'Run implement incrementally — one feature at a time, reviewing output between runs',
+      'Check the capability checkboxes in your feature PRD to track progress',
+      'If output quality is low, the issue is usually in the specs — improve your specs, not your prompts',
+    ]}
+    pitfalls={[
+      'Running implement with no specs — produces generic code with no project context',
+      'Implementing everything at once instead of one feature at a time',
+      'Not reviewing the generated code — implement is a tool, not an autopilot',
+      'Blaming implement for poor output when the real issue is vague or contradictory specs',
+    ]}
+    related={[
+      { name: 'profile', relation: 'Implement reads profile for product context and audience' },
+      { name: 'style', relation: 'Implement reads style for all visual and UI decisions' },
+      { name: 'stack', relation: 'Implement reads stack for technology choices and patterns' },
+      { name: 'practices', relation: 'Implement reads practices for code quality and testing standards' },
+      { name: 'feature', relation: 'Implement builds against feature PRD capabilities' },
+      { name: 'architect', relation: 'Implement reads architecture for project structure and data model' },
+    ]}
+  />
+
+</SidebarLayout>

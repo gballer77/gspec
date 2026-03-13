@@ -1,0 +1,26 @@
+---
+import CopyButton from './CopyButton.astro';
+
+interface Props {
+  code: string;
+  lang?: string;
+  showCopy?: boolean;
+}
+
+const { code, lang, showCopy = true } = Astro.props;
+---
+
+<div class="relative group rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface-raised)] overflow-hidden">
+  {lang && (
+    <div class="flex items-center justify-between px-4 py-2 border-b border-[var(--border-subtle)]">
+      <span class="text-xs font-medium text-primary-300 bg-primary-900/50 px-2 py-0.5 rounded">{lang}</span>
+      {showCopy && <CopyButton text={code} />}
+    </div>
+  )}
+  <pre class="overflow-x-auto p-6 text-sm leading-relaxed"><code class="font-mono text-[var(--text-body)]">{code}</code></pre>
+  {!lang && showCopy && (
+    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <CopyButton text={code} />
+    </div>
+  )}
+</div>

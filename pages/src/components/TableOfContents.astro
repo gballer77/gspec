@@ -1,0 +1,28 @@
+---
+interface Props {
+  headings: { id: string; label: string; level: number }[];
+}
+
+const { headings } = Astro.props;
+---
+
+<nav class="toc text-sm" aria-label="Table of contents">
+  <h4 class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">
+    On this page
+  </h4>
+  <ul class="space-y-1">
+    {headings.map((heading) => (
+      <li>
+        <a
+          href={`#${heading.id}`}
+          class:list={[
+            'block py-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-200 leading-snug',
+            heading.level === 3 && 'pl-3',
+          ]}
+        >
+          {heading.label}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>

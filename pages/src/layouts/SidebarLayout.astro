@@ -1,0 +1,119 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+import BaseLayout from './BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <Navbar slot="navbar" />
+
+  <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+    <div class="lg:grid lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_200px] lg:gap-8">
+      <!-- Left sidebar (hidden on mobile, toggle button shown) -->
+      <aside class="hidden lg:block sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto py-8 pr-4 scrollbar-thin">
+        <slot name="sidebar" />
+      </aside>
+
+      <!-- Mobile sidebar toggle -->
+      <button
+        type="button"
+        id="sidebar-toggle"
+        class="lg:hidden fixed bottom-6 left-6 z-30 w-12 h-12 rounded-full bg-primary-500 text-white shadow-lg flex items-center justify-center hover:bg-primary-400 transition-colors duration-200"
+        aria-label="Toggle sidebar navigation"
+      >
+        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      </button>
+
+      <!-- Mobile sidebar overlay -->
+      <div id="sidebar-overlay" class="lg:hidden fixed inset-0 z-40 hidden">
+        <div class="absolute inset-0 bg-[var(--bg-overlay)]" data-sidebar-backdrop></div>
+        <aside class="absolute inset-y-0 left-0 w-72 max-w-[80vw] bg-[var(--bg-page)] border-r border-[var(--border-default)] overflow-y-auto p-6 pt-20">
+          <button
+            type="button"
+            class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            data-sidebar-close
+            aria-label="Close sidebar"
+          >
+            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <slot name="sidebar" />
+        </aside>
+      </div>
+
+      <!-- Main content -->
+      <article class="py-8 min-w-0">
+        <div class="prose prose-neutral max-w-[65ch] mx-auto
+          [&_h1]:text-[var(--text-primary)] [&_h1]:text-[1.953rem] [&_h1]:sm:text-[2.441rem] [&_h1]:font-bold [&_h1]:tracking-tight
+          [&_h2]:text-[var(--text-primary)] [&_h2]:text-[1.563rem] [&_h2]:sm:text-[1.953rem] [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:mt-16 [&_h2]:mb-6
+          [&_h3]:text-[var(--text-primary)] [&_h3]:text-[1.25rem] [&_h3]:sm:text-[1.563rem] [&_h3]:font-semibold [&_h3]:mt-10 [&_h3]:mb-4
+          [&_p]:text-[var(--text-body)] [&_p]:leading-relaxed
+          [&_a]:text-primary-400 [&_a]:no-underline hover:[&_a]:underline [&_a]:decoration-primary-400/30 hover:[&_a]:decoration-primary-400/60
+          [&_strong]:text-[var(--text-primary)] [&_strong]:font-semibold
+          [&_code]:text-primary-300 [&_code]:bg-[var(--bg-surface-raised)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:font-mono
+          [&_ul]:text-[var(--text-body)] [&_ol]:text-[var(--text-body)]
+          [&_li]:text-[var(--text-body)]
+          [&_blockquote]:border-primary-500/40 [&_blockquote]:text-[var(--text-secondary)]
+        ">
+          <slot />
+        </div>
+      </article>
+
+      <!-- Right ToC (xl only) -->
+      <aside class="hidden xl:block sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto py-8 pl-4">
+        <slot name="toc" />
+      </aside>
+    </div>
+  </div>
+
+  <Footer slot="footer" />
+</BaseLayout>
+
+<script>
+  function initSidebarToggle() {
+    const toggle = document.getElementById('sidebar-toggle');
+    const overlay = document.getElementById('sidebar-overlay');
+    const backdrop = overlay?.querySelector('[data-sidebar-backdrop]');
+    const closeBtn = overlay?.querySelector('[data-sidebar-close]');
+
+    if (!toggle || !overlay) return;
+
+    function open() {
+      overlay.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function close() {
+      overlay.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    toggle.addEventListener('click', open);
+    backdrop?.addEventListener('click', close);
+    closeBtn?.addEventListener('click', close);
+
+    // Close sidebar when clicking a nav link
+    overlay.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', close);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
+        close();
+      }
+    });
+  }
+
+  initSidebarToggle();
+  document.addEventListener('astro:after-swap', initSidebarToggle);
+</script>

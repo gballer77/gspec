@@ -1,0 +1,22 @@
+---
+import CopyButton from './CopyButton.astro';
+---
+
+<section class="py-16 lg:py-24 border-t border-[var(--border-subtle)]">
+  <div class="max-w-[1152px] mx-auto px-4 lg:px-8 text-center">
+    <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
+      Ready to give your AI tools context?
+    </h2>
+    <p class="text-[var(--text-secondary)] mb-8 max-w-lg mx-auto">
+      One command installs structured specification skills into your AI coding tool.
+    </p>
+    <div class="inline-flex items-center gap-3 bg-[var(--bg-surface-raised)] border border-[var(--border-default)] rounded-lg px-5 py-3 font-mono text-sm sm:text-base text-[var(--text-primary)] mb-6">
+      <span class="text-primary-400 select-none">$</span>
+      <span>npx gspec</span>
+      <CopyButton text="npx gspec" />
+    </div>
+    <p class="text-sm text-[var(--text-muted)]">
+      Then follow the <a href="/getting-started/" class="text-primary-400 hover:text-primary-300 underline decoration-primary-400/30 hover:decoration-primary-400/60 transition-colors duration-200">Getting Started guide</a> to define your first spec.
+    </p>
+  </div>
+</section>

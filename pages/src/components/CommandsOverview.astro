@@ -1,0 +1,63 @@
+---
+const groups = [
+  {
+    stage: 'Define',
+    description: 'Establish your product foundation',
+    commands: [
+      { name: 'profile', role: 'Business Strategist', description: 'Define what your product is, who it serves, and why it exists' },
+      { name: 'style', role: 'UI Designer', description: 'Generate a visual design system with tokens, colors, and component patterns' },
+      { name: 'stack', role: 'Solutions Architect', description: 'Define your technology choices, frameworks, and infrastructure' },
+      { name: 'practices', role: 'Engineering Lead', description: 'Set development standards, testing conventions, and workflows' },
+    ],
+  },
+  {
+    stage: 'Optional Depth',
+    description: 'Add precision where it matters',
+    commands: [
+      { name: 'research', role: 'Market Analyst', description: 'Analyze competitors and identify feature gaps' },
+      { name: 'feature', role: 'Product Manager', description: 'Write a PRD with prioritized capabilities and acceptance criteria' },
+      { name: 'epic', role: 'Product Manager', description: 'Break down large initiatives into focused feature PRDs' },
+      { name: 'architect', role: 'Technical Architect', description: 'Design the technical blueprint — data model, APIs, project structure' },
+      { name: 'analyze', role: 'Quality Analyst', description: 'Cross-reference all specs and resolve contradictions' },
+    ],
+  },
+  {
+    stage: 'Build',
+    description: 'Implement with full context',
+    commands: [
+      { name: 'implement', role: 'Senior Developer', description: 'Read all specs and build software with complete project context' },
+    ],
+  },
+];
+---
+
+<section class="py-16 lg:py-24">
+  <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+    <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] text-center mb-4 tracking-tight">
+      11 commands, one workflow
+    </h2>
+    <p class="text-[var(--text-secondary)] text-center mb-12 max-w-2xl mx-auto">
+      Each command adopts a professional perspective to guide you through comprehensive product definition.
+    </p>
+
+    <div class="grid lg:grid-cols-3 gap-6 lg:gap-8">
+      {groups.map((group) => (
+        <div>
+          <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-1">{group.stage}</h3>
+          <p class="text-sm text-[var(--text-secondary)] mb-4">{group.description}</p>
+          <div class="flex flex-col gap-3">
+            {group.commands.map((cmd) => (
+              <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-4 hover:border-neutral-600 transition-colors duration-200">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <code class="text-sm font-mono font-medium text-primary-400">{cmd.name}</code>
+                  <span class="text-xs text-[var(--text-muted)]">{cmd.role}</span>
+                </div>
+                <p class="text-sm text-[var(--text-secondary)] leading-relaxed">{cmd.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

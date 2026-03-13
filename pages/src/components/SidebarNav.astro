@@ -1,0 +1,102 @@
+---
+interface Props {
+  sections: { id: string; label: string; group?: string }[];
+}
+
+const { sections } = Astro.props;
+
+// Group sections
+const grouped: { group: string; items: { id: string; label: string }[] }[] = [];
+let currentGroup: string | null = null;
+for (const section of sections) {
+  const group = section.group || '';
+  if (group !== currentGroup) {
+    grouped.push({ group, items: [] });
+    currentGroup = group;
+  }
+  grouped[grouped.length - 1].items.push(section);
+}
+---
+
+<nav class="sidebar-nav text-sm" aria-label="Page sections">
+  {grouped.map((group) => (
+    <div class="mb-4">
+      {group.group && (
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2 px-3">
+          {group.group}
+        </h4>
+      )}
+      <ul class="space-y-0.5">
+        {group.items.map((item) => (
+          <li>
+            <a
+              href={`#${item.id}`}
+              class="sidebar-link block px-3 py-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-raised)] transition-colors duration-200"
+              data-section-id={item.id}
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
+</nav>
+
+<script>
+  function initScrollSpy() {
+    const links = document.querySelectorAll('.sidebar-link');
+    if (!links.length) return;
+
+    const sectionIds = Array.from(links).map(
+      (link) => (link as HTMLElement).dataset.sectionId!
+    );
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter(Boolean) as HTMLElement[];
+
+    let skipObserver = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (skipObserver) return;
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActive(entry.target.id);
+            break;
+          }
+        }
+      },
+      {
+        rootMargin: '-80px 0px -60% 0px',
+      }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+
+    function setActive(id: string) {
+      links.forEach((link) => {
+        const isActive = (link as HTMLElement).dataset.sectionId === id;
+        link.classList.toggle('text-primary-400', isActive);
+        link.classList.toggle('font-medium', isActive);
+        link.classList.toggle('text-[var(--text-secondary)]', !isActive);
+      });
+    }
+
+    links.forEach((link) => {
+      link.addEventListener('click', () => {
+        skipObserver = true;
+        setActive((link as HTMLElement).dataset.sectionId!);
+        setTimeout(() => {
+          skipObserver = false;
+        }, 100);
+      });
+    });
+
+    // Activate first section by default
+    if (sectionIds[0]) setActive(sectionIds[0]);
+  }
+
+  initScrollSpy();
+  document.addEventListener('astro:after-swap', initScrollSpy);
+</script>

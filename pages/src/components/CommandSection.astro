@@ -1,0 +1,75 @@
+---
+import CodeBlock from './CodeBlock.astro';
+
+interface Props {
+  id: string;
+  name: string;
+  role: string;
+  description: string;
+  produces: string;
+  invocation: string;
+  questions?: string[];
+  bestPractices?: string[];
+  pitfalls?: string[];
+  related?: { name: string; relation: string }[];
+}
+
+const { id, name, role, description, produces, invocation, questions, bestPractices, pitfalls, related } = Astro.props;
+---
+
+<section id={id} class="scroll-mt-20">
+  <h2 class="flex items-center gap-3">
+    <code class="text-primary-400 bg-primary-900/30 px-2 py-0.5 rounded text-lg">{name}</code>
+    <span class="text-sm font-normal text-[var(--text-muted)]">{role}</span>
+  </h2>
+
+  <h3>What it does</h3>
+  <p>{description}</p>
+
+  <h3>What it produces</h3>
+  <p>{produces}</p>
+
+  <h3>Example invocation</h3>
+  <CodeBlock code={invocation} lang="command" />
+
+  {questions && questions.length > 0 && (
+    <>
+      <h3>Key questions</h3>
+      <p>The command guides you through a conversation covering:</p>
+      <ul>
+        {questions.map((q) => <li>{q}</li>)}
+      </ul>
+    </>
+  )}
+
+  {bestPractices && bestPractices.length > 0 && (
+    <>
+      <h3>Best practices</h3>
+      <ul>
+        {bestPractices.map((bp) => <li>{bp}</li>)}
+      </ul>
+    </>
+  )}
+
+  {pitfalls && pitfalls.length > 0 && (
+    <>
+      <h3>Common pitfalls</h3>
+      <ul>
+        {pitfalls.map((p) => <li>{p}</li>)}
+      </ul>
+    </>
+  )}
+
+  {related && related.length > 0 && (
+    <>
+      <h3>Related commands</h3>
+      <ul>
+        {related.map((r) => (
+          <li>
+            <a href={`#${r.name}`}><code>{r.name}</code></a> — {r.relation}
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+</section>

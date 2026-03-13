@@ -1,0 +1,103 @@
+---
+const stages = [
+  {
+    name: 'Define',
+    required: true,
+    description: 'Product identity, design, stack, standards',
+    commands: ['profile', 'style', 'stack', 'practices'],
+    color: 'primary',
+  },
+  {
+    name: 'Research',
+    required: false,
+    description: 'Competitive analysis & gaps',
+    commands: ['research'],
+    color: 'secondary',
+  },
+  {
+    name: 'Specify',
+    required: false,
+    description: 'Feature PRDs & epics',
+    commands: ['feature', 'epic'],
+    color: 'secondary',
+  },
+  {
+    name: 'Architect',
+    required: false,
+    description: 'Technical blueprint',
+    commands: ['architect'],
+    color: 'secondary',
+  },
+  {
+    name: 'Analyze',
+    required: false,
+    description: 'Cross-spec consistency',
+    commands: ['analyze'],
+    color: 'secondary',
+  },
+  {
+    name: 'Build',
+    required: true,
+    description: 'Spec-driven implementation',
+    commands: ['implement'],
+    color: 'primary',
+  },
+];
+---
+
+<section class="py-16 lg:py-24">
+  <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+    <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] text-center mb-4 tracking-tight">
+      A structured workflow for AI context
+    </h2>
+    <p class="text-[var(--text-secondary)] text-center mb-12 max-w-2xl mx-auto">
+      Define your product once, then let AI build with full context. Only <strong class="text-[var(--text-primary)] font-medium">Define</strong> and <strong class="text-[var(--text-primary)] font-medium">Build</strong> are required — everything else adds optional depth.
+    </p>
+
+    <!-- Workflow diagram -->
+    <div class="flex flex-col lg:flex-row items-stretch gap-3 lg:gap-0 max-w-5xl mx-auto">
+      {stages.map((stage, i) => (
+        <div class="flex-1 flex flex-col lg:flex-row items-stretch">
+          <div class:list={[
+            'flex-1 rounded-xl border p-5 text-center transition-colors duration-200',
+            stage.required
+              ? 'border-primary-500/40 bg-primary-900/20'
+              : 'border-[var(--border-default)] bg-[var(--bg-surface)]',
+          ]}>
+            <div class="flex items-center justify-center gap-2 mb-2">
+              <h3 class:list={[
+                'font-semibold text-sm',
+                stage.required ? 'text-primary-400' : 'text-[var(--text-primary)]',
+              ]}>
+                {stage.name}
+              </h3>
+              {stage.required && (
+                <span class="text-[10px] font-medium uppercase tracking-wider text-primary-300 bg-primary-500/20 px-1.5 py-0.5 rounded">Required</span>
+              )}
+            </div>
+            <p class="text-xs text-[var(--text-secondary)] mb-3">{stage.description}</p>
+            <div class="flex flex-wrap justify-center gap-1.5">
+              {stage.commands.map((cmd) => (
+                <code class="text-xs font-mono px-2 py-0.5 rounded bg-[var(--bg-surface-raised)] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
+                  {cmd}
+                </code>
+              ))}
+            </div>
+          </div>
+          {i < stages.length - 1 && (
+            <div class="hidden lg:flex items-center justify-center w-6 text-[var(--text-muted)]">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+
+    <!-- Iterate note -->
+    <p class="text-center text-sm text-[var(--text-muted)] mt-6">
+      Specs stay in sync with your code through automated spec-sync — update once, context updates everywhere.
+    </p>
+  </div>
+</section>

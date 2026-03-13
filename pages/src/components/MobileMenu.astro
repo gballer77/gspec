@@ -1,0 +1,98 @@
+---
+const currentPath = Astro.url.pathname;
+
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/getting-started/', label: 'Getting Started' },
+  { href: '/docs/', label: 'Docs' },
+];
+---
+
+<div
+  id="mobile-menu"
+  class="fixed inset-0 z-50 hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Navigation menu"
+>
+  <div class="absolute inset-0 bg-[var(--bg-overlay)]" data-mobile-menu-backdrop></div>
+  <nav class="absolute inset-y-0 right-0 w-full max-w-sm bg-[var(--bg-page)] border-l border-[var(--border-default)] p-6 pt-20 flex flex-col gap-2">
+    <button
+      type="button"
+      class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-raised)] transition-colors duration-200"
+      data-mobile-menu-close
+      aria-label="Close menu"
+    >
+      <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+      </svg>
+    </button>
+    {links.map((link) => (
+      <a
+        href={link.href}
+        class:list={[
+          'block px-4 py-3 rounded-lg text-lg font-medium transition-colors duration-200',
+          currentPath === link.href
+            ? 'text-primary-400 bg-primary-900/30'
+            : 'text-[var(--text-body)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-raised)]',
+        ]}
+      >
+        {link.label}
+      </a>
+    ))}
+  </nav>
+</div>
+
+<script>
+  function initMobileMenu() {
+    const menu = document.getElementById('mobile-menu');
+    const openBtn = document.querySelector('[data-mobile-menu-open]');
+    const closeBtn = menu?.querySelector('[data-mobile-menu-close]');
+    const backdrop = menu?.querySelector('[data-mobile-menu-backdrop]');
+
+    if (!menu || !openBtn) return;
+
+    let focusableEls: HTMLElement[] = [];
+    let firstFocusable: HTMLElement | null = null;
+    let lastFocusable: HTMLElement | null = null;
+
+    function open() {
+      menu.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      focusableEls = Array.from(menu.querySelectorAll('a, button')) as HTMLElement[];
+      firstFocusable = focusableEls[0];
+      lastFocusable = focusableEls[focusableEls.length - 1];
+      closeBtn?.focus();
+    }
+
+    function close() {
+      menu.classList.add('hidden');
+      document.body.style.overflow = '';
+      (openBtn as HTMLElement).focus();
+    }
+
+    openBtn.addEventListener('click', open);
+    closeBtn?.addEventListener('click', close);
+    backdrop?.addEventListener('click', close);
+
+    document.addEventListener('keydown', (e) => {
+      if (menu.classList.contains('hidden')) return;
+      if (e.key === 'Escape') {
+        close();
+        return;
+      }
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === firstFocusable) {
+          e.preventDefault();
+          lastFocusable?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastFocusable) {
+          e.preventDefault();
+          firstFocusable?.focus();
+        }
+      }
+    });
+  }
+
+  initMobileMenu();
+  document.addEventListener('astro:after-swap', initMobileMenu);
+</script>
