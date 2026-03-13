@@ -61,18 +61,18 @@ const stages = [
           <div class:list={[
             'flex-1 rounded-xl border p-5 text-center transition-colors duration-200',
             stage.required
-              ? 'border-primary-500/40 bg-primary-900/20'
+              ? 'border-[var(--border-primary-subtle)] bg-[var(--bg-primary-subtle)]'
               : 'border-[var(--border-default)] bg-[var(--bg-surface)]',
           ]}>
             <div class="flex items-center justify-center gap-2 mb-2">
               <h3 class:list={[
                 'font-semibold text-sm',
-                stage.required ? 'text-primary-400' : 'text-[var(--text-primary)]',
+                stage.required ? 'text-[var(--text-accent)]' : 'text-[var(--text-primary)]',
               ]}>
                 {stage.name}
               </h3>
               {stage.required && (
-                <span class="text-[10px] font-medium uppercase tracking-wider text-primary-300 bg-primary-500/20 px-1.5 py-0.5 rounded">Required</span>
+                <span class="text-[10px] font-medium uppercase tracking-wider text-[var(--badge-accent-text)] bg-[var(--badge-accent-bg)] px-1.5 py-0.5 rounded">Required</span>
               )}
             </div>
             <p class="text-xs text-[var(--text-secondary)] mb-3">{stage.description}</p>

@@ -49,7 +49,7 @@ const groups = [
             {group.commands.map((cmd) => (
               <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-4 hover:border-neutral-600 transition-colors duration-200">
                 <div class="flex items-center gap-2 mb-1.5">
-                  <code class="text-sm font-mono font-medium text-primary-400">{cmd.name}</code>
+                  <code class="text-sm font-mono font-medium text-[var(--text-accent)]">{cmd.name}</code>
                   <span class="text-xs text-[var(--text-muted)]">{cmd.role}</span>
                 </div>
                 <p class="text-sm text-[var(--text-secondary)] leading-relaxed">{cmd.description}</p>

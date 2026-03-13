@@ -51,12 +51,12 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
           <div class:list={[
             'rounded-lg border p-3 text-center text-sm',
             stage.required
-              ? 'border-primary-500/40 bg-primary-900/20'
+              ? 'border-[var(--border-primary-subtle)] bg-[var(--bg-primary-subtle)]'
               : 'border-[var(--border-default)] bg-[var(--bg-surface)]',
           ]}>
-            <div class:list={['font-semibold mb-1', stage.required ? 'text-primary-400' : 'text-[var(--text-primary)]']}>
+            <div class:list={['font-semibold mb-1', stage.required ? 'text-[var(--text-accent)]' : 'text-[var(--text-primary)]']}>
               {stage.name}
-              {stage.required && <span class="text-[9px] ml-1 text-primary-300 uppercase">req</span>}
+              {stage.required && <span class="text-[9px] ml-1 text-[var(--badge-accent-text)] uppercase">req</span>}
             </div>
             <div class="text-xs text-[var(--text-secondary)] font-mono">{stage.desc}</div>
           </div>

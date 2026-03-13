@@ -72,6 +72,12 @@
   --code-text: var(--color-primary-300);
   --code-badge: var(--color-primary-300);
   --code-badge-bg: rgba(30, 19, 56, 0.5);
+  --bg-primary-subtle: rgba(30, 19, 56, 0.4);
+  --border-primary-subtle: rgba(139, 92, 246, 0.4);
+  --text-accent: var(--color-primary-400);
+  --text-accent-strong: var(--color-primary-300);
+  --badge-accent-bg: rgba(139, 92, 246, 0.2);
+  --badge-accent-text: var(--color-primary-300);
 }
 
 [data-theme="light"] {
@@ -88,6 +94,12 @@
   --code-text: var(--color-primary-600);
   --code-badge: var(--color-primary-600);
   --code-badge-bg: rgba(139, 92, 246, 0.1);
+  --bg-primary-subtle: rgba(139, 92, 246, 0.06);
+  --border-primary-subtle: rgba(139, 92, 246, 0.3);
+  --text-accent: var(--color-primary-600);
+  --text-accent-strong: var(--color-primary-700);
+  --badge-accent-bg: rgba(139, 92, 246, 0.1);
+  --badge-accent-text: #6D28D9;
 }
 
 /* Base styles */
