@@ -13,6 +13,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Install artifacts (created by running gspec locally)
+.claude
+.cursor
+.agent
+.agents
+
 # OS specific
 .DS_Store
 Thumbs.db
