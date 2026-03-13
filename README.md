@@ -25,7 +25,7 @@ These documents become the shared context for all subsequent AI interactions. Wh
 
 The only commands you *need* are the four fundamentals and `implement`. Everything else exists to help when your project calls for it.
 
-The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `implement` can take a plain-language description and start building. The remaining commands — `research`, `feature`, `epic`, `architect`, `dor`, and `record` — add structure and rigor when the scope or complexity warrants it.
+The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `implement` can take a plain-language description and start building. The remaining commands — `research`, `feature`, `epic`, `architect`, `analyze`, `dor`, and `record` — add structure and rigor when the scope or complexity warrants it.
 
 ```mermaid
 flowchart LR
@@ -42,10 +42,13 @@ flowchart LR
     Architect["4. Architect
     technical blueprint"]
 
-    Build["5. Build
+    Analyze["5. Analyze
+    reconcile specs"]
+
+    Build["6. Build
     implement"]
     
-    Iterate["6. Iterate
+    Iterate["7. Iterate
     dor · record"]
 
     Define --> Research
@@ -55,7 +58,9 @@ flowchart LR
     Research --> Build
     Specify --> Architect
     Specify --> Build
+    Architect --> Analyze
     Architect --> Build
+    Analyze --> Build
     Build --> Iterate
     Iterate --> Build
 
@@ -63,6 +68,7 @@ flowchart LR
     style Research fill:#a855f7,color:#fff,stroke:none
     style Specify fill:#f59e0b,color:#fff,stroke:none
     style Architect fill:#f59e0b,color:#fff,stroke:none
+    style Analyze fill:#f59e0b,color:#fff,stroke:none
     style Build fill:#22c55e,color:#fff,stroke:none
     style Iterate fill:#64748b,color:#fff,stroke:none
 ```
@@ -83,9 +89,9 @@ flowchart LR
 
 | Command | Role | What it produces |
 |---|---|---|
-| `gspec.research` | Product Strategist | Competitive analysis with feature matrix, gap identification, and strategic recommendations |
+| `gspec.research` | Product Strategist | Competitive analysis, feature matrix, gap identification, and additional feature proposals |
 
-Use `research` when you want to understand what competitors offer, identify table-stakes features you might be missing, and find differentiation opportunities. It reads competitors from your product profile, produces a persistent `gspec/research.md` file, and can optionally generate feature PRDs from the findings. The `implement` command automatically uses this file when it exists.
+Use `research` when you want to understand what competitors offer, identify table-stakes features you might be missing, find differentiation opportunities, and **propose additional features** that serve your product's mission. It reads competitors from your product profile, produces a persistent `gspec/research.md` file, and can optionally generate feature PRDs from its findings and proposals. This is where new feature ideas are surfaced and vetted — not during implementation.
 
 **3. Specify What to Build** *(optional)* — Define features and requirements.
 
@@ -100,17 +106,25 @@ Use `feature` when you want a detailed PRD with prioritized capabilities and acc
 
 | Command | Role | What it produces |
 |---|---|---|
-| `gspec.architect` | Senior Architect | Technical architecture document with data models, API design, project structure, auth flows, and Mermaid diagrams |
+| `gspec.architect` | Senior Architect | Technical architecture document with data models, API design, project structure, auth flows, technical gap analysis, and Mermaid diagrams |
 
-Use `architect` when your feature involves significant technical complexity — new data models, service boundaries, auth flows, or integration points that benefit from upfront design. For straightforward features, `implement` can make sound architectural decisions on its own using your `stack` and `practices` specs.
+Use `architect` when your feature involves significant technical complexity — new data models, service boundaries, auth flows, or integration points that benefit from upfront design. It also **identifies technical gaps and ambiguities** in your specs and proposes solutions, so that `implement` can focus on building rather than making architectural decisions. For straightforward features, `implement` can make sound architectural decisions on its own using your `stack` and `practices` specs.
 
-**5. Build** — Implement with full context.
+**5. Analyze** *(optional)* — Reconcile discrepancies across specs before building.
 
 | Command | Role | What it does |
 |---|---|---|
-| `gspec.implement` | Senior Engineer | Reads all specs (including research), identifies gaps, plans and builds |
+| `gspec.analyze` | Specification Analyst | Cross-references all specs, identifies contradictions, and walks you through reconciling each one |
 
-**6. Iterate** *(optional)* — Keep specs and code in sync as the project evolves.
+Use `analyze` after `architect` (or any time multiple specs exist) to catch conflicts before `implement` sees them. For example, if the stack says PostgreSQL but the architecture references MongoDB, or a feature PRD defines a data model that contradicts the architecture, `analyze` will surface the discrepancy and let you choose the resolution. Each conflict is presented one at a time with options — no new files are created, only existing specs are updated.
+
+**6. Build** — Implement with full context.
+
+| Command | Role | What it does |
+|---|---|---|
+| `gspec.implement` | Senior Engineer | Reads all specs, plans the build order, and implements |
+
+**7. Iterate** *(optional)* — Keep specs and code in sync as the project evolves.
 
 | Command | Role | What it does |
 |---|---|---|
@@ -188,7 +202,7 @@ These are standard Markdown files. They live in your repo, are version-controlle
 
 **Incremental implementation.** Feature PRDs use checkboxes to track which capabilities have been built. The `implement` command reads these to know what's done and what's remaining, so it can be run multiple times as your project grows.
 
-**Competitive research.** The `research` command analyzes competitors named in your product profile, identifying table-stakes features you might be missing and opportunities for differentiation. Its output is saved to `gspec/research.md` and automatically used by `implement` when present.
+**Research and architecture own discovery.** Feature proposals and technical gap analysis happen *before* implementation — in `research` and `architect` respectively. The `research` command surfaces new feature ideas through competitive analysis and product-driven reasoning. The `architect` command identifies technical gaps and resolves ambiguities. This separation keeps `implement` focused on building what the specs define, rather than proposing scope changes mid-build.
 
 **Platform-agnostic.** A single set of source commands builds for Claude Code, Cursor, Antigravity, and Codex. The build system handles platform-specific formatting so the commands stay consistent across tools.
 

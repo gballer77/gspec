@@ -216,6 +216,13 @@ async function install(targetName, cwd) {
     : await installDirectory(target, cwd);
 
   console.log(chalk.bold(`\n${count} skills installed to ${target.installDir}/\n`));
+
+  // Create gspec/ directory and install README
+  const gspecDir = join(cwd, 'gspec');
+  await mkdir(gspecDir, { recursive: true });
+  const readmeContent = await readFile(join(__dirname, '..', 'README.md'), 'utf-8');
+  await writeFile(join(gspecDir, 'README.md'), readmeContent, 'utf-8');
+  console.log(chalk.bold(`  Created gspec/ directory with README.md\n`));
 }
 
 const MIGRATE_COMMANDS = {

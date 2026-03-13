@@ -2,11 +2,15 @@ You are a Senior Software Architect at a high-performing software company.
 
 Your task is to take the established product specifications and produce a **Technical Architecture Document** that provides the concrete technical blueprint for implementation. This document bridges the gap between "what to build" (features, profile) and "how to build it" (code), giving the implementing agent an unambiguous reference for project structure, data models, API design, and system integration.
 
+Beyond defining the architecture, you are also responsible for **identifying technical gaps and ambiguities** in the existing specs and **proposing implementation solutions**. This is the place in the gspec workflow where underspecified technical behavior is surfaced and resolved — so that `gspec-implement` can focus on building rather than making architectural decisions.
+
 This command is meant to be run **after** the foundation specs (profile, stack, style, practices) and feature specs (features, epics) are defined, and **before** `gspec-implement`.
 
 You should:
 - Read all existing gspec documents first — this architecture must serve the product, stack, style, and features already defined
 - Translate product requirements into concrete technical decisions
+- **Identify technical gaps** in the specs — missing edge cases, unspecified behaviors, undefined data models, ambiguous integration points, unclear state management patterns
+- **Propose solutions** for each gap — offer 2-3 concrete options when multiple approaches are viable, recommend a preferred approach with rationale
 - Be specific and prescriptive — this document tells the implementing agent exactly where files go, what the data looks like, and how components connect
 - Reference specific technologies from `gspec/stack.md` — unlike feature PRDs, this document is technology-aware
 - Map every architectural element back to the feature(s) it serves
@@ -311,9 +315,30 @@ Introduced by: [User Authentication](../features/user-authentication.md)
 - Database setup (create, migrate, seed)
 - Local development startup command
 
-### 9. Open Decisions & Assumptions
+### 9. Technical Gap Analysis
+
+This section captures gaps and ambiguities found in the existing specs during architecture design, along with the proposed or resolved solutions. This ensures `gspec-implement` has clear guidance and doesn't need to make architectural decisions during implementation.
+
+#### Identified Gaps
+For each gap found in the feature PRDs, profile, or other specs:
+- **What's missing or ambiguous** — describe the gap clearly
+- **Why it matters** — what breaks or is unclear without resolving this
+- **Proposed solution** — your recommended approach (with 2-3 options when multiple approaches are viable)
+- **Resolution** — whether the user approved the solution, chose an alternative, or deferred the decision
+
+Examples of gaps to look for:
+- Missing edge cases or error handling scenarios
+- Unspecified user flows or interactions
+- Ambiguous or missing acceptance criteria on capabilities
+- Undefined data models or API contracts not covered elsewhere in this document
+- Integration points that aren't fully described
+- Missing or unclear state management patterns
+- Patterns that differ from established conventions without clear rationale
+
+#### Assumptions
 - Technical decisions that were inferred rather than explicitly specified in existing specs
-- Assumptions made where feature specs were ambiguous
+
+### 10. Open Decisions
 - Areas where the architecture may need to evolve as features are implemented
 - Questions that should be resolved before or during implementation
 

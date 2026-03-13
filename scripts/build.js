@@ -46,6 +46,10 @@ const COMMANDS = {
     name: 'gspec-architect',
     description: 'Define the technical architecture: project structure, data model, API design, and environment setup',
   },
+  'gspec.analyze.md': {
+    name: 'gspec-analyze',
+    description: 'Analyze gspec specs for discrepancies and reconcile conflicts between documents',
+  },
   'gspec.research.md': {
     name: 'gspec-research',
     description: 'Research competitors from the product profile and produce a competitive analysis with feature gap identification',
