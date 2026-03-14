@@ -8,7 +8,7 @@ These specs define what the product is, how it should look, what technology it u
 
 1. **Read the specs first** — Before making non-trivial changes, read the relevant gspec documents to understand existing decisions and constraints. At minimum, scan `gspec/profile.md` and any feature PRDs in `gspec/features/` related to your work.
 
-2. **Update feature checkboxes** — When you implement a capability defined in a feature PRD (`gspec/features/*.md`), change its checkbox from `- [ ]` to `- [x]`. When all capabilities in a feature are checked, also update the corresponding entry in any epic file (`gspec/epics/*.md`).
+2. **Update feature checkboxes** — When you implement a capability defined in a feature PRD (`gspec/features/*.md`), change its checkbox from `- [ ]` to `- [x]`.
 
 3. **Update specs that your changes contradict** — If your code change makes a spec statement incorrect (e.g., you changed the data model, switched a dependency, altered a UI pattern, or added a new API endpoint), update the spec to reflect reality. Common candidates:
    - `gspec/architecture.md` — project structure, data model, API routes, component hierarchy

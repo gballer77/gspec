@@ -24,11 +24,7 @@ const COMMANDS = {
   },
   'gspec.feature.md': {
     name: 'gspec-feature',
-    description: 'Generate a product requirements document (PRD) for an individual feature',
-  },
-  'gspec.epic.md': {
-    name: 'gspec-epic',
-    description: 'Break down a large epic into multiple focused feature PRDs with dependency mapping',
+    description: 'Generate one or more product requirements documents (PRDs) for features',
   },
   'gspec.style.md': {
     name: 'gspec-style',

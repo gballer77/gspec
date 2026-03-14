@@ -1,0 +1,278 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const releases = [
+  {
+    version: '1.7.0',
+    date: 'March 14, 2026',
+    title: 'Unified feature command',
+    summary: 'The feature command now handles both single features and large bodies of work, replacing the separate epic command. One command, any scope.',
+    changes: [
+      {
+        type: 'changed',
+        description: 'The <code>feature</code> command now intelligently assesses scope — if the request is small, it produces a single PRD; if it\'s large enough to warrant decomposition, it proposes a multi-feature breakdown for your approval before generating individual PRDs.',
+      },
+      {
+        type: 'removed',
+        description: 'The <code>epic</code> command has been removed. All of its functionality is now part of <code>feature</code>. The <code>gspec/epics/</code> directory is no longer used.',
+      },
+      {
+        type: 'changed',
+        description: 'All commands that previously referenced epics (<code>implement</code>, <code>architect</code>, <code>analyze</code>, <code>research</code>, <code>migrate</code>) have been updated to remove epic references and work with the unified feature command.',
+      },
+      {
+        type: 'added',
+        description: 'Multi-feature output guidance — when generating multiple PRDs, the feature command cross-references dependencies, maintains consistent terminology, assigns priorities holistically, and suggests a build order.',
+      },
+      {
+        type: 'added',
+        description: 'Releases page added to the documentation site.',
+      },
+    ],
+    migration: 'If you have existing files in <code>gspec/epics/</code>, they can be safely archived or deleted — the feature PRDs they reference in <code>gspec/features/</code> are unaffected. Run <code>npx gspec</code> to install the updated commands.',
+  },
+  {
+    version: '1.6.0',
+    date: 'March 12, 2026',
+    title: 'Spec-sync and streamlined workflow',
+    summary: 'Introduced automatic spec-sync so AI tools keep specifications in sync with code changes, and removed the manual dor/record commands in favor of the automated system.',
+    changes: [
+      {
+        type: 'added',
+        description: 'Automatic spec-sync system — AI tools now read specs before making changes and update them when code diverges from documented intent, without needing explicit commands.',
+      },
+      {
+        type: 'removed',
+        description: 'The <code>dor</code> and <code>record</code> commands have been removed. Their functionality is replaced by the automated spec-sync rules.',
+      },
+      {
+        type: 'added',
+        description: 'GitHub Pages documentation site with getting started guide, full command reference, and workflow overview.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install updated commands. The <code>dor</code> and <code>record</code> commands are no longer available — spec updates now happen automatically.',
+  },
+  {
+    version: '1.5.1',
+    date: 'March 12, 2026',
+    title: 'Architect description fix',
+    summary: 'Patch release to correct the architect command description.',
+    changes: [
+      {
+        type: 'fixed',
+        description: 'Fixed the <code>architect</code> command description metadata in the build output.',
+      },
+    ],
+  },
+  {
+    version: '1.5.0',
+    date: 'March 12, 2026',
+    title: 'Analyze command',
+    summary: 'Added the analyze command for cross-referencing all gspec documents and resolving contradictions before implementation.',
+    changes: [
+      {
+        type: 'added',
+        description: 'New <code>analyze</code> command — cross-references all existing specs, identifies contradictions and inconsistencies, and walks you through resolving each one interactively.',
+      },
+      {
+        type: 'changed',
+        description: 'Refined the overall spec workflow to position <code>analyze</code> between <code>architect</code> and <code>implement</code> for catching conflicts before building.',
+      },
+    ],
+  },
+  {
+    version: '1.4.0',
+    date: 'March 4, 2026',
+    title: 'Codex support',
+    summary: 'Added OpenAI Codex as a supported platform, bringing gspec to four AI coding tools.',
+    changes: [
+      {
+        type: 'added',
+        description: 'Codex platform support — <code>npx gspec --target codex</code> installs skills to <code>.agents/skills/</code>.',
+      },
+    ],
+  },
+  {
+    version: '1.3.0',
+    date: 'February 24, 2026',
+    title: 'Standalone research command',
+    summary: 'Extracted competitive research into its own dedicated command and simplified the implement workflow.',
+    changes: [
+      {
+        type: 'added',
+        description: 'New standalone <code>research</code> command — analyzes competitors from the product profile, produces a competitive feature matrix, identifies gaps, and proposes additional features.',
+      },
+      {
+        type: 'changed',
+        description: 'Simplified the <code>implement</code> command by removing its built-in competitor research phase. Research now happens separately before implementation.',
+      },
+    ],
+  },
+  {
+    version: '1.1.2',
+    date: 'February 21, 2026',
+    title: 'Clarifying questions and optional commands',
+    summary: 'Commands now ask clarifying questions before generating specs, and non-essential commands are clearly marked as optional.',
+    changes: [
+      {
+        type: 'changed',
+        description: 'All spec-generating commands now require clarifying questions in chat before finalizing output — no more unresolved questions embedded in generated documents.',
+      },
+      {
+        type: 'changed',
+        description: 'Clarified that <code>architect</code>, <code>epic</code>, and <code>feature</code> are optional — you can skip straight to <code>implement</code> for simpler projects.',
+      },
+    ],
+  },
+  {
+    version: '1.1.0',
+    date: 'February 19, 2026',
+    title: 'Architect, migrate, and agent-oriented output',
+    summary: 'Major update adding the architect command, migration tooling, Mermaid diagrams, and a significant overhaul of output quality for agent consumption.',
+    changes: [
+      {
+        type: 'added',
+        description: 'New <code>architect</code> command — generates a technical architecture document with project structure, data model (ER diagrams), API design, component architecture, auth flows, and technical gap analysis.',
+      },
+      {
+        type: 'added',
+        description: 'New <code>migrate</code> command — updates existing gspec documents to the current format when upgrading versions, preserving all content.',
+      },
+      {
+        type: 'added',
+        description: 'Mermaid diagrams in architect output — entity-relationship diagrams for data models, page hierarchy graphs, and sequence diagrams for auth flows.',
+      },
+      {
+        type: 'added',
+        description: 'Version tracking via <code>gspec-version</code> YAML frontmatter in all generated spec files.',
+      },
+      {
+        type: 'changed',
+        description: 'Feature PRDs consolidated from 10 sections to 7, removing redundancy and improving clarity.',
+      },
+      {
+        type: 'changed',
+        description: 'All command outputs refined for agent-oriented consumption — technology-agnostic, implementation-ready, with explicit acceptance criteria.',
+      },
+      {
+        type: 'changed',
+        description: 'The <code>implement</code> command now has an explicit planning phase with user approval and pauses between implementation phases.',
+      },
+    ],
+  },
+  {
+    version: '1.0.3',
+    date: 'February 13, 2026',
+    title: 'Package metadata',
+    summary: 'Added repository URL and branding to the npm package.',
+    changes: [
+      {
+        type: 'changed',
+        description: 'Added repository URL to <code>package.json</code> for npm listing.',
+      },
+    ],
+  },
+  {
+    version: '1.0.2',
+    date: 'February 13, 2026',
+    title: 'Initial release',
+    summary: 'First published version of gspec with the core specification workflow and multi-platform support.',
+    changes: [
+      {
+        type: 'added',
+        description: 'Core specification commands: <code>profile</code>, <code>style</code>, <code>stack</code>, <code>practices</code>, <code>feature</code>, <code>epic</code>, <code>implement</code>, <code>dor</code>, <code>record</code>.',
+      },
+      {
+        type: 'added',
+        description: 'Build pipeline and <code>npx gspec</code> installer for Claude Code, Cursor, and Antigravity.',
+      },
+      {
+        type: 'added',
+        description: 'Incremental implementation tracking with capability checkboxes in feature PRDs.',
+      },
+    ],
+  },
+];
+
+const typeColors: Record<string, { bg: string; text: string; label: string }> = {
+  added: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', label: 'Added' },
+  changed: { bg: 'bg-amber-500/10', text: 'text-amber-400', label: 'Changed' },
+  removed: { bg: 'bg-red-500/10', text: 'text-red-400', label: 'Removed' },
+  fixed: { bg: 'bg-blue-500/10', text: 'text-blue-400', label: 'Fixed' },
+};
+---
+
+<BaseLayout title="Releases — gspec" description="Release notes and changelog for gspec — what's new in each version.">
+  <Navbar slot="navbar" />
+
+  <div class="max-w-[768px] mx-auto px-4 lg:px-8 py-12">
+    <h1 class="text-[1.953rem] sm:text-[2.441rem] font-bold tracking-tight text-[var(--text-primary)] mb-2">
+      Releases
+    </h1>
+    <p class="text-lg text-[var(--text-secondary)] mb-16">
+      What's new in each version of gspec.
+    </p>
+
+    <div class="space-y-16">
+      {releases.map((release, i) => (
+        <article class="relative">
+          {/* Version badge and date */}
+          <div class="flex items-center gap-3 mb-3">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-mono font-semibold bg-[var(--bg-primary-subtle)] text-[var(--text-accent)] border border-[var(--border-primary-subtle)]">
+              v{release.version}
+            </span>
+            <time class="text-sm text-[var(--text-muted)]">{release.date}</time>
+            {i === 0 && (
+              <span class="text-[10px] font-medium uppercase tracking-wider text-[var(--badge-accent-text)] bg-[var(--badge-accent-bg)] px-1.5 py-0.5 rounded">
+                Latest
+              </span>
+            )}
+          </div>
+
+          {/* Title and summary */}
+          <h2 class="text-[1.25rem] sm:text-[1.563rem] font-semibold text-[var(--text-primary)] mb-2 tracking-tight">
+            {release.title}
+          </h2>
+          <p class="text-[var(--text-body)] leading-relaxed mb-6">
+            {release.summary}
+          </p>
+
+          {/* Changes list */}
+          <div class="space-y-3">
+            {release.changes.map((change) => {
+              const colors = typeColors[change.type] || typeColors.added;
+              return (
+                <div class="flex gap-3">
+                  <span class:list={[
+                    'inline-flex items-center justify-center shrink-0 px-2 py-0.5 rounded text-xs font-medium mt-0.5',
+                    colors.bg, colors.text,
+                  ]}>
+                    {colors.label}
+                  </span>
+                  <p class="text-sm text-[var(--text-body)] leading-relaxed [&_code]:text-[var(--code-text)] [&_code]:bg-[var(--bg-surface-raised)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono" set:html={change.description} />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Migration note */}
+          {release.migration && (
+            <div class="mt-6 p-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
+              <h4 class="text-sm font-semibold text-[var(--text-primary)] mb-1">Migration</h4>
+              <p class="text-sm text-[var(--text-secondary)] leading-relaxed [&_code]:text-[var(--code-text)] [&_code]:bg-[var(--bg-surface-raised)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono" set:html={release.migration} />
+            </div>
+          )}
+
+          {/* Separator */}
+          {i < releases.length - 1 && (
+            <hr class="mt-16 border-[var(--border-subtle)]" />
+          )}
+        </article>
+      ))}
+    </div>
+  </div>
+
+  <Footer slot="footer" />
+</BaseLayout>

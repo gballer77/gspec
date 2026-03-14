@@ -25,7 +25,7 @@ These documents become the shared context for all subsequent AI interactions. Wh
 
 The only commands you *need* are the four fundamentals and `implement`. Everything else exists to help when your project calls for it.
 
-The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `implement` can take a plain-language description and start building. The remaining commands — `research`, `feature`, `epic`, `architect`, `analyze`, `dor`, and `record` — add structure and rigor when the scope or complexity warrants it.
+The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `implement` can take a plain-language description and start building. The remaining commands — `research`, `feature`, `architect`, `analyze`, `dor`, and `record` — add structure and rigor when the scope or complexity warrants it.
 
 ```mermaid
 flowchart LR
@@ -37,7 +37,7 @@ flowchart LR
     competitive analysis"]
 
     Specify["3. Specify
-    feature · epic"]
+    feature"]
 
     Architect["4. Architect
     technical blueprint"]
@@ -97,10 +97,9 @@ Use `research` when you want to understand what competitors offer, identify tabl
 
 | Command | Role | What it produces |
 |---|---|---|
-| `gspec.feature` | Product Manager | PRD for a single feature with prioritized capabilities |
-| `gspec.epic` | Product Manager | Breaks a large epic into multiple feature PRDs with dependency mapping |
+| `gspec.feature` | Product Manager | One or more feature PRDs with prioritized capabilities |
 
-Use `feature` when you want a detailed PRD with prioritized capabilities and acceptance criteria before building. Use `epic` when a body of work is large enough to need decomposition into multiple features with dependency mapping. For smaller tasks or rapid prototyping, you can skip straight to `implement` with a plain-language description.
+Use `feature` when you want detailed PRDs with prioritized capabilities and acceptance criteria before building. It handles both single features and larger bodies of work — if the scope is large enough, it will propose a multi-feature breakdown for your approval. For smaller tasks or rapid prototyping, you can skip straight to `implement` with a plain-language description.
 
 **4. Architect** *(optional)* — Translate specs into a concrete technical blueprint.
 
@@ -182,8 +181,6 @@ project-root/
     ├── practices.md        # Development standards
     ├── architecture.md     # Technical architecture blueprint
     ├── research.md         # Competitive analysis and feature gaps
-    ├── epics/
-    │   └── onboarding-flow.md
     └── features/
         ├── user-authentication.md
         ├── dashboard-analytics.md

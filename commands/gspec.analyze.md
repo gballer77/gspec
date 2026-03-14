@@ -27,8 +27,7 @@ Read **every** available gspec document in this order:
 4. `gspec/practices.md` — Development standards, testing, conventions
 5. `gspec/architecture.md` — Technical blueprint: project structure, data model, API design, environment
 6. `gspec/research.md` — Competitive analysis and feature proposals
-7. `gspec/epics/*.md` — Epic structure and feature dependencies
-8. `gspec/features/*.md` — Individual feature requirements
+7. `gspec/features/*.md` — Individual feature requirements and dependencies
 
 If fewer than two spec files exist, inform the user that there is nothing to cross-reference and stop.
 
@@ -64,7 +63,6 @@ Systematically compare specs against each other. Look for these categories of di
 #### Scope & Priority Conflicts
 - A feature capability is marked P0 in one place but P1 or P2 in another
 - Profile describes scope or positioning that conflicts with what features actually define
-- Epic dependency ordering conflicts with feature priority levels
 - Research recommendations conflict with decisions already made in other specs
 
 #### Behavioral Conflicts

@@ -27,7 +27,7 @@ Before conducting any research, read available gspec documents for context:
    - **Market & Competition** section — direct competitors, indirect competitors or alternatives, white space or gaps the product fills
    - **Value Proposition** section — differentiation and competitive advantages
 2. `gspec/features/*.md` — **Optional.** If feature PRDs exist, read them to understand what capabilities are already specified. This enables gap analysis in later phases.
-3. `gspec/epics/*.md` — **Optional.** If epics exist, read them for broader product scope context.
+
 
 **If `gspec/profile.md` does not exist or has no Market & Competition section**, inform the user that a product profile with competitor information is required for competitive research. Suggest running `gspec-profile` first. Do not proceed without competitor information.
 

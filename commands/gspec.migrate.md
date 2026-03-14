@@ -11,7 +11,7 @@ Your task is to update existing gspec specification documents to match the curre
 Scan the `gspec/` directory for all Markdown files:
 - `gspec/*.md` (profile, stack, style, practices, architecture)
 - `gspec/features/*.md` (individual feature PRDs)
-- `gspec/epics/*.md` (epic summaries)
+
 
 For each file, check the YAML frontmatter at the top of the file:
 - If the file starts with `---` followed by YAML content and another `---`, read the `gspec-version` field
@@ -40,7 +40,6 @@ For each file that needs migration, determine its document type and read the cor
 | `gspec/practices.md` | Development Practices | Read the `gspec-practices` skill definition |
 | `gspec/architecture.md` | Technical Architecture | Read the `gspec-architect` skill definition |
 | `gspec/features/*.md` | Feature PRD | Read the `gspec-feature` skill definition |
-| `gspec/epics/*.md` | Epic Summary | Read the `gspec-epic` skill definition |
 
 The skill definitions are located in your installed skills directory. Read them to understand the current "Required Sections" structure for each document type.
 

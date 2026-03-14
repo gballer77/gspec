@@ -4,7 +4,7 @@ Your task is to take the established product specifications and produce a **Tech
 
 Beyond defining the architecture, you are also responsible for **identifying technical gaps and ambiguities** in the existing specs and **proposing implementation solutions**. This is the place in the gspec workflow where underspecified technical behavior is surfaced and resolved — so that `gspec-implement` can focus on building rather than making architectural decisions.
 
-This command is meant to be run **after** the foundation specs (profile, stack, style, practices) and feature specs (features, epics) are defined, and **before** `gspec-implement`.
+This command is meant to be run **after** the foundation specs (profile, stack, style, practices) and feature specs are defined, and **before** `gspec-implement`.
 
 You should:
 - Read all existing gspec documents first — this architecture must serve the product, stack, style, and features already defined
@@ -27,8 +27,7 @@ Before generating the architecture document, read **all** existing gspec documen
 2. **`gspec/stack.md`** — Technology choices, frameworks, and infrastructure. Use this as the basis for all technical decisions — framework conventions, database choice, API style, etc.
 3. **`gspec/style.md`** — Design system and tokens. Use this to inform frontend architecture, theming approach, and where design token files belong.
 4. **`gspec/practices.md`** — Development standards. Use this to align file organization, testing patterns, and code structure with team conventions.
-5. **`gspec/epics/*.md`** — Epic structure and feature dependencies. Use this to understand feature grouping and sequencing.
-6. **`gspec/features/*.md`** — Individual feature requirements. Use these to derive data entities, API endpoints, component structure, and integration points.
+5. **`gspec/features/*.md`** — Individual feature requirements and dependencies. Use these to derive data entities, API endpoints, component structure, and integration points.
 
 All of these provide essential context. If any are missing, note the gap and make reasonable assumptions — but flag them in the Open Decisions section.
 

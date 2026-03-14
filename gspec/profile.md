@@ -76,8 +76,7 @@ gspec is a CLI tool and AI skill system that installs into your project and prov
 - **Style** — Visual design system with design tokens, colors, and component patterns
 - **Stack** — Technology choices, frameworks, and infrastructure
 - **Practices** — Development standards, testing conventions, and workflows
-- **Features** — Individual feature PRDs with prioritized capabilities
-- **Epics** — Large initiatives broken into multiple features with dependency mapping
+- **Features** — One or more feature PRDs with prioritized capabilities
 - **Architecture** — Technical blueprint with data models, APIs, and project structure
 - **Research** — Competitive analysis and feature gap identification
 
@@ -96,7 +95,7 @@ Once generated, these Markdown documents live in a `gspec/` directory in your re
 
 1. **New project kickoff** — A small team runs the four foundation commands (profile, style, stack, practices) to establish a shared product definition before writing code. AI tools immediately have full context.
 
-2. **Feature planning** — A product manager uses `gspec-feature` or `gspec-epic` to define new capabilities with prioritized requirements. The developer then runs `gspec-implement` and the AI builds against the spec.
+2. **Feature planning** — A product manager uses `gspec-feature` to define new capabilities with prioritized requirements. The developer then runs `gspec-implement` and the AI builds against the spec.
 
 3. **Keeping specs honest** — As a developer ships code that changes the data model, the spec-sync rules prompt the AI tool to update `architecture.md` automatically, keeping documentation current without manual effort.
 

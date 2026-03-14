@@ -13,7 +13,6 @@ const sections = [
   { id: 'practices', label: 'practices', group: 'Define' },
   { id: 'research', label: 'research', group: 'Research' },
   { id: 'feature', label: 'feature', group: 'Specify' },
-  { id: 'epic', label: 'epic', group: 'Specify' },
   { id: 'architect', label: 'architect', group: 'Architect' },
   { id: 'analyze', label: 'analyze', group: 'Analyze' },
   { id: 'implement', label: 'implement', group: 'Build' },
@@ -28,7 +27,7 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
 
   <h1>Documentation</h1>
   <p class="text-lg text-[var(--text-secondary)] !mt-2 !mb-12">
-    Complete reference for the gspec workflow and all 11 commands.
+    Complete reference for the gspec workflow and all 10 commands.
   </p>
 
   <!-- Workflow Overview -->
@@ -43,7 +42,7 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
         {[
           { name: 'Define', desc: 'profile, style, stack, practices', required: true },
           { name: 'Research', desc: 'research', required: false },
-          { name: 'Specify', desc: 'feature, epic', required: false },
+          { name: 'Specify', desc: 'feature', required: false },
           { name: 'Architect', desc: 'architect', required: false },
           { name: 'Analyze', desc: 'analyze', required: false },
           { name: 'Build', desc: 'implement', required: true },
@@ -236,13 +235,14 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
     id="feature"
     name="feature"
     role="Product Manager"
-    description="Writes a product requirements document (PRD) for an individual feature. Produces prioritized capabilities (P0/P1/P2) with testable acceptance criteria, scope boundaries, and dependency mapping."
-    produces="A feature PRD saved to gspec/features/<feature-name>.md. Includes overview, user stories, scope (in/out/deferred), prioritized capabilities with acceptance criteria, dependencies, assumptions and risks, and success metrics."
+    description="Writes one or more product requirements documents (PRDs) for features. Handles both single features and larger bodies of work — if the scope is large enough, it proposes a multi-feature breakdown for your approval before generating individual PRDs."
+    produces="One or more feature PRDs saved to gspec/features/<feature-name>.md. Each includes overview, user stories, scope (in/out/deferred), prioritized capabilities with acceptance criteria, dependencies, assumptions and risks, and success metrics."
     invocation={'/feature "Task board with drag-and-drop columns"'}
     questions={[
       'Feature description and user need it addresses',
       'Target users and their workflows',
       'Scope boundaries — what\'s in and what\'s explicitly out',
+      'For large requests: how to decompose into independent features',
       'Edge cases and error scenarios',
       'Dependencies on other features or systems',
     ]}
@@ -250,48 +250,16 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
       'Describe the user need, not the solution — let the Product Manager role shape the requirements',
       'Be explicit about scope boundaries to prevent feature creep',
       'P0 capabilities should be the minimum for the feature to be useful',
-      'Keep individual features focused — use epic to break down large initiatives',
+      'For large initiatives, review the proposed feature breakdown before the PRDs are generated',
     ]}
     pitfalls={[
       'Describing implementation details instead of user needs in the feature description',
       'Making everything P0 — if everything is critical, nothing is prioritized',
-      'Writing features that are too large — if it has more than 10-12 capabilities, consider using epic instead',
+      'Over-decomposing small work into multiple features — only split when sub-features deliver independent user value',
     ]}
     related={[
-      { name: 'epic', relation: 'Use epic instead when a feature is too large to specify in one PRD' },
       { name: 'architect', relation: 'Architect reads feature PRDs to design the technical blueprint' },
       { name: 'implement', relation: 'Implement builds against feature PRD capabilities and checks them off' },
-    ]}
-  />
-
-  <CommandSection
-    id="epic"
-    name="epic"
-    role="Product Manager"
-    description="Breaks down a large initiative into multiple focused feature PRDs with dependency mapping. Use this when a body of work is too large for a single feature PRD."
-    produces="Multiple feature PRDs saved to gspec/features/, plus an epic overview document. Each generated feature PRD follows the same structure as a standalone feature command output."
-    invocation={'/epic "Complete user authentication system with OAuth, email/password, and role-based access control"'}
-    questions={[
-      'The overall initiative and its goals',
-      'How the initiative should be decomposed into features',
-      'Dependencies between the resulting features',
-      'Priority ordering for implementation',
-    ]}
-    bestPractices={[
-      'Use epic when your initiative naturally decomposes into 3+ distinct features',
-      'Provide context about the overall goal, not just a list of features you want',
-      'Review the generated dependency map before implementing — build dependencies first',
-      'Each generated feature PRD can be independently implemented with /implement',
-    ]}
-    pitfalls={[
-      'Using epic for something that\'s really just one feature — you\'ll get artificially split PRDs',
-      'Not reviewing the dependency mapping — implementing features out of order causes rework',
-      'Trying to specify everything at epic level instead of letting each feature PRD handle its own details',
-    ]}
-    related={[
-      { name: 'feature', relation: 'Epic generates multiple feature PRDs' },
-      { name: 'architect', relation: 'Run architect after epic to design the technical blueprint across all features' },
-      { name: 'implement', relation: 'Implement each generated feature PRD individually' },
     ]}
   />
 
