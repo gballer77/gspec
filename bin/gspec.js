@@ -9,6 +9,7 @@ import chalk from 'chalk';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = join(__dirname, '..', 'dist');
+const STARTERS_DIR = join(__dirname, '..', 'starters');
 const pkg = JSON.parse(await readFile(join(__dirname, '..', 'package.json'), 'utf-8'));
 
 const BANNER = `
@@ -107,6 +108,254 @@ function promptConfirmNo(message) {
       resolve(answer.trim().toLowerCase().startsWith('n'));
     });
   });
+}
+
+// --- Feature dependency map ---
+// Maps feature slugs to their required feature dependencies (other feature slugs).
+// This is used to auto-include dependencies when a user selects a feature.
+const FEATURE_DEPENDENCIES = {
+  'home-page': [],
+  'about-page': ['home-page'],
+  'contact-page': ['home-page'],
+  'services-page': ['home-page'],
+  'responsive-navbar': ['home-page'],
+  'contact-form': ['contact-page'],
+  'site-footer': ['home-page', 'about-page', 'contact-page'],
+  'theme-switcher': ['home-page', 'about-page', 'contact-page'],
+};
+
+function resolveFeatureDependencies(selectedSlugs) {
+  const resolved = new Set(selectedSlugs);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const slug of [...resolved]) {
+      const deps = FEATURE_DEPENDENCIES[slug] || [];
+      for (const dep of deps) {
+        if (!resolved.has(dep)) {
+          resolved.add(dep);
+          changed = true;
+        }
+      }
+    }
+  }
+  return [...resolved];
+}
+
+// --- Starter template utilities ---
+
+async function parseStarterDescription(filePath) {
+  const content = await readFile(filePath, 'utf-8');
+  const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
+  if (!match) return '';
+  const descLine = match[1].split('\n').find((l) => l.startsWith('description:'));
+  return descLine ? descLine.replace(/^description:\s*/, '').trim() : '';
+}
+
+async function listStarterTemplates(category) {
+  const dir = join(STARTERS_DIR, category);
+  let entries;
+  try {
+    entries = await readdir(dir);
+  } catch (e) {
+    if (e.code === 'ENOENT') return [];
+    throw e;
+  }
+  const mdFiles = entries.filter((f) => f.endsWith('.md'));
+  const templates = [];
+  for (const f of mdFiles) {
+    const slug = f.replace(/\.md$/, '');
+    const description = await parseStarterDescription(join(dir, f));
+    templates.push({ slug, description });
+  }
+  return templates;
+}
+
+function formatStarterName(slug) {
+  return slug
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+function stampVersion(content) {
+  return content.replace(/^(---\s*\n[\s\S]*?)gspec-version:\s*.+/m, `$1gspec-version: ${pkg.version}`);
+}
+
+function promptSelect(message, choices) {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  console.log(chalk.bold(`\n${message}\n`));
+  for (let i = 0; i < choices.length; i++) {
+    const label = formatStarterName(choices[i].slug);
+    const desc = choices[i].description ? ` — ${choices[i].description}` : '';
+    console.log(`  ${chalk.cyan(String(i + 1))}) ${label}${desc}`);
+  }
+  console.log();
+
+  return new Promise((resolve) => {
+    rl.question(chalk.bold(`  Select [1-${choices.length}]: `), (answer) => {
+      rl.close();
+      const num = parseInt(answer.trim(), 10);
+      if (num >= 1 && num <= choices.length) return resolve(choices[num - 1].slug);
+      console.error(chalk.red(`\nInvalid selection: "${answer.trim()}"`));
+      process.exit(1);
+    });
+  });
+}
+
+function promptMultiSelect(message, choices) {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  console.log(chalk.bold(`\n${message}\n`));
+  for (let i = 0; i < choices.length; i++) {
+    const label = formatStarterName(choices[i].slug);
+    const desc = choices[i].description ? ` — ${choices[i].description}` : '';
+    console.log(`  ${chalk.cyan(String(i + 1))}) ${label}${desc}`);
+  }
+  console.log();
+
+  return new Promise((resolve) => {
+    rl.question(chalk.bold('  Enter numbers (comma-separated), "all", or press Enter to skip: '), (answer) => {
+      rl.close();
+      const trimmed = answer.trim().toLowerCase();
+      if (trimmed === '') return resolve([]);
+      if (trimmed === 'all') return resolve(choices.map((c) => c.slug));
+
+      const nums = trimmed.split(',').map((s) => parseInt(s.trim(), 10));
+      const invalid = nums.find((n) => isNaN(n) || n < 1 || n > choices.length);
+      if (invalid !== undefined) {
+        console.error(chalk.red(`\nInvalid selection: "${answer.trim()}"`));
+        process.exit(1);
+      }
+      resolve(nums.map((n) => choices[n - 1].slug));
+    });
+  });
+}
+
+async function seedStarterTemplates(cwd) {
+  const wantStarters = await promptConfirm(chalk.bold('  Would you like to start from a starter template? [y/N]: '));
+  if (!wantStarters) {
+    console.log(chalk.dim('\n  Skipped starter templates.\n'));
+    return;
+  }
+
+  // Check for existing profile — required before starters
+  const profilePath = join(cwd, 'gspec', 'profile.md');
+  let hasProfile = false;
+  try {
+    await stat(profilePath);
+    hasProfile = true;
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+
+  if (!hasProfile) {
+    console.log(chalk.yellow('\n  ⚠  No product profile found (gspec/profile.md).'));
+    console.log(chalk.yellow('  A profile defines what the product is and who it serves.'));
+    console.log(chalk.yellow('  Starter templates work best when a profile exists to provide context.\n'));
+    console.log(chalk.dim('  Run the gspec-profile command in your AI tool first, then re-run npx gspec to seed starters.\n'));
+    const continueWithout = await promptConfirm(chalk.bold('  Continue without a profile? [y/N]: '));
+    if (!continueWithout) {
+      console.log(chalk.dim('\n  Skipped starter templates. Generate a profile first, then re-run npx gspec.\n'));
+      return;
+    }
+  }
+
+  const practices = await listStarterTemplates('practices');
+  const stacks = await listStarterTemplates('stacks');
+  const styles = await listStarterTemplates('styles');
+  const features = await listStarterTemplates('features');
+
+  if (practices.length === 0 || stacks.length === 0 || styles.length === 0) {
+    console.log(chalk.yellow('  Missing starter templates (practices, stacks, or styles). Skipping.\n'));
+    return;
+  }
+
+  // Single-select with auto-select for single-option categories
+  const practice = practices.length === 1
+    ? (console.log(chalk.dim(`\n  Using practice: ${formatStarterName(practices[0].slug)}`)), practices[0].slug)
+    : await promptSelect('Select a development practice', practices);
+
+  const stack = stacks.length === 1
+    ? (console.log(chalk.dim(`  Using stack: ${formatStarterName(stacks[0].slug)}`)), stacks[0].slug)
+    : await promptSelect('Select a technology stack', stacks);
+
+  const style = styles.length === 1
+    ? (console.log(chalk.dim(`  Using style: ${formatStarterName(styles[0].slug)}`)), styles[0].slug)
+    : await promptSelect('Select a visual style', styles);
+
+  let selectedFeatures = [];
+  if (features.length > 0) {
+    selectedFeatures = await promptMultiSelect('Select features (optional)', features);
+  }
+
+  // Auto-include feature dependencies
+  if (selectedFeatures.length > 0) {
+    const resolved = resolveFeatureDependencies(selectedFeatures);
+    const added = resolved.filter((f) => !selectedFeatures.includes(f));
+    if (added.length > 0) {
+      console.log(chalk.cyan(`\n  Auto-including dependencies: ${added.map(formatStarterName).join(', ')}`));
+      selectedFeatures = resolved;
+    }
+  }
+
+  // Check for existing files
+  const gspecDir = join(cwd, 'gspec');
+  const filesToWrite = [
+    { src: join(STARTERS_DIR, 'practices', `${practice}.md`), dest: join(gspecDir, 'practices.md'), label: 'gspec/practices.md' },
+    { src: join(STARTERS_DIR, 'stacks', `${stack}.md`), dest: join(gspecDir, 'stack.md'), label: 'gspec/stack.md' },
+    { src: join(STARTERS_DIR, 'styles', `${style}.md`), dest: join(gspecDir, 'style.md'), label: 'gspec/style.md' },
+  ];
+  for (const feature of selectedFeatures) {
+    filesToWrite.push({
+      src: join(STARTERS_DIR, 'features', `${feature}.md`),
+      dest: join(gspecDir, 'features', `${feature}.md`),
+      label: `gspec/features/${feature}.md`,
+    });
+  }
+
+  const existingFiles = [];
+  for (const f of filesToWrite) {
+    try {
+      await stat(f.dest);
+      existingFiles.push(f.label);
+    } catch (e) {
+      if (e.code !== 'ENOENT') throw e;
+    }
+  }
+
+  if (existingFiles.length > 0) {
+    console.log(chalk.yellow(`\n  The following files already exist and will be overwritten:\n`));
+    for (const label of existingFiles) {
+      console.log(`    ${chalk.yellow('!')} ${label}`);
+    }
+    console.log();
+    const confirmed = await promptConfirm(chalk.bold('  Continue and overwrite? [y/N]: '));
+    if (!confirmed) {
+      console.log(chalk.dim('\n  Skipped starter templates.\n'));
+      return;
+    }
+  }
+
+  // Copy files with version stamping
+  console.log(chalk.bold('\n  Seeding starter templates...\n'));
+  for (const f of filesToWrite) {
+    await mkdir(dirname(f.dest), { recursive: true });
+    const content = await readFile(f.src, 'utf-8');
+    await writeFile(f.dest, stampVersion(content), 'utf-8');
+    console.log(`  ${chalk.green('+')} ${f.label}`);
+  }
+
+  // Summary
+  console.log(chalk.bold('\n  Seeded gspec/ with:'));
+  console.log(`    Practice: ${formatStarterName(practice)}`);
+  console.log(`    Stack:    ${formatStarterName(stack)}`);
+  console.log(`    Style:    ${formatStarterName(style)}`);
+  if (selectedFeatures.length > 0) {
+    console.log(`    Features: ${selectedFeatures.map(formatStarterName).join(', ')}`);
+  } else {
+    console.log('    Features: (none)');
+  }
+  console.log();
 }
 
 async function findExistingFiles(target, cwd) {
@@ -405,6 +654,8 @@ program
     }
 
     await install(targetName, process.cwd());
+
+    await seedStarterTemplates(process.cwd());
 
     const skipSync = await promptConfirmNo(chalk.bold('  Enable automatic spec sync? (keeps gspec specs up to date as code changes) [Y/n]: '));
     if (!skipSync) {

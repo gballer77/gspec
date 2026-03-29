@@ -23,7 +23,7 @@ Read **every** available gspec document in this order:
 
 1. `gspec/profile.md` — Product identity, scope, audience, and positioning
 2. `gspec/stack.md` — Technology choices, frameworks, infrastructure
-3. `gspec/style.md` — Visual design language, tokens, component patterns
+3. `gspec/style.md` — Visual design language, tokens, component styling
 4. `gspec/practices.md` — Development standards, testing, conventions
 5. `gspec/architecture.md` — Technical blueprint: project structure, data model, API design, environment
 6. `gspec/research.md` — Competitive analysis and feature proposals

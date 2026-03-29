@@ -110,34 +110,27 @@ You should:
 - Component color adjustments
 - Contrast considerations
 
-#### Theme Switching
-- How themes interact with the color palette
-- Token mapping between themes
+### 6. Component Styling
 
-### 6. Components
+> **Focus on visual styling only** — colors, borders, typography, spacing, and state appearances. Do NOT define component structure, layout behavior, or interaction patterns (those belong in feature PRDs). The goal is to answer "what does it look like?" not "how does it work?"
 
 #### Buttons
-- Primary, secondary, tertiary styles
-- States (default, hover, active, disabled)
-- Sizes and padding
-- Border radius
+- Color treatments for primary, secondary, ghost variants
+- States: default, hover, active, disabled appearances
+- Sizes and border radius
 
 #### Form Elements
-- Input fields
-- Dropdowns, checkboxes, radio buttons
-- Labels and helper text
-- Validation states
+- Input field colors, borders, and focus ring styles
+- Label and helper text typography
+- Validation state colors (error, success)
 
 #### Cards & Containers
-- Background colors
-- Border styles
-- Shadow elevations
-- Corner radius
+- Background colors and border styles
+- Shadow elevations and corner radius
 
-#### Navigation
-- Header/navbar styles
-- Menu patterns
-- Active states
+#### Navigation Elements
+- Link colors: default, hover, active states
+- Background treatments for navigation surfaces
 
 ### 7. Visual Effects
 
@@ -157,11 +150,13 @@ You should:
 
 ### 8. Iconography
 
-#### Icon Style
-- Outlined vs filled
+> **The style guide is the single authority for icon library choices.** The stack document defines the CSS framework and component library (e.g., shadcn/ui); the style guide defines which icon set is used. This separation ensures icon decisions are driven by design rationale (visual consistency, stroke style) while component library decisions remain with the technology stack (framework compatibility).
+
+#### Icon Library
+- Specific icon library recommendation with rationale
+- Outlined vs filled style
 - Stroke width
 - Size standards
-- Icon library recommendation
 
 #### Usage Guidelines
 - When to use icons

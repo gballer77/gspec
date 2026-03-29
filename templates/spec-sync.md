@@ -13,7 +13,7 @@ These specs define what the product is, how it should look, what technology it u
 3. **Update specs that your changes contradict** — If your code change makes a spec statement incorrect (e.g., you changed the data model, switched a dependency, altered a UI pattern, or added a new API endpoint), update the spec to reflect reality. Common candidates:
    - `gspec/architecture.md` — project structure, data model, API routes, component hierarchy
    - `gspec/stack.md` — dependencies, frameworks, infrastructure
-   - `gspec/style.md` — design tokens, component patterns, visual conventions
+   - `gspec/style.md` — design tokens, component styling, visual conventions
    - `gspec/practices.md` — coding standards, testing conventions, workflows
    - `gspec/profile.md` — product scope, target users, value proposition (rarely changes)
 

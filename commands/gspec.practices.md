@@ -34,8 +34,10 @@ You should:
 - Focus on practices that matter for this specific project
 - Avoid generic advice that doesn't apply
 - **Do NOT include technology stack information** — this is documented separately
-- **Do NOT prescribe specific testing frameworks, tools, or libraries** — focus on testing principles, patterns, and practices, not which tools to use
+- **Do NOT prescribe specific testing frameworks, tools, or libraries** — focus on testing principles, patterns, and practices. The stack document (`gspec/stack.md`) is the single authority for which test tools are used.
+- **DO define CI/CD pipeline structure** — the practices document defines pipeline stages, gates, and ordering (lint → typecheck → test → build → deploy). The stack document defines which CI/CD platform technology is used (GitHub Actions, GitLab CI, etc.).
 - **Mark sections as "Not Applicable"** when they don't apply to this project
+- **Precedence rule**: Where this document conflicts with technology-specific practices in `gspec/stack.md`, the stack's technology-specific practices take precedence for framework-specific concerns (e.g., file naming conventions dictated by a framework). This document governs general engineering principles.
 
 ---
 

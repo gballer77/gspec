@@ -51,7 +51,10 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: 2 }));
       The CLI will prompt you to select your platform — <strong>Claude Code</strong>, <strong>Cursor</strong>, <strong>Antigravity</strong>, or <strong>Codex</strong>. It installs structured specification skills as slash commands in your tool of choice.
     </p>
     <p>
-      That's it. No accounts, no config files, no dependencies. The skills are plain Markdown files installed into your project.
+      After installing commands, you'll be offered <strong>starter templates</strong> — pre-built specs for common technology stacks, practices, visual styles, and features. Select the ones that match your project and they'll be copied into your <code>gspec/</code> directory as a starting point. Starters are optional — you can skip them and generate each spec from scratch using the commands.
+    </p>
+    <p>
+      That's it. No accounts, no config files, no dependencies. The skills are plain Markdown files installed into your project. Browse the full <a href={`${import.meta.env.BASE_URL}starters/`}>starter template library</a> to see what's available.
     </p>
   </section>
 

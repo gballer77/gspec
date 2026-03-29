@@ -5,6 +5,39 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.8.0',
+    date: 'March 28, 2026',
+    title: 'Starter templates',
+    summary: 'The installer now offers pre-built starter templates so new projects can hit the ground running with practices, stack, style, and feature specs already in place.',
+    changes: [
+      {
+        type: 'added',
+        description: 'Starter template seeding during <code>npx gspec</code> install — choose from pre-built practices, technology stacks, visual styles, and common feature PRDs to populate your <code>gspec/</code> directory instantly.',
+      },
+      {
+        type: 'added',
+        description: 'Starter template library with templates for multiple stacks (Next.js + Supabase + Vercel, Next.js + Vercel + TypeScript, Astro + Tailwind + GitHub Pages), practices (TDD pipeline-first), styles (clean professional, dark minimal developer), and common features (home page, about page, contact form, navbar, footer, theme switcher, and more).',
+      },
+      {
+        type: 'added',
+        description: 'New <code>gspec-migrate-starters</code> command for migrating starter templates to the current gspec format (project maintenance).',
+      },
+      {
+        type: 'changed',
+        description: 'The <code>starters/</code> directory is now included in the published npm package.',
+      },
+      {
+        type: 'changed',
+        description: 'Clarified document authority — <code>stack</code> is the single authority for testing tool choices and CI/CD technology, <code>style</code> is the single authority for icon libraries. Stack technology-specific practices take precedence over general practices for framework-specific concerns.',
+      },
+      {
+        type: 'changed',
+        description: 'Component styling guidance refined — <code>style</code> focuses on visual appearance only (colors, spacing, typography), while <code>stack</code> owns component library selection (shadcn/ui, Radix, Headless UI).',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install updated commands. You will be prompted to seed starter templates — this is optional and will not affect existing gspec files unless you choose to overwrite.',
+  },
+  {
     version: '1.7.0',
     date: 'March 14, 2026',
     title: 'Unified feature command',

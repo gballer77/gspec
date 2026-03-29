@@ -14,7 +14,10 @@ yarn-debug.log*
 yarn-error.log*
 
 # Install artifacts (created by running gspec locally)
-.claude
+.claude/**
+!.claude/skills/
+!.claude/skills/gspec-migrate-starters/
+!.claude/skills/gspec-migrate-starters/**
 .cursor
 .agent
 .agents

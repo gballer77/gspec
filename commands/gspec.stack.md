@@ -91,6 +91,8 @@ You should:
 - Responsive design tooling
 
 - **Note**: Visual design values (colors, typography, spacing) are documented separately as framework-agnostic design tokens; include here how the chosen CSS framework maps to those tokens
+- **Component library** (if applicable) — e.g., shadcn/ui, Headless UI, Radix UI. Component libraries are framework-specific technology choices and belong in the stack, not the style guide.
+- **Note**: Icon libraries (e.g., HeroIcons, Lucide) are defined in `gspec/style.md`, not here. The stack defines the CSS framework and component library; the style defines the icon set. Do NOT include an iconography section in the stack document.
 
 ### 5. Backend Stack
 **Mark as N/A if this is a frontend-only or static site project**
@@ -129,9 +131,9 @@ You should:
 - Scaling approach
 
 #### CI/CD Pipeline
-- CI/CD platform (GitHub Actions, GitLab CI, Jenkins, etc.)
-- Pipeline stages
-- Deployment automation
+- CI/CD platform technology (GitHub Actions, GitLab CI, Jenkins, etc.) and rationale
+- Deployment automation and trigger configuration
+- **Note**: The stack defines *which CI/CD technology* is used. The pipeline structure (stages, gates, ordering) is defined in `gspec/practices.md`. Include platform-specific configuration details here (e.g., workflow YAML format, runner setup), not pipeline philosophy.
 
 #### Infrastructure as Code
 - IaC tool (Terraform, CloudFormation, Pulumi, etc.)
@@ -189,10 +191,13 @@ You should:
 
 ### 10. Testing Infrastructure
 
+> **The stack is the single authority for test tooling choices.** Define which frameworks and tools are used here. Testing philosophy, patterns, and coverage requirements are defined in `gspec/practices.md`.
+
 #### Testing Frameworks
-- Unit testing framework
+- Unit testing framework (Vitest, Jest, pytest, etc.) and rationale
 - Integration testing tools
-- E2E testing framework (Playwright, Cypress, etc.)
+- E2E testing framework (Playwright, Cypress, etc.) and rationale
+- Component testing tools (if applicable)
 
 #### Test Data Management
 - Test database strategy
@@ -219,7 +224,7 @@ You should:
 ### 12. Development Tools
 
 #### Package Management
-- Package manager (npm, yarn, pnpm, pip, maven, etc.)
+- **Package manager** — Explicitly declare the package manager (npm, yarn, pnpm, pip, maven, etc.) with rationale for the choice. This must be stated clearly so all other gspec commands and CI/CD configuration use the correct tool.
 - Dependency management strategy
 - Private package registry (if applicable)
 

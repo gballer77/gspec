@@ -1,0 +1,188 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+
+const categories = [
+  {
+    id: 'stacks',
+    title: 'Technology Stacks',
+    description: 'Pre-configured stack definitions covering frameworks, databases, hosting, and tooling.',
+    file: 'gspec/stack.md',
+    templates: [
+      {
+        name: 'Next.js + Supabase + Vercel',
+        slug: 'nextjs-supabase-vercel',
+        description: 'Full-stack SaaS with Next.js App Router, Supabase (Postgres, Auth, RLS), and Vercel deployment.',
+      },
+      {
+        name: 'Next.js + Vercel + TypeScript',
+        slug: 'nextjs-vercel-typescript',
+        description: 'Next.js App Router, TypeScript, Tailwind CSS, deployed on Vercel.',
+      },
+      {
+        name: 'Astro + Tailwind + GitHub Pages',
+        slug: 'astro-tailwind-github-pages',
+        description: 'Static documentation site with Astro, Tailwind CSS v4, and GitHub Pages deployment.',
+      },
+    ],
+  },
+  {
+    id: 'practices',
+    title: 'Development Practices',
+    description: 'Engineering standards, code quality rules, and CI/CD workflows that AI agents follow during implementation.',
+    file: 'gspec/practices.md',
+    templates: [
+      {
+        name: 'TDD Pipeline-First',
+        slug: 'tdd-pipeline-first',
+        description: 'TDD, pipeline-first CI/CD, DRY principles, and clean code standards.',
+      },
+    ],
+  },
+  {
+    id: 'styles',
+    title: 'Visual Styles',
+    description: 'Design tokens, color palettes, typography, and component patterns for consistent UI.',
+    file: 'gspec/style.md',
+    templates: [
+      {
+        name: 'Clean Professional',
+        slug: 'clean-professional',
+        description: 'Clean, professional design with restrained palette and clear typography.',
+      },
+      {
+        name: 'Dark Minimal Developer',
+        slug: 'dark-minimal-developer',
+        description: 'Dark-first minimal design system with purple accent, inspired by developer documentation sites.',
+      },
+    ],
+  },
+  {
+    id: 'features',
+    title: 'Features',
+    description: 'Ready-made PRDs for common pages and components. Select as many as you need.',
+    file: 'gspec/features/',
+    templates: [
+      {
+        name: 'Home Page',
+        slug: 'home-page',
+        description: 'Hero section, service highlights, testimonials, and CTA.',
+      },
+      {
+        name: 'About Page',
+        slug: 'about-page',
+        description: 'Company story, mission, team bios, and values section.',
+      },
+      {
+        name: 'Contact Page',
+        slug: 'contact-page',
+        description: 'Contact page layout with form, location map, and business info.',
+      },
+      {
+        name: 'Contact Form',
+        slug: 'contact-form',
+        description: 'Validated contact form with email delivery and success feedback.',
+      },
+      {
+        name: 'Services Page',
+        slug: 'services-page',
+        description: 'Service offerings with descriptions, icons, and pricing tiers.',
+      },
+      {
+        name: 'Responsive Navbar',
+        slug: 'responsive-navbar',
+        description: 'Responsive navigation bar with mobile hamburger menu.',
+      },
+      {
+        name: 'Site Footer',
+        slug: 'site-footer',
+        description: 'Site footer with nav links, social icons, and copyright.',
+      },
+      {
+        name: 'Theme Switcher',
+        slug: 'theme-switcher',
+        description: 'Light/dark mode toggle with system preference detection.',
+      },
+    ],
+  },
+];
+---
+
+<BaseLayout title="Starters — gspec" description="Pre-built starter templates for technology stacks, practices, styles, and features. Seed your gspec project in seconds.">
+  <Navbar slot="navbar" />
+
+  <div class="max-w-[768px] mx-auto px-4 lg:px-8 py-12">
+    <h1 class="text-[1.953rem] sm:text-[2.441rem] font-bold tracking-tight text-[var(--text-primary)] mb-2">
+      Starters
+    </h1>
+    <p class="text-lg text-[var(--text-secondary)] mb-8">
+      Pre-built templates to bootstrap your <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-sm font-mono">gspec/</code> directory. Choose a stack, practices, style, and features — then start building.
+    </p>
+
+    <!-- How it works -->
+    <section class="mb-16">
+      <h2 class="text-[1.25rem] sm:text-[1.563rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
+        How it works
+      </h2>
+      <p class="text-[var(--text-body)] leading-relaxed mb-4">
+        When you run <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-sm font-mono">npx gspec</code>, the installer prompts you to seed starter templates after installing your commands. You pick one template from each core category — stack, practices, and style — and optionally select feature PRDs from the library.
+      </p>
+      <p class="text-[var(--text-body)] leading-relaxed mb-6">
+        Selected templates are copied into your <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-sm font-mono">gspec/</code> directory with the current gspec version stamped in. From there, customize them for your project — they're plain Markdown and yours to edit.
+      </p>
+      <CodeBlock code="npx gspec" lang="shell" />
+      <div class="mt-6 p-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
+        <h4 class="text-sm font-semibold text-[var(--text-primary)] mb-1">Tip</h4>
+        <p class="text-sm text-[var(--text-secondary)] leading-relaxed">
+          Starters are a starting point, not a ceiling. After seeding, run <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-xs font-mono">/gspec-profile</code> to define your product identity, then refine the seeded specs with the full command suite — <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-xs font-mono">/gspec-stack</code>, <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-xs font-mono">/gspec-style</code>, <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-xs font-mono">/gspec-practices</code>, and <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-xs font-mono">/gspec-feature</code>.
+        </p>
+      </div>
+    </section>
+
+    <!-- Template categories -->
+    <div class="space-y-16">
+      {categories.map((category) => (
+        <section id={category.id}>
+          <div class="flex items-center gap-3 mb-3">
+            <h2 class="text-[1.25rem] sm:text-[1.563rem] font-semibold text-[var(--text-primary)] tracking-tight">
+              {category.title}
+            </h2>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono text-[var(--text-muted)] border border-[var(--border-subtle)]">
+              {category.templates.length}
+            </span>
+          </div>
+          <p class="text-[var(--text-body)] leading-relaxed mb-2">
+            {category.description}
+          </p>
+          <p class="text-sm text-[var(--text-muted)] mb-6">
+            Outputs to <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1 py-0.5 rounded text-xs font-mono">{category.file}</code>
+          </p>
+
+          <div class="space-y-3">
+            {category.templates.map((template) => (
+              <div class="p-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-neutral-600 transition-colors duration-200">
+                <div class="flex items-start gap-3">
+                  <div class="min-w-0">
+                    <h3 class="text-sm font-semibold text-[var(--text-primary)]">
+                      {template.name}
+                    </h3>
+                    <p class="text-sm text-[var(--text-secondary)] leading-relaxed mt-1">
+                      {template.description}
+                    </p>
+                    <p class="text-xs text-[var(--text-muted)] mt-2 font-mono">
+                      {template.slug}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+
+  <Footer slot="footer" />
+</BaseLayout>
