@@ -52,6 +52,12 @@ const TARGETS = {
     label: 'Codex',
     layout: 'directory',
   },
+  opencode: {
+    sourceDir: join(DIST_DIR, 'opencode'),
+    installDir: '.opencode/skills',
+    label: 'Open Code',
+    layout: 'directory',
+  },
 };
 
 const TARGET_CHOICES = [
@@ -59,6 +65,7 @@ const TARGET_CHOICES = [
   { key: '2', name: 'cursor', label: 'Cursor' },
   { key: '3', name: 'antigravity', label: 'Antigravity' },
   { key: '4', name: 'codex', label: 'Codex' },
+  { key: '5', name: 'opencode', label: 'Open Code' },
 ];
 
 function promptTarget() {
@@ -71,7 +78,7 @@ function promptTarget() {
   console.log();
 
   return new Promise((resolve) => {
-    rl.question(chalk.bold('  Select [1-4]: '), (answer) => {
+    rl.question(chalk.bold('  Select [1-5]: '), (answer) => {
       rl.close();
       const trimmed = answer.trim().toLowerCase();
 
@@ -84,7 +91,7 @@ function promptTarget() {
       if (byName) return resolve(byName.name);
 
       console.error(chalk.red(`\nInvalid selection: "${answer.trim()}"`));
-      console.error(`Valid options: 1, 2, 3, 4, claude, cursor, antigravity, codex`);
+      console.error(`Valid options: 1, 2, 3, 4, 5, claude, cursor, antigravity, codex, opencode`);
       process.exit(1);
     });
   });
@@ -506,6 +513,11 @@ const SPEC_SYNC = {
     mode: 'append',
     wrap: (content) => content,
   },
+  opencode: {
+    file: 'AGENTS.md',
+    mode: 'append',
+    wrap: (content) => content,
+  },
 };
 
 const GSPEC_SECTION_MARKER = '<!-- gspec:spec-sync -->';
@@ -561,6 +573,7 @@ const MIGRATE_COMMANDS = {
   cursor: '/gspec-migrate',
   antigravity: '/gspec-migrate',
   codex: '/gspec-migrate',
+  opencode: '/gspec-migrate',
 };
 
 function parseGspecVersion(content) {
@@ -575,7 +588,7 @@ async function collectGspecFiles(gspecDir) {
 
   const topEntries = await readdir(gspecDir);
   for (const entry of topEntries) {
-    if (entry.endsWith('.md')) {
+    if (entry.endsWith('.md') && entry.toLowerCase() !== 'readme.md') {
       files.push({ path: join(gspecDir, entry), label: `gspec/${entry}` });
     }
   }
@@ -643,7 +656,7 @@ program
   .name('gspec')
   .description('Install gspec specification commands')
   .version(pkg.version)
-  .option('-t, --target <target>', 'target platform (claude, cursor, antigravity, codex)')
+  .option('-t, --target <target>', 'target platform (claude, cursor, antigravity, codex, opencode)')
   .action(async (opts) => {
     console.log(BANNER);
 

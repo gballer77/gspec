@@ -128,6 +128,21 @@ const targets = {
       await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
     },
   },
+  opencode: {
+    outDir: join(DIST_DIR, 'opencode'),
+    // .opencode/skills/<name>/SKILL.md
+    async emit(outDir, content, meta) {
+      const frontmatter = buildFrontmatter({
+        name: meta.name,
+        description: meta.description,
+      });
+      // OpenCode uses natural language invocation; strip the placeholder lines
+      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      const skillDir = join(outDir, meta.name);
+      await mkdir(skillDir, { recursive: true });
+      await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
+    },
+  },
 };
 
 async function build(targetNames) {

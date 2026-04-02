@@ -5,6 +5,23 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.9.0',
+    date: 'April 2, 2026',
+    title: 'Open Code support',
+    summary: 'Added Open Code as a supported platform and fixed a migration false positive for README files.',
+    changes: [
+      {
+        type: 'added',
+        description: 'Open Code platform support — <code>npx gspec --target opencode</code> installs skills to <code>.opencode/skills/</code>.',
+      },
+      {
+        type: 'fixed',
+        description: 'The installer no longer flags <code>gspec/README.md</code> as needing migration.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install updated commands. Select <strong>Open Code</strong> (option 5) if using Open Code.',
+  },
+  {
     version: '1.8.0',
     date: 'March 28, 2026',
     title: 'Starter templates',
