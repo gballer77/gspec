@@ -179,6 +179,7 @@ async function listStarterTemplates(category) {
 }
 
 function formatStarterName(slug) {
+  if (slug === '_none') return 'None';
   return slug
     .split('-')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -245,28 +246,6 @@ async function seedStarterTemplates(cwd) {
     return;
   }
 
-  // Check for existing profile — required before starters
-  const profilePath = join(cwd, 'gspec', 'profile.md');
-  let hasProfile = false;
-  try {
-    await stat(profilePath);
-    hasProfile = true;
-  } catch (e) {
-    if (e.code !== 'ENOENT') throw e;
-  }
-
-  if (!hasProfile) {
-    console.log(chalk.yellow('\n  ⚠  No product profile found (gspec/profile.md).'));
-    console.log(chalk.yellow('  A profile defines what the product is and who it serves.'));
-    console.log(chalk.yellow('  Starter templates work best when a profile exists to provide context.\n'));
-    console.log(chalk.dim('  Run the gspec-profile command in your AI tool first, then re-run npx gspec to seed starters.\n'));
-    const continueWithout = await promptConfirm(chalk.bold('  Continue without a profile? [y/N]: '));
-    if (!continueWithout) {
-      console.log(chalk.dim('\n  Skipped starter templates. Generate a profile first, then re-run npx gspec.\n'));
-      return;
-    }
-  }
-
   const practices = await listStarterTemplates('practices');
   const stacks = await listStarterTemplates('stacks');
   const styles = await listStarterTemplates('styles');
@@ -277,22 +256,25 @@ async function seedStarterTemplates(cwd) {
     return;
   }
 
+  const NONE_OPTION = { slug: '_none', description: 'I will define my own' };
+
   // Single-select with auto-select for single-option categories
   const practice = practices.length === 1
     ? (console.log(chalk.dim(`\n  Using practice: ${formatStarterName(practices[0].slug)}`)), practices[0].slug)
-    : await promptSelect('Select a development practice', practices);
+    : await promptSelect('Select a development practice', [...practices, NONE_OPTION]);
 
   const stack = stacks.length === 1
     ? (console.log(chalk.dim(`  Using stack: ${formatStarterName(stacks[0].slug)}`)), stacks[0].slug)
-    : await promptSelect('Select a technology stack', stacks);
+    : await promptSelect('Select a technology stack', [...stacks, NONE_OPTION]);
 
   const style = styles.length === 1
     ? (console.log(chalk.dim(`  Using style: ${formatStarterName(styles[0].slug)}`)), styles[0].slug)
-    : await promptSelect('Select a visual style', styles);
+    : await promptSelect('Select a visual style', [...styles, NONE_OPTION]);
 
   let selectedFeatures = [];
   if (features.length > 0) {
-    selectedFeatures = await promptMultiSelect('Select features (optional)', features);
+    selectedFeatures = await promptMultiSelect('Select features (optional)', [...features, NONE_OPTION]);
+    selectedFeatures = selectedFeatures.filter(f => f !== '_none');
   }
 
   // Auto-include feature dependencies
@@ -307,11 +289,16 @@ async function seedStarterTemplates(cwd) {
 
   // Check for existing files
   const gspecDir = join(cwd, 'gspec');
-  const filesToWrite = [
-    { src: join(STARTERS_DIR, 'practices', `${practice}.md`), dest: join(gspecDir, 'practices.md'), label: 'gspec/practices.md' },
-    { src: join(STARTERS_DIR, 'stacks', `${stack}.md`), dest: join(gspecDir, 'stack.md'), label: 'gspec/stack.md' },
-    { src: join(STARTERS_DIR, 'styles', `${style}.md`), dest: join(gspecDir, 'style.md'), label: 'gspec/style.md' },
-  ];
+  const filesToWrite = [];
+  if (practice !== '_none') {
+    filesToWrite.push({ src: join(STARTERS_DIR, 'practices', `${practice}.md`), dest: join(gspecDir, 'practices.md'), label: 'gspec/practices.md' });
+  }
+  if (stack !== '_none') {
+    filesToWrite.push({ src: join(STARTERS_DIR, 'stacks', `${stack}.md`), dest: join(gspecDir, 'stack.md'), label: 'gspec/stack.md' });
+  }
+  if (style !== '_none') {
+    filesToWrite.push({ src: join(STARTERS_DIR, 'styles', `${style}.md`), dest: join(gspecDir, 'style.md'), label: 'gspec/style.md' });
+  }
   for (const feature of selectedFeatures) {
     filesToWrite.push({
       src: join(STARTERS_DIR, 'features', `${feature}.md`),
@@ -328,6 +315,11 @@ async function seedStarterTemplates(cwd) {
     } catch (e) {
       if (e.code !== 'ENOENT') throw e;
     }
+  }
+
+  if (filesToWrite.length === 0) {
+    console.log(chalk.dim('\n  No starter templates selected. You can define these files using gspec commands.\n'));
+    return;
   }
 
   if (existingFiles.length > 0) {
@@ -354,13 +346,13 @@ async function seedStarterTemplates(cwd) {
 
   // Summary
   console.log(chalk.bold('\n  Seeded gspec/ with:'));
-  console.log(`    Practice: ${formatStarterName(practice)}`);
-  console.log(`    Stack:    ${formatStarterName(stack)}`);
-  console.log(`    Style:    ${formatStarterName(style)}`);
+  console.log(`    Practice: ${practice === '_none' ? chalk.dim('(will define)') : formatStarterName(practice)}`);
+  console.log(`    Stack:    ${stack === '_none' ? chalk.dim('(will define)') : formatStarterName(stack)}`);
+  console.log(`    Style:    ${style === '_none' ? chalk.dim('(will define)') : formatStarterName(style)}`);
   if (selectedFeatures.length > 0) {
     console.log(`    Features: ${selectedFeatures.map(formatStarterName).join(', ')}`);
   } else {
-    console.log('    Features: (none)');
+    console.log(`    Features: ${chalk.dim('(will define)')}`);
   }
   console.log();
 }
@@ -670,12 +662,23 @@ program
 
     await seedStarterTemplates(process.cwd());
 
-    const skipSync = await promptConfirmNo(chalk.bold('  Enable automatic spec sync? (keeps gspec specs up to date as code changes) [Y/n]: '));
-    if (!skipSync) {
-      await installSpecSync(targetName, process.cwd());
-    }
+    await installSpecSync(targetName, process.cwd());
 
     await checkGspecFiles(process.cwd(), targetName);
+
+    // Post-install: instruct user to generate profile.md
+    const targetLabel = TARGETS[targetName].label;
+    console.log();
+    console.log(chalk.bold.cyan('  ═══ Next Step ═══════════════════════════════════════════════'));
+    console.log();
+    console.log(chalk.bold.white('  Generate your product profile before continuing.'));
+    console.log();
+    console.log(`  Run ${chalk.bold.yellow('/gspec-profile')} in ${targetLabel} to create gspec/profile.md`);
+    console.log(`  — it defines what your product is, who it serves, and why it`);
+    console.log(`  exists. All other gspec commands use the profile as their foundation.`);
+    console.log();
+    console.log(chalk.bold.cyan('  ═════════════════════════════════════════════════════════════'));
+    console.log();
   });
 
 program.parse();

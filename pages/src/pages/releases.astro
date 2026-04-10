@@ -5,6 +5,27 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.10.0',
+    date: 'April 10, 2026',
+    title: 'Always-on spec sync and streamlined setup',
+    summary: 'Spec-sync is now always enabled during install, starter templates offer a "None" option for each category, and the CLI guides users to generate a product profile as the first post-install step.',
+    changes: [
+      {
+        type: 'changed',
+        description: 'Spec-sync is now always installed during <code>npx gspec</code> — no longer opt-in. The agent will always reference gspec files to stay within specification boundaries.',
+      },
+      {
+        type: 'changed',
+        description: 'Starter template selection now includes a <strong>None — I will define my own</strong> option for each category (practices, stack, style, and features), giving full control over which templates to seed.',
+      },
+      {
+        type: 'changed',
+        description: 'Removed the profile check from the starter template flow. The CLI now displays a prominent "Next Step" banner after install instructing users to run <code>/gspec-profile</code> before continuing.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install updated commands. Spec-sync will be added automatically.',
+  },
+  {
     version: '1.9.0',
     date: 'April 2, 2026',
     title: 'Open Code support',
