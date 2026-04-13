@@ -5,6 +5,31 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.11.0',
+    date: 'April 13, 2026',
+    title: 'Implementation guardrails for PRD requirements',
+    summary: 'The implement command now prevents PRD requirements from being silently skipped or deferred without explicit user approval.',
+    changes: [
+      {
+        type: 'changed',
+        description: 'The implementation plan must now account for every unchecked PRD capability — each must be assigned to a phase or explicitly listed under "Proposed to Defer" with a reason for user approval.',
+      },
+      {
+        type: 'changed',
+        description: 'Verification phase now checks for unapproved deferrals — any capability that was planned but not implemented must be flagged and approved by the user before it can remain unchecked.',
+      },
+      {
+        type: 'added',
+        description: 'New guardrail: the agent can never skip or descope a PRD capability without user approval, even when implementation details are ambiguous.',
+      },
+      {
+        type: 'changed',
+        description: 'When a user prompt narrows implementation scope, excluded unchecked capabilities must be explicitly listed under "Out of Scope for This Run" in the plan.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install updated commands.',
+  },
+  {
     version: '1.10.0',
     date: 'April 10, 2026',
     title: 'Always-on spec sync and streamlined setup',

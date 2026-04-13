@@ -57,8 +57,9 @@ Present this summary to the user so they understand the starting point. If **all
    - Identify files to create or modify
    - Note dependencies on prior phases
    - Include an estimated scope (small/medium/large)
-3. **Define test expectations per phase** — For each phase, specify what tests will be run to verify correctness before moving on (unit tests, integration tests, build verification, etc.)
-4. **Present the plan** — Show the user the full phased plan with clear phase boundaries and ask for approval
+3. **Account for every unchecked capability** — The plan must explicitly place every unchecked capability from in-scope feature PRDs into a phase **or** list it under a "Proposed to Defer" section with a reason. No unchecked capability may be silently omitted from the plan. The user reviews and approves what gets deferred at plan approval time.
+4. **Define test expectations per phase** — For each phase, specify what tests will be run to verify correctness before moving on (unit tests, integration tests, build verification, etc.)
+5. **Present the plan** — Show the user the full phased plan with clear phase boundaries and ask for approval
 
 **Wait for user approval before proceeding to Phase 3.** The user may reorder phases, adjust scope, or split/merge phases.
 
@@ -124,8 +125,8 @@ After implementation:
 1. **Walk through each functional requirement** from the feature PRD (if available) or the approved implementation plan and confirm it's satisfied
 2. **Review against acceptance criteria** — For each capability in the feature PRDs, check that every acceptance criterion listed under it is satisfied. These sub-listed conditions are the definition of "done" for each capability. If any criterion is not met, the capability should not be marked `[x]`.
 3. **Check the Definition of Done** from `gspec/practices.md`
-4. **Note any deferred items** — Requirements that were intentionally postponed or descoped during implementation
-5. **Verify checkbox accuracy** — Confirm that every capability marked `[x]` in the feature PRDs is genuinely implemented and working. Confirm that capabilities left as `[ ]` were intentionally deferred. Present a final status summary:
+4. **Verify no unapproved deferrals** — Compare the final implementation against the approved plan. If any capability that was assigned to a phase was not implemented, **do not silently leave it unchecked**. Flag it to the user, explain why it wasn't completed, and get explicit approval before marking it as deferred. Only capabilities the user approved for deferral during planning (or explicitly approves now) may remain unchecked.
+5. **Verify checkbox accuracy** — Confirm that every capability marked `[x]` in the feature PRDs is genuinely implemented and working. Confirm that capabilities left as `[ ]` were approved for deferral by the user. Present a final status summary:
 
 > **Implementation Summary:**
 > - Feature X: 7/7 capabilities implemented (complete)
@@ -144,6 +145,7 @@ When you encounter something the specs don't fully cover during implementation:
 - **If the ambiguity is significant** (e.g., unclear user flow, missing data model, conflicting requirements), pause and consult the user rather than making silent assumptions
 - **Never silently implement unspecified behavior** that contradicts or significantly extends the original spec — ask first
 - **Never override explicit spec decisions** with your own preferences
+- **Never skip or descope a PRD capability without user approval** — ambiguity in *how* to implement something is not grounds for dropping it. If a capability seems too complex, unclear, or problematic, raise it with the user rather than omitting it
 
 ---
 
@@ -173,7 +175,7 @@ If the user specifies a feature, focus on that feature's **unchecked capabilitie
 
 ### When the user provides a prompt alongside existing features:
 
-The user's prompt takes priority for scoping. Use it to determine focus, and reference existing feature PRDs as supporting context rather than the sole driver.
+The user's prompt takes priority for scoping. Use it to determine focus, and reference existing feature PRDs as supporting context rather than the sole driver. However, if the user's prompt narrows scope such that some unchecked PRD capabilities will not be implemented this run, explicitly list those excluded capabilities in the plan under "Out of Scope for This Run" so the user can see what is being deferred and why.
 
 ---
 
