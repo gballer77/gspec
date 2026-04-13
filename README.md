@@ -158,6 +158,24 @@ npx gspec --target opencode
 
 That's it. The commands are immediately available in your AI tool.
 
+If you have saved specs in `~/.gspec/` from a previous project, the installer will offer to seed your new project from them — either from a playbook or by picking individual specs.
+
+## Save & Restore
+
+Once you've built specs you're happy with, save them for reuse across projects:
+
+```bash
+gspec save        # Save a spec from the current project to ~/.gspec/
+gspec restore     # Restore a saved spec into the current project
+gspec playbook    # Bundle multiple saved specs into a reusable playbook
+```
+
+Saved specs are organized by type in `~/.gspec/` (profiles, stacks, styles, practices, features). Playbooks bundle multiple specs together so you can seed an entire project with one command:
+
+```bash
+gspec restore playbook/my-starter
+```
+
 ## Output Structure
 
 All specifications live in a `gspec/` directory at your project root:
