@@ -1,5 +1,5 @@
 ---
-gspec-version: 1.6.0
+spec-version: v1
 ---
 
 # Development Practices Guide — gspec

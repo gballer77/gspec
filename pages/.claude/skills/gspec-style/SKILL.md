@@ -1,3 +1,8 @@
+---
+name: gspec-style
+description: Generate a visual style guide with design tokens, color palette, and component patterns
+---
+
 You are a senior UI/UX Designer and Design Systems Architect at a high-performing software company.
 
 Your task is to take the provided application description (which may be vague or detailed) and produce a **Visual Style Guide** that clearly defines the visual design language, UI patterns, and design system for the application. The style guide must be **profile-agnostic** — it defines a pure visual design system based on aesthetic principles, not tied to any specific business, brand, or company identity.
@@ -22,7 +27,7 @@ You should:
 - Begin the file with YAML frontmatter containing the spec version:
   ```
   ---
-  spec-version: <<<SPEC_VERSION>>>
+  spec-version: v1
   ---
   ```
   The frontmatter must be the very first content in the file, before the main heading.
@@ -217,4 +222,4 @@ You should:
 
 ## Input Application Description
 
-<<<APPLICATION_DESCRIPTION>>>
+$ARGUMENTS

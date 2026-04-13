@@ -12,6 +12,8 @@ const pkg = JSON.parse(await readFile(join(ROOT, 'package.json'), 'utf-8'));
 
 // Version placeholder — replaced before platform-specific transforms
 const VERSION_RE = /<<<VERSION>>>/g;
+const SPEC_VERSION = 'v1';
+const SPEC_VERSION_RE = /<<<SPEC_VERSION>>>/g;
 
 // Placeholder pattern used in generic command files
 const PLACEHOLDER_RE = /<<<\w+>>>/g;
@@ -164,7 +166,7 @@ async function build(targetNames) {
       }
 
       const raw = await readFile(join(COMMANDS_DIR, file), 'utf-8');
-      const content = raw.replace(VERSION_RE, pkg.version);
+      const content = raw.replace(VERSION_RE, pkg.version).replace(SPEC_VERSION_RE, SPEC_VERSION);
       await target.emit(target.outDir, content, meta);
       count++;
     }

@@ -1,188 +1,141 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Navbar from '../components/Navbar.astro';
-import Footer from '../components/Footer.astro';
+import SidebarLayout from '../layouts/SidebarLayout.astro';
+import SidebarNav from '../components/SidebarNav.astro';
+import TableOfContents from '../components/TableOfContents.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 
-const categories = [
-  {
-    id: 'stacks',
-    title: 'Technology Stacks',
-    description: 'Pre-configured stack definitions covering frameworks, databases, hosting, and tooling.',
-    file: 'gspec/stack.md',
-    templates: [
-      {
-        name: 'Next.js + Supabase + Vercel',
-        slug: 'nextjs-supabase-vercel',
-        description: 'Full-stack SaaS with Next.js App Router, Supabase (Postgres, Auth, RLS), and Vercel deployment.',
-      },
-      {
-        name: 'Next.js + Vercel + TypeScript',
-        slug: 'nextjs-vercel-typescript',
-        description: 'Next.js App Router, TypeScript, Tailwind CSS, deployed on Vercel.',
-      },
-      {
-        name: 'Astro + Tailwind + GitHub Pages',
-        slug: 'astro-tailwind-github-pages',
-        description: 'Static documentation site with Astro, Tailwind CSS v4, and GitHub Pages deployment.',
-      },
-    ],
-  },
-  {
-    id: 'practices',
-    title: 'Development Practices',
-    description: 'Engineering standards, code quality rules, and CI/CD workflows that AI agents follow during implementation.',
-    file: 'gspec/practices.md',
-    templates: [
-      {
-        name: 'TDD Pipeline-First',
-        slug: 'tdd-pipeline-first',
-        description: 'TDD, pipeline-first CI/CD, DRY principles, and clean code standards.',
-      },
-    ],
-  },
-  {
-    id: 'styles',
-    title: 'Visual Styles',
-    description: 'Design tokens, color palettes, typography, and component patterns for consistent UI.',
-    file: 'gspec/style.md',
-    templates: [
-      {
-        name: 'Clean Professional',
-        slug: 'clean-professional',
-        description: 'Clean, professional design with restrained palette and clear typography.',
-      },
-      {
-        name: 'Dark Minimal Developer',
-        slug: 'dark-minimal-developer',
-        description: 'Dark-first minimal design system with purple accent, inspired by developer documentation sites.',
-      },
-    ],
-  },
-  {
-    id: 'features',
-    title: 'Features',
-    description: 'Ready-made PRDs for common pages and components. Select as many as you need.',
-    file: 'gspec/features/',
-    templates: [
-      {
-        name: 'Home Page',
-        slug: 'home-page',
-        description: 'Hero section, service highlights, testimonials, and CTA.',
-      },
-      {
-        name: 'About Page',
-        slug: 'about-page',
-        description: 'Company story, mission, team bios, and values section.',
-      },
-      {
-        name: 'Contact Page',
-        slug: 'contact-page',
-        description: 'Contact page layout with form, location map, and business info.',
-      },
-      {
-        name: 'Contact Form',
-        slug: 'contact-form',
-        description: 'Validated contact form with email delivery and success feedback.',
-      },
-      {
-        name: 'Services Page',
-        slug: 'services-page',
-        description: 'Service offerings with descriptions, icons, and pricing tiers.',
-      },
-      {
-        name: 'Responsive Navbar',
-        slug: 'responsive-navbar',
-        description: 'Responsive navigation bar with mobile hamburger menu.',
-      },
-      {
-        name: 'Site Footer',
-        slug: 'site-footer',
-        description: 'Site footer with nav links, social icons, and copyright.',
-      },
-      {
-        name: 'Theme Switcher',
-        slug: 'theme-switcher',
-        description: 'Light/dark mode toggle with system preference detection.',
-      },
-    ],
-  },
+const sections = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'save', label: 'Save' },
+  { id: 'restore', label: 'Restore' },
+  { id: 'playbooks', label: 'Playbooks' },
+  { id: 'install-flow', label: 'Install Flow' },
 ];
+
+const headings = sections.map((s) => ({ id: s.id, label: s.label, level: 2 }));
 ---
 
-<BaseLayout title="Starters — gspec" description="Pre-built starter templates for technology stacks, practices, styles, and features. Seed your gspec project in seconds.">
-  <Navbar slot="navbar" />
+<SidebarLayout title="Save & Restore — gspec" description="Save your gspec specs for reuse across projects. Create playbooks to bundle specs for rapid project setup.">
+  <SidebarNav sections={sections} slot="sidebar" />
+  <TableOfContents headings={headings} slot="toc" />
 
-  <div class="max-w-[768px] mx-auto px-4 lg:px-8 py-12">
-    <h1 class="text-[1.953rem] sm:text-[2.441rem] font-bold tracking-tight text-[var(--text-primary)] mb-2">
-      Starters
-    </h1>
-    <p class="text-lg text-[var(--text-secondary)] mb-8">
-      Pre-built templates to bootstrap your <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-sm font-mono">gspec/</code> directory. Choose a stack, practices, style, and features — then start building.
+  <h1>Save & Restore</h1>
+  <p class="text-lg text-[var(--text-secondary)] !mt-2 !mb-12">
+    Reuse your specs across projects. Save individual specs or bundle them into playbooks for one-command project setup.
+  </p>
+
+  <!-- Overview -->
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>
+      Once you've built specs you're happy with — a technology stack, a visual style, development practices, feature PRDs — you can save them to <code>~/.gspec/</code> for reuse in future projects. No more redefining the same stack or style from scratch every time.
+    </p>
+    <p>
+      Saved specs are organized by type:
+    </p>
+    <CodeBlock code={`~/.gspec/
+├── profiles/        # Product profiles
+├── stacks/          # Technology stacks
+├── styles/          # Visual styles
+├── practices/       # Development practices
+├── features/        # Feature PRDs
+└── playbooks/       # Bundled spec sets`} lang="text" />
+    <p>
+      These are plain Markdown files on your machine. Share them with teammates by copying them, checking them into a dotfiles repo, or distributing them however you like.
+    </p>
+  </section>
+
+  <!-- Save -->
+  <section id="save">
+    <h2>Save</h2>
+    <p>
+      Save any spec from your current project to <code>~/.gspec/</code> for reuse:
+    </p>
+    <CodeBlock code="gspec save" lang="shell" />
+    <p>
+      The CLI lists your project's gspec files and prompts you to select one. You give it a name (e.g. <code>my-saas-stack</code>) and an optional description. The spec is saved to the corresponding type folder — for example, <code>~/.gspec/stacks/my-saas-stack.md</code>.
+    </p>
+    <CodeBlock code={`$ gspec save
+
+  Which spec would you like to save?
+
+  1) gspec/stack.md — Next.js App Router with Supabase
+  2) gspec/style.md — Dark minimal design system
+  3) gspec/practices.md — TDD pipeline-first
+
+  Select [1-3]: 1
+
+  Save name (no spaces, e.g. my-saas-stack): nextjs-supabase
+
+  ✓ Saved to ~/.gspec/stacks/nextjs-supabase.md`} lang="output" />
+  </section>
+
+  <!-- Restore -->
+  <section id="restore">
+    <h2>Restore</h2>
+    <p>
+      Restore a saved spec into a new project:
+    </p>
+    <CodeBlock code="gspec restore" lang="shell" />
+    <p>
+      Interactive mode walks you through selecting a type and then a specific spec. Or pass the path directly:
+    </p>
+    <CodeBlock code="gspec restore stacks/nextjs-supabase" lang="shell" />
+    <p>
+      The spec is copied into your project's <code>gspec/</code> directory. If the saved spec was created with an older gspec version, you'll be prompted to run <code>/gspec-migrate</code> to update it.
+    </p>
+  </section>
+
+  <!-- Playbooks -->
+  <section id="playbooks">
+    <h2>Playbooks</h2>
+    <p>
+      A playbook bundles multiple saved specs into a single restorable package — a profile, stack, practices, style, and any number of features. Use playbooks to capture a complete project setup that you can replay in new projects with one command.
     </p>
 
-    <!-- How it works -->
-    <section class="mb-16">
-      <h2 class="text-[1.25rem] sm:text-[1.563rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
-        How it works
-      </h2>
-      <p class="text-[var(--text-body)] leading-relaxed mb-4">
-        When you run <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-sm font-mono">npx gspec</code>, the installer prompts you to seed starter templates after installing your commands. You pick one template from each core category — stack, practices, and style — and optionally select feature PRDs from the library.
-      </p>
-      <p class="text-[var(--text-body)] leading-relaxed mb-6">
-        Selected templates are copied into your <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-sm font-mono">gspec/</code> directory with the current gspec version stamped in. From there, customize them for your project — they're plain Markdown and yours to edit.
-      </p>
-      <CodeBlock code="npx gspec" lang="shell" />
-      <div class="mt-6 p-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
-        <h4 class="text-sm font-semibold text-[var(--text-primary)] mb-1">Tip</h4>
-        <p class="text-sm text-[var(--text-secondary)] leading-relaxed">
-          Starters are a starting point, not a ceiling. After seeding, run <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-xs font-mono">/gspec-profile</code> to define your product identity, then refine the seeded specs with the full command suite — <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-xs font-mono">/gspec-stack</code>, <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-xs font-mono">/gspec-style</code>, <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-xs font-mono">/gspec-practices</code>, and <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded text-xs font-mono">/gspec-feature</code>.
-        </p>
-      </div>
-    </section>
+    <h3>Create a playbook</h3>
+    <CodeBlock code="gspec playbook" lang="shell" />
+    <p>
+      The CLI walks you through selecting saved specs from each category. You give the playbook a name and description, and it's saved to <code>~/.gspec/playbooks/</code>.
+    </p>
+    <CodeBlock code={`$ gspec playbook
 
-    <!-- Template categories -->
-    <div class="space-y-16">
-      {categories.map((category) => (
-        <section id={category.id}>
-          <div class="flex items-center gap-3 mb-3">
-            <h2 class="text-[1.25rem] sm:text-[1.563rem] font-semibold text-[var(--text-primary)] tracking-tight">
-              {category.title}
-            </h2>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono text-[var(--text-muted)] border border-[var(--border-subtle)]">
-              {category.templates.length}
-            </span>
-          </div>
-          <p class="text-[var(--text-body)] leading-relaxed mb-2">
-            {category.description}
-          </p>
-          <p class="text-sm text-[var(--text-muted)] mb-6">
-            Outputs to <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1 py-0.5 rounded text-xs font-mono">{category.file}</code>
-          </p>
+  Create a playbook
 
-          <div class="space-y-3">
-            {category.templates.map((template) => (
-              <div class="p-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-neutral-600 transition-colors duration-200">
-                <div class="flex items-start gap-3">
-                  <div class="min-w-0">
-                    <h3 class="text-sm font-semibold text-[var(--text-primary)]">
-                      {template.name}
-                    </h3>
-                    <p class="text-sm text-[var(--text-secondary)] leading-relaxed mt-1">
-                      {template.description}
-                    </p>
-                    <p class="text-xs text-[var(--text-muted)] mt-2 font-mono">
-                      {template.slug}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
+  A playbook bundles saved specs so you can restore them all at once.
+
+  Select a profile (or skip): my-saas-profile
+  Select a stack (or skip): nextjs-supabase
+  Select practices (or skip): tdd-pipeline-first
+  Select a style (or skip): dark-minimal
+  Select features (optional): home-page, contact-form
+
+  Playbook name: saas-starter
+  Description: Full-stack SaaS with auth and contact form
+
+  ✓ Playbook saved to ~/.gspec/playbooks/saas-starter.md`} lang="output" />
+
+    <h3>Restore a playbook</h3>
+    <CodeBlock code="gspec restore playbook/saas-starter" lang="shell" />
+    <p>
+      All specs in the playbook are restored into <code>gspec/</code> at once — profile, stack, practices, style, and features. From there, customize for the new project and start building.
+    </p>
+  </section>
+
+  <!-- Install Flow -->
+  <section id="install-flow">
+    <h2>Install Flow</h2>
+    <p>
+      When you run <code>npx gspec</code> in a new project, the installer checks for saved specs in <code>~/.gspec/</code>. If you have saved specs or playbooks, it offers to seed your project from them — so you can go from zero to a fully-specced project in seconds.
+    </p>
+    <p>
+      If playbooks are available, you're asked to pick one first. If you prefer to pick individual specs, choose "Pick individual specs instead" and select from each category. If <code>~/.gspec/</code> is empty, the installer skips straight to post-install guidance.
+    </p>
+    <div class="not-prose my-6 p-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
+      <h4 class="text-sm font-semibold text-[var(--text-primary)] mb-1">Tip</h4>
+      <p class="text-sm text-[var(--text-secondary)] leading-relaxed">
+        Build up your <code class="text-[var(--code-text)] bg-[var(--bg-surface-raised)] px-1 py-0.5 rounded text-xs font-mono">~/.gspec/</code> library over time. Save specs from projects you're happy with, create playbooks for common project types, and share them with your team.
+      </p>
     </div>
-  </div>
-
-  <Footer slot="footer" />
-</BaseLayout>
+  </section>
+</SidebarLayout>

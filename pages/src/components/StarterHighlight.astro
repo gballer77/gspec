@@ -1,26 +1,23 @@
 ---
 const base = import.meta.env.BASE_URL;
 
-const categories = [
+const steps = [
   {
-    title: 'Stacks',
-    count: 3,
-    examples: ['Next.js + Supabase + Vercel', 'Astro + Tailwind + GitHub Pages'],
+    number: '1',
+    title: 'Define once',
+    desc: 'Build your ideal stack, style, practices, and features for a project — exactly the way you want them.',
   },
   {
-    title: 'Practices',
-    count: 1,
-    examples: ['TDD Pipeline-First'],
+    number: '2',
+    title: 'Save what works',
+    desc: 'Save specs to your personal library. Bundle them into playbooks that capture your complete project blueprint.',
+    command: 'gspec save',
   },
   {
-    title: 'Styles',
-    count: 2,
-    examples: ['Clean Professional', 'Dark Minimal Developer'],
-  },
-  {
-    title: 'Features',
-    count: 8,
-    examples: ['Home Page', 'Contact Form', 'Responsive Navbar', 'Theme Switcher'],
+    number: '3',
+    title: 'Launch the next one',
+    desc: 'Seed a new project from your playbook in seconds. Same standards, same quality — without repeating yourself.',
+    command: 'gspec restore playbook/my-stack',
   },
 ];
 ---
@@ -28,33 +25,110 @@ const categories = [
 <section class="py-16 lg:py-24">
   <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
     <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] text-center mb-4 tracking-tight">
-      Start with templates, not a blank page
+      Ship more products, faster — on your terms
     </h2>
+    <p class="text-[var(--text-secondary)] text-center mb-4 max-w-2xl mx-auto">
+      Every product you build refines your playbook. Save the specs that represent your standards — your stack, your style, your practices — and reuse them to launch new projects that meet your requirements from the start.
+    </p>
     <p class="text-[var(--text-secondary)] text-center mb-12 max-w-2xl mx-auto">
-      The installer offers pre-built starter templates for common stacks, practices, styles, and features. Pick what fits, then customize.
+      No more re-explaining your preferences to an AI. No more starting from scratch. Just your proven blueprints, ready to go.
     </p>
 
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {categories.map((cat) => (
-        <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-5 hover:border-neutral-600 transition-colors duration-200">
-          <div class="flex items-center gap-2 mb-3">
-            <h3 class="text-sm font-semibold text-[var(--text-primary)]">{cat.title}</h3>
-            <span class="text-xs font-mono text-[var(--text-muted)]">{cat.count}</span>
+    <div class="grid sm:grid-cols-3 gap-6 mb-10">
+      {steps.map((step) => (
+        <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 hover:border-neutral-600 transition-colors duration-200">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--bg-primary-subtle)] text-[var(--text-accent)] text-sm font-bold flex items-center justify-center">
+              {step.number}
+            </span>
+            <h3 class="text-sm font-semibold text-[var(--text-primary)]">{step.title}</h3>
           </div>
-          <ul class="space-y-1.5">
-            {cat.examples.map((ex) => (
-              <li class="text-sm text-[var(--text-secondary)] leading-snug">{ex}</li>
-            ))}
-            {cat.count > cat.examples.length && (
-              <li class="text-xs text-[var(--text-muted)]">+ {cat.count - cat.examples.length} more</li>
-            )}
-          </ul>
+          <p class="text-sm text-[var(--text-secondary)] leading-relaxed mb-3">{step.desc}</p>
+          {step.command && (
+            <code class="text-xs font-mono text-[var(--text-muted)]">{step.command}</code>
+          )}
         </div>
       ))}
     </div>
 
+    <!-- Simulated terminal -->
+    <div class="max-w-3xl mx-auto rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden shadow-lg shadow-black/20">
+      <!-- Title bar -->
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-raised)]">
+        <span class="w-3 h-3 rounded-full bg-[#FF5F57]"></span>
+        <span class="w-3 h-3 rounded-full bg-[#FEBC2E]"></span>
+        <span class="w-3 h-3 rounded-full bg-[#28C840]"></span>
+        <span class="text-xs text-[var(--text-muted)] ml-2 font-mono">~/new-project</span>
+      </div>
+      <!-- Terminal body -->
+      <div class="p-5 sm:p-6 font-mono text-[13px] leading-[1.7] overflow-x-auto terminal-lines">
+        <!-- Scene 1: Save from existing project -->
+        <div class="text-[var(--text-muted)] mb-4 text-xs uppercase tracking-wider">Saving specs from a finished project</div>
+        <div><span class="text-[var(--text-accent)]">$</span> <span class="text-[var(--text-body)]">gspec save</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-primary)] font-semibold">&nbsp;&nbsp;Which spec would you like to save?</div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-secondary)]">&nbsp;&nbsp;<span class="text-[var(--color-secondary-400)]">1</span>) gspec/stack.md <span class="text-[var(--text-muted)]">— Next.js + Supabase + Vercel</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;&nbsp;<span class="text-[var(--color-secondary-400)]">2</span>) gspec/style.md <span class="text-[var(--text-muted)]">— Dark minimal design system</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;&nbsp;<span class="text-[var(--color-secondary-400)]">3</span>) gspec/practices.md <span class="text-[var(--text-muted)]">— TDD pipeline-first</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-primary)]">&nbsp;&nbsp;Select [1-3]: <span class="text-[var(--text-body)]">1</span></div>
+        <div class="text-[var(--text-primary)]">&nbsp;&nbsp;Save name: <span class="text-[var(--text-body)]">saas-stack</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--color-success)]">&nbsp;&nbsp;&#10003; Saved to ~/.gspec/stacks/saas-stack.md</div>
+
+        <div class="my-5 border-t border-[var(--border-subtle)]"></div>
+
+        <!-- Scene 2: Create playbook -->
+        <div class="text-[var(--text-muted)] mb-4 text-xs uppercase tracking-wider">Bundling specs into a playbook</div>
+        <div><span class="text-[var(--text-accent)]">$</span> <span class="text-[var(--text-body)]">gspec playbook</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-primary)] font-semibold">&nbsp;&nbsp;Create a playbook</div>
+        <div class="text-[var(--text-muted)]">&nbsp;&nbsp;A playbook bundles saved specs so you can restore them all at once.</div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-secondary)]">&nbsp;&nbsp;Profile: <span class="text-[var(--text-body)]">my-saas-profile</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;&nbsp;Stack: <span class="text-[var(--text-body)]">saas-stack</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;&nbsp;Practices: <span class="text-[var(--text-body)]">tdd-pipeline-first</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;&nbsp;Style: <span class="text-[var(--text-body)]">dark-minimal</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;&nbsp;Features: <span class="text-[var(--text-body)]">auth, dashboard, billing</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-primary)]">&nbsp;&nbsp;Playbook name: <span class="text-[var(--text-body)]">saas-starter</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--color-success)]">&nbsp;&nbsp;&#10003; Playbook saved to ~/.gspec/playbooks/saas-starter.md</div>
+
+        <div class="my-5 border-t border-[var(--border-subtle)]"></div>
+
+        <!-- Scene 3: New project, restore playbook -->
+        <div class="text-[var(--text-muted)] mb-4 text-xs uppercase tracking-wider">Starting a brand new project</div>
+        <div><span class="text-[var(--text-accent)]">$</span> <span class="text-[var(--text-body)]">npx gspec --target claude</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-primary)] font-semibold">&nbsp;&nbsp;Would you like to start from saved specs in ~/.gspec/? [y/N]: <span class="text-[var(--text-body)] font-normal">y</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-primary)] font-semibold">&nbsp;&nbsp;Select a playbook</div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-secondary)]">&nbsp;&nbsp;<span class="text-[var(--color-secondary-400)]">1</span>) saas-starter <span class="text-[var(--text-muted)]">— Full-stack SaaS with auth and billing</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;&nbsp;<span class="text-[var(--color-secondary-400)]">2</span>) <span class="text-[var(--text-muted)]">Pick individual specs instead</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-primary)]">&nbsp;&nbsp;Select [1-2]: <span class="text-[var(--text-body)]">1</span></div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-primary)] font-semibold">&nbsp;&nbsp;Restoring playbook: saas-starter</div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--color-success)]">&nbsp;&nbsp;+ gspec/profile.md</div>
+        <div class="text-[var(--color-success)]">&nbsp;&nbsp;+ gspec/stack.md</div>
+        <div class="text-[var(--color-success)]">&nbsp;&nbsp;+ gspec/practices.md</div>
+        <div class="text-[var(--color-success)]">&nbsp;&nbsp;+ gspec/style.md</div>
+        <div class="text-[var(--color-success)]">&nbsp;&nbsp;+ gspec/features/auth.md</div>
+        <div class="text-[var(--color-success)]">&nbsp;&nbsp;+ gspec/features/dashboard.md</div>
+        <div class="text-[var(--color-success)]">&nbsp;&nbsp;+ gspec/features/billing.md</div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--color-success)]">&nbsp;&nbsp;&#10003; Playbook "saas-starter" restored.</div>
+        <div class="text-[var(--text-secondary)]">&nbsp;</div>
+        <div class="text-[var(--text-muted)]">&nbsp;&nbsp;Ready to build. Run <span class="text-[var(--text-accent)]">/gspec-implement</span> to start.</div>
+      </div>
+    </div>
+
     <p class="text-sm text-[var(--text-muted)] text-center mt-8">
-      <a href={`${base}starters/`} class="text-primary-400 hover:text-primary-300 underline decoration-primary-400/30 hover:decoration-primary-400/60 transition-colors duration-200">Browse all starters</a>
+      <a href={`${base}starters/`} class="text-primary-400 hover:text-primary-300 underline decoration-primary-400/30 hover:decoration-primary-400/60 transition-colors duration-200">Learn about save & restore</a>
     </p>
   </div>
 </section>

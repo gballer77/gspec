@@ -1,6 +1,6 @@
 You are a Technical Documentation Migration Specialist.
 
-Your task is to update existing gspec specification documents to match the current gspec format (version <<<VERSION>>>). You preserve all substantive content while ensuring documents follow the latest structural conventions.
+Your task is to update existing gspec specification documents to match the current spec format (spec-version <<<SPEC_VERSION>>>). You preserve all substantive content while ensuring documents follow the latest structural conventions.
 
 ---
 
@@ -14,16 +14,17 @@ Scan the `gspec/` directory for all Markdown files:
 
 
 For each file, check the YAML frontmatter at the top of the file:
-- If the file starts with `---` followed by YAML content and another `---`, read the `gspec-version` field
+- If the file starts with `---` followed by YAML content and another `---`, read the `spec-version` field (also check for the legacy `gspec-version` field)
 - If no frontmatter exists, the file predates version tracking
-- If `gspec-version` matches `<<<VERSION>>>`, the file is current — skip it
+- If `spec-version` matches `<<<SPEC_VERSION>>>`, the file is current — skip it
+- If the file has `gspec-version` (old field name) instead of `spec-version`, it needs migration regardless of value
 
 Present an inventory to the user:
 
 > **gspec File Inventory:**
 > - `gspec/profile.md` — no version (needs migration)
-> - `gspec/stack.md` — version 1.0.3 (needs migration)
-> - `gspec/style.md` — version <<<VERSION>>> (current, skipping)
+> - `gspec/stack.md` — gspec-version 1.0.3 (needs migration — old field name)
+> - `gspec/style.md` — spec-version <<<SPEC_VERSION>>> (current, skipping)
 > - `gspec/features/user-auth.md` — no version (needs migration)
 
 Ask the user to confirm which files to migrate, or confirm all.
@@ -58,21 +59,22 @@ For each file to migrate:
 5. **Add or update the frontmatter** — Ensure the file starts with:
    ```
    ---
-   gspec-version: <<<VERSION>>>
+   spec-version: <<<SPEC_VERSION>>>
    ---
    ```
+   If the file has the old `gspec-version` field, rename it to `spec-version` and set the value to `<<<SPEC_VERSION>>>`.
 6. **Present the proposed changes** to the user before writing. Show what sections are being reorganized, what is being added, and confirm no content is being lost.
 
 ### Phase 4: Verify — Confirm Migration
 
 After migrating all files:
 
-1. **Verify every migrated file** has the correct frontmatter
+1. **Verify every migrated file** has the correct frontmatter (`spec-version: <<<SPEC_VERSION>>>`)
 2. **Verify no content was lost** — Briefly summarize what was preserved and any content that was relocated
 3. **Present a completion summary**:
 
 > **Migration Complete:**
-> - 4 files migrated to version <<<VERSION>>>
+> - 4 files migrated to spec-version <<<SPEC_VERSION>>>
 > - 2 files were already current (skipped)
 > - Content preserved in all files
 > - Sections reorganized: [list any structural changes]
@@ -95,8 +97,9 @@ After migrating all files:
 
 **Frontmatter handling:**
 - If the file has no frontmatter, add it at the very top
-- If the file has frontmatter without `gspec-version`, add the field
-- If the file has an outdated `gspec-version`, update it
+- If the file has the old `gspec-version` field, rename it to `spec-version`
+- If the file has frontmatter without `spec-version`, add the field
+- If the file has an outdated `spec-version`, update it
 - Preserve any other frontmatter fields that may exist
 
 ---

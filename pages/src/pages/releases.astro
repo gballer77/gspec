@@ -5,6 +5,43 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.13.0',
+    date: 'April 13, 2026',
+    title: 'Save & restore specs across projects',
+    summary: 'Replace starter templates with a personal spec library. Save specs you\'ve built to ~/.gspec/, bundle them into playbooks, and restore them into new projects instantly.',
+    changes: [
+      {
+        type: 'added',
+        description: '<code>gspec save</code> command — save any spec from your project to <code>~/.gspec/</code> organized by type (profiles, stacks, styles, practices, features).',
+      },
+      {
+        type: 'added',
+        description: '<code>gspec restore</code> command — restore saved specs into a new project, either individually or from a playbook.',
+      },
+      {
+        type: 'added',
+        description: '<code>gspec playbook</code> command — bundle multiple saved specs into a single restorable package for one-command project setup.',
+      },
+      {
+        type: 'removed',
+        description: 'Starter templates removed — the <code>starters/</code> directory and all bundled templates (stacks, practices, styles, features) have been replaced by the save & restore system.',
+      },
+      {
+        type: 'removed',
+        description: 'The <code>gspec-migrate-starters</code> skill has been removed.',
+      },
+      {
+        type: 'changed',
+        description: 'Frontmatter field renamed from <code>gspec-version</code> to <code>spec-version</code>. The migrate command handles this rename automatically.',
+      },
+      {
+        type: 'changed',
+        description: 'The installer now checks <code>~/.gspec/</code> for saved specs and playbooks instead of offering bundled starter templates.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install updated commands. If you relied on starter templates, use the new <code>gspec save</code> command to build your own reusable spec library. Run <code>/gspec-migrate</code> to update the <code>gspec-version</code> frontmatter field to <code>spec-version</code>.',
+  },
+  {
     version: '1.11.0',
     date: 'April 13, 2026',
     title: 'Implementation guardrails for PRD requirements',

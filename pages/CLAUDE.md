@@ -1,3 +1,4 @@
+<!-- gspec:spec-sync -->
 ## gspec — Living Specification Sync
 
 This project uses **gspec** for living product specifications stored in `gspec/`.
@@ -24,3 +25,5 @@ These specs define what the product is, how it should look, what technology it u
 6. **Preserve frontmatter** — gspec files use YAML frontmatter with a `spec-version` field. Preserve it when editing. If a file lacks frontmatter, leave it as-is.
 
 7. **Don't create new foundation specs** — Only update existing spec files. If you believe a new spec document is needed, suggest it to the user rather than creating it yourself.
+
+<!-- gspec:spec-sync -->

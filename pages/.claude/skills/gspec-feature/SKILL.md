@@ -1,3 +1,8 @@
+---
+name: gspec-feature
+description: Generate one or more product requirements documents (PRDs) for features
+---
+
 You are a senior Product Manager at a high-performing software company.
 
 Your task is to take the provided feature description (which may be vague or detailed, small or large) and produce **one or more Product Requirements Documents (PRDs)** that clearly define *what* is being built and *why*, without deep technical or architectural implementation details.
@@ -80,7 +85,7 @@ Feature PRDs are designed to be **portable across projects**. A feature spec wri
 - Begin each file with YAML frontmatter containing the spec version:
   ```
   ---
-  spec-version: <<<SPEC_VERSION>>>
+  spec-version: v1
   ---
   ```
   The frontmatter must be the very first content in the file, before the main heading.
@@ -197,4 +202,4 @@ When generating multiple features from a large request:
 
 ## Input Feature Description
 
-<<<FEATURE_DESCRIPTION>>>
+$ARGUMENTS

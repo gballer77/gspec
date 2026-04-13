@@ -7,7 +7,7 @@ import CodeBlock from '../components/CodeBlock.astro';
 
 const sections = [
   { id: 'workflow', label: 'Workflow Overview' },
-  { id: 'starters', label: 'Starter Templates' },
+  { id: 'save-restore', label: 'Save & Restore' },
   { id: 'profile', label: 'profile', group: 'Define' },
   { id: 'style', label: 'style', group: 'Define' },
   { id: 'stack', label: 'stack', group: 'Define' },
@@ -72,54 +72,34 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
     </p>
   </section>
 
-  <!-- Starter Templates -->
-  <section id="starters">
-    <h2>Starter Templates</h2>
+  <!-- Save & Restore -->
+  <section id="save-restore">
+    <h2>Save & Restore</h2>
     <p>
-      When you run <code>npx gspec</code>, the installer offers to seed your <code>gspec/</code> directory with pre-built starter templates. These give you a working foundation instead of starting from a blank page.
+      Once you've built specs you're happy with, save them to <code>~/.gspec/</code> for reuse across projects. Bundle multiple specs into playbooks for one-command project setup.
     </p>
 
-    <h3>How it works</h3>
+    <h3>Save a spec</h3>
     <p>
-      After installing commands and selecting your platform, the CLI prompts you to choose one template from each core category — <strong>stack</strong>, <strong>practices</strong>, and <strong>style</strong> — and optionally select feature PRDs from the library. Selected templates are copied into <code>gspec/</code> with the current gspec version stamped in.
+      Run <code>gspec save</code> to save any spec from your current project. You give it a name and optional description, and it's stored in <code>~/.gspec/</code> organized by type (profiles, stacks, styles, practices, features).
     </p>
 
-    <h3>Available templates</h3>
+    <h3>Restore a spec</h3>
     <p>
-      Starters are organized into four categories:
+      Run <code>gspec restore</code> to interactively pick a saved spec, or pass the path directly: <code>gspec restore stacks/my-stack</code>. The spec is copied into your project's <code>gspec/</code> directory.
     </p>
-    <div class="not-prose my-6">
-      <div class="space-y-3">
-        {[
-          { category: 'Stacks', file: 'gspec/stack.md', items: ['Next.js + Supabase + Vercel', 'Next.js + Vercel + TypeScript', 'Astro + Tailwind + GitHub Pages'] },
-          { category: 'Practices', file: 'gspec/practices.md', items: ['TDD Pipeline-First'] },
-          { category: 'Styles', file: 'gspec/style.md', items: ['Clean Professional', 'Dark Minimal Developer'] },
-          { category: 'Features', file: 'gspec/features/', items: ['Home Page', 'About Page', 'Contact Page', 'Contact Form', 'Services Page', 'Responsive Navbar', 'Site Footer', 'Theme Switcher'] },
-        ].map((group) => (
-          <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-sm font-semibold text-[var(--text-primary)]">{group.category}</span>
-              <span class="text-xs font-mono text-[var(--text-muted)]">{group.items.length}</span>
-              <span class="text-xs text-[var(--text-muted)] ml-auto font-mono">{group.file}</span>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              {group.items.map((item) => (
-                <span class="inline-flex text-xs px-2 py-1 rounded border border-[var(--border-subtle)] bg-[var(--bg-surface-raised)] text-[var(--text-secondary)]">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
 
-    <h3>Customizing starters</h3>
+    <h3>Playbooks</h3>
     <p>
-      Starters are a starting point, not a finished spec. After seeding, refine them with the full command suite — run <code>/profile</code> to define your product identity, then use <code>/stack</code>, <code>/style</code>, <code>/practices</code>, and <code>/feature</code> to tailor each spec to your project. The commands will read and build on whatever is already in <code>gspec/</code>.
+      Run <code>gspec playbook</code> to bundle multiple saved specs — profile, stack, practices, style, and features — into a single restorable package. Restore an entire playbook with <code>gspec restore playbook/my-starter</code>.
+    </p>
+
+    <h3>Install flow</h3>
+    <p>
+      When you run <code>npx gspec</code> in a new project, the installer checks <code>~/.gspec/</code> for saved specs. If playbooks exist, you're offered them first. Otherwise, you can pick individual specs from each category. If <code>~/.gspec/</code> is empty, the installer skips straight to post-install guidance.
     </p>
     <p>
-      If you already have existing gspec files, the installer warns you before overwriting and lets you skip the seeding step entirely. See the full <a href={`${import.meta.env.BASE_URL}starters/`}>starter template library</a> for detailed descriptions.
+      See the full <a href={`${import.meta.env.BASE_URL}starters/`}>save & restore documentation</a> for detailed examples.
     </p>
   </section>
 

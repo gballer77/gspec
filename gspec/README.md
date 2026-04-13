@@ -19,13 +19,13 @@ gspec solves both problems. It provides a structured specification workflow that
 
 gspec installs as a set of slash commands (skills) in your AI coding tool. Each command plays a specific role — business strategist, product manager, architect, designer, engineer — and produces a structured Markdown document in your project's `gspec/` directory.
 
-These documents become the shared context for all subsequent AI interactions. When you implement features, your AI reads the specs. When the code changes, the specs update to match.
+These documents become the shared context for all subsequent AI interactions. When you implement features, your AI reads the specs. When the code changes, gspec's always-on spec sync keeps them in sync automatically.
 
 ### The Workflow
 
-The only commands you *need* are the four fundamentals and `implement`. Everything else exists to help when your project calls for it.
+The only commands you *need* are the four fundamentals and `/gspec-implement`. Everything else exists to help when your project calls for it.
 
-The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `implement` can take a plain-language description and start building. The remaining commands — `research`, `feature`, `architect`, `analyze`, `dor`, and `record` — add structure and rigor when the scope or complexity warrants it.
+The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `/gspec-implement` can take a plain-language description and start building. The remaining commands — `/gspec-research`, `/gspec-feature`, `/gspec-architect`, and `/gspec-analyze` — add structure and rigor when the scope or complexity warrants it.
 
 ```mermaid
 flowchart LR
@@ -47,9 +47,6 @@ flowchart LR
 
     Build["6. Build
     implement"]
-    
-    Iterate["7. Iterate
-    dor · record"]
 
     Define --> Research
     Define --> Specify
@@ -61,8 +58,7 @@ flowchart LR
     Architect --> Analyze
     Architect --> Build
     Analyze --> Build
-    Build --> Iterate
-    Iterate --> Build
+    Build --> Define
 
     style Define fill:#4a9eff,color:#fff,stroke:none
     style Research fill:#a855f7,color:#fff,stroke:none
@@ -70,73 +66,65 @@ flowchart LR
     style Architect fill:#f59e0b,color:#fff,stroke:none
     style Analyze fill:#f59e0b,color:#fff,stroke:none
     style Build fill:#22c55e,color:#fff,stroke:none
-    style Iterate fill:#64748b,color:#fff,stroke:none
 ```
 
-> **Blue** = required foundation. **Purple/Yellow** = optional depth. **Green** = implementation. **Gray** = maintenance.
+> **Blue** = required foundation. **Purple/Yellow** = optional depth. **Green** = implementation.
 > Every path starts with Define and passes through Build. The steps in between depend on your project's complexity.
 
 **1. Define the Fundamentals** — Establish the foundation that drives every decision.
 
 | Command | Role | What it produces |
 |---|---|---|
-| `gspec.profile` | Business Strategist | Product identity, audience, value proposition, positioning |
-| `gspec.style` | UI/UX Designer | Visual design language, design tokens, component patterns |
-| `gspec.stack` | Software Architect | Technology stack, frameworks, infrastructure, architecture |
-| `gspec.practices` | Engineering Lead | Development standards, code quality, testing, workflows |
+| `/gspec-profile` | Business Strategist | Product identity, audience, value proposition, positioning |
+| `/gspec-style` | UI/UX Designer | Visual design language, design tokens, component patterns |
+| `/gspec-stack` | Software Architect | Technology stack, frameworks, infrastructure, architecture |
+| `/gspec-practices` | Engineering Lead | Development standards, code quality, testing, workflows |
 
 **2. Research the Market** *(optional)* — Understand the competitive landscape before building.
 
 | Command | Role | What it produces |
 |---|---|---|
-| `gspec.research` | Product Strategist | Competitive analysis, feature matrix, gap identification, and additional feature proposals |
+| `/gspec-research` | Product Strategist | Competitive analysis, feature matrix, gap identification, and additional feature proposals |
 
-Use `research` when you want to understand what competitors offer, identify table-stakes features you might be missing, find differentiation opportunities, and **propose additional features** that serve your product's mission. It reads competitors from your product profile, produces a persistent `gspec/research.md` file, and can optionally generate feature PRDs from its findings and proposals. This is where new feature ideas are surfaced and vetted — not during implementation.
+Use `/gspec-research` when you want to understand what competitors offer, identify table-stakes features you might be missing, find differentiation opportunities, and **propose additional features** that serve your product's mission. It reads competitors from your product profile, produces a persistent `gspec/research.md` file, and can optionally generate feature PRDs from its findings and proposals. This is where new feature ideas are surfaced and vetted — not during implementation.
 
 **3. Specify What to Build** *(optional)* — Define features and requirements.
 
 | Command | Role | What it produces |
 |---|---|---|
-| `gspec.feature` | Product Manager | One or more feature PRDs with prioritized capabilities |
+| `/gspec-feature` | Product Manager | One or more feature PRDs with prioritized capabilities |
 
-Use `feature` when you want detailed PRDs with prioritized capabilities and acceptance criteria before building. It handles both single features and larger bodies of work — if the scope is large enough, it will propose a multi-feature breakdown for your approval. For smaller tasks or rapid prototyping, you can skip straight to `implement` with a plain-language description.
+Use `/gspec-feature` when you want detailed PRDs with prioritized capabilities and acceptance criteria before building. It handles both single features and larger bodies of work — if the scope is large enough, it will propose a multi-feature breakdown for your approval. For smaller tasks or rapid prototyping, you can skip straight to `/gspec-implement` with a plain-language description.
 
 **4. Architect** *(optional)* — Translate specs into a concrete technical blueprint.
 
 | Command | Role | What it produces |
 |---|---|---|
-| `gspec.architect` | Senior Architect | Technical architecture document with data models, API design, project structure, auth flows, technical gap analysis, and Mermaid diagrams |
+| `/gspec-architect` | Senior Architect | Technical architecture document with data models, API design, project structure, auth flows, technical gap analysis, and Mermaid diagrams |
 
-Use `architect` when your feature involves significant technical complexity — new data models, service boundaries, auth flows, or integration points that benefit from upfront design. It also **identifies technical gaps and ambiguities** in your specs and proposes solutions, so that `implement` can focus on building rather than making architectural decisions. For straightforward features, `implement` can make sound architectural decisions on its own using your `stack` and `practices` specs.
+Use `/gspec-architect` when your feature involves significant technical complexity — new data models, service boundaries, auth flows, or integration points that benefit from upfront design. It also **identifies technical gaps and ambiguities** in your specs and proposes solutions, so that `/gspec-implement` can focus on building rather than making architectural decisions. For straightforward features, `/gspec-implement` can make sound architectural decisions on its own using your `stack` and `practices` specs.
 
 **5. Analyze** *(optional)* — Reconcile discrepancies across specs before building.
 
 | Command | Role | What it does |
 |---|---|---|
-| `gspec.analyze` | Specification Analyst | Cross-references all specs, identifies contradictions, and walks you through reconciling each one |
+| `/gspec-analyze` | Specification Analyst | Cross-references all specs, identifies contradictions, and walks you through reconciling each one |
 
-Use `analyze` after `architect` (or any time multiple specs exist) to catch conflicts before `implement` sees them. For example, if the stack says PostgreSQL but the architecture references MongoDB, or a feature PRD defines a data model that contradicts the architecture, `analyze` will surface the discrepancy and let you choose the resolution. Each conflict is presented one at a time with options — no new files are created, only existing specs are updated.
+Use `/gspec-analyze` after `/gspec-architect` (or any time multiple specs exist) to catch conflicts before `/gspec-implement` sees them. For example, if the stack says PostgreSQL but the architecture references MongoDB, or a feature PRD defines a data model that contradicts the architecture, `/gspec-analyze` will surface the discrepancy and let you choose the resolution. Each conflict is presented one at a time with options — no new files are created, only existing specs are updated.
 
 **6. Build** — Implement with full context.
 
 | Command | Role | What it does |
 |---|---|---|
-| `gspec.implement` | Senior Engineer | Reads all specs, plans the build order, and implements |
+| `/gspec-implement` | Senior Engineer | Reads all specs, plans the build order, and implements |
 
-**7. Iterate** *(optional)* — Keep specs and code in sync as the project evolves.
-
-| Command | Role | What it does |
-|---|---|---|
-| `gspec.dor` | Engineer + Doc Lead | Makes code changes and updates specs to match |
-| `gspec.record` | Doc Lead | Updates specs to reflect decisions or changes — no code modifications |
-
-Use `dor` and `record` when you want your specification documents to stay accurate as the project evolves. If you're moving fast and specs are secondary, you can skip them — but as a project matures, keeping specs in sync prevents the context drift that degrades AI output over time.
+**Spec Sync** — gspec includes always-on spec sync that automatically keeps your specification documents in sync as the code evolves. This is installed alongside the skills and requires no manual intervention — when code changes affect spec-documented behavior, the sync rules prompt your AI tool to update the relevant gspec files.
 
 **Maintenance** — Keep specs up to date with the latest gspec format.
 
 | Command | Role | What it does |
 |---|---|---|
-| `gspec.migrate` | Migration Specialist | Updates existing gspec documents to the current format when you upgrade gspec, preserving all content |
+| `/gspec-migrate` | Migration Specialist | Updates existing gspec documents to the current format when you upgrade gspec, preserving all content |
 
 Each command is self-contained and will ask clarifying questions when essential information is missing.
 
@@ -156,6 +144,7 @@ The CLI will ask which platform you're installing for:
 | Cursor | `.cursor/commands/` |
 | Antigravity | `.agent/skills/` |
 | Codex | `.agents/skills/` |
+| Open Code | `.opencode/skills/` |
 
 You can skip the prompt by passing a target directly:
 
@@ -164,6 +153,7 @@ npx gspec --target claude
 npx gspec --target cursor
 npx gspec --target antigravity
 npx gspec --target codex
+npx gspec --target opencode
 ```
 
 That's it. The commands are immediately available in your AI tool.
@@ -193,13 +183,13 @@ These are standard Markdown files. They live in your repo, are version-controlle
 
 **Spec-first development.** Every implementation decision traces back to a specification. AI tools don't guess — they follow documented decisions about your product, stack, design, and standards.
 
-**Living documents.** Specifications aren't write-once artifacts. The `dor` and `record` commands keep them in sync as your project evolves, so they remain a reliable source of truth.
+**Living documents.** Specifications aren't write-once artifacts. The always-on spec sync keeps them in sync as your project evolves, so they remain a reliable source of truth.
 
 **Role-based commands.** Each command adopts a specific professional perspective — product manager, architect, designer, engineer. This ensures specifications are comprehensive and consider multiple viewpoints.
 
 **Incremental implementation.** Feature PRDs use checkboxes to track which capabilities have been built. The `implement` command reads these to know what's done and what's remaining, so it can be run multiple times as your project grows.
 
-**Research and architecture own discovery.** Feature proposals and technical gap analysis happen *before* implementation — in `research` and `architect` respectively. The `research` command surfaces new feature ideas through competitive analysis and product-driven reasoning. The `architect` command identifies technical gaps and resolves ambiguities. This separation keeps `implement` focused on building what the specs define, rather than proposing scope changes mid-build.
+**Research and architecture own discovery.** Feature proposals and technical gap analysis happen *before* implementation — in `/gspec-research` and `/gspec-architect` respectively. `/gspec-research` surfaces new feature ideas through competitive analysis and product-driven reasoning. `/gspec-architect` identifies technical gaps and resolves ambiguities. This separation keeps `/gspec-implement` focused on building what the specs define, rather than proposing scope changes mid-build.
 
 **Platform-agnostic.** A single set of source commands builds for Claude Code, Cursor, Antigravity, and Codex. The build system handles platform-specific formatting so the commands stay consistent across tools.
 
@@ -211,6 +201,7 @@ These are standard Markdown files. They live in your repo, are version-controlle
 | [Cursor](https://www.cursor.com/) | Commands format | Supported |
 | [Antigravity](https://www.antigravity.dev/) | Skills format | Supported |
 | [Codex](https://developers.openai.com/codex/cli/) | Skills format | Supported |
+| [Open Code](https://opencode.ai/) | Skills format | Supported |
 
 ## Project Status
 

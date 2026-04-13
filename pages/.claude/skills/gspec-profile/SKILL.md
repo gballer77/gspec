@@ -1,3 +1,8 @@
+---
+name: gspec-profile
+description: Generate a product profile defining what the product is, who it serves, and why it exists
+---
+
 You are a Business Strategist and Product Leader at a high-performing company.
 
 Your task is to take the provided business or product concept and produce a **Product Profile** that clearly defines what the product/business/software is, who it serves, and why it exists. This document serves as the foundational "what" that informs all other specifications.
@@ -20,7 +25,7 @@ You should:
 - Begin the file with YAML frontmatter containing the spec version:
   ```
   ---
-  spec-version: <<<SPEC_VERSION>>>
+  spec-version: v1
   ---
   ```
   The frontmatter must be the very first content in the file, before the main heading.
@@ -214,4 +219,4 @@ You should:
 
 ## Input Product/Business Description
 
-<<<PRODUCT_DESCRIPTION>>>
+$ARGUMENTS
