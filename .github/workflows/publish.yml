@@ -23,9 +23,42 @@ jobs:
 
       - run: npm run build
 
+  create-release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      created: ${{ steps.check.outputs.created }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for release commit
+        id: check
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+          if echo "$COMMIT_MSG" | grep -qP 'for v(\d+\.\d+\.\d+)'; then
+            VERSION=$(echo "$COMMIT_MSG" | grep -oP 'for v\K(\d+\.\d+\.\d+)')
+            echo "version=v$VERSION" >> "$GITHUB_OUTPUT"
+            echo "created=true" >> "$GITHUB_OUTPUT"
+            echo "Detected release commit for v$VERSION"
+          else
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            echo "Not a release commit, skipping"
+          fi
+
+      - name: Create GitHub Release
+        if: steps.check.outputs.created == 'true'
+        run: gh release create "${{ steps.check.outputs.version }}" --generate-notes --target "${{ github.sha }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
   publish:
-    needs: build
-    if: github.event_name == 'release'
+    needs: [build, create-release]
+    if: |
+      always() &&
+      needs.build.result == 'success' &&
+      (github.event_name == 'release' || needs.create-release.outputs.created == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -39,6 +72,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Verify version matches release tag
+        if: github.event_name == 'release'
         run: |
           PKG_VERSION="v$(node -p "require('./package.json').version")"
           TAG="${GITHUB_REF_NAME}"
