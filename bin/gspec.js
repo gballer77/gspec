@@ -800,6 +800,9 @@ async function saveSpec(cwd) {
     if (e.code !== 'ENOENT') throw e;
   }
 
+  // Uncheck all implementation checkboxes so saved specs start fresh
+  content = content.replace(/- \[x\]/g, '- [ ]');
+
   await writeFile(destPath, content, 'utf-8');
   console.log(chalk.green(`\n  ✓ Saved to ~/.gspec/${selected.type}/${name}.md\n`));
 }

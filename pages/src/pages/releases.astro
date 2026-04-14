@@ -5,6 +5,19 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.13.1',
+    date: 'April 13, 2026',
+    title: 'Saved specs start with clean checkboxes',
+    summary: 'When saving a spec to your library, all implementation checkboxes are now automatically unchecked so restored specs always start fresh.',
+    changes: [
+      {
+        type: 'fixed',
+        description: '<code>gspec save</code> now resets all <code>- [x]</code> checkboxes to <code>- [ ]</code> before writing to <code>~/.gspec/</code>, so restored specs correctly show all capabilities as not yet implemented.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install updated commands. Previously saved specs with checked boxes are unaffected — re-save them to get clean checkboxes.',
+  },
+  {
     version: '1.13.0',
     date: 'April 13, 2026',
     title: 'Save & restore specs across projects',
