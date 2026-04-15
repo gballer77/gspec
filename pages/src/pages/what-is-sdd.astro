@@ -15,6 +15,10 @@ const sections = [
   { id: 'mdd', label: 'Model-Driven Development', group: 'Approaches' },
   { id: 'adrs', label: 'Architecture Decision Records', group: 'Approaches' },
   { id: 'prds', label: 'PRDs & Product Specs', group: 'Approaches' },
+  { id: 'ai-sdd', label: 'AI-Era SDD Tools', group: 'AI-Era Tools' },
+  { id: 'spec-kit', label: 'GitHub Spec Kit', group: 'AI-Era Tools' },
+  { id: 'openspec', label: 'OpenSpec', group: 'AI-Era Tools' },
+  { id: 'kiro', label: 'Kiro', group: 'AI-Era Tools' },
   { id: 'benefits', label: 'Benefits of SDD' },
   { id: 'challenges', label: 'Challenges & Trade-offs' },
   { id: 'ai-era', label: 'SDD in the AI Era' },
@@ -271,6 +275,75 @@ const headings = sections.map((s) => ({
     </p>
   </section>
 
+  <!-- AI-Era SDD Tools -->
+  <section id="ai-sdd">
+    <h2>AI-Era SDD Tools</h2>
+    <p>
+      The rise of AI coding assistants has spawned a new generation of SDD frameworks designed specifically for human-AI collaboration. These tools share a common insight: AI agents produce dramatically better code when guided by structured specifications rather than ad-hoc prompts. Here are the most prominent.
+    </p>
+  </section>
+
+  <!-- GitHub Spec Kit -->
+  <section id="spec-kit">
+    <h3>GitHub Spec Kit</h3>
+    <p>
+      <strong>Spec Kit</strong> is GitHub's open-source toolkit for spec-driven development, designed to bring structure to AI-assisted coding workflows. It provides a guided, multi-step process that turns a vague idea into a comprehensive specification, then into an implementation plan, and finally into actionable tasks for a coding agent.
+    </p>
+    <p>
+      The Spec Kit workflow follows three phases:
+    </p>
+    <ul>
+      <li><strong>Specify</strong> — Through iterative dialogue with AI, a rough idea becomes a comprehensive PRD with acceptance criteria. The AI asks clarifying questions, identifies edge cases, and helps define precise requirements.</li>
+      <li><strong>Plan</strong> — The specification is translated into a concrete implementation plan covering components, architecture, and dependencies.</li>
+      <li><strong>Tasks</strong> — The plan is broken into actionable tasks that a coding agent executes sequentially, building the project piece by piece.</li>
+    </ul>
+    <p>
+      Spec Kit supports a wide range of AI tools including GitHub Copilot, Claude Code, Gemini CLI, Cursor, and Windsurf. Its key strength is making specifications the central source of truth — when requirements change, you update the spec, regenerate the plan, and let the agent handle the rest.
+    </p>
+    <p>
+      <strong>Scope:</strong> End-to-end project scaffolding. Spec Kit excels at greenfield projects where you're building from scratch, guiding you from idea through implementation.
+    </p>
+  </section>
+
+  <!-- OpenSpec -->
+  <section id="openspec">
+    <h3>OpenSpec</h3>
+    <p>
+      <strong>OpenSpec</strong>, created by Fission AI, is a lightweight spec-driven framework for AI coding assistants. It's open source, requires no API keys or external services, and works with 20+ AI coding tools. Its distinguishing philosophy is that specs live in the repository alongside code, providing persistent context that survives across chat sessions and team changes.
+    </p>
+    <p>
+      OpenSpec organizes work around a <strong>propose-apply-archive</strong> workflow:
+    </p>
+    <ul>
+      <li><strong>Propose</strong> — Describe your intended change, and OpenSpec creates a complete change proposal including a proposal document, updated specs, a design document, and a task list.</li>
+      <li><strong>Apply</strong> — The coding agent implements the tasks defined in the proposal, with progress tracked as each task completes.</li>
+      <li><strong>Archive</strong> — Completed changes are archived with timestamps, and the canonical specs are updated to reflect the new state of the system.</li>
+    </ul>
+    <p>
+      A key concept in OpenSpec is the <strong>spec delta</strong> — each change captures what shifted in the system's requirements, making it easy for developers and reviewers to understand modifications at a high level without digging through code diffs.
+    </p>
+    <p>
+      <strong>Scope:</strong> Iterative feature development. OpenSpec is particularly well-suited for brownfield projects — existing codebases where you need to evolve specifications alongside ongoing development.
+    </p>
+  </section>
+
+  <!-- Kiro -->
+  <section id="kiro">
+    <h3>Kiro</h3>
+    <p>
+      <strong>Kiro</strong>, developed by Amazon Web Services, is an agentic AI IDE and CLI that embeds spec-driven development directly into the development environment. Rather than being a standalone spec framework you install, Kiro is a full IDE (based on VS Code) where spec-driven workflows are a first-class feature.
+    </p>
+    <p>
+      Kiro's approach to specifications has a distinctive feature: it uses <strong>EARS notation</strong> (Easy Approach to Requirements Syntax) to transform natural-language prompts into structured requirements with explicit constraints and acceptance criteria. When you describe a feature, Kiro generates formal requirements that remove ambiguity from the original prompt.
+    </p>
+    <p>
+      As an AWS product, Kiro integrates deeply with the AWS ecosystem — connecting to services like Amazon SageMaker and supporting MCP (Model Context Protocol) for accessing documentation, databases, and APIs during development.
+    </p>
+    <p>
+      <strong>Scope:</strong> Full IDE with integrated spec workflows. Kiro bundles the spec-driven process into the development tool itself rather than existing as a separate framework you add to your workflow.
+    </p>
+  </section>
+
   <!-- Benefits of SDD -->
   <section id="benefits">
     <h2>Benefits of SDD</h2>
@@ -399,6 +472,15 @@ const headings = sections.map((s) => ({
       <li>
         <strong>vs. Traditional PRDs</strong> — gspec feature specs are structured like modern PRDs but designed to be machine-readable and to live alongside the code in version control, not in a separate tool like Notion or Confluence.
       </li>
+      <li>
+        <strong>vs. Spec Kit</strong> — GitHub's Spec Kit follows a linear specify-plan-tasks pipeline optimized for greenfield projects. gspec takes a modular approach with independent spec types (profile, style, stack, practices, architecture, features) that can be generated in any order and used independently. Spec Kit is more prescriptive about workflow; gspec is more flexible about which specs you need and when.
+      </li>
+      <li>
+        <strong>vs. OpenSpec</strong> — OpenSpec organizes work around change proposals with spec deltas, tracking how each change modifies the system's requirements. gspec treats specs as living documents that are updated in place as the code evolves. OpenSpec provides better change-level traceability; gspec provides a cleaner current-state view of the full product specification.
+      </li>
+      <li>
+        <strong>vs. Kiro</strong> — Kiro bundles spec-driven development into a full IDE, tightly coupled with the AWS ecosystem. gspec is tool-agnostic — it installs as slash commands into whichever AI coding tool you already use (Claude Code, Cursor, Copilot, and others). Kiro gives you a more integrated experience; gspec gives you more flexibility in your tool choices.
+      </li>
     </ul>
 
     <h3>When to Use What</h3>
@@ -407,6 +489,9 @@ const headings = sections.map((s) => ({
     </p>
     <ul>
       <li><strong>gspec</strong> for full-stack product specifications that guide AI-assisted development</li>
+      <li><strong>Spec Kit</strong> for structured greenfield project scaffolding with GitHub Copilot</li>
+      <li><strong>OpenSpec</strong> for change-tracked spec evolution in brownfield codebases</li>
+      <li><strong>Kiro</strong> for an all-in-one IDE experience with deep AWS integration</li>
       <li><strong>OpenAPI</strong> for detailed, machine-enforceable API contracts between services</li>
       <li><strong>BDD</strong> for executable acceptance tests tied to business scenarios</li>
       <li><strong>ADRs</strong> for preserving the historical context behind architectural decisions</li>
