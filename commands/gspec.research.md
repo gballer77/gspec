@@ -186,6 +186,7 @@ After writing `gspec/research.md`, ask the user:
 - Clearly distinguish between facts (what competitors do) and recommendations (what the product should do)
 - Include the competitive feature matrix as a Markdown table
 - Categorize all findings using the Table-Stakes / Differentiating / White-Space framework
+- **The research document must be profile-agnostic in its headings and title** — use a generic document title like "# Competitive Research", not "# Competitive Research — ACME Solutions". Do NOT include the project name or company name in section headings. You may reference the product's positioning and competitive context from `gspec/profile.md` within the body where needed for analysis, but the document structure itself should be reusable. The "Our Product" column in matrices should use "Our Product" — not the product's name.
 
 ### Output File Structure
 

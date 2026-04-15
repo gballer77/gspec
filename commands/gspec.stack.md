@@ -36,6 +36,7 @@ You should:
 - **Mark sections as "Not Applicable"** when they don't apply to this project (e.g., no backend, no message queue, etc.)
 - **Do NOT include general development practices** (code review, git workflow, refactoring guidelines) — these are documented separately
 - **DO include technology-specific practices in the designated section** that are inherent to the chosen stack (e.g., framework-specific conventions, ORM usage patterns, CSS framework token mapping, recommended library configurations)
+- **The stack document must be profile-agnostic** — it defines technology choices for a given type of application, not for a specific business or product. Do NOT include the project name, company name, business purpose, or product-specific context in the document title, headings, or body. Use generic terms like "the application" or "the system" instead. Profile-specific context lives exclusively in `gspec/profile.md`.
 
 ---
 

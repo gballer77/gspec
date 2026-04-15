@@ -38,14 +38,14 @@ You should:
 - **DO define CI/CD pipeline structure** — the practices document defines pipeline stages, gates, and ordering (lint → typecheck → test → build → deploy). The stack document defines which CI/CD platform technology is used (GitHub Actions, GitLab CI, etc.).
 - **Mark sections as "Not Applicable"** when they don't apply to this project
 - **Precedence rule**: Where this document conflicts with technology-specific practices in `gspec/stack.md`, the stack's technology-specific practices take precedence for framework-specific concerns (e.g., file naming conventions dictated by a framework). This document governs general engineering principles.
+- **The practices document must be profile-agnostic** — it defines engineering standards for a development team, not for a specific business or product. Do NOT include the project name, company name, business purpose, or product-specific context in the document title, headings, or body. Use generic terms like "the project" or "the team" instead. Profile-specific context lives exclusively in `gspec/profile.md`.
 
 ---
 
 ## Required Sections
 
 ### 1. Overview
-- Team context (size, experience level)
-- Development timeline constraints
+- Summary of the practices
 
 ### 2. Core Development Practices
 

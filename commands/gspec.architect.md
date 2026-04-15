@@ -56,6 +56,7 @@ All of these provide essential context. If any are missing, note the gap and mak
 - **Mark sections as "Not Applicable"** when they don't apply (e.g., no API for a static site, no frontend for a CLI tool)
 - Include code blocks for directory trees, schema definitions, and configuration snippets
 - **Do NOT duplicate product-level information** from feature PRDs — reference capabilities by name, don't restate them
+- **The architecture document must be profile-agnostic** — it defines the technical blueprint for a system, not for a specific business or product identity. Do NOT include the project name, company name, business purpose, or product-specific context in the document title, headings, or body. Use generic terms like "the application", "the system", or "the platform" instead. You may read `gspec/profile.md` to understand scope and boundaries, but do not carry business identity into the architecture document. Profile-specific context lives exclusively in `gspec/profile.md`.
 
 ---
 

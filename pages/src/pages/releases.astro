@@ -5,6 +5,23 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.13.2',
+    date: 'April 15, 2026',
+    title: 'Profile-agnostic spec generation',
+    summary: 'All generated specs except profile.md are now explicitly prohibited from including project names, company names, or business-specific context. No more "Technology Stack — ACME Solutions" headings.',
+    changes: [
+      {
+        type: 'changed',
+        description: 'The <code>stack</code>, <code>practices</code>, <code>architect</code>, and <code>research</code> commands now include explicit profile-agnostic rules — generated documents must not contain project names, company names, or business purpose in titles, headings, or body text.',
+      },
+      {
+        type: 'changed',
+        description: 'The <code>practices</code> overview section simplified to focus on a summary of practices rather than team-specific context.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install updated commands. Existing specs are unaffected — regenerate them if you want to remove any project-specific references.',
+  },
+  {
     version: '1.13.1',
     date: 'April 13, 2026',
     title: 'Saved specs start with clean checkboxes',
