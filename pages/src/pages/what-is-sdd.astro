@@ -5,23 +5,18 @@ import TableOfContents from '../components/TableOfContents.astro';
 
 const sections = [
   { id: 'introduction', label: 'Introduction' },
-  { id: 'problem', label: 'The Problem SDD Solves' },
+  { id: 'problem', label: 'The Problem Agentic SDD Solves' },
+  { id: 'traditional-sdd', label: 'Traditional SDD', group: 'History' },
+  { id: 'traditional-approaches', label: 'Notable Approaches', group: 'History' },
+  { id: 'why-agents-change-everything', label: 'Why Agents Change Everything' },
   { id: 'core-principles', label: 'Core Principles' },
-  { id: 'sdd-workflow', label: 'The SDD Workflow' },
-  { id: 'frameworks', label: 'SDD Frameworks', group: 'Approaches' },
-  { id: 'openapi', label: 'OpenAPI / Swagger', group: 'Approaches' },
-  { id: 'bdd', label: 'Behavior-Driven Development', group: 'Approaches' },
-  { id: 'dbc', label: 'Design by Contract', group: 'Approaches' },
-  { id: 'mdd', label: 'Model-Driven Development', group: 'Approaches' },
-  { id: 'adrs', label: 'Architecture Decision Records', group: 'Approaches' },
-  { id: 'prds', label: 'PRDs & Product Specs', group: 'Approaches' },
-  { id: 'ai-sdd', label: 'AI-Era SDD Tools', group: 'AI-Era Tools' },
-  { id: 'spec-kit', label: 'GitHub Spec Kit', group: 'AI-Era Tools' },
-  { id: 'openspec', label: 'OpenSpec', group: 'AI-Era Tools' },
-  { id: 'kiro', label: 'Kiro', group: 'AI-Era Tools' },
-  { id: 'benefits', label: 'Benefits of SDD' },
+  { id: 'agentic-workflow', label: 'The Agentic SDD Workflow' },
+  { id: 'ai-sdd', label: 'Agentic SDD Tools', group: 'Tools' },
+  { id: 'spec-kit', label: 'GitHub Spec Kit', group: 'Tools' },
+  { id: 'openspec', label: 'OpenSpec', group: 'Tools' },
+  { id: 'kiro', label: 'Kiro', group: 'Tools' },
+  { id: 'benefits', label: 'Benefits' },
   { id: 'challenges', label: 'Challenges & Trade-offs' },
-  { id: 'ai-era', label: 'SDD in the AI Era' },
   { id: 'gspec', label: 'Where gspec Fits' },
 ];
 
@@ -32,49 +27,116 @@ const headings = sections.map((s) => ({
 }));
 ---
 
-<SidebarLayout title="What is Spec-Driven Development? — gspec" description="An educational guide to Spec-Driven Development (SDD) — what it is, why it matters, common frameworks, and how it shapes modern software engineering.">
+<SidebarLayout title="What is Spec-Driven Development? — gspec" description="A guide to Spec-Driven Development (SDD) in the age of AI agents — what it is, its roots in traditional specification practices, and why agentic coding makes it essential.">
   <SidebarNav sections={sections} slot="sidebar" />
   <TableOfContents headings={headings} slot="toc" />
 
   <h1>What is Spec-Driven Development?</h1>
   <p class="text-lg text-[var(--text-secondary)] !mt-2 !mb-12">
-    A comprehensive guide to building software from specifications — the philosophy, the frameworks, and why it matters more than ever.
+    An age-old discipline reborn — how AI coding agents have turned specifications from nice-to-have documentation into the essential interface between human intent and machine implementation.
   </p>
 
   <!-- Introduction -->
   <section id="introduction">
     <h2>Introduction</h2>
     <p>
-      <strong>Spec-Driven Development (SDD)</strong> is a software engineering methodology where formal specifications are written <em>before</em> implementation begins, and those specifications remain the authoritative source of truth throughout the project lifecycle. Rather than treating documentation as an afterthought, SDD makes specs the starting point — and the living backbone — of your software.
+      <strong>Spec-Driven Development (SDD)</strong> is a software engineering methodology where formal specifications are written <em>before</em> implementation begins, and those specifications remain the authoritative source of truth throughout the project lifecycle.
     </p>
     <p>
-      The concept isn't new. Formal methods researchers in the 1970s and 1980s advocated for mathematical specifications before code. But the practice has evolved far beyond academic formalism. Today, SDD appears in many forms — from API contracts that generate server stubs, to behavior specifications that double as test suites, to product requirement documents that guide entire teams.
+      The concept is as old as software engineering itself. Formal methods researchers in the 1970s advocated for mathematical specifications before code. Over the decades, the practice evolved through API contracts, behavior-driven test suites, architecture decision records, and product requirement documents — each bringing structure to a different layer of the stack.
     </p>
     <p>
-      What unites all flavors of SDD is a simple conviction: <strong>if you can't specify it clearly, you can't build it reliably.</strong>
+      But in 2024 and 2025, something changed. AI coding agents — tools like Claude Code, GitHub Copilot, Cursor, and Windsurf — moved from autocomplete assistants to autonomous implementers capable of writing entire features, refactoring systems, and shipping code with minimal human intervention. And with that shift, SDD went from a discipline practiced by methodical teams to a <strong>practical necessity for anyone working with AI agents</strong>.
+    </p>
+    <p>
+      This is the story of <strong>Agentic SDD</strong> — Spec-Driven Development purpose-built for the era where your most prolific contributor isn't a person, but an AI.
     </p>
   </section>
 
-  <!-- The Problem SDD Solves -->
+  <!-- The Problem Agentic SDD Solves -->
   <section id="problem">
-    <h2>The Problem SDD Solves</h2>
+    <h2>The Problem Agentic SDD Solves</h2>
     <p>
-      Most software projects don't fail because of bad code. They fail because of misalignment — between what the customer needs, what the product manager writes, what the designer envisions, and what the developer builds. Each handoff introduces drift.
+      AI coding agents are remarkably capable at generating code. They can write functions, build components, set up databases, and wire together entire applications. But they face a fundamental challenge: <strong>they don't know what you're building</strong>.
     </p>
     <p>
-      Consider the typical workflow without specifications:
+      Without structured context, every AI interaction starts from zero. You re-explain your stack, your patterns, your preferences, your product's purpose. The agent makes reasonable-sounding but often wrong assumptions — choosing the wrong framework, inventing a data model that contradicts your existing one, styling a component in a way that clashes with your design system.
+    </p>
+    <p>
+      This isn't an AI problem. It's the same <strong>communication infrastructure problem</strong> that has plagued software teams since the beginning — just with a new participant. When humans worked alone, misalignment happened between product managers, designers, and developers. Now it happens between humans and their AI agents.
+    </p>
+    <p>
+      Consider the typical AI-assisted workflow without specifications:
     </p>
     <ul>
-      <li>A product manager describes a feature in a meeting or a loose ticket</li>
-      <li>A developer interprets it based on their understanding, makes dozens of micro-decisions</li>
-      <li>A reviewer catches some issues but misses others</li>
-      <li>The feature ships, and stakeholders say "that's not what I meant"</li>
+      <li>You describe a feature in a chat prompt with partial context</li>
+      <li>The agent interprets it, makes dozens of micro-decisions you didn't anticipate</li>
+      <li>You review the output, correct the obvious mistakes, miss the subtle ones</li>
+      <li>Three iterations later, you've spent more time steering the agent than you would have spent writing the code yourself</li>
     </ul>
     <p>
-      This isn't a people problem — it's a <strong>communication infrastructure problem</strong>. Natural language is ambiguous. Meetings are ephemeral. Tickets decay. Tribal knowledge doesn't scale.
+      Agentic SDD solves this by giving AI agents what they actually need: <strong>persistent, structured context</strong> that defines your product's identity, technology choices, design language, engineering standards, system architecture, and feature requirements. With specs in place, the agent doesn't guess — it reads.
+    </p>
+  </section>
+
+  <!-- Traditional SDD -->
+  <section id="traditional-sdd">
+    <h2>Traditional SDD: A Brief History</h2>
+    <p>
+      Before exploring how AI agents have transformed SDD, it's worth acknowledging the rich history of specification-driven approaches that laid the groundwork.
     </p>
     <p>
-      SDD addresses this by creating structured, unambiguous artifacts that everyone can reference. When a specification exists, disagreements surface <em>before</em> code is written — when they're cheap to resolve — rather than after, when they're expensive.
+      The idea that you should specify what software should do before building it has been around for decades. It has taken many forms, each targeting a different layer of the software stack and a different audience. These approaches established the core insight that agentic SDD builds upon: <strong>if you can't specify it clearly, you can't build it reliably</strong> — whether the builder is a human or an AI.
+    </p>
+  </section>
+
+  <!-- Notable Traditional Approaches -->
+  <section id="traditional-approaches">
+    <h3>Notable Approaches</h3>
+    <ul>
+      <li><strong>OpenAPI / Swagger</strong> — The most successful traditional SDD framework. Defines RESTful APIs in a machine-readable format (YAML/JSON), enabling server stub generation, client SDK creation, interactive documentation, contract tests, and mock servers. Championed by API-first companies like Stripe and Twilio.</li>
+      <li><strong>Behavior-Driven Development (BDD)</strong> — Pioneered by Dan North, popularized by Cucumber, SpecFlow, and Behave. Uses natural-language Gherkin scenarios (Given/When/Then) as specifications that are simultaneously human-readable and machine-executable.</li>
+      <li><strong>Design by Contract (DbC)</strong> — Formalized by Bertrand Meyer in Eiffel. Embeds preconditions, postconditions, and invariants directly into code. Influenced modern type systems, Zod schemas, and Rust's ownership model.</li>
+      <li><strong>Model-Driven Development (MDD)</strong> — Uses formal models (UML diagrams, domain-specific languages, schema-first ORMs like Prisma) to describe system structure, then generates code from those models.</li>
+      <li><strong>Architecture Decision Records (ADRs)</strong> — Popularized by Michael Nygard. Lightweight documents capturing architectural decisions with context, rationale, and consequences. Solves the "why did we choose this?" problem six months later.</li>
+      <li><strong>PRDs & Product Specifications</strong> — The oldest form of software specification. From waterfall-era Word documents to modern lean formats in Linear, Notion, and Shape Up — defining what to build and why from the user's perspective.</li>
+    </ul>
+    <p>
+      Each of these approaches solved a real problem, but they shared a common limitation: they were designed for <strong>human-to-human communication</strong>. A developer reads the OpenAPI spec and writes the implementation. A QA engineer reads the Gherkin scenarios and validates behavior. The specification was a coordination artifact between people.
+    </p>
+    <p>
+      Agentic SDD changes the audience. The primary consumer of your specifications is no longer just your team — it's your AI agent. And that changes what specs need to contain, how they need to be structured, and how they need to evolve.
+    </p>
+  </section>
+
+  <!-- Why Agents Change Everything -->
+  <section id="why-agents-change-everything">
+    <h2>Why Agents Change Everything</h2>
+    <p>
+      Traditional SDD frameworks worked because humans are good at filling gaps. A developer reading an incomplete API spec can infer intent from context, ask a colleague, or make a reasonable judgment call. AI agents can't do this — or rather, they do it badly, hallucinating plausible-sounding answers that silently diverge from your intent.
+    </p>
+    <p>
+      This changes the requirements for specifications in several important ways:
+    </p>
+
+    <h3>Specs Must Be Comprehensive</h3>
+    <p>
+      An AI agent implementing a feature needs to know not just <em>what</em> to build, but which framework to use, what patterns to follow, how to name files, what the data model looks like, and what design tokens to apply. Traditional SDD frameworks each covered one slice. Agentic SDD needs to cover <em>the full stack</em> — product identity, visual design, technology choices, engineering standards, architecture, and feature requirements — all in one coherent system.
+    </p>
+
+    <h3>Specs Must Be Machine-Readable</h3>
+    <p>
+      An OpenAPI spec was machine-readable, but a PRD in Confluence wasn't. When your AI agent is the primary consumer, every spec needs to be in a format the agent can parse and act on. Structured Markdown, version-controlled alongside the code, has emerged as the lingua franca of agentic SDD — readable by both humans and LLMs, easy to diff, and natural to include in agent context windows.
+    </p>
+
+    <h3>Specs Must Be Living</h3>
+    <p>
+      Spec drift was always a problem, but with human developers it was a nuisance — the developer knew the code had changed even if the spec hadn't. With AI agents, stale specs are actively dangerous. An agent that reads an outdated architecture spec will generate code that contradicts your current system. Agentic SDD requires that specs evolve <em>as part of</em> every code change, not after.
+    </p>
+
+    <h3>Specs Replace Prompts</h3>
+    <p>
+      In the early days of AI-assisted coding, developers used increasingly elaborate prompts to steer their agents. "Use React with TypeScript, follow this naming convention, put files here, style it like this..." Agentic SDD recognizes that these prompts are just specifications scattered across chat sessions. The solution is obvious: write them down once, structure them properly, and let every agent interaction inherit the context automatically.
     </p>
   </section>
 
@@ -82,204 +144,58 @@ const headings = sections.map((s) => ({
   <section id="core-principles">
     <h2>Core Principles</h2>
     <p>
-      While SDD frameworks differ in scope and syntax, they share a set of core principles:
+      Agentic SDD inherits the timeless principles of traditional SDD, but reframes them for a world where AI is the implementer:
     </p>
 
     <h3>1. Specs Come First</h3>
     <p>
-      Implementation follows specification, not the other way around. This doesn't mean you need a complete spec before writing any code — iterative refinement is fine — but the spec should lead, not trail.
+      Implementation follows specification. This is even more critical with AI agents — an agent without specs will generate something, but it won't be what you wanted. The spec is the steering wheel. Without it, you're a passenger.
     </p>
 
-    <h3>2. Specs Are Authoritative</h3>
+    <h3>2. Specs Are the Interface</h3>
     <p>
-      When the spec and the code disagree, one of them needs to change. In SDD, the spec is the source of truth. If the implementation diverges, either the code is wrong or the spec needs to be updated intentionally — never silently.
+      In agentic development, specs are the primary interface between human intent and machine execution. When the spec and the code disagree, one of them needs to change — and the spec is the source of truth. If the implementation diverges, either the code is wrong or the spec needs to be updated intentionally.
     </p>
 
-    <h3>3. Specs Are Structured</h3>
+    <h3>3. Specs Are Structured for Agents</h3>
     <p>
-      A spec is not a wiki page or a Confluence document with screenshots. SDD specs use consistent formats — schemas, structured markdown, formal grammars, or domain-specific languages — so they can be parsed, validated, and acted upon.
+      Specs use consistent formats — structured Markdown, YAML frontmatter, predictable section layouts — so AI agents can parse, reference, and act on them. A spec that a human can read but an agent can't process defeats the purpose.
     </p>
 
     <h3>4. Specs Are Living Documents</h3>
     <p>
-      Specifications are not write-once artifacts. They evolve alongside the software. The key distinction from traditional documentation is that specs are updated <em>as part of</em> the development process, not after it.
+      Specifications evolve alongside the software. Every code change that contradicts a spec triggers a spec update. This is the hardest discipline in SDD and the most important — stale specs are worse than no specs, because they actively mislead AI agents.
     </p>
 
-    <h3>5. Specs Enable Automation</h3>
+    <h3>5. Specs Compound</h3>
     <p>
-      Well-structured specs can drive code generation, test creation, validation, documentation rendering, and more. The more machine-readable your specs, the more leverage you get from them.
+      Each spec builds persistent context that compounds across every AI interaction. Your first prompt with specs is more informed than your hundredth prompt without them. Over time, a well-maintained spec library becomes a massive productivity multiplier.
     </p>
   </section>
 
-  <!-- The SDD Workflow -->
-  <section id="sdd-workflow">
-    <h2>The SDD Workflow</h2>
+  <!-- The Agentic SDD Workflow -->
+  <section id="agentic-workflow">
+    <h2>The Agentic SDD Workflow</h2>
     <p>
-      While specific implementations vary, the general SDD workflow follows a consistent pattern:
+      The traditional SDD cycle of define-validate-implement-verify-evolve still applies, but the roles change when AI agents enter the picture:
     </p>
     <ol>
-      <li><strong>Define</strong> — Write the specification. This might be an API schema, a behavioral scenario, a product requirements document, or an architecture decision record.</li>
-      <li><strong>Validate</strong> — Review the spec with stakeholders. Catch misunderstandings, missing edge cases, and contradictions before any code is written.</li>
-      <li><strong>Implement</strong> — Build the software to satisfy the specification. The spec serves as both a guide and a contract.</li>
-      <li><strong>Verify</strong> — Confirm that the implementation matches the spec. This can be automated (contract tests, schema validation) or manual (acceptance review).</li>
-      <li><strong>Evolve</strong> — When requirements change, update the spec first, then update the code. The spec always reflects the intended state of the system.</li>
+      <li><strong>Specify</strong> — Humans (often collaborating with AI) write the specifications. This might be a product profile, a feature PRD, a style guide, a technology stack definition, or an architecture document. The AI can help draft, but the human decides.</li>
+      <li><strong>Review</strong> — Stakeholders review the specs. In agentic SDD, this is where you catch misalignment — before the agent writes a single line of code. It's dramatically cheaper to change a spec than to redirect an agent mid-implementation.</li>
+      <li><strong>Implement</strong> — The AI agent reads the specs and builds the software. The agent has full context: what the product is, what technology to use, what patterns to follow, what the feature requires, and what it should look like. It doesn't guess.</li>
+      <li><strong>Verify</strong> — Humans review the agent's output against the specs. Did it meet the acceptance criteria? Does it follow the architecture? Does it match the style guide? The spec is the rubric.</li>
+      <li><strong>Sync</strong> — As the code evolves, specs are updated to reflect reality. The agent is instructed to update specs as part of implementation, keeping the system in sync. This is what makes specs "living."</li>
     </ol>
     <p>
-      This loop — define, validate, implement, verify, evolve — is the heartbeat of SDD. The specific tools and formats change, but the cycle remains constant.
+      The key difference from traditional SDD: the implement step is primarily executed by an AI agent, which makes the quality of the specify step the single biggest lever on the quality of the output.
     </p>
   </section>
 
-  <!-- SDD Frameworks & Approaches -->
-  <section id="frameworks">
-    <h2>Common SDD Frameworks & Approaches</h2>
-    <p>
-      Spec-Driven Development is not a single tool or methodology — it's a family of practices. Here are the most widely adopted approaches, each targeting different layers of the software stack.
-    </p>
-  </section>
-
-  <!-- OpenAPI / Swagger -->
-  <section id="openapi">
-    <h3>OpenAPI / Swagger</h3>
-    <p>
-      <strong>OpenAPI</strong> (formerly Swagger) is perhaps the most successful SDD framework in production use today. It provides a standard, machine-readable format for describing RESTful APIs.
-    </p>
-    <p>
-      An OpenAPI specification defines endpoints, request/response schemas, authentication methods, and error codes in YAML or JSON. From this single spec, teams can generate:
-    </p>
-    <ul>
-      <li>Server stubs in dozens of languages</li>
-      <li>Client SDKs for consumers</li>
-      <li>Interactive API documentation (Swagger UI, Redoc)</li>
-      <li>Contract tests that verify implementation matches the spec</li>
-      <li>Mock servers for frontend development</li>
-    </ul>
-    <p>
-      The "API-first" movement, championed by companies like Stripe and Twilio, is built on this approach. Teams design the API contract before writing implementation code, enabling frontend and backend teams to work in parallel against the shared spec.
-    </p>
-    <p>
-      <strong>Scope:</strong> API interfaces. OpenAPI excels at defining the contract between services but doesn't address product requirements, visual design, or architecture decisions.
-    </p>
-  </section>
-
-  <!-- Behavior-Driven Development -->
-  <section id="bdd">
-    <h3>Behavior-Driven Development (BDD)</h3>
-    <p>
-      <strong>BDD</strong>, pioneered by Dan North and popularized by tools like <strong>Cucumber</strong>, <strong>SpecFlow</strong>, and <strong>Behave</strong>, uses natural-language scenarios as specifications. These scenarios are written in <strong>Gherkin</strong> syntax:
-    </p>
-    <blockquote>
-      <p>
-        <strong>Given</strong> a user is logged in<br />
-        <strong>When</strong> they click "Create Task"<br />
-        <strong>Then</strong> a new task form should appear
-      </p>
-    </blockquote>
-    <p>
-      The power of BDD is that specs are simultaneously human-readable and machine-executable. Product managers can read and write scenarios, and developers wire them to step definitions that drive automated tests.
-    </p>
-    <p>
-      BDD bridges the gap between business requirements and test automation. The spec <em>is</em> the test. When a scenario fails, you know exactly which business behavior broke.
-    </p>
-    <p>
-      <strong>Scope:</strong> Feature behavior and acceptance criteria. BDD is excellent for defining what the system should do from a user's perspective but doesn't prescribe architecture, technology choices, or visual design.
-    </p>
-  </section>
-
-  <!-- Design by Contract -->
-  <section id="dbc">
-    <h3>Design by Contract (DbC)</h3>
-    <p>
-      <strong>Design by Contract</strong>, formalized by Bertrand Meyer in the Eiffel programming language, embeds specifications directly into code. Every method declares:
-    </p>
-    <ul>
-      <li><strong>Preconditions</strong> — what must be true before the method runs</li>
-      <li><strong>Postconditions</strong> — what the method guarantees upon completion</li>
-      <li><strong>Invariants</strong> — what must always be true about the object's state</li>
-    </ul>
-    <p>
-      These contracts are checked at runtime (and sometimes at compile time), turning specifications into enforceable agreements between components. Languages like Eiffel have native support; others use libraries (e.g., <code>contracts</code> in Python, <code>cofoja</code> for Java).
-    </p>
-    <p>
-      DbC influenced modern type systems, assertion libraries, and tools like Microsoft's Code Contracts. TypeScript's type system, Zod validation schemas, and Rust's ownership model all carry echoes of contract-based thinking.
-    </p>
-    <p>
-      <strong>Scope:</strong> Code-level interfaces and invariants. DbC operates at the function and class level — it doesn't address system architecture, product requirements, or cross-service contracts.
-    </p>
-  </section>
-
-  <!-- Model-Driven Development -->
-  <section id="mdd">
-    <h3>Model-Driven Development (MDD)</h3>
-    <p>
-      <strong>Model-Driven Development</strong> takes SDD to a higher abstraction level. Instead of writing specs in text, teams build formal models (often visual) that describe the system's structure and behavior. Tools then generate code from these models.
-    </p>
-    <p>
-      Common MDD approaches include:
-    </p>
-    <ul>
-      <li><strong>UML</strong> — Unified Modeling Language for system design (class diagrams, sequence diagrams, state machines)</li>
-      <li><strong>Domain-Specific Languages (DSLs)</strong> — Custom languages for specific problem domains (e.g., SQL for data, Terraform for infrastructure)</li>
-      <li><strong>Schema-first ORMs</strong> — Tools like Prisma and Drizzle where you define your data model in a schema file and generate database migrations and type-safe clients</li>
-    </ul>
-    <p>
-      The promise of MDD is that the model captures intent at a level above code, reducing translation errors. In practice, the approach works best for well-understood domains with stable patterns — database schemas, state machines, infrastructure configuration.
-    </p>
-    <p>
-      <strong>Scope:</strong> System structure and behavior models. MDD is powerful for architecture and data modeling but is rarely used for product requirements or visual design.
-    </p>
-  </section>
-
-  <!-- Architecture Decision Records -->
-  <section id="adrs">
-    <h3>Architecture Decision Records (ADRs)</h3>
-    <p>
-      <strong>ADRs</strong>, popularized by Michael Nygard, are lightweight documents that capture significant architectural decisions. Each ADR records:
-    </p>
-    <ul>
-      <li><strong>Context</strong> — what situation or problem prompted the decision</li>
-      <li><strong>Decision</strong> — what was decided and why</li>
-      <li><strong>Status</strong> — proposed, accepted, deprecated, or superseded</li>
-      <li><strong>Consequences</strong> — what trade-offs and implications follow</li>
-    </ul>
-    <p>
-      ADRs solve a specific problem in SDD: <em>why</em> was a technical choice made? Six months later, when someone asks "why did we choose PostgreSQL over MongoDB?", the ADR has the answer — with the original context intact.
-    </p>
-    <p>
-      Tools like <code>adr-tools</code>, Log4brains, and simple markdown files in an <code>docs/adr/</code> directory make ADRs easy to adopt. They're version-controlled alongside the code, evolving as decisions are revisited.
-    </p>
-    <p>
-      <strong>Scope:</strong> Architectural decisions and their rationale. ADRs capture the "why" behind technical choices but don't define APIs, features, or visual design.
-    </p>
-  </section>
-
-  <!-- PRDs & Product Specs -->
-  <section id="prds">
-    <h3>PRDs & Product Specifications</h3>
-    <p>
-      <strong>Product Requirements Documents (PRDs)</strong> are the oldest form of specification in software. They define what a product should do from the user's perspective — features, user stories, acceptance criteria, and scope boundaries.
-    </p>
-    <p>
-      Modern PRDs have evolved significantly from the 50-page Word documents of the waterfall era. Today's product specs tend to be:
-    </p>
-    <ul>
-      <li><strong>Lean</strong> — focused on outcomes, not implementation details</li>
-      <li><strong>Structured</strong> — using consistent templates with prioritized capabilities</li>
-      <li><strong>Iterative</strong> — refined as understanding grows</li>
-      <li><strong>Testable</strong> — each requirement has clear acceptance criteria</li>
-    </ul>
-    <p>
-      Tools and frameworks in this space include JIRA epics/stories, Linear project specs, Notion templates, Shape Up pitches, Amazon's Working Backwards press releases, and various internal PRD templates at tech companies.
-    </p>
-    <p>
-      <strong>Scope:</strong> Product requirements and user-facing behavior. PRDs define what to build and why, but they don't specify technical implementation, API contracts, or code-level design.
-    </p>
-  </section>
-
-  <!-- AI-Era SDD Tools -->
+  <!-- Agentic SDD Tools -->
   <section id="ai-sdd">
-    <h2>AI-Era SDD Tools</h2>
+    <h2>Agentic SDD Tools</h2>
     <p>
-      The rise of AI coding assistants has spawned a new generation of SDD frameworks designed specifically for human-AI collaboration. These tools share a common insight: AI agents produce dramatically better code when guided by structured specifications rather than ad-hoc prompts. Here are the most prominent.
+      The rise of AI coding agents has spawned a new generation of SDD frameworks designed specifically for human-AI collaboration. These tools share a common insight: AI agents produce dramatically better code when guided by structured specifications rather than ad-hoc prompts. Here are the most prominent.
     </p>
   </section>
 
@@ -344,36 +260,41 @@ const headings = sections.map((s) => ({
     </p>
   </section>
 
-  <!-- Benefits of SDD -->
+  <!-- Benefits -->
   <section id="benefits">
-    <h2>Benefits of SDD</h2>
+    <h2>Benefits of Agentic SDD</h2>
     <p>
-      Organizations that adopt spec-driven practices consistently report several advantages:
+      Teams that adopt spec-driven practices for AI-assisted development see compounding advantages:
     </p>
 
-    <h3>Reduced Ambiguity</h3>
+    <h3>AI Output Quality</h3>
     <p>
-      Structured specifications force clarity. Vague requirements like "the system should be fast" become concrete: "API responses must complete within 200ms at the 95th percentile." Disagreements are surfaced during spec review, not during code review or QA.
+      The single biggest benefit. AI agents with structured specs generate code that actually fits your project — right framework, right patterns, right style, right architecture. Without specs, you get generic code that requires extensive rework. With specs, you get code that looks like your team wrote it.
     </p>
 
-    <h3>Parallel Development</h3>
+    <h3>Persistent Context</h3>
     <p>
-      When a contract is defined upfront, teams can work in parallel. Frontend and backend teams build against the same API spec. Multiple developers implement different features against the same architecture document. The spec acts as a coordination mechanism without requiring constant synchronization.
-    </p>
-
-    <h3>Better Onboarding</h3>
-    <p>
-      New team members can read the specs to understand the system — its purpose, its architecture, its design decisions, and its feature requirements. This is dramatically faster than piecing together understanding from code, comments, and oral history.
-    </p>
-
-    <h3>Automated Validation</h3>
-    <p>
-      Machine-readable specs enable automated tooling: contract tests, schema validation, documentation generation, code generation, and consistency checks. The spec becomes infrastructure, not just documentation.
+      Every AI chat session starts with a blank slate. Specs give your agent persistent memory across sessions — your product's purpose, your technology choices, your design language, your engineering standards. You stop repeating yourself.
     </p>
 
     <h3>Reduced Rework</h3>
     <p>
-      Finding a requirement error during spec review costs minutes. Finding it after implementation costs hours or days. Finding it after deployment costs significantly more. SDD shifts discovery left, where the cost of change is lowest.
+      Finding a requirement error during spec review costs minutes. Finding it after an AI agent has implemented the wrong thing costs hours of untangling generated code. Specs shift discovery left, where the cost of change is lowest.
+    </p>
+
+    <h3>Parallel Agent Work</h3>
+    <p>
+      When specs define clear boundaries — feature requirements, architecture patterns, component interfaces — multiple AI agents (or multiple sessions) can work in parallel without stepping on each other. The spec is the coordination mechanism.
+    </p>
+
+    <h3>Better Onboarding</h3>
+    <p>
+      New team members — and new AI agents — can read the specs to understand the system. Its purpose, its architecture, its design decisions, its feature requirements. This is dramatically faster than piecing together understanding from code, comments, and oral history.
+    </p>
+
+    <h3>Human Oversight at Scale</h3>
+    <p>
+      As AI agents take on more implementation work, humans need to shift from writing code to directing and reviewing it. Specs are the natural control surface for this shift — you steer by specifying, and verify by reviewing against the spec.
     </p>
   </section>
 
@@ -381,54 +302,27 @@ const headings = sections.map((s) => ({
   <section id="challenges">
     <h2>Challenges & Trade-offs</h2>
     <p>
-      SDD is not without costs. Understanding the trade-offs helps teams adopt it effectively.
+      Agentic SDD is not without costs. Understanding the trade-offs helps teams adopt it effectively.
     </p>
 
     <h3>Upfront Investment</h3>
     <p>
-      Writing specifications takes time. For rapid prototyping or exploratory work, the overhead may not be justified. SDD delivers the most value when the cost of misalignment is high — larger teams, longer-lived projects, complex domains.
+      Writing specifications takes time. For rapid prototyping, a quick hack, or exploratory work, the overhead may not be justified. Agentic SDD delivers the most value when the project will involve multiple AI interactions, when consistency matters, or when the cost of misalignment is high.
     </p>
 
     <h3>Spec Drift</h3>
     <p>
-      The biggest risk in SDD is specs that fall out of sync with reality. When the code evolves but the spec doesn't, the spec becomes misleading — worse than having no spec at all. Successful SDD requires discipline and tooling to keep specs current.
+      The biggest risk in any SDD practice — specs that fall out of sync with reality. With AI agents, this is especially dangerous: an agent reading a stale spec will confidently generate code that contradicts your current system. The discipline of updating specs alongside code is non-negotiable.
     </p>
 
     <h3>Over-Specification</h3>
     <p>
-      There's a tension between thoroughness and agility. Specs that are too detailed become rigid and resist change. Specs that are too vague provide insufficient guidance. Finding the right level of detail is a skill that improves with practice.
+      There's a tension between giving agents enough context and creating specs so detailed they become rigid. Specs that are too prescriptive leave no room for the agent's (often good) judgment. Specs that are too vague provide insufficient guidance. Finding the right level of detail is a skill that improves with practice.
     </p>
 
     <h3>Tooling Fragmentation</h3>
     <p>
-      Most SDD frameworks address only one layer of the stack. A team might use OpenAPI for APIs, Gherkin for behavior, ADRs for architecture, and PRDs for features — each with its own format, tooling, and workflow. This fragmentation can create its own coordination overhead.
-    </p>
-  </section>
-
-  <!-- SDD in the AI Era -->
-  <section id="ai-era">
-    <h2>SDD in the AI Era</h2>
-    <p>
-      The rise of AI-assisted coding tools has given Spec-Driven Development new urgency and new capabilities.
-    </p>
-    <p>
-      AI coding assistants are remarkably capable at generating code, but they face a fundamental challenge: <strong>they don't know what you're building</strong>. Without context about your product's purpose, your design language, your technology choices, and your engineering standards, AI tools make reasonable-sounding but often wrong assumptions.
-    </p>
-    <p>
-      This is where SDD and AI become natural partners. Specifications give AI tools the structured context they need to generate code that actually fits your project:
-    </p>
-    <ul>
-      <li><strong>Product specs</strong> tell the AI <em>who</em> you're building for and <em>why</em></li>
-      <li><strong>Design specs</strong> ensure generated UI matches your visual language</li>
-      <li><strong>Technology specs</strong> prevent the AI from choosing the wrong framework or library</li>
-      <li><strong>Architecture specs</strong> guide the AI toward your established patterns</li>
-      <li><strong>Feature specs</strong> give the AI scoped, testable requirements to build against</li>
-    </ul>
-    <p>
-      Without specs, every AI interaction starts from zero — you re-explain your stack, your patterns, your preferences. With specs, the AI has persistent, structured context that compounds across interactions.
-    </p>
-    <p>
-      This shift is turning SDD from a "nice to have" discipline into a practical multiplier for AI-assisted development. Teams with good specs get dramatically better output from AI tools than teams without.
+      The agentic SDD space is young and moving fast. Different tools take different approaches — some are IDE-integrated, some are framework-agnostic, some focus on greenfield, others on brownfield. Teams need to evaluate which approach fits their workflow rather than adopting everything.
     </p>
   </section>
 
@@ -436,44 +330,29 @@ const headings = sections.map((s) => ({
   <section id="gspec">
     <h2>Where gspec Fits</h2>
     <p>
-      <strong>gspec</strong> is one implementation of Spec-Driven Development, designed specifically for the AI-assisted development workflow. Understanding how it relates to the frameworks above helps clarify its role.
+      <strong>gspec</strong> is one implementation of Agentic SDD, designed to give AI coding agents the full-stack context they need to build software that matches your intent.
     </p>
 
     <h3>What gspec Does Differently</h3>
     <p>
-      Most SDD frameworks target a single layer — OpenAPI for APIs, BDD for behavior, ADRs for decisions. gspec takes a <strong>full-stack specification approach</strong>, covering the entire surface area of a product across multiple spec types:
+      Traditional SDD frameworks each targeted a single layer — OpenAPI for APIs, BDD for behavior, ADRs for decisions. Agentic SDD tools like Spec Kit and OpenSpec focus primarily on feature requirements and task planning. gspec takes a <strong>full-stack specification approach</strong>, covering the entire surface area of a product across multiple spec types:
     </p>
     <ul>
-      <li><strong>Product identity</strong> (profile) — like a lean PRD for your product's purpose</li>
+      <li><strong>Product identity</strong> (profile) — who you're building for and why</li>
       <li><strong>Visual design</strong> (style) — design tokens and component patterns</li>
       <li><strong>Technology choices</strong> (stack) — frameworks, infrastructure, and rationale</li>
       <li><strong>Engineering standards</strong> (practices) — coding conventions and workflows</li>
       <li><strong>System architecture</strong> (architecture) — data models, APIs, project structure</li>
       <li><strong>Feature requirements</strong> (features) — prioritized capabilities with acceptance criteria</li>
     </ul>
-
-    <h3>How gspec Compares</h3>
     <p>
-      Here's how gspec relates to the established SDD approaches:
+      This matters because an AI agent implementing a feature doesn't just need to know <em>what</em> to build — it needs to know <em>how</em> your team builds, <em>what</em> your product looks like, and <em>where</em> code should go. gspec provides all of that context in a single, coherent system.
     </p>
+
+    <h3>How gspec Compares to Other Agentic SDD Tools</h3>
     <ul>
       <li>
-        <strong>vs. OpenAPI</strong> — OpenAPI goes deeper on API contract details (request/response schemas, status codes, authentication). gspec's architecture spec covers API design at a higher level. They're complementary — you might use gspec for the overall system design and OpenAPI for detailed API contracts.
-      </li>
-      <li>
-        <strong>vs. BDD/Cucumber</strong> — BDD scenarios are executable tests. gspec feature specs define requirements and acceptance criteria but don't execute directly. BDD is better for automated acceptance testing; gspec is better for guiding AI implementation.
-      </li>
-      <li>
-        <strong>vs. ADRs</strong> — ADRs capture individual decisions with rationale. gspec's stack and architecture specs capture the current state of decisions in a consolidated form. ADRs provide better historical context; gspec provides a better current snapshot for AI tools.
-      </li>
-      <li>
-        <strong>vs. MDD/UML</strong> — Model-driven approaches use formal visual models and code generation. gspec uses structured Markdown — more accessible, easier to version, and optimized for LLM consumption rather than diagram tooling.
-      </li>
-      <li>
-        <strong>vs. Traditional PRDs</strong> — gspec feature specs are structured like modern PRDs but designed to be machine-readable and to live alongside the code in version control, not in a separate tool like Notion or Confluence.
-      </li>
-      <li>
-        <strong>vs. Spec Kit</strong> — GitHub's Spec Kit follows a linear specify-plan-tasks pipeline optimized for greenfield projects. gspec takes a modular approach with independent spec types (profile, style, stack, practices, architecture, features) that can be generated in any order and used independently. Spec Kit is more prescriptive about workflow; gspec is more flexible about which specs you need and when.
+        <strong>vs. Spec Kit</strong> — GitHub's Spec Kit follows a linear specify-plan-tasks pipeline optimized for greenfield projects. gspec takes a modular approach with independent spec types that can be generated in any order and used independently. Spec Kit is more prescriptive about workflow; gspec is more flexible about which specs you need and when.
       </li>
       <li>
         <strong>vs. OpenSpec</strong> — OpenSpec organizes work around change proposals with spec deltas, tracking how each change modifies the system's requirements. gspec treats specs as living documents that are updated in place as the code evolves. OpenSpec provides better change-level traceability; gspec provides a cleaner current-state view of the full product specification.
@@ -485,19 +364,16 @@ const headings = sections.map((s) => ({
 
     <h3>When to Use What</h3>
     <p>
-      SDD frameworks are not mutually exclusive. A well-run project might use several:
+      Agentic SDD tools are not mutually exclusive. The right choice depends on your team, your tools, and what problems you're solving:
     </p>
     <ul>
-      <li><strong>gspec</strong> for full-stack product specifications that guide AI-assisted development</li>
+      <li><strong>gspec</strong> for full-stack product specifications that give AI agents comprehensive project context</li>
       <li><strong>Spec Kit</strong> for structured greenfield project scaffolding with GitHub Copilot</li>
       <li><strong>OpenSpec</strong> for change-tracked spec evolution in brownfield codebases</li>
       <li><strong>Kiro</strong> for an all-in-one IDE experience with deep AWS integration</li>
-      <li><strong>OpenAPI</strong> for detailed, machine-enforceable API contracts between services</li>
-      <li><strong>BDD</strong> for executable acceptance tests tied to business scenarios</li>
-      <li><strong>ADRs</strong> for preserving the historical context behind architectural decisions</li>
     </ul>
     <p>
-      The right choice depends on your team, your tools, and what problems you're solving. The important thing is that you're writing specifications at all — the specific framework matters less than the discipline of thinking before coding.
+      You can also layer traditional SDD tools alongside agentic ones — <strong>OpenAPI</strong> for detailed API contracts, <strong>BDD</strong> for executable acceptance tests, <strong>ADRs</strong> for preserving architectural decision history. The important thing is that your AI agents have the structured context they need to build what you actually want.
     </p>
     <p>
       If you're interested in trying gspec, check out the <a href={`${import.meta.env.BASE_URL}getting-started/`}>Getting Started guide</a> or explore the <a href={`${import.meta.env.BASE_URL}docs/`}>full documentation</a>.
