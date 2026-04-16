@@ -154,7 +154,7 @@ After writing `gspec/research.md`, ask the user:
    - Scope (in-scope goals, out-of-scope items, deferred ideas)
    - Capabilities (with P0/P1/P2 priority levels, using **unchecked checkboxes** `- [ ]` for each capability, each with 2-4 **acceptance criteria** as a sub-list)
    - Dependencies (on other features or external services)
-   - Assumptions & Risks (assumptions, open questions, key risks and mitigations)
+   - Assumptions & Risks (assumptions, key risks and mitigations — all questions must be resolved in the chat before saving; only record explicitly deferred decisions)
    - Success Metrics
    - Implementation Context (standard portability note)
    - Begin the file with YAML frontmatter: `---\nspec-version: <<<SPEC_VERSION>>>\n---`

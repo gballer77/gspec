@@ -47,13 +47,8 @@ You should:
 - Deployment target (cloud, on-premise, hybrid)
 - Scale and performance requirements
 
-### 2. Open Questions & Clarifications
-**List any critical questions that need answers before finalizing technology choices**
-- Missing requirements that impact stack decisions
-- Unclear constraints or preferences
-- Team expertise or existing infrastructure questions
-- Budget or licensing considerations
-- **Mark as "None" if all information is clear**
+### 2. Clarifications
+**All questions that impact technology choices must be resolved by asking the user in the chat before the document is saved.** Do not save the stack spec with unresolved questions. If the user explicitly defers a decision, record it here as a "Deferred Decision" with context explaining what was deferred and why. If there are no deferred decisions, omit this section entirely.
 
 ### 3. Core Technology Stack
 
