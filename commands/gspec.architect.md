@@ -339,8 +339,9 @@ Examples of gaps to look for:
 - Technical decisions that were inferred rather than explicitly specified in existing specs
 
 ### 10. Open Decisions
-- Areas where the architecture may need to evolve as features are implemented
-- Questions that should be resolved before or during implementation
+- **All technical questions and decisions must be resolved by asking the user before the document is saved.** Do not save the architecture with unresolved questions.
+- If the user explicitly defers a decision, record it here with context explaining what was deferred and why. If there are no deferred decisions, omit this section entirely.
+- Areas where the architecture may need to evolve as features are implemented may be noted, but these must be acknowledged evolution points — not unresolved questions.
 
 ---
 

@@ -163,8 +163,8 @@ This separation — combined with the portability principles above — allows th
 
 ### 6. Assumptions & Risks
 - Assumptions (what we're taking as true)
-- Open questions — **only** unknowns that genuinely cannot be answered until implementation or real-world usage begins (e.g., performance thresholds pending benchmarking, exact rate limits pending load testing). Questions about scope, users, priorities, or feature design must be asked and resolved in the chat before the spec is written. If there are no open questions, omit this sub-section.
 - Key risks and mitigations (brief bullet points — focus on risks that could affect implementation scope or approach)
+- **No open questions** — All questions must be resolved by asking the user in the chat before the spec is saved. If the user explicitly defers a question, record it as a "Deferred Decision" with context explaining what was deferred and why. If there are no deferred decisions, omit the sub-section entirely. Never embed unresolved questions in the document by default.
 
 ### 7. Success Metrics
 - 2-4 measurable outcomes that define whether this feature is working
