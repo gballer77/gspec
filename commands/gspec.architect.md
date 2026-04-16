@@ -29,7 +29,7 @@ Before generating the architecture document, read **all** existing gspec documen
 4. **`gspec/practices.md`** — Development standards. Use this to align file organization, testing patterns, and code structure with team conventions.
 5. **`gspec/features/*.md`** — Individual feature requirements and dependencies. Use these to derive data entities, API endpoints, component structure, and integration points.
 
-All of these provide essential context. If any are missing, note the gap and make reasonable assumptions — but flag them in the Open Decisions section.
+All of these provide essential context. If any are missing, note the gap and ask the user to clarify before proceeding. If the user explicitly defers, make reasonable assumptions and record them in the Assumptions sub-section of the Technical Gap Analysis.
 
 ---
 
@@ -339,8 +339,9 @@ Examples of gaps to look for:
 - Technical decisions that were inferred rather than explicitly specified in existing specs
 
 ### 10. Open Decisions
-- Areas where the architecture may need to evolve as features are implemented
-- Questions that should be resolved before or during implementation
+- **All technical questions and decisions must be resolved by asking the user before the document is saved.** Do not save the architecture with unresolved questions.
+- If the user explicitly defers a decision, record it here with context explaining what was deferred and why. If there are no deferred decisions, omit this section entirely.
+- Areas where the architecture may need to evolve as features are implemented may be noted, but these must be acknowledged evolution points — not unresolved questions.
 
 ---
 
