@@ -5,6 +5,35 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.14.0',
+    date: 'April 16, 2026',
+    title: 'Spec-first workflow and resolved specs',
+    summary: 'Agents now create a feature PRD before implementing any feature not already covered by an existing spec. Open questions are no longer allowed in saved specs — all questions must be resolved in conversation before the document is saved.',
+    changes: [
+      {
+        type: 'added',
+        description: 'New spec-sync rule: <strong>"Spec before you build"</strong> — when a user asks for a feature not covered by an existing PRD in <code>gspec/features/</code>, the agent must run <code>gspec-feature</code> to create the spec before implementing.',
+      },
+      {
+        type: 'changed',
+        description: 'The <code>feature</code> command no longer allows open questions in saved PRDs. All questions must be resolved by asking the user in conversation. Only explicitly deferred decisions are recorded.',
+      },
+      {
+        type: 'changed',
+        description: 'The <code>architect</code> command\'s "Open Decisions" section now requires all technical questions to be resolved before saving. Deferred decisions are only recorded when the user explicitly declines to answer.',
+      },
+      {
+        type: 'changed',
+        description: 'The <code>stack</code> command\'s "Open Questions" section renamed to "Clarifications" and now requires resolution before saving, with the same deferred-only policy.',
+      },
+      {
+        type: 'changed',
+        description: 'The <code>research</code> command\'s generated PRD structure updated to match the new no-open-questions policy.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install updated commands. Existing specs are unaffected — open questions in previously generated specs will remain until you regenerate them.',
+  },
+  {
     version: '1.13.2',
     date: 'April 15, 2026',
     title: 'Profile-agnostic spec generation',
