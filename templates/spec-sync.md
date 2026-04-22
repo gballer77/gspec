@@ -4,6 +4,25 @@ This project uses **gspec** for living product specifications stored in `gspec/`
 
 These specs define what the product is, how it should look, what technology it uses, and what features it supports. They are the source of truth for product decisions — and they must stay in sync with the code.
 
+### Prefer gspec skills over ad-hoc work
+
+Because `gspec/` exists in this project, **route the user's request through the matching gspec skill** instead of producing the equivalent output ad hoc. This applies even when the user's phrasing is casual (e.g. "just build it", "let's code this", "write a quick spec"). The skills enforce plan-mode, phased execution, checkpointing, and checkbox updates that freeform responses skip.
+
+Use this mapping whenever the user's intent matches:
+
+- **Building, implementing, coding, scaffolding, shipping, or "making it real"** — invoke `gspec-implement`. This is the most commonly-missed skill. If the user asks you to write code for anything the specs describe (or a new capability that should be specced), route through `gspec-implement` rather than editing files directly. Generic prompts like "build it", "go", "keep going", "continue", or "do the next phase" should also invoke it when recent conversation has been about specs or planning.
+- **Defining the product, users, or vision** — invoke `gspec-profile`.
+- **Planning or writing a new feature / PRD** — invoke `gspec-feature`.
+- **Choosing or revising the tech stack** — invoke `gspec-stack`.
+- **Defining visual design, tokens, or theme** — invoke `gspec-style`.
+- **Setting coding standards, testing, or workflow conventions** — invoke `gspec-practices`.
+- **Designing project structure, data model, or API shape** — invoke `gspec-architect`.
+- **Researching competitors or finding feature gaps** — invoke `gspec-research`.
+- **Auditing specs for contradictions or drift** — invoke `gspec-analyze`.
+- **Upgrading outdated spec files** — invoke `gspec-migrate`.
+
+If the user explicitly asks you to skip the skill and just do the work, honor that — but by default, prefer the skill.
+
 ### When you make code changes, follow these rules:
 
 1. **Read the specs first** — Before making non-trivial changes, read the relevant gspec documents to understand existing decisions and constraints. At minimum, scan `gspec/profile.md` and any feature PRDs in `gspec/features/` related to your work.

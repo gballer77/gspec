@@ -118,6 +118,17 @@ function promptConfirmNo(message) {
   });
 }
 
+function promptConfirmYes(message) {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(message, (answer) => {
+      rl.close();
+      const trimmed = answer.trim().toLowerCase();
+      resolve(trimmed === '' || trimmed.startsWith('y'));
+    });
+  });
+}
+
 function formatStarterName(slug) {
   if (slug === '_none') return 'None';
   return slug
@@ -759,19 +770,50 @@ async function saveSpec(cwd) {
 
   const selected = files[num - 1];
 
-  // Prompt for name
-  const name = await promptInput(chalk.bold('\n  Save name (no spaces, e.g. my-saas-stack): '));
-  if (!name) {
-    console.error(chalk.red('\n  Name is required.'));
-    process.exit(1);
-  }
-  if (/\s/.test(name)) {
-    console.error(chalk.red('\n  Name cannot contain spaces. Use hyphens instead (e.g. my-saas-stack).'));
-    process.exit(1);
+  // Read source content and look for an existing name in frontmatter
+  let content = await readFile(selected.path, 'utf-8');
+  const { fields: sourceFields } = parseFrontmatter(content);
+  const existingName = sourceFields.name;
+
+  let name;
+  let overwriteConfirmed = false;
+
+  if (existingName) {
+    const existingPath = join(GSPEC_HOME, selected.type, `${existingName}.md`);
+    let savedExists = false;
+    try {
+      await stat(existingPath);
+      savedExists = true;
+    } catch (e) {
+      if (e.code !== 'ENOENT') throw e;
+    }
+
+    if (savedExists) {
+      const overwrite = await promptConfirmYes(
+        chalk.bold(`\n  Overwrite existing ~/.gspec/${selected.type}/${existingName}.md? [Y/n]: `)
+      );
+      if (overwrite) {
+        name = existingName;
+        overwriteConfirmed = true;
+      }
+    } else {
+      name = existingName;
+    }
   }
 
-  // Read content and update frontmatter with name
-  let content = await readFile(selected.path, 'utf-8');
+  if (!name) {
+    const answered = await promptInput(chalk.bold('\n  Save name (no spaces, e.g. my-saas-stack): '));
+    if (!answered) {
+      console.error(chalk.red('\n  Name is required.'));
+      process.exit(1);
+    }
+    if (/\s/.test(answered)) {
+      console.error(chalk.red('\n  Name cannot contain spaces. Use hyphens instead (e.g. my-saas-stack).'));
+      process.exit(1);
+    }
+    name = answered;
+  }
+
   content = setFrontmatterField(content, 'name', name);
 
   // Ensure description exists
@@ -788,16 +830,18 @@ async function saveSpec(cwd) {
   const destPath = join(destDir, `${name}.md`);
   await mkdir(destDir, { recursive: true });
 
-  // Check if file already exists
-  try {
-    await stat(destPath);
-    const overwrite = await promptConfirm(chalk.yellow(`\n  ${selected.type}/${name} already exists. Overwrite? [y/N]: `));
-    if (!overwrite) {
-      console.log(chalk.dim('\n  Save cancelled.\n'));
-      return;
+  // Check for conflict unless overwrite was already confirmed above
+  if (!overwriteConfirmed) {
+    try {
+      await stat(destPath);
+      const overwrite = await promptConfirm(chalk.yellow(`\n  ${selected.type}/${name} already exists. Overwrite? [y/N]: `));
+      if (!overwrite) {
+        console.log(chalk.dim('\n  Save cancelled.\n'));
+        return;
+      }
+    } catch (e) {
+      if (e.code !== 'ENOENT') throw e;
     }
-  } catch (e) {
-    if (e.code !== 'ENOENT') throw e;
   }
 
   // Uncheck all implementation checkboxes so saved specs start fresh

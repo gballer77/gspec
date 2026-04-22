@@ -5,6 +5,27 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.15.0',
+    date: 'April 21, 2026',
+    title: 'Skill routing and smarter spec saves',
+    summary: 'Skill descriptions now include explicit trigger phrases so AI tools route requests to the right gspec command instead of answering ad hoc, and `gspec save` reuses the existing spec name with a default-yes overwrite prompt.',
+    changes: [
+      {
+        type: 'changed',
+        description: 'All gspec skill descriptions now include explicit <strong>TRIGGER guidance</strong> — listing common user phrasings (e.g. "build the app", "write a PRD", "design the architecture", "research competitors") that should invoke each skill. This helps AI tools pick the right command rather than producing the equivalent output by hand.',
+      },
+      {
+        type: 'added',
+        description: 'New <strong>"Prefer gspec skills over ad-hoc work"</strong> section in <code>spec-sync.md</code> that maps user intents to the matching skill. Particular emphasis on routing build/code requests — including casual prompts like "build it", "go", or "keep going" — through <code>gspec-implement</code> instead of direct file edits.',
+      },
+      {
+        type: 'changed',
+        description: '<code>gspec save</code> now reuses the existing <code>name</code> from a spec\'s frontmatter when present, prompting <code>Overwrite existing ~/.gspec/&lt;type&gt;/&lt;name&gt;.md? [Y/n]</code> with overwrite as the default. Re-saving an updated spec is now a single keypress instead of re-entering the name.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install updated commands.',
+  },
+  {
     version: '1.14.0',
     date: 'April 16, 2026',
     title: 'Spec-first workflow and resolved specs',
