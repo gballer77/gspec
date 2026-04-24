@@ -16,6 +16,7 @@ const sections = [
   { id: 'feature', label: 'feature', group: 'Specify' },
   { id: 'architect', label: 'architect', group: 'Architect' },
   { id: 'analyze', label: 'analyze', group: 'Analyze' },
+  { id: 'audit', label: 'audit', group: 'Analyze' },
   { id: 'implement', label: 'implement', group: 'Build' },
 ];
 
@@ -28,7 +29,7 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
 
   <h1>Documentation</h1>
   <p class="text-lg text-[var(--text-secondary)] !mt-2 !mb-12">
-    Complete reference for the gspec workflow and all 10 commands.
+    Complete reference for the gspec workflow and all 11 commands.
   </p>
 
   <!-- Workflow Overview -->
@@ -45,7 +46,7 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
           { name: 'Research', desc: 'research', required: false },
           { name: 'Specify', desc: 'feature', required: false },
           { name: 'Architect', desc: 'architect', required: false },
-          { name: 'Analyze', desc: 'analyze', required: false },
+          { name: 'Analyze', desc: 'analyze, audit', required: false },
           { name: 'Build', desc: 'implement', required: true },
         ].map((stage) => (
           <div class:list={[
@@ -68,7 +69,7 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
       Only <strong>Define</strong> and <strong>Build</strong> are required. The four Define commands (profile, style, stack, practices) establish your product foundation. The implement command reads all specs and builds software. Everything in between adds optional depth — use what your project needs.
     </p>
     <p>
-      All specs are Markdown files stored in a <code>gspec/</code> directory in your repository. They're version-controlled, human-readable, and automatically kept in sync through gspec's spec-sync system.
+      Most specs are Markdown files stored in a <code>gspec/</code> directory in your repository. The style guide can alternatively be a self-contained HTML design system (<code>style.html</code>) that renders tokens and component previews directly in a browser — useful for design-aware AI tools. An optional <code>gspec/design/</code> folder holds mockups (HTML, SVG, PNG, JPG) exported from external design tools; the implement command reads them as authoritative visual guidance. All files are version-controlled, human-readable, and automatically kept in sync through gspec's spec-sync system.
     </p>
   </section>
 
@@ -140,10 +141,11 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
     id="style"
     name="style"
     role="UI Designer"
-    description="Generates a visual design system with colors, typography, spacing, component patterns, and design tokens. Adopts the perspective of a UI Designer to create a cohesive visual language for your product."
-    produces="A comprehensive style guide saved to gspec/style.md. Includes color palette with hex/RGB/HSL values, typography scale, spacing system, component specifications (buttons, cards, forms), theme tokens for dark/light mode, and accessibility guidelines."
+    description="Generates a visual design system with colors, typography, spacing, component patterns, and design tokens. Adopts the perspective of a UI Designer to create a cohesive visual language for your product. Supports two output formats: a renderable HTML design system (style.html) — a single self-contained file with live swatches, type specimens, and styled component previews, readable by design-aware AI tools — or a Markdown style guide (style.md). Either format is valid; gspec consumers read whichever is present. A complementary gspec/design/ folder can hold mockups (HTML, SVG, PNG, JPG) from external design tools like Figma, v0, or Framer AI, which the implement command reads as authoritative visual guidance."
+    produces="A single style guide saved as gspec/style.html (recommended — a renderable HTML design system with design tokens as CSS variables, color swatches, typography specimens, and live styled component examples for light and dark mode) or gspec/style.md (a Markdown style guide with the same structured content as prose). In both formats: color palette with hex/RGB/HSL values, typography scale, spacing system, component specifications (buttons, cards, forms), theme tokens for dark/light mode, and accessibility guidelines."
     invocation="/style"
     questions={[
+      'Preferred output format (HTML renderable design system or Markdown style guide)',
       'Design vision and visual personality (minimal, bold, playful, etc.)',
       'Target platforms (web, mobile, desktop)',
       'Brand colors or color preferences',
@@ -154,16 +156,19 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
       'Run profile first so the style command can align design with brand personality',
       'Provide a clear visual personality direction — \"clean and minimal\" produces better results than \"nice\"',
       'Review the generated color palette for accessibility compliance (WCAG AA contrast ratios)',
+      'Prefer style.html when your workflow includes design-aware AI tools — they can render and reason about it directly',
+      'Drop mockups from external design tools into gspec/design/ so /gspec-implement can match their layouts',
       'The style guide is consumed by implement — keep it structured and specific',
     ]}
     pitfalls={[
       'Generating a style guide without a profile — the design won\'t reflect your product\'s personality',
+      'Maintaining both style.html and style.md for the same project — pick one as the source of truth',
       'Over-specifying in the conversation and constraining the Designer role too much',
       'Ignoring accessibility requirements in the output — check contrast ratios',
     ]}
     related={[
       { name: 'profile', relation: 'Style reads profile for brand personality and audience context' },
-      { name: 'implement', relation: 'Implement reads style for all UI decisions (colors, spacing, components)' },
+      { name: 'implement', relation: 'Implement reads style and gspec/design/ mockups for all UI decisions (colors, spacing, components, layout)' },
     ]}
   />
 
@@ -354,6 +359,39 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
     related={[
       { name: 'architect', relation: 'Analyze catches contradictions between architecture and other specs' },
       { name: 'implement', relation: 'Run analyze before implement to ensure specs are consistent' },
+      { name: 'audit', relation: 'Analyze compares specs to other specs; audit compares specs to the codebase' },
+    ]}
+  />
+
+  <!-- Audit Stage -->
+  <CommandSection
+    id="audit"
+    name="audit"
+    role="Specification Auditor"
+    description="Reads the specs and inspects the actual codebase, then surfaces drift between what the specs say and what the code does — mismatched dependencies, undocumented routes, stale data models, design tokens that don't match the stylesheet, capability checkboxes that don't reflect reality. Walks you through each discrepancy and — with your approval — updates the specs to match reality. Distinct from analyze, which compares specs against each other rather than against the codebase. Complements always-on spec-sync (which catches drift as code changes happen) by sweeping for accumulated drift that slipped through."
+    produces="A list of findings where each drift is cited with the exact spec statement and the matching evidence in code. With your per-finding approval, affected spec files are updated in place. At the end, a summary of updates made, items deferred, and a code-follow-up list for any drift the user chose to fix in the code rather than the spec."
+    invocation="/audit"
+    questions={[
+      'Optional scope hint (e.g., \"just audit the stack\", \"audit the features/ folder\") — without a hint, audit sweeps all specs',
+      'Whether to update specs to match code, leave specs alone (and flag code for fix), or defer on a per-finding basis',
+    ]}
+    bestPractices={[
+      'Run audit before shipping a major release or before handing the project to a new contributor',
+      'Run audit after a long sprint where spec-sync may have missed changes (e.g., rapid iterative sessions)',
+      'Pass a scope hint for large codebases — audit one domain at a time (stack, then architecture, then features)',
+      'Use the code-follow-up list from audit as input for the next /implement run',
+      'Treat profile drift conservatively — the profile is often aspirational, not descriptive',
+    ]}
+    pitfalls={[
+      'Running audit on a brand-new project with no code — there\'s nothing to compare specs against',
+      'Blindly choosing \"update spec to match code\" for every finding — some drift means the code is wrong, not the spec',
+      'Using audit as a substitute for /implement — audit never modifies code',
+      'Auditing a massive codebase in one pass — prefer scoped sweeps for comprehension',
+    ]}
+    related={[
+      { name: 'analyze', relation: 'Analyze finds spec-to-spec contradictions; audit finds spec-to-code drift' },
+      { name: 'implement', relation: 'Audit\'s code-follow-up list feeds the next implement run when code needs to change' },
+      { name: 'migrate', relation: 'Run migrate first if specs use an outdated format before auditing against code' },
     ]}
   />
 
@@ -362,7 +400,7 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
     id="implement"
     name="implement"
     role="Senior Developer"
-    description="Reads all existing gspec documents and implements your software with full project context. Synthesizes profile, style, stack, practices, architecture, and feature PRDs to produce code that matches your specifications."
+    description="Reads all existing gspec documents and implements your software with full project context. Synthesizes profile, style (style.md or style.html), stack, practices, architecture, and feature PRDs, plus any mockups in gspec/design/, to produce code that matches your specifications. When design mockups are present, implement matches their layout and visual hierarchy within the style guide's token constraints."
     produces="Working code committed to your repository. Updates feature PRD capability checkboxes from [ ] to [x] as each capability is implemented. Produces code that follows your stack, practices, and style specifications."
     invocation="/implement"
     questions={[
@@ -384,7 +422,7 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
     ]}
     related={[
       { name: 'profile', relation: 'Implement reads profile for product context and audience' },
-      { name: 'style', relation: 'Implement reads style for all visual and UI decisions' },
+      { name: 'style', relation: 'Implement reads the style guide (style.md or style.html) plus any gspec/design/ mockups for all visual and UI decisions' },
       { name: 'stack', relation: 'Implement reads stack for technology choices and patterns' },
       { name: 'practices', relation: 'Implement reads practices for code quality and testing standards' },
       { name: 'feature', relation: 'Implement builds against feature PRD capabilities' },

@@ -96,10 +96,10 @@ No enterprise overhead, no learning curve.`} lang="markdown" />
     </p>
     <CodeBlock code="/style" lang="command" />
     <p>
-      It reads your profile first, then asks about your design vision, target platforms, and visual personality. The output is a comprehensive style guide with hex colors, font stacks, spacing scales, and component specifications.
+      It reads your profile first, then asks about your design vision, target platforms, and visual personality. Pick an output format — a renderable HTML design system (<code>style.html</code>) that design-aware AI tools can inspect directly, or a Markdown style guide (<code>style.md</code>). Either way, the output includes hex colors, font stacks, spacing scales, and component specifications.
     </p>
     <p>
-      Your AI coding tools can now make UI decisions that match your intended design language — consistent colors, proper spacing, correct typography.
+      Your AI coding tools can now make UI decisions that match your intended design language — consistent colors, proper spacing, correct typography. Drop mockups from external design tools (Figma, v0, Framer AI) into <code>gspec/design/</code> and <code>/implement</code> will use them as authoritative layout guidance.
     </p>
   </section>
 
@@ -160,7 +160,8 @@ No enterprise overhead, no learning curve.`} lang="markdown" />
     </p>
     <CodeBlock code={`Reading specs...
   ✓ profile.md — TaskFlow, task management for small teams
-  ✓ style.md — Design tokens, component patterns
+  ✓ style.html — Renderable design system, 3 component variants
+  ✓ design/task-board.html — Mockup from external design tool
   ✓ stack.md — Next.js, PostgreSQL, Vercel
   ✓ practices.md — Vitest, trunk-based, conventional commits
   ✓ features/task-board.md — 8 capabilities, 3 P0

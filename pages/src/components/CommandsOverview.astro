@@ -5,7 +5,7 @@ const groups = [
     description: 'Establish your product foundation',
     commands: [
       { name: 'profile', role: 'Business Strategist', description: 'Define what your product is, who it serves, and why it exists' },
-      { name: 'style', role: 'UI Designer', description: 'Generate a visual design system with tokens, colors, and component patterns' },
+      { name: 'style', role: 'UI Designer', description: 'Generate a renderable HTML design system (style.html) or Markdown style guide (style.md), plus support for design-tool mockups in gspec/design/' },
       { name: 'stack', role: 'Solutions Architect', description: 'Define your technology choices, frameworks, and infrastructure' },
       { name: 'practices', role: 'Engineering Lead', description: 'Set development standards, testing conventions, and workflows' },
     ],
@@ -18,6 +18,7 @@ const groups = [
       { name: 'feature', role: 'Product Manager', description: 'Write one or more PRDs with prioritized capabilities and acceptance criteria' },
       { name: 'architect', role: 'Technical Architect', description: 'Design the technical blueprint — data model, APIs, project structure' },
       { name: 'analyze', role: 'Quality Analyst', description: 'Cross-reference all specs and resolve contradictions' },
+      { name: 'audit', role: 'Specification Auditor', description: 'Check specs against the actual codebase and update them to match reality' },
     ],
   },
   {
@@ -33,7 +34,7 @@ const groups = [
 <section class="py-16 lg:py-24">
   <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
     <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] text-center mb-4 tracking-tight">
-      10 commands, one workflow
+      11 commands, one workflow
     </h2>
     <p class="text-[var(--text-secondary)] text-center mb-12 max-w-2xl mx-auto">
       Each command adopts a professional perspective to guide you through comprehensive product definition.

@@ -15,7 +15,46 @@ You should:
 
 ---
 
-## Output Rules
+## Output Format — Markdown or HTML
+
+gspec supports two formats for the style guide. **Both are valid** — you emit one file, not both.
+
+| Format | Filename | Best for |
+|---|---|---|
+| **HTML design system** (recommended for new projects) | `gspec/style.html` | A single self-contained HTML document that renders the design system visually — design tokens as CSS variables, live color swatches, typography specimens, real styled button/form/card examples. Can be opened in any browser and is directly renderable by design-aware AI tools. |
+| **Markdown style guide** | `gspec/style.md` | A narrative design system document. Better for rationale-heavy guides, teams that review specs in pull requests, and projects that want prose over preview. |
+
+### How to choose which to produce
+
+1. **If `gspec/style.html` already exists** — update it in place. Do not create a `gspec/style.md`.
+2. **If `gspec/style.md` already exists** — update it in place. Do not create a `gspec/style.html`.
+3. **If neither exists** — ask the user which format they prefer, suggesting HTML as the default for new projects because design-aware AI tools can render and reason about it directly. Offer both options briefly:
+   > Which format would you like for your style guide?
+   > 1. **HTML design system** (recommended) — a renderable `style.html` with live component previews
+   > 2. **Markdown style guide** — a narrative `style.md`
+
+A project should normally have only one of the two. If both exist (e.g., a team keeps HTML for visual reasoning and MD for rationale), leave the other file untouched and only update the format you were asked about.
+
+---
+
+## Output Rules — Common to Both Formats
+
+- **Before generating the document**, ask clarifying questions if:
+  - The desired visual mood or aesthetic direction is unclear (e.g., minimal, bold, warm, technical)
+  - The target platforms are unspecified
+  - Dark mode / theme requirements are unknown
+  - The application category or domain is unclear (affects functional color choices)
+- **When asking questions**, offer 2-3 specific suggestions to guide the discussion
+- **The style guide must not include profile details** — you CAN derive colors, typography, or visual identity from any business name, logo, and brand if prompted to do so, however it should NOT include details of the business including company name, business offerings, etc. Base all design decisions on aesthetic principles, usability, and the functional needs of the application category
+- Use exact color codes (hex, RGB, HSL) for all colors
+- Specify exact font families, weights, and sizes
+- Include spacing scales and measurement systems
+- Provide examples where helpful
+- **Mark sections as "Not Applicable"** when they don't apply to this application
+
+### Format-Specific Output Rules
+
+#### Markdown (`gspec/style.md`)
 
 - Output **ONLY** a single Markdown document
 - Save the file as `gspec/style.md` in the root of the project, create the `gspec` folder if it doesn't exist
@@ -26,23 +65,30 @@ You should:
   ---
   ```
   The frontmatter must be the very first content in the file, before the main heading.
-- **Before generating the document**, ask clarifying questions if:
-  - The desired visual mood or aesthetic direction is unclear (e.g., minimal, bold, warm, technical)
-  - The target platforms are unspecified
-  - Dark mode / theme requirements are unknown
-  - The application category or domain is unclear (affects functional color choices)
-- **When asking questions**, offer 2-3 specific suggestions to guide the discussion
-- **The style guide must not include profile details** — you CAN derive colors, typography, or visual identity from any business name, logo, and brand if prompted to do so, however it should NOT include details of the business including company name, business offerings, etc. Base all design decisions on aesthetic principles, usability, and the functional needs of the application category
-- Include visual descriptions and specifications
-- Use color codes (hex, RGB, HSL) for all colors
-- Specify exact font families, weights, and sizes
-- Include spacing scales and measurement systems
-- Provide examples where helpful
-- **Mark sections as "Not Applicable"** when they don't apply to this application
+
+#### HTML (`gspec/style.html`)
+
+- Output **ONLY** a single self-contained HTML document (no external CSS/JS files, no build step required)
+- Save the file as `gspec/style.html` in the root of the project, create the `gspec` folder if it doesn't exist
+- The first line of the file must be an HTML comment containing the spec version:
+  ```
+  <!-- spec-version: <<<SPEC_VERSION>>> -->
+  ```
+  This appears before the `<!DOCTYPE html>` declaration so the gspec tooling can detect the version.
+- The document must include:
+  - A `<style>` block in the `<head>` defining **design tokens as CSS custom properties** (`--color-primary`, `--space-md`, `--font-heading`, etc.) — these are the canonical source of truth for the design system
+  - Rendered **visual examples** of every token category: color swatches with hex values, typography specimens at every scale step, spacing scale visualizations, shadow elevations, border-radius samples
+  - **Live styled components**: buttons (all variants + states), form inputs (default, focus, error, disabled), cards, navigation elements, badges, etc.
+  - **Light mode and dark mode** side-by-side or togglable (a small `<script>` for a theme toggle is allowed and encouraged)
+  - Inline rationale and usage guidance alongside each section (e.g., `<p class="rationale">Use primary on calls-to-action…</p>`)
+- The HTML must be standards-compliant, semantic, and must render correctly when opened as a file in any modern browser
+- Keep the file self-contained — do not link to external CSS frameworks or JS libraries. If you need a font, use a `<link>` to Google Fonts or a system font stack
 
 ---
 
 ## Required Sections
+
+These sections must be covered regardless of output format. In Markdown they are headings (`##`, `###`). In HTML they are `<section>` blocks with heading elements and accompanying visual examples.
 
 ### 1. Overview
 - Design vision statement
@@ -203,6 +249,12 @@ You should:
 - Common UI patterns
 - Page layout examples
 - Do's and don'ts
+
+---
+
+## Complementary Design Folder
+
+Separately from the style guide, projects may keep visual mockups in a `gspec/design/` folder — HTML pages, SVG exports, PNG/JPG screenshots, or other assets produced by external design tools (Figma, v0, Framer AI, Penpot, etc.). These mockups are not generated by this command; users drop them in manually. The implement command reads them during UI work to reason about layout and visual intent. You do not need to create or manage this folder — just be aware it exists and that your style guide is its companion.
 
 ---
 

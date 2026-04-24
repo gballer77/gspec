@@ -5,6 +5,43 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.16.0',
+    date: 'April 24, 2026',
+    title: 'Design-tool integration, spec-to-code audit, and broader profile support',
+    summary: 'The style guide can now be a renderable HTML design system (style.html) alongside the traditional Markdown (style.md), a new gspec/design/ folder lets you drop mockups from external design tools so /gspec-implement matches their layout when building UI, a new /gspec-audit command finds drift between your specs and the actual codebase, and /gspec-profile now adapts to non-commercial products like open-source libraries, internal tools, and research software.',
+    changes: [
+      {
+        type: 'added',
+        description: 'New <code>style.html</code> output format — a single self-contained HTML design system with design tokens as CSS custom properties, live color swatches, typography specimens, and styled component previews. Renderable in any browser and directly readable by design-aware AI tools. The <code>/gspec-style</code> command asks which format you prefer when neither file exists, suggesting HTML as the default for new projects. Markdown (<code>style.md</code>) is still fully supported — both formats are valid.',
+      },
+      {
+        type: 'added',
+        description: 'New <code>gspec/design/</code> folder for external mockups — drop HTML, SVG, PNG, or JPG files from Figma, v0, Framer AI, Penpot, or any other design tool. <code>/gspec-implement</code> reads these mockups as authoritative visual guidance and matches their layout and hierarchy within the style guide\'s token constraints. The folder is drop-in only; gspec does not generate or edit its contents.',
+      },
+      {
+        type: 'added',
+        description: 'New <code>/gspec-audit</code> command — inspects the actual codebase (package manifests, configs, source, tests) and surfaces drift between what the specs say and what the code does. Presents each finding one at a time with the spec quote and the code evidence side by side, then asks per-finding whether to update the spec to match the code, keep the spec and flag the code for a separate fix, or defer. Distinct from <code>/gspec-analyze</code> (which compares specs to other specs) and complements always-on spec-sync (which catches drift as code changes happen) by sweeping for accumulated drift.',
+      },
+      {
+        type: 'changed',
+        description: '<code>/gspec-implement</code>, <code>/gspec-analyze</code>, and <code>/gspec-migrate</code> now read either <code>style.md</code> or <code>style.html</code>, and the spec-sync rules in <code>CLAUDE.md</code> / <code>AGENTS.md</code> / cursor rules describe <code>gspec/design/</code> as read-only authoritative guidance.',
+      },
+      {
+        type: 'changed',
+        description: 'Version metadata for HTML specs lives in a first-line comment (<code>&lt;!-- spec-version: v1 --&gt;</code>) before <code>&lt;!DOCTYPE html&gt;</code>. The installer, migrate command, and <code>gspec save</code> / <code>gspec restore</code> now parse both YAML frontmatter (Markdown) and HTML comments (HTML specs).',
+      },
+      {
+        type: 'changed',
+        description: '<code>gspec save</code>, <code>gspec restore</code>, and <code>gspec playbook</code> preserve the style guide\'s file extension — HTML style guides are saved under <code>~/.gspec/styles/&lt;name&gt;.html</code> and restored as <code>gspec/style.html</code>; Markdown style guides continue to use <code>.md</code>.',
+      },
+      {
+        type: 'changed',
+        description: '<code>/gspec-profile</code> now adapts to the product type — commercial SaaS, internal tools, open-source libraries, research software, and personal projects. Sections like Business Model, Market & Competition, Brand, and Public-Facing Information are now marked optional with guidance to skip or adapt when a product has no external market. Commercial framing is no longer forced onto products without customers or revenue.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install updated commands. Existing <code>style.md</code> files continue to work unchanged. To switch to the HTML format, delete <code>gspec/style.md</code> and run <code>/gspec-style</code>, or ask your AI tool to convert your existing Markdown style guide to the new HTML format. Drop design-tool mockups into <code>gspec/design/</code> at any time. Run <code>/gspec-audit</code> to reconcile any drift between your existing specs and codebase. Existing <code>profile.md</code> files are unaffected — regenerate to pick up the new product-type-aware structure.',
+  },
+  {
     version: '1.15.0',
     date: 'April 21, 2026',
     title: 'Skill routing and smarter spec saves',

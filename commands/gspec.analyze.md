@@ -4,6 +4,8 @@ Your task is to read all existing gspec specification documents, identify discre
 
 This command is designed to be run **after** `gspec-architect` (or at any point when multiple specs exist) and **before** `gspec-implement`, to ensure the implementing agent receives a coherent, conflict-free set of instructions.
 
+> **Analyze vs. audit.** `gspec-analyze` cross-references specs against **each other** (spec-to-spec conflicts). `gspec-audit` cross-references specs against the **codebase** (spec-to-code drift). If the user's intent is "do my docs still reflect what the code does?", route to `gspec-audit` instead.
+
 You should:
 - Read and deeply cross-reference all available gspec documents
 - Identify concrete discrepancies — not style differences or minor wording variations, but substantive contradictions where two specs disagree on a fact, technology, behavior, or requirement
@@ -23,11 +25,12 @@ Read **every** available gspec document in this order:
 
 1. `gspec/profile.md` — Product identity, scope, audience, and positioning
 2. `gspec/stack.md` — Technology choices, frameworks, infrastructure
-3. `gspec/style.md` — Visual design language, tokens, component styling
-4. `gspec/practices.md` — Development standards, testing, conventions
-5. `gspec/architecture.md` — Technical blueprint: project structure, data model, API design, environment
-6. `gspec/research.md` — Competitive analysis and feature proposals
-7. `gspec/features/*.md` — Individual feature requirements and dependencies
+3. `gspec/style.md` **or** `gspec/style.html` — Visual design language, tokens, component styling. Read whichever exists; read both if both are present. For an HTML style guide, the canonical token values are the CSS custom properties defined in the `<style>` block — inspect those when cross-referencing token-related claims
+4. `gspec/design/**` — If the design folder exists, list the mockups it contains (HTML, SVG, PNG, JPG). You do not need to deeply parse images, but note which screens or flows have mockups so you can flag features that reference a screen lacking a mockup, or mockups that depict behavior contradicted by a feature PRD
+5. `gspec/practices.md` — Development standards, testing, conventions
+6. `gspec/architecture.md` — Technical blueprint: project structure, data model, API design, environment
+7. `gspec/research.md` — Competitive analysis and feature proposals
+8. `gspec/features/*.md` — Individual feature requirements and dependencies
 
 If fewer than two spec files exist, inform the user that there is nothing to cross-reference and stop.
 
@@ -53,8 +56,10 @@ Systematically compare specs against each other. Look for these categories of di
 - Authentication or authorization requirements differ between specs
 
 #### Design & Style Conflicts
-- A feature PRD references visual patterns or components that contradict `style.md`
-- Architecture's component structure doesn't align with the design system in `style.md`
+- A feature PRD references visual patterns or components that contradict the style guide (`style.md` or `style.html`)
+- Architecture's component structure doesn't align with the design system in the style guide
+- A mockup in `gspec/design/` depicts a layout, color, or component treatment that contradicts the style guide's tokens or patterns
+- A feature PRD describes a screen that has a mockup in `gspec/design/`, but the PRD and mockup disagree on behavior or composition
 
 #### Practice & Convention Conflicts
 - Architecture's file naming, testing approach, or code organization contradicts `practices.md`
@@ -123,7 +128,7 @@ When updating specs to resolve a discrepancy:
 
 - **Surgical updates only** — change the minimum text needed to resolve the conflict
 - **Preserve format and tone** — match the existing document's style, heading structure, and voice
-- **Preserve `spec-version` frontmatter** — do not alter or remove it
+- **Preserve `spec-version` metadata** — do not alter or remove it. For Markdown files this is YAML frontmatter (`---\nspec-version: ...\n---`); for HTML style guides it is the first-line comment (`<!-- spec-version: ... -->`). Both must be left intact.
 - **Do not rewrite sections** — if a one-line change resolves the conflict, make a one-line change
 - **Do not add changelog annotations** — the git history captures what changed
 

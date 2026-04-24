@@ -255,11 +255,13 @@ async function seedFromSavedSpecs(cwd) {
   const gspecDir = join(cwd, 'gspec');
   const filesToWrite = [];
 
+  // `dest` is null for types whose destination filename depends on the saved file's extension
+  // (currently `styles`, which may be .md or .html).
   const CATEGORY_ORDER = [
     { type: 'profiles', label: 'Select a profile', dest: 'profile.md', mode: 'single' },
     { type: 'practices', label: 'Select practices', dest: 'practices.md', mode: 'single' },
     { type: 'stacks', label: 'Select a stack', dest: 'stack.md', mode: 'single' },
-    { type: 'styles', label: 'Select a style', dest: 'style.md', mode: 'single' },
+    { type: 'styles', label: 'Select a style', dest: null, mode: 'single' },
     { type: 'features', label: 'Select features (optional)', dest: null, mode: 'multi' },
   ];
 
@@ -275,19 +277,24 @@ async function seedFromSavedSpecs(cwd) {
         : await promptSelect(cat.label, [...specs, NONE_OPTION]);
 
       if (selected !== '_none') {
+        const savedFilename = await resolveSavedSpecFilename(cat.type, selected);
+        if (!savedFilename) continue;
+        const destFilename = cat.dest || destFilenameForRestoredSpec(cat.type, savedFilename);
         filesToWrite.push({
-          src: join(gspecHome, cat.type, `${selected}.md`),
-          dest: join(gspecDir, cat.dest),
-          label: `gspec/${cat.dest}`,
+          src: join(gspecHome, cat.type, savedFilename),
+          dest: join(gspecDir, destFilename),
+          label: `gspec/${destFilename}`,
         });
       }
     } else {
       let selectedSlugs = await promptMultiSelect(cat.label, specs);
       for (const slug of selectedSlugs) {
+        const savedFilename = await resolveSavedSpecFilename(cat.type, slug);
+        if (!savedFilename) continue;
         filesToWrite.push({
-          src: join(gspecHome, cat.type, `${slug}.md`),
-          dest: join(gspecDir, 'features', `${slug}.md`),
-          label: `gspec/features/${slug}.md`,
+          src: join(gspecHome, cat.type, savedFilename),
+          dest: join(gspecDir, 'features', savedFilename),
+          label: `gspec/features/${savedFilename}`,
         });
       }
     }
@@ -561,6 +568,11 @@ const MIGRATE_COMMANDS = {
 };
 
 function parseSpecVersion(content) {
+  // HTML spec files store the version as a first-line comment:
+  //   <!-- spec-version: v1 -->
+  const htmlMatch = content.match(/^\s*<!--\s*spec-version:\s*([^\s-][^-]*?)\s*-->/);
+  if (htmlMatch) return htmlMatch[1].trim();
+
   const match = content.match(/^---\n([\s\S]*?)\n---/);
   if (!match) return null;
   const newMatch = match[1].match(/^spec-version:\s*(.+)$/m);
@@ -576,6 +588,11 @@ async function collectGspecFiles(gspecDir) {
   const topEntries = await readdir(gspecDir);
   for (const entry of topEntries) {
     if (entry.endsWith('.md') && entry.toLowerCase() !== 'readme.md') {
+      files.push({ path: join(gspecDir, entry), label: `gspec/${entry}` });
+    }
+    // Pick up style.html (the HTML-format style guide) alongside Markdown specs.
+    // Other .html files under gspec/ are not gspec-owned and are skipped.
+    if (entry === 'style.html') {
       files.push({ path: join(gspecDir, entry), label: `gspec/${entry}` });
     }
   }
@@ -648,19 +665,82 @@ const GSPEC_TYPE_MAP = {
   'profile.md': 'profiles',
   'stack.md': 'stacks',
   'style.md': 'styles',
+  'style.html': 'styles',
   'practices.md': 'practices',
 };
 
 // Reverse: restore type folder → gspec/ destination filename
+// The `styles` entry is a function because the destination depends on the saved file's extension.
 const RESTORE_DEST_MAP = {
   profiles: 'profile.md',
   stacks: 'stack.md',
-  styles: 'style.md',
+  styles: 'style.md', // default when the saved extension is .md
   practices: 'practices.md',
   features: null, // features keep their own filename
 };
 
+// Given a save-type folder and a saved slug, resolve the actual filename in ~/.gspec/<type>/.
+// Styles can be stored as .md or .html; all others are .md.
+async function resolveSavedSpecFilename(type, slug) {
+  const dir = join(GSPEC_HOME, type);
+  const candidates = type === 'styles'
+    ? [`${slug}.md`, `${slug}.html`]
+    : [`${slug}.md`];
+  for (const candidate of candidates) {
+    try {
+      await stat(join(dir, candidate));
+      return candidate;
+    } catch (e) {
+      if (e.code !== 'ENOENT') throw e;
+    }
+  }
+  return null;
+}
+
+// Destination filename in a project's gspec/ directory for a restored saved spec.
+// For styles, preserve the saved file's extension so a .html style guide restores as style.html.
+function destFilenameForRestoredSpec(type, savedFilename) {
+  if (type === 'features') return savedFilename;
+  if (type === 'styles') {
+    return savedFilename.endsWith('.html') ? 'style.html' : 'style.md';
+  }
+  return RESTORE_DEST_MAP[type];
+}
+
+function isHtmlSpec(content) {
+  const head = content.slice(0, 500).trimStart().toLowerCase();
+  if (head.startsWith('<!doctype') || head.startsWith('<html')) return true;
+  // Leading HTML comments before <!DOCTYPE> (where we store HTML spec metadata)
+  if (head.startsWith('<!--')) {
+    // Peek further to see if a <!DOCTYPE> / <html> follows the comments
+    const scan = content.slice(0, 2000).toLowerCase();
+    return /<!doctype|<html/.test(scan);
+  }
+  return false;
+}
+
+function parseHtmlMetadata(content) {
+  // Consume consecutive `<!-- key: value -->` comments at the top of the file,
+  // stopping at the first non-comment, non-blank line.
+  const fields = {};
+  const lines = content.split('\n');
+  let bodyStart = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    if (trimmed === '') {
+      bodyStart = i + 1;
+      continue;
+    }
+    const match = trimmed.match(/^<!--\s*([\w-]+):\s*(.+?)\s*-->$/);
+    if (!match) break;
+    fields[match[1]] = match[2];
+    bodyStart = i + 1;
+  }
+  return { fields, body: lines.slice(bodyStart).join('\n') };
+}
+
 function parseFrontmatter(content) {
+  if (isHtmlSpec(content)) return parseHtmlMetadata(content);
   const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
   if (!match) return { fields: {}, body: content };
   const fields = {};
@@ -673,7 +753,34 @@ function parseFrontmatter(content) {
   return { fields, body: content.slice(match[0].length) };
 }
 
+function setHtmlMetadataField(content, key, value) {
+  const lines = content.split('\n');
+  let lastCommentIndex = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    if (trimmed === '') continue;
+    if (trimmed.startsWith('<!--') && trimmed.endsWith('-->')) {
+      lastCommentIndex = i;
+      const m = trimmed.match(/^<!--\s*([\w-]+):\s*(.+?)\s*-->$/);
+      if (m && m[1] === key) {
+        lines[i] = `<!-- ${key}: ${value} -->`;
+        return lines.join('\n');
+      }
+      continue;
+    }
+    break;
+  }
+  const newComment = `<!-- ${key}: ${value} -->`;
+  if (lastCommentIndex >= 0) {
+    lines.splice(lastCommentIndex + 1, 0, newComment);
+  } else {
+    lines.unshift(newComment);
+  }
+  return lines.join('\n');
+}
+
 function setFrontmatterField(content, key, value) {
+  if (isHtmlSpec(content)) return setHtmlMetadataField(content, key, value);
   const match = content.match(/^(---\s*\n)([\s\S]*?)(\n---)/);
   if (!match) {
     // No frontmatter — create one
@@ -711,10 +818,11 @@ async function collectSavableFiles(cwd) {
     throw e;
   }
 
-  // Top-level spec files
+  // Top-level spec files. Accept the Markdown specs plus the HTML style guide.
   const topEntries = await readdir(gspecDir);
   for (const entry of topEntries) {
-    if (!entry.endsWith('.md') || entry.toLowerCase() === 'readme.md') continue;
+    if (entry.toLowerCase() === 'readme.md') continue;
+    if (!entry.endsWith('.md') && entry !== 'style.html') continue;
     const type = GSPEC_TYPE_MAP[entry];
     if (!type) continue;
     files.push({
@@ -769,6 +877,8 @@ async function saveSpec(cwd) {
   }
 
   const selected = files[num - 1];
+  // Preserve the source file's extension when saving (.md for most specs, .html for style.html).
+  const ext = selected.path.endsWith('.html') ? '.html' : '.md';
 
   // Read source content and look for an existing name in frontmatter
   let content = await readFile(selected.path, 'utf-8');
@@ -779,7 +889,7 @@ async function saveSpec(cwd) {
   let overwriteConfirmed = false;
 
   if (existingName) {
-    const existingPath = join(GSPEC_HOME, selected.type, `${existingName}.md`);
+    const existingPath = join(GSPEC_HOME, selected.type, `${existingName}${ext}`);
     let savedExists = false;
     try {
       await stat(existingPath);
@@ -790,7 +900,7 @@ async function saveSpec(cwd) {
 
     if (savedExists) {
       const overwrite = await promptConfirmYes(
-        chalk.bold(`\n  Overwrite existing ~/.gspec/${selected.type}/${existingName}.md? [Y/n]: `)
+        chalk.bold(`\n  Overwrite existing ~/.gspec/${selected.type}/${existingName}${ext}? [Y/n]: `)
       );
       if (overwrite) {
         name = existingName;
@@ -825,16 +935,16 @@ async function saveSpec(cwd) {
     }
   }
 
-  // Write to ~/.gspec/{type}/{name}.md
+  // Write to ~/.gspec/{type}/{name}{ext}
   const destDir = join(GSPEC_HOME, selected.type);
-  const destPath = join(destDir, `${name}.md`);
+  const destPath = join(destDir, `${name}${ext}`);
   await mkdir(destDir, { recursive: true });
 
   // Check for conflict unless overwrite was already confirmed above
   if (!overwriteConfirmed) {
     try {
       await stat(destPath);
-      const overwrite = await promptConfirm(chalk.yellow(`\n  ${selected.type}/${name} already exists. Overwrite? [y/N]: `));
+      const overwrite = await promptConfirm(chalk.yellow(`\n  ${selected.type}/${name}${ext} already exists. Overwrite? [y/N]: `));
       if (!overwrite) {
         console.log(chalk.dim('\n  Save cancelled.\n'));
         return;
@@ -848,7 +958,13 @@ async function saveSpec(cwd) {
   content = content.replace(/- \[x\]/g, '- [ ]');
 
   await writeFile(destPath, content, 'utf-8');
-  console.log(chalk.green(`\n  ✓ Saved to ~/.gspec/${selected.type}/${name}.md\n`));
+  console.log(chalk.green(`\n  ✓ Saved to ~/.gspec/${selected.type}/${name}${ext}\n`));
+}
+
+function isSavedSpecFile(type, filename) {
+  if (filename.endsWith('.md')) return true;
+  if (type === 'styles' && filename.endsWith('.html')) return true;
+  return false;
 }
 
 async function listSavedTypes() {
@@ -860,8 +976,7 @@ async function listSavedTypes() {
         const info = await stat(join(GSPEC_HOME, entry));
         if (info.isDirectory()) {
           const files = await readdir(join(GSPEC_HOME, entry));
-          const mdFiles = files.filter((f) => f.endsWith('.md'));
-          if (mdFiles.length > 0) types.push(entry);
+          if (files.some((f) => isSavedSpecFile(entry, f))) types.push(entry);
         }
       } catch { /* skip */ }
     }
@@ -877,11 +992,11 @@ async function listSavedSpecs(type) {
   const entries = await readdir(dir);
   const specs = [];
   for (const entry of entries) {
-    if (!entry.endsWith('.md')) continue;
+    if (!isSavedSpecFile(type, entry)) continue;
     const content = await readFile(join(dir, entry), 'utf-8');
     const { fields } = parseFrontmatter(content);
     specs.push({
-      slug: entry.replace(/\.md$/, ''),
+      slug: entry.replace(/\.(md|html)$/, ''),
       description: fields.description || '',
     });
   }
@@ -954,25 +1069,20 @@ async function restoreSpec(specPath, cwd) {
 }
 
 async function restoreFile(type, name, cwd) {
-  const srcPath = join(GSPEC_HOME, type, `${name}.md`);
-
-  try {
-    await stat(srcPath);
-  } catch (e) {
-    if (e.code === 'ENOENT') {
-      console.error(chalk.red(`\n  Not found: ~/.gspec/${type}/${name}.md\n`));
-      process.exit(1);
-    }
-    throw e;
+  const savedFilename = await resolveSavedSpecFilename(type, name);
+  if (!savedFilename) {
+    console.error(chalk.red(`\n  Not found: ~/.gspec/${type}/${name}.md\n`));
+    process.exit(1);
   }
+  const srcPath = join(GSPEC_HOME, type, savedFilename);
 
   const gspecDir = join(cwd, 'gspec');
   let destPath;
 
   if (type === 'features') {
-    destPath = join(gspecDir, 'features', `${name}.md`);
+    destPath = join(gspecDir, 'features', savedFilename);
   } else {
-    const destFile = RESTORE_DEST_MAP[type];
+    const destFile = destFilenameForRestoredSpec(type, savedFilename);
     if (!destFile) {
       console.error(chalk.red(`\n  Unknown spec type: ${type}\n`));
       process.exit(1);
@@ -1201,10 +1311,18 @@ async function restorePlaybook(name, cwd) {
     restorations.push({ type: 'features', slug: f });
   }
 
+  // Resolve each restoration to its actual saved filename (styles may be .md or .html)
+  for (const r of restorations) {
+    r.savedFilename = await resolveSavedSpecFilename(r.type, r.slug);
+  }
+
   // Check for existing files
   const existing = [];
   for (const r of restorations) {
-    const destFile = r.type === 'features' ? join('features', `${r.slug}.md`) : RESTORE_DEST_MAP[r.type];
+    if (!r.savedFilename) continue;
+    const destFile = r.type === 'features'
+      ? join('features', r.savedFilename)
+      : destFilenameForRestoredSpec(r.type, r.savedFilename);
     const destPath = join(gspecDir, destFile);
     try {
       await stat(destPath);
@@ -1230,18 +1348,15 @@ async function restorePlaybook(name, cwd) {
   // Restore all specs
   const outdated = [];
   for (const r of restorations) {
-    const srcFile = join(GSPEC_HOME, r.type, `${r.slug}.md`);
-    try {
-      await stat(srcFile);
-    } catch (e) {
-      if (e.code === 'ENOENT') {
-        console.log(`  ${chalk.yellow('!')} Skipped ${r.type}/${r.slug} — not found in ~/.gspec/`);
-        continue;
-      }
-      throw e;
+    if (!r.savedFilename) {
+      console.log(`  ${chalk.yellow('!')} Skipped ${r.type}/${r.slug} — not found in ~/.gspec/`);
+      continue;
     }
+    const srcFile = join(GSPEC_HOME, r.type, r.savedFilename);
 
-    const destFile = r.type === 'features' ? join('features', `${r.slug}.md`) : RESTORE_DEST_MAP[r.type];
+    const destFile = r.type === 'features'
+      ? join('features', r.savedFilename)
+      : destFilenameForRestoredSpec(r.type, r.savedFilename);
     const destPath = join(gspecDir, destFile);
     await mkdir(dirname(destPath), { recursive: true });
     const specContent = await readFile(srcFile, 'utf-8');

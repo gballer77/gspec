@@ -1,0 +1,78 @@
+---
+const base = import.meta.env.BASE_URL;
+---
+
+<section class="py-16 lg:py-24 border-t border-[var(--border-subtle)]">
+  <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+    <div class="max-w-2xl mx-auto text-center mb-12">
+      <span class="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--text-accent)] mb-3">New</span>
+      <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
+        Design-tool native
+      </h2>
+      <p class="text-[var(--text-secondary)] leading-relaxed">
+        AI design tools like Figma, v0, and Framer AI produce real, renderable output. gspec meets them where they are — with an HTML design system your AI agent can render, and a design folder that captures mockups as first-class implementation context.
+      </p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
+      <div class="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 lg:p-8">
+        <div class="w-10 h-10 rounded-lg bg-[var(--bg-primary-subtle)] flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-[var(--text-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-2">
+          <code class="font-mono text-sm bg-[var(--bg-primary-subtle)] text-[var(--text-accent)] px-1.5 py-0.5 rounded">style.html</code>
+          <span class="font-semibold ml-1">Renderable design system</span>
+        </h3>
+        <p class="text-[var(--text-secondary)] leading-relaxed mb-4">
+          A single self-contained HTML file with your design tokens as CSS variables, live color swatches, typography specimens, and real styled component previews. Open it in a browser. Inspect it with a design-aware AI. Markdown style guides still work — pick whichever format fits your workflow.
+        </p>
+        <code class="text-xs font-mono text-[var(--text-muted)]">/gspec-style</code>
+      </div>
+
+      <div class="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 lg:p-8">
+        <div class="w-10 h-10 rounded-lg bg-[var(--bg-primary-subtle)] flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-[var(--text-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-2">
+          <code class="font-mono text-sm bg-[var(--bg-primary-subtle)] text-[var(--text-accent)] px-1.5 py-0.5 rounded">gspec/design/</code>
+          <span class="font-semibold ml-1">Mockups as context</span>
+        </h3>
+        <p class="text-[var(--text-secondary)] leading-relaxed mb-4">
+          Drop HTML, SVG, PNG, or JPG mockups exported from Figma, v0, Framer AI, or any other design tool into the <code class="font-mono text-xs">design/</code> folder. When <code class="font-mono text-xs">/gspec-implement</code> builds UI, it reads the relevant mockups and matches their layout and visual hierarchy within the style guide's token constraints.
+        </p>
+        <code class="text-xs font-mono text-[var(--text-muted)]">drop files in gspec/design/</code>
+      </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden shadow-lg shadow-black/20">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-raised)]">
+        <span class="w-3 h-3 rounded-full bg-[#FF5F57]"></span>
+        <span class="w-3 h-3 rounded-full bg-[#FEBC2E]"></span>
+        <span class="w-3 h-3 rounded-full bg-[#28C840]"></span>
+        <span class="text-xs text-[var(--text-muted)] ml-2 font-mono">~/my-project/gspec</span>
+      </div>
+      <div class="p-5 sm:p-6 font-mono text-[13px] leading-[1.7] overflow-x-auto">
+        <div class="text-[var(--text-secondary)]"><span class="text-[var(--text-muted)]">├──</span> profile.md</div>
+        <div class="text-[var(--text-accent)]"><span class="text-[var(--text-muted)]">├──</span> style.html <span class="text-[var(--text-muted)]"># renderable design system</span></div>
+        <div class="text-[var(--text-secondary)]"><span class="text-[var(--text-muted)]">├──</span> stack.md</div>
+        <div class="text-[var(--text-secondary)]"><span class="text-[var(--text-muted)]">├──</span> practices.md</div>
+        <div class="text-[var(--text-secondary)]"><span class="text-[var(--text-muted)]">├──</span> architecture.md</div>
+        <div class="text-[var(--text-accent)]"><span class="text-[var(--text-muted)]">├──</span> design/ <span class="text-[var(--text-muted)]"># mockups from design AI tools</span></div>
+        <div class="text-[var(--text-secondary)]"><span class="text-[var(--text-muted)]">│&nbsp;&nbsp;&nbsp;├──</span> dashboard.html</div>
+        <div class="text-[var(--text-secondary)]"><span class="text-[var(--text-muted)]">│&nbsp;&nbsp;&nbsp;├──</span> checkout-flow.png</div>
+        <div class="text-[var(--text-secondary)]"><span class="text-[var(--text-muted)]">│&nbsp;&nbsp;&nbsp;└──</span> settings-screen.svg</div>
+        <div class="text-[var(--text-secondary)]"><span class="text-[var(--text-muted)]">└──</span> features/</div>
+        <div class="text-[var(--text-secondary)]"><span class="text-[var(--text-muted)]">&nbsp;&nbsp;&nbsp;&nbsp;├──</span> user-authentication.md</div>
+        <div class="text-[var(--text-secondary)]"><span class="text-[var(--text-muted)]">&nbsp;&nbsp;&nbsp;&nbsp;└──</span> dashboard-analytics.md</div>
+      </div>
+    </div>
+
+    <p class="text-sm text-[var(--text-muted)] text-center mt-8">
+      <a href={`${base}docs/#style`} class="text-primary-400 hover:text-primary-300 underline decoration-primary-400/30 hover:decoration-primary-400/60 transition-colors duration-200">Read the style command docs</a>
+    </p>
+  </div>
+</section>

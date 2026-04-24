@@ -8,23 +8,26 @@ Your task is to update existing gspec specification documents to match the curre
 
 ### Phase 1: Inventory — Scan All gspec Files
 
-Scan the `gspec/` directory for all Markdown files:
+Scan the `gspec/` directory for all spec files:
 - `gspec/*.md` (profile, stack, style, practices, architecture)
+- `gspec/style.html` (HTML design system, if present — the style guide may be in either Markdown or HTML)
 - `gspec/features/*.md` (individual feature PRDs)
 
+Do **not** migrate files under `gspec/design/` — those are external design mockups (HTML, SVG, PNG, JPG) that are dropped in manually and are not owned by gspec. Leave them untouched.
 
-For each file, check the YAML frontmatter at the top of the file:
-- If the file starts with `---` followed by YAML content and another `---`, read the `spec-version` field (also check for the legacy `gspec-version` field)
-- If no frontmatter exists, the file predates version tracking
+For each file, check the spec-version metadata:
+- **For Markdown files**: check the YAML frontmatter at the top. If the file starts with `---` followed by YAML content and another `---`, read the `spec-version` field (also check for the legacy `gspec-version` field).
+- **For `gspec/style.html`**: the spec-version is stored as the first-line HTML comment `<!-- spec-version: ... -->`. Read that comment.
+- If no version metadata exists, the file predates version tracking
 - If `spec-version` matches `<<<SPEC_VERSION>>>`, the file is current — skip it
-- If the file has `gspec-version` (old field name) instead of `spec-version`, it needs migration regardless of value
+- If a Markdown file has `gspec-version` (old field name) instead of `spec-version`, it needs migration regardless of value
 
 Present an inventory to the user:
 
 > **gspec File Inventory:**
 > - `gspec/profile.md` — no version (needs migration)
 > - `gspec/stack.md` — gspec-version 1.0.3 (needs migration — old field name)
-> - `gspec/style.md` — spec-version <<<SPEC_VERSION>>> (current, skipping)
+> - `gspec/style.html` — spec-version <<<SPEC_VERSION>>> (current, skipping)
 > - `gspec/features/user-auth.md` — no version (needs migration)
 
 Ask the user to confirm which files to migrate, or confirm all.
@@ -37,7 +40,7 @@ For each file that needs migration, determine its document type and read the cor
 |---|---|---|
 | `gspec/profile.md` | Product Profile | Read the `gspec-profile` skill definition |
 | `gspec/stack.md` | Technology Stack | Read the `gspec-stack` skill definition |
-| `gspec/style.md` | Visual Style Guide | Read the `gspec-style` skill definition |
+| `gspec/style.md` or `gspec/style.html` | Visual Style Guide (Markdown or HTML) | Read the `gspec-style` skill definition |
 | `gspec/practices.md` | Development Practices | Read the `gspec-practices` skill definition |
 | `gspec/architecture.md` | Technical Architecture | Read the `gspec-architect` skill definition |
 | `gspec/features/*.md` | Feature PRD | Read the `gspec-feature` skill definition |
@@ -56,13 +59,19 @@ For each file to migrate:
    - Sections that were removed in the current format (move content to the appropriate new section, or remove if truly obsolete)
    - Formatting changes (e.g., checkbox format for capabilities, acceptance criteria requirements)
 4. **Preserve all substantive content** — Never discard information during migration. If a section was removed from the format, find the right place for its content or keep it in a "Legacy Content" section at the bottom.
-5. **Add or update the frontmatter** — Ensure the file starts with:
-   ```
-   ---
-   spec-version: <<<SPEC_VERSION>>>
-   ---
-   ```
-   If the file has the old `gspec-version` field, rename it to `spec-version` and set the value to `<<<SPEC_VERSION>>>`.
+5. **Add or update the version metadata** —
+   - **For Markdown files**, ensure the file starts with:
+     ```
+     ---
+     spec-version: <<<SPEC_VERSION>>>
+     ---
+     ```
+     If the file has the old `gspec-version` field, rename it to `spec-version` and set the value to `<<<SPEC_VERSION>>>`.
+   - **For `gspec/style.html`**, ensure the very first line of the file is:
+     ```
+     <!-- spec-version: <<<SPEC_VERSION>>> -->
+     ```
+     This comment must appear before the `<!DOCTYPE html>` declaration. If the file already has a `<!-- spec-version: ... -->` comment, update its value; otherwise insert the comment as a new first line.
 6. **Present the proposed changes** to the user before writing. Show what sections are being reorganized, what is being added, and confirm no content is being lost.
 
 ### Phase 4: Verify — Confirm Migration
@@ -95,12 +104,17 @@ After migrating all files:
 
 **Handle missing sections gracefully.** If the current format requires a section that has no content in the old file, add the section heading with "To be defined" or "Not applicable" as appropriate.
 
-**Frontmatter handling:**
+**Frontmatter handling (Markdown files):**
 - If the file has no frontmatter, add it at the very top
 - If the file has the old `gspec-version` field, rename it to `spec-version`
 - If the file has frontmatter without `spec-version`, add the field
 - If the file has an outdated `spec-version`, update it
 - Preserve any other frontmatter fields that may exist
+
+**HTML version-comment handling (`gspec/style.html`):**
+- If the file has no `<!-- spec-version: ... -->` comment, insert one as the first line of the file (before `<!DOCTYPE html>`)
+- If the file has an outdated spec-version in the comment, update the value in place
+- Do not move, wrap, or reformat the comment — it must remain on the first line exactly as `<!-- spec-version: <value> -->`
 
 ---
 

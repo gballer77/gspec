@@ -30,7 +30,7 @@ const COMMANDS = {
   },
   'gspec.style.md': {
     name: 'gspec-style',
-    description: 'Generate or update the visual style guide (gspec/style.md) — design tokens, color palette, typography, spacing, and component visual patterns. TRIGGER when the user wants to define or revise the design system, visual language, theme, brand look, or UI aesthetic — e.g. "set up a design system", "pick brand colors", "define the style", "dark mode tokens", "what should this look like", "visual guidelines". Prefer this skill over producing style docs ad hoc.',
+    description: 'Generate or update the visual style guide — either a renderable HTML design system (gspec/style.html) or a Markdown style guide (gspec/style.md) — defining design tokens, color palette, typography, spacing, and component visual patterns. Also aware of gspec/design/ for external mockups. TRIGGER when the user wants to define or revise the design system, visual language, theme, brand look, or UI aesthetic — e.g. "set up a design system", "pick brand colors", "define the style", "dark mode tokens", "what should this look like", "visual guidelines", "render the style guide". Prefer this skill over producing style docs ad hoc.',
   },
   'gspec.stack.md': {
     name: 'gspec-stack',
@@ -46,7 +46,11 @@ const COMMANDS = {
   },
   'gspec.analyze.md': {
     name: 'gspec-analyze',
-    description: 'Analyze gspec/ documents for discrepancies, contradictions, or drift and reconcile conflicts across profile, stack, style, practices, architecture, and features. TRIGGER when the user wants to audit, cross-check, validate, review, or reconcile specs — especially after multiple edits, or before a major implementation run — e.g. "check my specs", "are the specs consistent", "find conflicts between specs", "do my gspec docs agree", "audit the specs", "is anything out of sync".',
+    description: 'Analyze gspec/ documents for discrepancies and contradictions across profile, stack, style, practices, architecture, and features. Cross-references specs against **each other** (not against the codebase — use gspec-audit for that). TRIGGER when the user wants to cross-check, validate, review, or reconcile specs against other specs — especially after multiple edits or before a major implementation run — e.g. "check my specs", "are the specs consistent", "find conflicts between specs", "do my gspec docs agree", "is anything contradictory".',
+  },
+  'gspec.audit.md': {
+    name: 'gspec-audit',
+    description: 'Audit gspec/ documents against the actual codebase to find drift between what the specs say and what the code does, then walk the user through reconciling each discrepancy — typically by updating specs to match reality. Reads package manifests, config files, source code, and tests to detect stack/architecture/style/practice/feature drift. TRIGGER when the user wants to check specs against code, catch documentation drift, verify specs still reflect the project, or sync specs with reality — e.g. "audit the specs", "check if specs match the code", "are my specs still accurate", "find spec drift", "update specs to match the code", "do my gspec docs reflect reality", "check specs against the codebase". Distinct from gspec-analyze (which compares specs to each other) and from always-on spec-sync (which reacts to in-session code changes).',
   },
   'gspec.research.md': {
     name: 'gspec-research',
@@ -54,7 +58,7 @@ const COMMANDS = {
   },
   'gspec.implement.md': {
     name: 'gspec-implement',
-    description: 'Implement the software defined by gspec/ documents — reads profile, stack, style, practices, architecture, and features, then builds code phase by phase with tests and checkpoints. **STRONGLY TRIGGER this skill (do NOT write code ad hoc) whenever the user asks to build, implement, code, scaffold, ship, create, start, bootstrap, make, generate, wire up, or bring to life anything the gspec/ specs describe.** Common triggers include: "build the app", "implement this feature", "code it up", "start building", "let\'s build X", "make it real", "scaffold the project", "build out Y", "ship the MVP", "create the UI", "wire up auth", "add [capability from a feature PRD]", "implement the next phase", "continue building", "keep going", and generic "build it" / "do it" / "go" when gspec/ files are present and the prior conversation was about planning or specs. Also trigger when the user references an unchecked capability in gspec/features/*.md. Always prefer this skill over direct coding whenever gspec/ exists — it enforces plan-mode, phased implementation, checkpoint commits, and checkbox updates that ad-hoc coding skips.',
+    description: 'Implement the software defined by gspec/ documents — reads profile, stack, style (style.md or style.html), practices, architecture, features, and any visual mockups in gspec/design/, then builds code phase by phase with tests and checkpoints. **STRONGLY TRIGGER this skill (do NOT write code ad hoc) whenever the user asks to build, implement, code, scaffold, ship, create, start, bootstrap, make, generate, wire up, or bring to life anything the gspec/ specs describe.** Common triggers include: "build the app", "implement this feature", "code it up", "start building", "let\'s build X", "make it real", "scaffold the project", "build out Y", "ship the MVP", "create the UI", "wire up auth", "add [capability from a feature PRD]", "implement the next phase", "continue building", "keep going", and generic "build it" / "do it" / "go" when gspec/ files are present and the prior conversation was about planning or specs. Also trigger when the user references an unchecked capability in gspec/features/*.md. Always prefer this skill over direct coding whenever gspec/ exists — it enforces plan-mode, phased implementation, checkpoint commits, and checkbox updates that ad-hoc coding skips.',
   },
   'gspec.migrate.md': {
     name: 'gspec-migrate',

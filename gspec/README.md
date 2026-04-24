@@ -25,7 +25,7 @@ These documents become the shared context for all subsequent AI interactions. Wh
 
 The only commands you *need* are the four fundamentals and `/gspec-implement`. Everything else exists to help when your project calls for it.
 
-The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `/gspec-implement` can take a plain-language description and start building. The remaining commands — `/gspec-research`, `/gspec-feature`, `/gspec-architect`, and `/gspec-analyze` — add structure and rigor when the scope or complexity warrants it.
+The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `/gspec-implement` can take a plain-language description and start building. The remaining commands — `/gspec-research`, `/gspec-feature`, `/gspec-architect`, `/gspec-analyze`, and `/gspec-audit` — add structure and rigor when the scope or complexity warrants it.
 
 ```mermaid
 flowchart LR
@@ -42,8 +42,9 @@ flowchart LR
     Architect["4. Architect
     technical blueprint"]
 
-    Analyze["5. Analyze
-    reconcile specs"]
+    Analyze["5. Analyze &amp; Audit
+    reconcile specs
+    check specs vs code"]
 
     Build["6. Build
     implement"]
@@ -76,7 +77,7 @@ flowchart LR
 | Command | Role | What it produces |
 |---|---|---|
 | `/gspec-profile` | Business Strategist | Product identity, audience, value proposition, positioning |
-| `/gspec-style` | UI/UX Designer | Visual design language, design tokens, component patterns |
+| `/gspec-style` | UI/UX Designer | Visual design language, design tokens, component patterns. Produces either a renderable `style.html` design system or a `style.md` Markdown guide |
 | `/gspec-stack` | Software Architect | Technology stack, frameworks, infrastructure, architecture |
 | `/gspec-practices` | Engineering Lead | Development standards, code quality, testing, workflows |
 
@@ -104,13 +105,16 @@ Use `/gspec-feature` when you want detailed PRDs with prioritized capabilities a
 
 Use `/gspec-architect` when your feature involves significant technical complexity — new data models, service boundaries, auth flows, or integration points that benefit from upfront design. It also **identifies technical gaps and ambiguities** in your specs and proposes solutions, so that `/gspec-implement` can focus on building rather than making architectural decisions. For straightforward features, `/gspec-implement` can make sound architectural decisions on its own using your `stack` and `practices` specs.
 
-**5. Analyze** *(optional)* — Reconcile discrepancies across specs before building.
+**5. Analyze & Audit** *(optional)* — Reconcile discrepancies before building, and keep specs honest as the codebase evolves.
 
 | Command | Role | What it does |
 |---|---|---|
-| `/gspec-analyze` | Specification Analyst | Cross-references all specs, identifies contradictions, and walks you through reconciling each one |
+| `/gspec-analyze` | Specification Analyst | Cross-references all specs against **each other**, identifies contradictions, and walks you through reconciling each one |
+| `/gspec-audit` | Specification Auditor | Cross-references specs against the **actual codebase**, finds drift (stack mismatches, stale data models, design tokens that don't match the stylesheet, capability checkboxes that lie), and walks you through updating specs to match reality |
 
-Use `/gspec-analyze` after `/gspec-architect` (or any time multiple specs exist) to catch conflicts before `/gspec-implement` sees them. For example, if the stack says PostgreSQL but the architecture references MongoDB, or a feature PRD defines a data model that contradicts the architecture, `/gspec-analyze` will surface the discrepancy and let you choose the resolution. Each conflict is presented one at a time with options — no new files are created, only existing specs are updated.
+Use `/gspec-analyze` after `/gspec-architect` (or any time multiple specs exist) to catch spec-to-spec conflicts before `/gspec-implement` sees them. For example, if the stack says PostgreSQL but the architecture references MongoDB.
+
+Use `/gspec-audit` periodically — before a major release, after a long sprint, or any time you suspect docs have drifted from code. Audit reads package manifests, configs, source files, and test output, then asks you per-finding whether to update the spec to match the code, keep the spec and fix the code separately, or defer. Each finding is presented one at a time with the spec quote and the code evidence side by side. Audit never modifies code.
 
 **6. Build** — Implement with full context.
 
@@ -119,6 +123,8 @@ Use `/gspec-analyze` after `/gspec-architect` (or any time multiple specs exist)
 | `/gspec-implement` | Senior Engineer | Reads all specs, plans the build order, and implements |
 
 **Spec Sync** — gspec includes always-on spec sync that automatically keeps your specification documents in sync as the code evolves. This is installed alongside the skills and requires no manual intervention — when code changes affect spec-documented behavior, the sync rules prompt your AI tool to update the relevant gspec files.
+
+**Design-tool integration** — The style guide supports both Markdown (`style.md`) and a renderable HTML design system (`style.html`) that design-aware AI tools can open, render, and reason about directly. Drop mockups from external design tools (Figma, v0, Framer AI, etc.) into `gspec/design/` and `/gspec-implement` will use them as authoritative visual guidance when building UI.
 
 **Maintenance** — Keep specs up to date with the latest gspec format.
 
@@ -184,18 +190,23 @@ All specifications live in a `gspec/` directory at your project root:
 project-root/
 └── gspec/
     ├── profile.md          # Product identity and positioning
-    ├── style.md            # Visual design language
+    ├── style.html          # Visual design language (HTML — renderable design system)
+    │                       # or style.md if you prefer a Markdown style guide
     ├── stack.md            # Technology stack and architecture
     ├── practices.md        # Development standards
     ├── architecture.md     # Technical architecture blueprint
     ├── research.md         # Competitive analysis and feature gaps
+    ├── design/             # Optional — external mockups read during implementation
+    │   ├── dashboard.html
+    │   ├── checkout-flow.png
+    │   └── ...
     └── features/
         ├── user-authentication.md
         ├── dashboard-analytics.md
         └── ...
 ```
 
-These are standard Markdown files. They live in your repo, are version-controlled with your code, and are readable by both humans and AI tools.
+Most specs are Markdown. The style guide can also be a self-contained HTML file (`style.html`) that renders the design system as live swatches, typography specimens, and styled component previews — ideal for design-aware AI tools. The optional `gspec/design/` folder holds mockups (HTML, SVG, PNG, JPG) exported from external design tools like Figma, v0, or Framer AI; `/gspec-implement` reads them to reason about layout and visual intent. All files live in your repo, are version-controlled with your code, and are readable by both humans and AI tools.
 
 ## Key Design Decisions
 
