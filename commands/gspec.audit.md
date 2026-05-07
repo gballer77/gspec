@@ -12,11 +12,12 @@ You should:
 - Read and deeply internalize all available gspec documents
 - Inspect the actual codebase — package manifests, source files, tests, configs, stylesheets, routes, data models, and git history where relevant
 - Identify concrete drift — not stylistic differences, but substantive mismatches where the spec and the code disagree on a fact, technology, behavior, or requirement
+- Identify **orphan capabilities** — coherent feature-level capabilities the code implements that no feature PRD describes
 - Present each discrepancy to the user one at a time, clearly showing what each side says
 - Offer resolution options with a recommendation
 - Wait for the user's decision before moving to the next discrepancy
-- Update the affected spec files to reflect each resolution
-- Never modify code as part of this command — audit only updates specs
+- Update the affected spec files to reflect each resolution; for orphan capabilities, draft a new feature PRD in `gspec/features/` when the user accepts
+- Never modify code as part of this command — audit only updates specs and adds new feature PRDs
 
 ---
 
@@ -34,6 +35,7 @@ Read **every** available gspec document in this order:
 6. `gspec/architecture.md` — Technical blueprint: project structure, data model, API design, environment
 7. `gspec/research.md` — Competitive analysis and feature proposals (informational only — not audited against code)
 8. `gspec/features/*.md` — Individual feature requirements, priorities, and capability checkboxes
+9. `gspec/features/*.tasks.md` — When a feature has a tasks file, also read it. Tasks files declare a per-task execution checkbox state and `covers:` traceability to PRD capabilities; both are subject to drift checks against the code
 
 If the `gspec/` directory is empty, inform the user that there are no specs to audit and stop.
 
@@ -54,6 +56,11 @@ Build a picture of what the code **actually** is. Read the following, as availab
 - Data model — schemas, migrations, ORM models, type definitions
 - Component library usage — what the UI actually imports and composes
 - Test files — what framework, what coverage areas
+
+**Capability mapping**
+- Build a short mental list of the coherent, user-visible capabilities the code implements — not low-level details, but feature-level units (e.g. "users can export data as CSV", "admin can invite team members", "documents have version history"). A capability typically shows up as a cluster: a route + handler + UI surface + test, or an end-to-end flow.
+- For each capability, note whether it appears in any `gspec/features/*.md` PRD (by feature name, capability checkbox, or acceptance criteria). Capabilities with no PRD coverage are candidates for the **Orphan Capability** category in Phase 3.
+- Be deliberately conservative: a utility helper, an internal admin script, or a piece of plumbing is **not** a capability worth a PRD. Only flag things a user (end user, admin, integrator) would recognize as a feature.
 
 **Version control signals** (use sparingly; git log is authoritative only where the spec makes explicit claims about workflow)
 - `git log --oneline -n 20` for recent commit-message style (only if practices.md makes claims about commit conventions)
@@ -99,6 +106,22 @@ Systematically compare specs against the evidence from Phase 2. Look for these c
 - A feature PRD's acceptance criteria describe behavior that the code explicitly handles differently
 - A feature PRD references a data field, endpoint, or UI element whose implementation has diverged (e.g., PRD says "users can filter by tag", code has filter-by-category)
 
+#### Tasks Drift (only when a tasks file exists for the feature)
+- A task is marked `- [x]` in the tasks file but the code does not implement what the task describes
+- A task is marked `- [ ]` but the code clearly implements it (the checkbox should be updated)
+- A task's `covers:` references capability text the PRD no longer contains (the PRD was edited but the tasks file wasn't refreshed — recommend regenerating via `/gspec-tasks`)
+- A capability is marked `- [x]` in the PRD but one or more of its covering tasks is still `- [ ]` (or vice versa) — flag the inconsistency and recommend the user reconcile state
+
+#### Orphan Capability (code implements a feature that has no PRD)
+- The code ships a coherent, user-visible capability that no `gspec/features/*.md` PRD describes
+- Evidence is typically a cluster — a route + handler + UI surface + test — that adds up to something a user would call a feature
+- An orphan capability is **not** the same as Feature Drift: drift is divergence within a specced feature; an orphan is an entirely unspecced feature
+- Use the **capability mapping** from Phase 2 as your candidate list. Filter out:
+  - Internal utilities, admin scripts, dev tooling, or plumbing the user never sees
+  - Capabilities that *are* covered by an existing PRD even if checkboxes are stale (those are Feature Drift, not orphans)
+  - Capabilities that are partial enough that calling them a "feature" overstates them (note the partial work in the audit summary instead)
+- The recommended resolution is to draft a new feature PRD in `gspec/features/` so the capability is captured, its checkboxes can drive future audits, and `gspec-implement` can extend it correctly
+
 #### Profile Drift (rare; treat conservatively)
 - The profile's stated audience, scope, or value proposition conflicts with what the product actually does in code (e.g., profile says "B2B only" but the code has a consumer signup flow)
 - **Profile drift is usually a signal to update the product, not the spec.** Flag profile drift for user discussion rather than recommending an automatic spec update.
@@ -125,7 +148,7 @@ For each discrepancy, present:
 ```
 ### Drift [N]: [Brief title]
 
-**Category:** [Stack / Architecture / Style / Practice / Feature / Profile]
+**Category:** [Stack / Architecture / Style / Practice / Feature / Orphan Capability / Profile]
 
 **Spec says:**
 - **[File, section]**: [exact quote or precise summary]
@@ -141,6 +164,33 @@ For each discrepancy, present:
 1. **Update spec to match code** — Apply this change to [File X]: [summary of edit]
 2. **Keep the spec as-is** — The code is wrong and should be fixed separately. Audit will leave the spec unchanged.
 3. **Defer** — Skip this finding for now.
+
+Which would you like?
+```
+
+For an **Orphan Capability** finding, the presentation differs slightly — there is no "spec says" side, and the resolution options are different:
+
+```
+### Drift [N]: Orphan Capability — [Capability name]
+
+**Category:** Orphan Capability
+
+**Spec says:** *(no PRD covers this capability)*
+
+**Code shows:**
+- **Capability:** [one-sentence description in user-facing terms]
+- **Evidence:** [route(s), handler file(s), UI file(s), test file(s) — concrete paths]
+- **Scope estimate:** [trivial / focused single feature / large enough to need decomposition]
+
+**Why this matters:** Without a PRD, future audits can't track this capability's completeness, `gspec-implement` won't know how to extend it correctly, and the team has no documented intent to compare against.
+
+**Recommended action:** Draft a new feature PRD in `gspec/features/` so the capability is captured.
+
+**Options:**
+1. **Draft a feature PRD now** — Audit will create `gspec/features/<slug>.md` following the gspec-feature schema, marking implemented capabilities as `- [x]` based on the code evidence. *(See Phase 5 for the inline drafting protocol.)*
+2. **Defer to `/gspec-feature` later** — Audit notes this in the code-follow-up summary so you can run `/gspec-feature` on it as a separate, deeper conversation.
+3. **Not actually a feature** — The code is internal plumbing or out of scope; audit drops the finding and won't re-flag it (note this back to the user as a hint they may want to add a comment in the code so future audits know).
+4. **Defer** — Skip for now.
 
 Which would you like?
 ```
@@ -164,31 +214,56 @@ When updating specs to match the code:
 - **Do not rewrite sections** — if a one-line change resolves the drift, make a one-line change
 - **Do not add changelog annotations** — git history captures what changed
 
+#### Drafting a new feature PRD for an Orphan Capability
+
+When the user picks option 1 ("Draft a feature PRD now") for an Orphan Capability finding, audit creates a new file in `gspec/features/`. The drafting follows the **same schema and rules as `gspec-feature`** — do not invent a different format. Specifically:
+
+- **Filename:** kebab-case slug derived from the capability name, e.g. `csv-export.md`, `team-invitations.md`. Confirm the slug with the user before writing if it's not obvious.
+- **Frontmatter:** the file must start with
+  ```
+  ---
+  spec-version: <<<SPEC_VERSION>>>
+  ---
+  ```
+  followed by the main heading.
+- **Required sections** (in this order, no extras): Overview, Users & Use Cases, Scope, Capabilities, Dependencies, Assumptions & Risks, Success Metrics, Implementation Context.
+- **Capabilities section is the load-bearing one for audit:** list each user-visible capability the code already implements as a checkbox, and mark it `- [x]` when the code clearly satisfies it. Include 2–4 brief acceptance criteria per capability based on what the code actually does (read tests and handlers to extract these). If a capability is only partially implemented, leave it `- [ ]` and note the gap.
+- **Priority:** assign `P0`/`P1`/`P2` based on the capability's apparent centrality. Lean toward `P0` for capabilities the code clearly treats as core; `P1`/`P2` for ancillary ones.
+- **Technology agnosticism:** the PRD must not name specific frameworks, libraries, databases, or services even though you derived it from concrete code. Use generic terms ("data store", "API", "authentication service"). Refer to `gspec-feature`'s technology-agnostic vocabulary list if needed.
+- **Portability:** do not reference project-specific personas, design system details, or stack choices. Use generic role descriptions ("end users", "administrators").
+- **Resolve ambiguity inline before writing:** if the code's intent is unclear (e.g., is this admin-only or for all users? is this experimental or shipped?), ask the user 1–2 targeted questions in chat *before* writing the file. Do not embed unresolved questions in the PRD.
+- **Implementation Context block:** include the standard verbatim note at the bottom (see `gspec-feature`'s section 8).
+- **Decomposition:** if the orphan capability is actually a *cluster* of distinct features (audit's "Scope estimate" was "large enough to need decomposition"), pause and propose a breakdown to the user before writing — same protocol as `gspec-feature` for multi-feature output. Confirm the breakdown, then write one file per feature.
+
+After writing, briefly tell the user what was created (filename + capability list with checkbox states) and continue to the next finding.
+
 ### Phase 6: Final Verification
 
 After all discrepancies have been resolved (or deferred):
 
 1. **Re-read the updated specs** briefly to confirm the edits landed correctly
 2. **Present a summary:**
-   - Total discrepancies found, grouped by category
+   - Total discrepancies found, grouped by category (including Orphan Capability)
    - Number where spec was updated to match code
    - Number where spec was kept as-is (code flagged for follow-up)
+   - Number of new feature PRDs created (with filenames) and capabilities those PRDs cover
    - Number deferred
-   - List of files that were updated
+   - List of files that were updated or created
 3. **Flag code follow-ups**: if the user chose "Keep the spec and fix code" for any finding, list those at the end as a punch list so they don't get lost. Do not modify code — this is a reference list for the user or a follow-up implement run.
+4. **Flag orphan-capability hand-offs**: if the user picked "Defer to `/gspec-feature` later" for any orphan capability, list the capability and the evidence (file paths) so a follow-up `/gspec-feature` run has everything it needs.
 
 ---
 
 ## Rules
 
 - **Never modify code.** This command only reads code and updates specs. If a drift suggests the code should change, list it in the code-follow-up summary and let the user decide whether to run `/gspec-implement` or fix it themselves.
-- **Never create new spec files.** Audit only updates existing gspec documents.
-- **Never silently update specs.** Every change requires user approval via the drift resolution flow.
+- **Never create new foundation specs.** Audit must not create `profile.md`, `stack.md`, `style.md`/`style.html`, `practices.md`, `architecture.md`, or `research.md`. The only new files audit may create are feature PRDs in `gspec/features/`, and only as the explicit resolution to an Orphan Capability finding.
+- **Never silently update specs.** Every change — including creating a new feature PRD — requires user approval via the drift resolution flow.
 - **One discrepancy at a time.** Do not batch resolutions — the user decides each one individually.
 - **Be precise about the evidence.** Quote the spec, cite the file and line range where the code contradicts it. Vague drift reports ("the architecture is out of date") are not actionable.
-- **Prioritize by impact.** Present drifts that would cause incorrect implementation or confused future work first. Cosmetic drift comes last.
+- **Prioritize by impact.** Present drifts that would cause incorrect implementation or confused future work first. Cosmetic drift comes last. Orphan Capabilities sit alongside Feature Drift in priority — both directly affect what `gspec-implement` will produce next.
 - **Treat the profile conservatively.** Profile drift usually reflects an intentional pivot and deserves a human decision, not an automatic spec update.
-- **Respect the scope hint.** If the user passes a hint like "audit the stack only", stick to it.
+- **Respect the scope hint.** If the user passes a hint like "audit the stack only", stick to it. A scope hint of "audit features" includes Orphan Capability detection; a hint that excludes features (e.g. "audit the stack only") suppresses it.
 
 ---
 

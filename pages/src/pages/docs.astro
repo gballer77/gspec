@@ -8,6 +8,7 @@ import CodeBlock from '../components/CodeBlock.astro';
 const sections = [
   { id: 'workflow', label: 'Workflow Overview' },
   { id: 'save-restore', label: 'Save & Restore' },
+  { id: 'extensions', label: 'Extensions' },
   { id: 'profile', label: 'profile', group: 'Define' },
   { id: 'style', label: 'style', group: 'Define' },
   { id: 'stack', label: 'stack', group: 'Define' },
@@ -15,6 +16,7 @@ const sections = [
   { id: 'research', label: 'research', group: 'Research' },
   { id: 'feature', label: 'feature', group: 'Specify' },
   { id: 'architect', label: 'architect', group: 'Architect' },
+  { id: 'tasks', label: 'tasks', group: 'Plan' },
   { id: 'analyze', label: 'analyze', group: 'Analyze' },
   { id: 'audit', label: 'audit', group: 'Analyze' },
   { id: 'implement', label: 'implement', group: 'Build' },
@@ -23,13 +25,13 @@ const sections = [
 const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group ? 3 : 2 }));
 ---
 
-<SidebarLayout title="Documentation — gspec" description="Complete command reference for gspec — workflow overview and detailed documentation for all 11 commands.">
+<SidebarLayout title="Documentation — gspec" description="Complete command reference for gspec — workflow overview and detailed documentation for all 12 commands.">
   <SidebarNav sections={sections} slot="sidebar" />
   <TableOfContents headings={headings} slot="toc" />
 
   <h1>Documentation</h1>
   <p class="text-lg text-[var(--text-secondary)] !mt-2 !mb-12">
-    Complete reference for the gspec workflow and all 11 commands.
+    Complete reference for the gspec workflow and all 12 commands.
   </p>
 
   <!-- Workflow Overview -->
@@ -46,6 +48,7 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
           { name: 'Research', desc: 'research', required: false },
           { name: 'Specify', desc: 'feature', required: false },
           { name: 'Architect', desc: 'architect', required: false },
+          { name: 'Plan', desc: 'tasks', required: false },
           { name: 'Analyze', desc: 'analyze, audit', required: false },
           { name: 'Build', desc: 'implement', required: true },
         ].map((stage) => (
@@ -101,6 +104,45 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
     </p>
     <p>
       See the full <a href={`${import.meta.env.BASE_URL}starters/`}>save & restore documentation</a> for detailed examples.
+    </p>
+  </section>
+
+  <!-- Extensions -->
+  <section id="extensions">
+    <h2>Extensions</h2>
+    <p>
+      Extensions are user-authored skills that install alongside the built-in gspec commands. They live in <code>~/.gspec/extensions/</code> as Markdown files with frontmatter, and are auto-installed into every project the next time you run <code>npx gspec</code>.
+    </p>
+    <p>
+      An extension is a complete skill — same shape as anything in gspec's own <code>commands/</code> folder. Use them for organization-specific or project-class-specific commands you want available everywhere without forking gspec or copy-pasting into each project.
+    </p>
+
+    <h3>Authoring</h3>
+    <p>
+      Write an extension as a Markdown file with two required frontmatter fields:
+    </p>
+    <CodeBlock code={`---
+name: my-deploy
+description: Trigger and manage deploy workflows. Run after tests pass.
+---
+
+You are a Deployment Engineer.
+... rest of the skill body ...`} lang="markdown" />
+    <p>
+      The <code>name</code> must be lowercase letters, digits, and hyphens, and must not collide with a built-in <code>gspec-*</code> skill. Names like <code>my-deploy</code>, <code>release-notes</code>, or <code>jira-sync</code> are fine; <code>gspec-implement</code> is rejected.
+    </p>
+
+    <h3>Manage extensions</h3>
+    <CodeBlock code={`gspec extension save ./my-deploy.md   # Install into ~/.gspec/extensions/
+gspec extension list                  # See what's installed
+gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang="shell" />
+    <p>
+      Removing an extension only deletes it from <code>~/.gspec/extensions/</code> — already-emitted copies in projects (under <code>.claude/skills/</code>, <code>.cursor/commands/</code>, etc.) stay in place. Delete them per-project if desired.
+    </p>
+
+    <h3>Install behavior</h3>
+    <p>
+      When you run <code>npx gspec</code> in a project, the installer first copies the built-in skills, then scans <code>~/.gspec/extensions/</code> and emits each valid extension into the same install directory using the same per-platform formatting as core skills. Invalid extensions (missing frontmatter, name collisions, malformed names) are skipped with a warning. Two extensions claiming the same <code>name</code> resolve last-write-wins, also with a warning.
     </p>
   </section>
 
@@ -331,6 +373,38 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
       { name: 'feature', relation: 'Architect reads feature PRDs to design the technical structure' },
       { name: 'analyze', relation: 'Run analyze after architect to catch cross-spec contradictions' },
       { name: 'implement', relation: 'Implement reads architecture for project structure, data model, and APIs' },
+    ]}
+  />
+
+  <!-- Plan Stage -->
+  <CommandSection
+    id="tasks"
+    name="tasks"
+    role="Engineering Lead"
+    description="Decomposes a feature PRD into an ordered, dependency-aware task plan with explicit parallel-execution markers. Sits between feature (the 'what') and implement (the 'how'). Reads the PRD plus the architecture and stack for ordering signals, then proposes 1–N concrete tasks per capability with stable IDs, deps lines, and [P] markers for tasks that are safe to run in parallel."
+    produces="A sibling file at gspec/features/<feature>.tasks.md with YAML frontmatter linking it back to the PRD, plus a single ## Tasks section containing ordered, checkboxed tasks. Each task carries a priority (P0/P1/P2), an optional [P] marker, a deps: line listing prerequisite task IDs, and a covers: line quoting the PRD capability text the task contributes to."
+    invocation={'/tasks "home-page"'}
+    questions={[
+      'Which feature PRD to decompose (if multiple PRDs exist)',
+      'Whether to regenerate from scratch or extend an existing tasks file',
+    ]}
+    bestPractices={[
+      'Run after feature (and after architect when it exists) so technical context informs the decomposition',
+      'Skip for trivial features — implement\'s checkbox-driven planning is enough when there\'s nothing to parallelize and nothing depends on anything',
+      'Keep tasks small enough that a single implementation pass can finish and verify each one',
+      'Prefer to leave [P] off when in doubt — false parallelism causes more pain than missed parallelism',
+    ]}
+    pitfalls={[
+      'Marking [P] on tasks that write to the same file as a sibling — one will overwrite the other',
+      'Renumbering existing task IDs on regenerate — IDs are stable, append new ones at the next free number',
+      'Inventing acceptance criteria for an underspecified PRD — fix the PRD with /feature first instead',
+      'Treating the tasks file as a rewrite of the PRD — capabilities stay in the PRD, execution stays in tasks',
+    ]}
+    related={[
+      { name: 'feature', relation: 'Tasks decomposes the PRD that feature produced — every task line traces back to a capability via covers:' },
+      { name: 'architect', relation: 'Tasks reads architecture for ordering signals (e.g., schema before API, API before UI)' },
+      { name: 'implement', relation: 'When a tasks file exists, implement plans phases from it — respecting deps and [P] markers — and updates task checkboxes as work completes' },
+      { name: 'analyze', relation: 'Analyze validates that every PRD capability is covered by at least one task and that no task references a missing capability' },
     ]}
   />
 

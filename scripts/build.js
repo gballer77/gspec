@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { TARGETS } from './emitters.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -15,9 +16,6 @@ const VERSION_RE = /<<<VERSION>>>/g;
 const SPEC_VERSION = 'v1';
 const SPEC_VERSION_RE = /<<<SPEC_VERSION>>>/g;
 
-// Placeholder pattern used in generic command files
-const PLACEHOLDER_RE = /<<<\w+>>>/g;
-
 // Metadata for each command, keyed by source filename
 const COMMANDS = {
   'gspec.profile.md': {
@@ -27,6 +25,10 @@ const COMMANDS = {
   'gspec.feature.md': {
     name: 'gspec-feature',
     description: 'Generate product requirements documents (PRDs) for features in gspec/features/. TRIGGER when the user wants to plan, spec, propose, document, or expand a feature/capability before coding — e.g. "add a feature for X", "write a PRD", "spec out Y", "plan this feature", "what should the auth flow do", "new feature idea", "draft requirements". Prefer this skill over writing freeform feature docs.',
+  },
+  'gspec.tasks.md': {
+    name: 'gspec-tasks',
+    description: 'Decompose a feature PRD in gspec/features/ into an ordered, dependency-aware task plan with parallel-execution markers, written to gspec/features/<feature>.tasks.md. TRIGGER when the user wants to plan execution order, break a feature into tasks, identify what can run in parallel, sequence implementation work, or produce a build plan from a PRD — e.g. "break this feature into tasks", "what order should I build this in", "plan the implementation order", "make a task list for X", "what can run in parallel", "decompose feature Y", "ordered task plan". Run this AFTER gspec-feature and BEFORE gspec-implement when a feature is large or has non-obvious ordering. Prefer this skill over ad-hoc task lists.',
   },
   'gspec.style.md': {
     name: 'gspec-style',
@@ -50,7 +52,7 @@ const COMMANDS = {
   },
   'gspec.audit.md': {
     name: 'gspec-audit',
-    description: 'Audit gspec/ documents against the actual codebase to find drift between what the specs say and what the code does, then walk the user through reconciling each discrepancy — typically by updating specs to match reality. Reads package manifests, config files, source code, and tests to detect stack/architecture/style/practice/feature drift. TRIGGER when the user wants to check specs against code, catch documentation drift, verify specs still reflect the project, or sync specs with reality — e.g. "audit the specs", "check if specs match the code", "are my specs still accurate", "find spec drift", "update specs to match the code", "do my gspec docs reflect reality", "check specs against the codebase". Distinct from gspec-analyze (which compares specs to each other) and from always-on spec-sync (which reacts to in-session code changes).',
+    description: 'Audit gspec/ documents against the actual codebase to find drift between what the specs say and what the code does, then walk the user through reconciling each discrepancy — typically by updating specs to match reality. Reads package manifests, config files, source code, and tests to detect stack/architecture/style/practice/feature drift, and detects **orphan capabilities** (coherent features the code implements that no PRD covers) — drafting a new feature PRD in gspec/features/ when the user accepts. TRIGGER when the user wants to check specs against code, catch documentation drift, verify specs still reflect the project, sync specs with reality, or find unspecced features in the codebase — e.g. "audit the specs", "check if specs match the code", "are my specs still accurate", "find spec drift", "update specs to match the code", "do my gspec docs reflect reality", "check specs against the codebase", "find features that aren\'t spec\'d", "what does the code do that we never wrote a PRD for". Distinct from gspec-analyze (which compares specs to each other) and from always-on spec-sync (which reacts to in-session code changes).',
   },
   'gspec.research.md': {
     name: 'gspec-research',
@@ -66,100 +68,17 @@ const COMMANDS = {
   },
 };
 
-function buildFrontmatter(fields) {
-  const lines = ['---'];
-  for (const [key, value] of Object.entries(fields)) {
-    lines.push(`${key}: ${value}`);
-  }
-  lines.push('---');
-  return lines.join('\n');
-}
-
-// Each target defines how to emit files and transform content
-const targets = {
-  claude: {
-    outDir: join(DIST_DIR, 'claude'),
-    // .claude/skills/<name>/SKILL.md
-    async emit(outDir, content, meta) {
-      const frontmatter = buildFrontmatter({
-        name: meta.name,
-        description: meta.description,
-      });
-      const body = content.replace(PLACEHOLDER_RE, '$ARGUMENTS');
-      const skillDir = join(outDir, meta.name);
-      await mkdir(skillDir, { recursive: true });
-      await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
-    },
-  },
-  cursor: {
-    outDir: join(DIST_DIR, 'cursor'),
-    // .cursor/commands/<name>.mdc (flat file)
-    async emit(outDir, content, meta) {
-      const frontmatter = buildFrontmatter({
-        description: meta.description,
-      });
-      // Cursor has no $ARGUMENTS convention; strip the placeholder lines
-      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
-      await mkdir(outDir, { recursive: true });
-      await writeFile(join(outDir, `${meta.name}.mdc`), frontmatter + '\n\n' + body, 'utf-8');
-    },
-  },
-  antigravity: {
-    outDir: join(DIST_DIR, 'antigravity'),
-    // .agent/skills/<name>/SKILL.md
-    async emit(outDir, content, meta) {
-      const frontmatter = buildFrontmatter({
-        name: meta.name,
-        description: meta.description,
-      });
-      // Antigravity uses natural language invocation; strip the placeholder lines
-      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
-      const skillDir = join(outDir, meta.name);
-      await mkdir(skillDir, { recursive: true });
-      await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
-    },
-  },
-  codex: {
-    outDir: join(DIST_DIR, 'codex'),
-    // .agents/skills/<name>/SKILL.md
-    async emit(outDir, content, meta) {
-      const frontmatter = buildFrontmatter({
-        name: meta.name,
-        description: meta.description,
-      });
-      // Codex uses natural language invocation; strip the placeholder lines
-      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
-      const skillDir = join(outDir, meta.name);
-      await mkdir(skillDir, { recursive: true });
-      await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
-    },
-  },
-  opencode: {
-    outDir: join(DIST_DIR, 'opencode'),
-    // .opencode/skills/<name>/SKILL.md
-    async emit(outDir, content, meta) {
-      const frontmatter = buildFrontmatter({
-        name: meta.name,
-        description: meta.description,
-      });
-      // OpenCode uses natural language invocation; strip the placeholder lines
-      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
-      const skillDir = join(outDir, meta.name);
-      await mkdir(skillDir, { recursive: true });
-      await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
-    },
-  },
-};
-
 async function build(targetNames) {
   const files = (await readdir(COMMANDS_DIR)).filter(f => f.endsWith('.md'));
 
   for (const targetName of targetNames) {
-    const target = targets[targetName];
+    const target = TARGETS[targetName];
     if (!target) {
       console.error(`Unknown target: ${targetName}`);
       process.exit(1);
     }
+
+    const outDir = join(DIST_DIR, target.distSubdir);
 
     let count = 0;
     for (const file of files) {
@@ -171,7 +90,7 @@ async function build(targetNames) {
 
       const raw = await readFile(join(COMMANDS_DIR, file), 'utf-8');
       const content = raw.replace(VERSION_RE, pkg.version).replace(SPEC_VERSION_RE, SPEC_VERSION);
-      await target.emit(target.outDir, content, meta);
+      await target.emit(outDir, content, meta);
       count++;
     }
 
@@ -181,7 +100,7 @@ async function build(targetNames) {
 
 // Build all targets by default, or specific ones via CLI args
 const requested = process.argv.slice(2);
-const targetNames = requested.length > 0 ? requested : Object.keys(targets);
+const targetNames = requested.length > 0 ? requested : Object.keys(TARGETS);
 
 build(targetNames).catch(err => {
   console.error(err);

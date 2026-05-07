@@ -131,6 +131,9 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: 2 }));
     <p>
       If playbooks are available, you're asked to pick one first. If you prefer to pick individual specs, choose "Pick individual specs instead" and select from each category. If <code>~/.gspec/</code> is empty, the installer skips straight to post-install guidance.
     </p>
+    <p>
+      The installer also scans <code>~/.gspec/extensions/</code> for any user-authored skills you've installed via <code>gspec extension save</code>. Each valid extension is emitted into the same per-platform install directory as the built-in skills. See the <a href={`${import.meta.env.BASE_URL}docs/#extensions`}>Extensions section in the docs</a> for details.
+    </p>
     <div class="not-prose my-6 p-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
       <h4 class="text-sm font-semibold text-[var(--text-primary)] mb-1">Tip</h4>
       <p class="text-sm text-[var(--text-secondary)] leading-relaxed">

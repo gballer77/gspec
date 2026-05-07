@@ -25,7 +25,7 @@ These documents become the shared context for all subsequent AI interactions. Wh
 
 The only commands you *need* are the four fundamentals and `/gspec-implement`. Everything else exists to help when your project calls for it.
 
-The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `/gspec-implement` can take a plain-language description and start building. The remaining commands — `/gspec-research`, `/gspec-feature`, `/gspec-architect`, `/gspec-analyze`, and `/gspec-audit` — add structure and rigor when the scope or complexity warrants it.
+The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `/gspec-implement` can take a plain-language description and start building. The remaining commands — `/gspec-research`, `/gspec-feature`, `/gspec-architect`, `/gspec-tasks`, `/gspec-analyze`, and `/gspec-audit` — add structure and rigor when the scope or complexity warrants it.
 
 ```mermaid
 flowchart LR
@@ -42,11 +42,14 @@ flowchart LR
     Architect["4. Architect
     technical blueprint"]
 
-    Analyze["5. Analyze &amp; Audit
+    Plan["5. Plan
+    ordered tasks"]
+
+    Analyze["6. Analyze &amp; Audit
     reconcile specs
     check specs vs code"]
 
-    Build["6. Build
+    Build["7. Build
     implement"]
 
     Define --> Research
@@ -55,9 +58,12 @@ flowchart LR
     Research --> Specify
     Research --> Build
     Specify --> Architect
+    Specify --> Plan
     Specify --> Build
+    Architect --> Plan
     Architect --> Analyze
     Architect --> Build
+    Plan --> Build
     Analyze --> Build
     Build --> Define
 
@@ -65,6 +71,7 @@ flowchart LR
     style Research fill:#a855f7,color:#fff,stroke:none
     style Specify fill:#f59e0b,color:#fff,stroke:none
     style Architect fill:#f59e0b,color:#fff,stroke:none
+    style Plan fill:#f59e0b,color:#fff,stroke:none
     style Analyze fill:#f59e0b,color:#fff,stroke:none
     style Build fill:#22c55e,color:#fff,stroke:none
 ```
@@ -105,7 +112,15 @@ Use `/gspec-feature` when you want detailed PRDs with prioritized capabilities a
 
 Use `/gspec-architect` when your feature involves significant technical complexity — new data models, service boundaries, auth flows, or integration points that benefit from upfront design. It also **identifies technical gaps and ambiguities** in your specs and proposes solutions, so that `/gspec-implement` can focus on building rather than making architectural decisions. For straightforward features, `/gspec-implement` can make sound architectural decisions on its own using your `stack` and `practices` specs.
 
-**5. Analyze & Audit** *(optional)* — Reconcile discrepancies before building, and keep specs honest as the codebase evolves.
+**5. Plan** *(optional)* — Decompose a feature PRD into ordered work.
+
+| Command | Role | What it produces |
+|---|---|---|
+| `/gspec-tasks` | Engineering Lead | A sibling `gspec/features/<feature>.tasks.md` file with stable task IDs, explicit `deps:` lines, and `[P]` markers for parallel-safe work |
+
+Use `/gspec-tasks` after `/gspec-feature` (and after `/gspec-architect` when it exists) for any feature large enough that build order matters or that has work which could legitimately run in parallel. The output is what `/gspec-implement` consumes — when a tasks file exists for an in-scope feature, implement plans phases from it, respecting deps and surfacing `[P]`-marked tasks for parallel execution. Trivial features can skip this step and go straight to `/gspec-implement`, which falls back to PRD-checkbox-driven planning.
+
+**6. Analyze & Audit** *(optional)* — Reconcile discrepancies before building, and keep specs honest as the codebase evolves.
 
 | Command | Role | What it does |
 |---|---|---|
@@ -116,11 +131,11 @@ Use `/gspec-analyze` after `/gspec-architect` (or any time multiple specs exist)
 
 Use `/gspec-audit` periodically — before a major release, after a long sprint, or any time you suspect docs have drifted from code. Audit reads package manifests, configs, source files, and test output, then asks you per-finding whether to update the spec to match the code, keep the spec and fix the code separately, or defer. Each finding is presented one at a time with the spec quote and the code evidence side by side. Audit never modifies code.
 
-**6. Build** — Implement with full context.
+**7. Build** — Implement with full context.
 
 | Command | Role | What it does |
 |---|---|---|
-| `/gspec-implement` | Senior Engineer | Reads all specs, plans the build order, and implements |
+| `/gspec-implement` | Senior Engineer | Reads all specs (including any `*.tasks.md` files), plans the build order, and implements |
 
 **Spec Sync** — gspec includes always-on spec sync that automatically keeps your specification documents in sync as the code evolves. This is installed alongside the skills and requires no manual intervention — when code changes affect spec-documented behavior, the sync rules prompt your AI tool to update the relevant gspec files.
 
@@ -181,6 +196,18 @@ Saved specs are organized by type in `~/.gspec/` (profiles, stacks, styles, prac
 ```bash
 gspec restore playbook/my-starter
 ```
+
+## Extensions
+
+Author your own skills and have them auto-installed alongside the built-in `gspec-*` commands in every project. Extensions live in `~/.gspec/extensions/` as Markdown files with `name` and `description` frontmatter and the same shape as anything in `commands/`.
+
+```bash
+gspec extension save ./my-deploy.md   # Install a local skill file as a user extension
+gspec extension list                  # See what's installed
+gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/
+```
+
+When you next run `npx gspec` in a project, the installer copies the built-in skills first, then emits each valid extension into the same per-platform install directory using the same formatting. Extension names that collide with built-in `gspec-*` skills are rejected with an error; malformed or duplicate extensions are skipped with a warning.
 
 ## Output Structure
 

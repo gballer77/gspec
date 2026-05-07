@@ -13,6 +13,7 @@ Use this mapping whenever the user's intent matches:
 - **Building, implementing, coding, scaffolding, shipping, or "making it real"** — invoke `gspec-implement`. This is the most commonly-missed skill. If the user asks you to write code for anything the specs describe (or a new capability that should be specced), route through `gspec-implement` rather than editing files directly. Generic prompts like "build it", "go", "keep going", "continue", or "do the next phase" should also invoke it when recent conversation has been about specs or planning.
 - **Defining the product, users, or vision** — invoke `gspec-profile`.
 - **Planning or writing a new feature / PRD** — invoke `gspec-feature`.
+- **Producing an ordered task plan from a feature PRD (with explicit dependencies and parallel-execution markers)** — invoke `gspec-tasks`. Run before `gspec-implement` for non-trivial features.
 - **Choosing or revising the tech stack** — invoke `gspec-stack`.
 - **Defining visual design, tokens, or theme** — invoke `gspec-style`.
 - **Setting coding standards, testing, or workflow conventions** — invoke `gspec-practices`.
@@ -30,7 +31,7 @@ If the user explicitly asks you to skip the skill and just do the work, honor th
 
 2. **Spec before you build** — If the user asks for a feature or capability that isn't covered by an existing feature PRD in `gspec/features/`, run the `gspec-feature` command to create a new feature PRD before implementing it. Every feature should be specified before it's built — don't skip straight to code.
 
-3. **Update feature checkboxes** — When you implement a capability defined in a feature PRD (`gspec/features/*.md`), change its checkbox from `- [ ]` to `- [x]`.
+3. **Update feature checkboxes** — When you implement a capability defined in a feature PRD (`gspec/features/*.md`), change its checkbox from `- [ ]` to `- [x]`. **If a tasks file exists** at `gspec/features/<feature>.tasks.md`, also flip the checkbox of each completed task in that file. Only flip the PRD capability checkbox once every task whose `covers:` references it is checked.
 
 4. **Update specs that your changes contradict** — If your code change makes a spec statement incorrect (e.g., you changed the data model, switched a dependency, altered a UI pattern, or added a new API endpoint), update the spec to reflect reality. Common candidates:
    - `gspec/architecture.md` — project structure, data model, API routes, component hierarchy

@@ -31,6 +31,7 @@ Read **every** available gspec document in this order:
 6. `gspec/architecture.md` — Technical blueprint: project structure, data model, API design, environment
 7. `gspec/research.md` — Competitive analysis and feature proposals
 8. `gspec/features/*.md` — Individual feature requirements and dependencies
+9. `gspec/features/*.tasks.md` — For any feature that has a tasks file, read it alongside the PRD. Tasks files declare a build order and parallelism strategy that must stay consistent with the PRD's capabilities
 
 If fewer than two spec files exist, inform the user that there is nothing to cross-reference and stop.
 
@@ -74,6 +75,14 @@ Systematically compare specs against each other. Look for these categories of di
 - Two specs describe the same user flow differently
 - Acceptance criteria in a feature PRD contradict architectural decisions
 - Edge cases handled differently across specs
+
+#### Tasks ↔ PRD Conflicts
+For any feature that has a `gspec/features/<feature>.tasks.md` file, validate the tasks file against its PRD:
+- A task's `covers:` line quotes capability text that does not exist in the PRD (orphan task)
+- A PRD capability is not `covers:`-referenced by any task in the tasks file (orphan capability — every unchecked capability must be covered by at least one task)
+- A task's checkbox is `- [x]` but its covered capability is still `- [ ]` in the PRD, or vice versa (state inconsistency)
+- A task's `deps:` references a task ID that does not exist in the file
+- The tasks file's `feature:` frontmatter slug does not match its filename's feature slug
 
 **Do NOT flag:**
 - Minor wording or style differences that don't change meaning

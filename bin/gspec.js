@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
-import { readdir, readFile, writeFile, mkdir, stat } from 'node:fs/promises';
+import { readdir, readFile, writeFile, mkdir, stat, unlink } from 'node:fs/promises';
 import { join, dirname, basename } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
 import chalk from 'chalk';
+import { TARGETS as EMITTER_TARGETS } from '../scripts/emitters.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = join(__dirname, '..', 'dist');
@@ -28,38 +29,21 @@ const BANNER = `
   ${chalk.white('═════════════════════════════baller.software═══')}
 `;
 
-const TARGETS = {
-  claude: {
-    sourceDir: join(DIST_DIR, 'claude'),
-    installDir: '.claude/skills',
-    label: 'Claude Code',
-    layout: 'directory',
-  },
-  cursor: {
-    sourceDir: join(DIST_DIR, 'cursor'),
-    installDir: '.cursor/commands',
-    label: 'Cursor',
-    layout: 'flat',
-  },
-  antigravity: {
-    sourceDir: join(DIST_DIR, 'antigravity'),
-    installDir: '.agent/skills',
-    label: 'Antigravity',
-    layout: 'directory',
-  },
-  codex: {
-    sourceDir: join(DIST_DIR, 'codex'),
-    installDir: '.agents/skills',
-    label: 'Codex',
-    layout: 'directory',
-  },
-  opencode: {
-    sourceDir: join(DIST_DIR, 'opencode'),
-    installDir: '.opencode/skills',
-    label: 'Open Code',
-    layout: 'directory',
-  },
-};
+// Derive install-side TARGETS from the shared emitter config so we have one source of truth.
+// `sourceDir` is computed from the shared `distSubdir`; `emit` is reused for installing user extensions.
+const TARGETS = Object.fromEntries(
+  Object.entries(EMITTER_TARGETS).map(([key, t]) => [key, {
+    ...t,
+    sourceDir: join(DIST_DIR, t.distSubdir),
+  }]),
+);
+
+// Names emitted by core gspec; user extensions cannot collide with these.
+const BUILTIN_SKILL_NAMES = new Set([
+  'gspec-profile', 'gspec-feature', 'gspec-tasks', 'gspec-style',
+  'gspec-stack', 'gspec-practices', 'gspec-architect', 'gspec-analyze',
+  'gspec-audit', 'gspec-research', 'gspec-implement', 'gspec-migrate',
+]);
 
 const TARGET_CHOICES = [
   { key: '1', name: 'claude', label: 'Claude Code' },
@@ -1397,6 +1381,8 @@ program
 
     await install(targetName, process.cwd());
 
+    await installExtensions(targetName, process.cwd());
+
     await seedFromSavedSpecs(process.cwd());
 
     await installSpecSync(targetName, process.cwd());
@@ -1424,6 +1410,176 @@ program
     }
   });
 
+// --- Extensions ---
+
+const EXTENSIONS_DIR = join(GSPEC_HOME, 'extensions');
+const EXTENSION_NAME_RE = /^[a-z0-9][a-z0-9-]*$/;
+
+async function loadExtensions() {
+  let entries;
+  try {
+    entries = await readdir(EXTENSIONS_DIR);
+  } catch (e) {
+    if (e.code === 'ENOENT') return [];
+    throw e;
+  }
+
+  const files = entries.filter((f) => f.endsWith('.md'));
+  const loaded = [];
+  for (const file of files) {
+    const path = join(EXTENSIONS_DIR, file);
+    const content = await readFile(path, 'utf-8');
+    const { fields, body } = parseFrontmatter(content);
+    loaded.push({ file, path, fields, body, content });
+  }
+  return loaded;
+}
+
+function validateExtension(ext) {
+  const errors = [];
+  if (!ext.fields.name) errors.push("missing 'name' frontmatter");
+  if (!ext.fields.description) errors.push("missing 'description' frontmatter");
+  if (ext.fields.name && !EXTENSION_NAME_RE.test(ext.fields.name)) {
+    errors.push(`invalid name "${ext.fields.name}" (must match /^[a-z0-9][a-z0-9-]*$/)`);
+  }
+  if (ext.fields.name && BUILTIN_SKILL_NAMES.has(ext.fields.name)) {
+    errors.push(`name "${ext.fields.name}" collides with a built-in gspec skill`);
+  }
+  return errors;
+}
+
+async function installExtensions(targetName, cwd) {
+  const extensions = await loadExtensions();
+  if (extensions.length === 0) return;
+
+  const target = TARGETS[targetName];
+  const valid = [];
+  for (const ext of extensions) {
+    const errors = validateExtension(ext);
+    if (errors.length > 0) {
+      console.warn(chalk.yellow(`  ! Skipping extension ${ext.file}: ${errors.join('; ')}`));
+      continue;
+    }
+    valid.push(ext);
+  }
+
+  // Resolve duplicates by name (last write wins, with a warning)
+  const byName = new Map();
+  for (const ext of valid) {
+    if (byName.has(ext.fields.name)) {
+      console.warn(chalk.yellow(
+        `  ! Extension name "${ext.fields.name}" defined in two files; ${ext.file} overrides ${byName.get(ext.fields.name).file}`
+      ));
+    }
+    byName.set(ext.fields.name, ext);
+  }
+  const finalSet = Array.from(byName.values());
+  if (finalSet.length === 0) return;
+
+  console.log(chalk.bold(`\nInstalling ${finalSet.length} user extension${finalSet.length === 1 ? '' : 's'} from ~/.gspec/extensions/...\n`));
+  const installPath = join(cwd, target.installDir);
+  for (const ext of finalSet) {
+    const meta = { name: ext.fields.name, description: ext.fields.description };
+    await target.emit(installPath, ext.body, meta);
+    console.log(`  ${chalk.green('+')} ${ext.fields.name} ${chalk.dim('(extension)')}`);
+  }
+}
+
+async function extensionList() {
+  console.log(BANNER);
+  const extensions = await loadExtensions();
+  if (extensions.length === 0) {
+    console.log(chalk.dim('\n  No extensions installed in ~/.gspec/extensions/.\n'));
+    console.log(chalk.dim('  Use "gspec extension save <path>" to install one.\n'));
+    return;
+  }
+
+  console.log(chalk.bold(`\n  ${extensions.length} extension${extensions.length === 1 ? '' : 's'} in ~/.gspec/extensions/:\n`));
+  for (const ext of extensions) {
+    const errors = validateExtension(ext);
+    const name = ext.fields.name || chalk.dim('(no name)');
+    const desc = ext.fields.description ? chalk.dim(` — ${ext.fields.description}`) : '';
+    if (errors.length > 0) {
+      console.log(`  ${chalk.yellow('!')} ${ext.file} → ${name}${desc}`);
+      console.log(`      ${chalk.yellow(errors.join('; '))}`);
+    } else {
+      console.log(`  ${chalk.green('•')} ${name}${desc}`);
+      console.log(`      ${chalk.dim(ext.file)}`);
+    }
+  }
+  console.log();
+}
+
+async function extensionSave(srcPath) {
+  console.log(BANNER);
+
+  if (!srcPath) {
+    console.error(chalk.red('\n  Usage: gspec extension save <path-to-extension.md>\n'));
+    process.exit(1);
+  }
+
+  let content;
+  try {
+    content = await readFile(srcPath, 'utf-8');
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      console.error(chalk.red(`\n  File not found: ${srcPath}\n`));
+      process.exit(1);
+    }
+    throw e;
+  }
+
+  const { fields } = parseFrontmatter(content);
+  const ext = { file: basename(srcPath), fields };
+  const errors = validateExtension(ext);
+  if (errors.length > 0) {
+    console.error(chalk.red(`\n  Cannot save extension: ${errors.join('; ')}\n`));
+    process.exit(1);
+  }
+
+  await mkdir(EXTENSIONS_DIR, { recursive: true });
+  const destPath = join(EXTENSIONS_DIR, `${fields.name}.md`);
+
+  try {
+    await stat(destPath);
+    const overwrite = await promptConfirm(chalk.yellow(`\n  Extension "${fields.name}" already exists. Overwrite? [y/N]: `));
+    if (!overwrite) {
+      console.log(chalk.dim('\n  Cancelled.\n'));
+      return;
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+
+  await writeFile(destPath, content, 'utf-8');
+  console.log(chalk.green(`\n  ✓ Saved extension to ~/.gspec/extensions/${fields.name}.md\n`));
+  console.log(chalk.dim(`  It will be installed alongside core skills the next time you run "gspec" in a project.\n`));
+}
+
+async function extensionRemove(name) {
+  console.log(BANNER);
+
+  if (!name) {
+    console.error(chalk.red('\n  Usage: gspec extension remove <name>\n'));
+    process.exit(1);
+  }
+
+  const path = join(EXTENSIONS_DIR, `${name}.md`);
+  try {
+    await stat(path);
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      console.error(chalk.red(`\n  Extension not found: ~/.gspec/extensions/${name}.md\n`));
+      process.exit(1);
+    }
+    throw e;
+  }
+
+  await unlink(path);
+  console.log(chalk.green(`\n  ✓ Removed ~/.gspec/extensions/${name}.md\n`));
+  console.log(chalk.dim(`  Already-installed copies in projects (.claude/skills/, .cursor/commands/, etc.) are left in place — delete them manually if desired.\n`));
+}
+
 program
   .command('save')
   .description('Save a gspec spec to ~/.gspec for reuse across projects')
@@ -1444,6 +1600,31 @@ program
   .description('Create a playbook that bundles saved specs for quick project setup')
   .action(async () => {
     await createPlaybook();
+  });
+
+const extensionCmd = program
+  .command('extension')
+  .description('Manage user-authored gspec extension skills in ~/.gspec/extensions/');
+
+extensionCmd
+  .command('list')
+  .description('List installed extensions')
+  .action(async () => {
+    await extensionList();
+  });
+
+extensionCmd
+  .command('save <path>')
+  .description('Save a local .md skill file as a user extension in ~/.gspec/extensions/')
+  .action(async (path) => {
+    await extensionSave(path);
+  });
+
+extensionCmd
+  .command('remove <name>')
+  .description('Remove a user extension from ~/.gspec/extensions/ (does not uninstall already-emitted copies)')
+  .action(async (name) => {
+    await extensionRemove(name);
   });
 
 program.parse();

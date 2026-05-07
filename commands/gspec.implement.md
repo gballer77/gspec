@@ -21,6 +21,7 @@ Before writing any code, read all available gspec documents in this order:
 1. `gspec/profile.md` — Understand what the product is and who it's for
 2. `gspec/features/*.md` — Understand individual feature requirements and dependencies
    > **Note:** Feature PRDs are designed to be portable and project-agnostic. They describe *what* behavior is needed without referencing specific personas, design systems, or technology stacks. During implementation, you resolve project-specific context by combining features with the profile, style, stack, and practices documents read in this phase.
+3. `gspec/features/*.tasks.md` — For any feature in scope, also read its tasks file if one exists. Tasks files are produced by `gspec-tasks` and contain an ordered, dependency-aware breakdown of the PRD's capabilities into concrete implementation tasks with `[P]` parallel markers and explicit `deps:` lines. **When a tasks file exists, it is the authoritative build order for that feature.** When it doesn't exist, fall back to the PRD's checkbox capabilities directly.
 4. `gspec/stack.md` — Understand the technology choices
 5. `gspec/style.md` **or** `gspec/style.html` — Understand the visual design language. The style guide may be in either format; read whichever exists (or both, if both are present — the HTML file contains the renderable token definitions and visual examples, the Markdown file contains prose rationale)
 6. `gspec/design/**` — If this folder exists, read every mockup in it. Supported formats include HTML pages, SVG files, and image files (PNG, JPG, WEBP). These are visual mockups (typically produced by external design tools like Figma, v0, Framer AI, etc.) that show layout, composition, and visual intent for specific screens or flows. **Treat them as authoritative visual guidance** — when building UI for a feature, look for relevant mockups in `gspec/design/` and match their layout, spacing, and hierarchy within the constraints of the style guide
@@ -41,10 +42,16 @@ This command is designed to be **run multiple times** as features are added or e
 - **`- [ ]`** (unchecked) = capability not yet implemented — include in this run's scope
 - **No checkbox prefix** = treat as not yet implemented (backwards compatible with older PRDs)
 
+**When a feature has a tasks file** (`gspec/features/<feature>.tasks.md`), also assess task-level state:
+
+- A task with `- [x]` is complete; skip unless user requests re-implementation
+- A task with `- [ ]` is pending and goes into this run's scope
+- A capability is considered fully delivered only when **every** task whose `covers:` references it is `- [x]`. A PRD capability checkbox should never be checked while one of its covering tasks is still unchecked, and vice versa — flag any such inconsistency to the user
+
 For each feature PRD, build an implementation status summary:
 
-> **Feature: User Authentication** — 4/7 capabilities implemented (all P0 done, 3 P1/P2 remaining)
-> **Feature: Dashboard** — 0/5 capabilities implemented (new feature)
+> **Feature: User Authentication** — 4/7 capabilities implemented (all P0 done, 3 P1/P2 remaining); tasks file shows 8/14 tasks done
+> **Feature: Dashboard** — 0/5 capabilities implemented (new feature, no tasks file)
 
 Present this summary to the user so they understand the starting point. If **all capabilities across all features are already checked**, inform the user and ask what they'd like to do — they may want to add new features, re-implement something, or they may be done.
 
@@ -52,14 +59,15 @@ Present this summary to the user so they understand the starting point. If **all
 
 **Enter plan mode** and create a concrete, phased implementation plan.
 
-1. **Survey the full scope** — Review all feature PRDs and identify every unchecked capability that is in scope for this run
-2. **Organize into implementation phases** — Group related capabilities into logical phases that can be built and verified independently. Each phase should:
+1. **Survey the full scope** — Review all feature PRDs and identify every unchecked capability that is in scope for this run. For features that have a tasks file, the unchecked tasks (not just capabilities) are the actual unit of work.
+2. **Organize into implementation phases** — Group related work into logical phases that can be built and verified independently. Each phase should:
    - Have a clear name and objective (e.g., "Phase 1: Core Data Models & API", "Phase 2: Authentication Flow")
-   - List the specific capabilities (with feature PRD references) it will implement
+   - List the specific capabilities (with feature PRD references) it will implement, **and the specific tasks (by ID, e.g. T1, T2, T7) when a tasks file exists**
    - Identify files to create or modify
    - Note dependencies on prior phases
    - Include an estimated scope (small/medium/large)
-3. **Account for every unchecked capability** — The plan must explicitly place every unchecked capability from in-scope feature PRDs into a phase **or** list it under a "Proposed to Defer" section with a reason. No unchecked capability may be silently omitted from the plan. The user reviews and approves what gets deferred at plan approval time.
+   - **When tasks files exist for in-scope features**, respect the `deps:` ordering they declare (no task may be scheduled before its declared deps), and note `[P]`-marked tasks as parallel-safe within a phase so the phase can fan-out work where appropriate
+3. **Account for every unchecked unit of work** — The plan must explicitly place every unchecked capability (or every unchecked task, when a tasks file exists) from in-scope feature PRDs into a phase **or** list it under a "Proposed to Defer" section with a reason. Nothing unchecked may be silently omitted from the plan. The user reviews and approves what gets deferred at plan approval time.
 4. **Define test expectations per phase** — For each phase, specify what tests will be run to verify correctness before moving on (unit tests, integration tests, build verification, etc.)
 5. **Present the plan** — Show the user the full phased plan with clear phase boundaries and ask for approval
 
@@ -108,7 +116,10 @@ Present a brief scaffold summary to the user before proceeding to feature implem
    c. **Follow the style** — Apply the design system, tokens, and icon library from `gspec/style.md` or `gspec/style.html` (whichever exists). The style guide is the single authority for icon library choices. Component libraries (e.g., shadcn/ui) are defined in `gspec/stack.md`.
    d. **Match the mockups** — For UI work, if `gspec/design/` contains mockups relevant to the screen or flow you are building, match their layout, spacing, and visual hierarchy. Resolve any conflict between a mockup and the style guide in favor of the style guide's tokens and semantics, then adjust the layout to remain faithful to the mockup's intent. If a mockup shows a visual pattern that the style guide doesn't cover, pause and ask the user whether to extend the style guide or deviate from the mockup.
    e. **Satisfy the requirements** — Trace each piece of code back to a functional requirement in the feature PRD (if available) or to the user's stated goals and the approved implementation plan
-3. **Mark capabilities as implemented** — After successfully implementing each capability, immediately update the feature PRD by changing its checkbox from `- [ ]` to `- [x]`. Do this incrementally as each capability is completed, not in a batch at the end. If a capability line did not have a checkbox prefix, add one as `- [x]`. This ensures that if the session is interrupted, progress is not lost. When updating gspec files, preserve existing `spec-version` YAML frontmatter. If a file lacks frontmatter, add `---\nspec-version: <<<SPEC_VERSION>>>\n---` at the top.
+3. **Mark progress as you go** — Update checkboxes incrementally, never in a batch at the end. This ensures that if the session is interrupted, progress is not lost.
+   - **Tasks (when a tasks file exists)**: as soon as a task is complete and verified, flip its checkbox in `gspec/features/<feature>.tasks.md` from `- [ ]` to `- [x]`.
+   - **Capabilities**: flip a PRD capability checkbox from `- [ ]` to `- [x]` only after every task whose `covers:` references it is checked. If no tasks file exists for that feature, flip the capability checkbox immediately on completion (the original behavior). If a capability line did not have a checkbox prefix, add one as `- [x]`.
+   - When updating gspec files, preserve existing `spec-version` YAML frontmatter. If a file lacks frontmatter, add `---\nspec-version: <<<SPEC_VERSION>>>\n---` at the top.
 4. **Run tests** — Execute the tests defined for this phase (and any existing tests to catch regressions). Fix any failures before proceeding.
 6. **Surface new gaps** — If implementation reveals new ambiguities, pause and consult the user rather than making silent assumptions
 7. **Pause and report** — After completing the phase and confirming tests pass, present a phase completion summary to the user:
@@ -129,7 +140,7 @@ After implementation:
 2. **Review against acceptance criteria** — For each capability in the feature PRDs, check that every acceptance criterion listed under it is satisfied. These sub-listed conditions are the definition of "done" for each capability. If any criterion is not met, the capability should not be marked `[x]`.
 3. **Check the Definition of Done** from `gspec/practices.md`
 4. **Verify no unapproved deferrals** — Compare the final implementation against the approved plan. If any capability that was assigned to a phase was not implemented, **do not silently leave it unchecked**. Flag it to the user, explain why it wasn't completed, and get explicit approval before marking it as deferred. Only capabilities the user approved for deferral during planning (or explicitly approves now) may remain unchecked.
-5. **Verify checkbox accuracy** — Confirm that every capability marked `[x]` in the feature PRDs is genuinely implemented and working. Confirm that capabilities left as `[ ]` were approved for deferral by the user. Present a final status summary:
+5. **Verify checkbox accuracy** — Confirm that every capability marked `[x]` in the feature PRDs is genuinely implemented and working. Confirm that capabilities left as `[ ]` were approved for deferral by the user. **For features with tasks files**, also confirm task↔capability consistency: every checked capability has all its covering tasks checked, and every unchecked capability has at least one unchecked covering task. Present a final status summary:
 
 > **Implementation Summary:**
 > - Feature X: 7/7 capabilities implemented (complete)

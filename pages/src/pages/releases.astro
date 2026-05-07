@@ -5,6 +5,35 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.17.0',
+    date: 'May 7, 2026',
+    title: 'Task decomposition and user-authored extensions',
+    summary: 'A new /gspec-tasks command decomposes a feature PRD into an ordered, dependency-aware task plan with parallel-execution markers, and a new extension system auto-installs user-authored skills from ~/.gspec/extensions/ into every project alongside the built-in commands.',
+    changes: [
+      {
+        type: 'added',
+        description: 'New <code>/gspec-tasks</code> command — decomposes a feature PRD into a sibling <code>gspec/features/&lt;feature&gt;.tasks.md</code> file with stable task IDs (T1, T2, …), <code>[P]</code> parallel-execution markers, <code>deps:</code> lines listing prerequisite tasks, and <code>covers:</code> lines that quote the PRD capability text each task contributes to. Run after <code>/gspec-feature</code> for non-trivial features. Optional — trivial features can skip straight to <code>/gspec-implement</code>.',
+      },
+      {
+        type: 'added',
+        description: 'New extension system — <code>gspec extension save &lt;path&gt;</code>, <code>gspec extension list</code>, and <code>gspec extension remove &lt;name&gt;</code> manage user-authored skills in <code>~/.gspec/extensions/</code>. Extensions are auto-installed alongside built-in commands every time you run <code>npx gspec</code>, using the same per-platform formatting. Names that collide with built-in <code>gspec-*</code> skills are rejected; malformed or duplicate extensions are skipped with a warning.',
+      },
+      {
+        type: 'changed',
+        description: '<code>/gspec-implement</code> now reads <code>gspec/features/*.tasks.md</code> alongside PRDs. When a tasks file exists for an in-scope feature, the implementation plan is built from tasks — respecting <code>deps:</code> ordering and surfacing <code>[P]</code>-marked work for parallel execution. Capability checkboxes in the PRD flip only after every task whose <code>covers:</code> references the capability is checked. Projects without tasks files keep the original checkbox-driven flow unchanged.',
+      },
+      {
+        type: 'changed',
+        description: '<code>/gspec-feature</code> ends each generated PRD with a one-line nudge to run <code>/gspec-tasks</code> for non-trivial features. <code>/gspec-analyze</code> now validates Tasks ↔ PRD coverage (every capability covered by at least one task; no orphan tasks; consistent checkbox state across both files). <code>/gspec-audit</code> adds a Tasks Drift category for spec-to-code mismatches in tasks files.',
+      },
+      {
+        type: 'changed',
+        description: 'Internal refactor — emitter logic shared by build and install moved into <code>scripts/emitters.js</code> so the same per-platform formatting handles both first-party skills and user extensions. No user-visible change.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the new <code>gspec-tasks</code> command alongside the existing skills. Existing projects continue to work unchanged — tasks files are opt-in. To start using tasks for a feature, run <code>/gspec-tasks &lt;feature&gt;</code> to produce the tasks file from its PRD, then run <code>/gspec-implement</code> as usual. To install your own extensions, drop a Markdown skill file with <code>name</code> and <code>description</code> frontmatter into <code>~/.gspec/extensions/</code> (or use <code>gspec extension save</code>) and re-run <code>npx gspec</code> in your project.',
+  },
+  {
     version: '1.16.0',
     date: 'April 24, 2026',
     title: 'Design-tool integration, spec-to-code audit, and broader profile support',
