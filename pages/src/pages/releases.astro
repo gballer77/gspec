@@ -496,12 +496,17 @@ const typeColors: Record<string, { bg: string; text: string; label: string }> = 
 
     <div class="space-y-16">
       {releases.map((release, i) => (
-        <article class="relative">
+        <article id={`v${release.version}`} class="relative scroll-mt-20">
           {/* Version badge and date */}
           <div class="flex items-center gap-3 mb-3">
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-mono font-semibold bg-[var(--bg-primary-subtle)] text-[var(--text-accent)] border border-[var(--border-primary-subtle)]">
+            <a
+              href={`#v${release.version}`}
+              class="group inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-mono font-semibold bg-[var(--bg-primary-subtle)] text-[var(--text-accent)] border border-[var(--border-primary-subtle)] no-underline hover:bg-[var(--bg-primary)] hover:text-[var(--text-on-primary)] transition-colors"
+              aria-label={`Permalink to v${release.version}`}
+            >
               v{release.version}
-            </span>
+              <span class="opacity-0 group-hover:opacity-70 transition-opacity" aria-hidden="true">#</span>
+            </a>
             <time class="text-sm text-[var(--text-muted)]">{release.date}</time>
             {i === 0 && (
               <span class="text-[10px] font-medium uppercase tracking-wider text-[var(--badge-accent-text)] bg-[var(--badge-accent-bg)] px-1.5 py-0.5 rounded">
