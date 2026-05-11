@@ -5,6 +5,19 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.17.1',
+    date: 'May 11, 2026',
+    title: 'Fix: missing emitters module on install',
+    summary: 'Fixes <code>ERR_MODULE_NOT_FOUND</code> on <code>npx gspec</code> caused by the published package shipping <code>bin/gspec.js</code> without its <code>scripts/emitters.js</code> dependency. The shared emitter module now lives in <code>bin/</code> alongside the CLI entry point so it is always present at runtime.',
+    changes: [
+      {
+        type: 'fixed',
+        description: 'Running <code>npx gspec</code> on a fresh install no longer fails with <code>Cannot find module \'.../scripts/emitters.js\'</code>. The 1.17.0 internal refactor extracted shared emitter logic into <code>scripts/emitters.js</code>, but <code>scripts/</code> was not in the published <code>files</code> list, so the runtime import in <code>bin/gspec.js</code> resolved to a missing file. The module has been moved to <code>bin/emitters.js</code>, which ships with every install.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to pick up the fix.',
+  },
+  {
     version: '1.17.0',
     date: 'May 7, 2026',
     title: 'Task decomposition and user-authored extensions',
