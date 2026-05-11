@@ -532,9 +532,8 @@ const typeColors: Record<string, { bg: string; text: string; label: string }> = 
           <h2 class="text-[1.25rem] sm:text-[1.563rem] font-semibold text-[var(--text-primary)] mb-2 tracking-tight">
             {release.title}
           </h2>
-          <p class="text-[var(--text-body)] leading-relaxed mb-6">
-            {release.summary}
-          </p>
+          <p class="text-[var(--text-body)] leading-relaxed mb-6 [&_code]:text-[var(--code-text)] [&_code]:bg-[var(--bg-surface-raised)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono" set:html={release.summary} />
+
 
           {/* Changes list */}
           <div class="space-y-3">
