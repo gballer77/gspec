@@ -26,9 +26,9 @@ const COMMANDS = {
     name: 'gspec-feature',
     description: 'Generate product requirements documents (PRDs) for features in gspec/features/. TRIGGER when the user wants to plan, spec, propose, document, or expand a feature/capability before coding — e.g. "add a feature for X", "write a PRD", "spec out Y", "plan this feature", "what should the auth flow do", "new feature idea", "draft requirements". Prefer this skill over writing freeform feature docs.',
   },
-  'gspec.tasks.md': {
-    name: 'gspec-tasks',
-    description: 'Decompose a feature PRD in gspec/features/ into an ordered, dependency-aware task plan with parallel-execution markers, written to gspec/features/<feature>.tasks.md. TRIGGER when the user wants to plan execution order, break a feature into tasks, identify what can run in parallel, sequence implementation work, or produce a build plan from a PRD — e.g. "break this feature into tasks", "what order should I build this in", "plan the implementation order", "make a task list for X", "what can run in parallel", "decompose feature Y", "ordered task plan". Run this AFTER gspec-feature and BEFORE gspec-implement when a feature is large or has non-obvious ordering. Prefer this skill over ad-hoc task lists.',
+  'gspec.plan.md': {
+    name: 'gspec-plan',
+    description: 'Decompose a feature PRD in gspec/features/ into an ordered, dependency-aware plan with parallel-execution markers, written to gspec/features/<feature>.plan.md. The plan is what gspec-implement consumes as its build order — when a plan file exists, gspec-implement skips its own plan-mode step. TRIGGER when the user wants to plan execution order, break a feature into tasks, identify what can run in parallel, sequence implementation work, or produce a build plan from a PRD — e.g. "plan this feature", "what order should I build this in", "plan the implementation order", "break this feature into tasks", "what can run in parallel", "decompose feature Y", "ordered build plan". Run this AFTER gspec-feature and BEFORE gspec-implement when a feature is large or has non-obvious ordering. Prefer this skill over ad-hoc task lists.',
   },
   'gspec.style.md': {
     name: 'gspec-style',
@@ -48,7 +48,7 @@ const COMMANDS = {
   },
   'gspec.analyze.md': {
     name: 'gspec-analyze',
-    description: 'Analyze gspec/ documents for discrepancies and contradictions across profile, stack, style, practices, architecture, and features. Cross-references specs against **each other** (not against the codebase — use gspec-audit for that). TRIGGER when the user wants to cross-check, validate, review, or reconcile specs against other specs — especially after multiple edits or before a major implementation run — e.g. "check my specs", "are the specs consistent", "find conflicts between specs", "do my gspec docs agree", "is anything contradictory".',
+    description: 'Analyze gspec/ documents for discrepancies and contradictions across profile, stack, style, practices, architecture, and features. Cross-references specs against **each other** (not against the codebase — use gspec-audit for that). Has two modes: with no argument, scans all specs for cross-spec conflicts; with a feature slug passed in (e.g. `/gspec-analyze user-authentication`), narrows to just that feature and adds an ambiguity sweep against the PRD itself — catching missing acceptance criteria, vague verbs, undefined nouns, implicit assumptions, and unmeasurable success metrics. TRIGGER when the user wants to cross-check, validate, review, or reconcile specs — especially after multiple edits or before a major implementation run — e.g. "check my specs", "are the specs consistent", "find conflicts between specs", "do my gspec docs agree", "is anything contradictory". ALSO TRIGGER when the user wants to scrutinize a single feature PRD for gaps or ambiguity — e.g. "check this feature spec", "is the auth PRD clear enough", "find ambiguity in <feature>", "clarify the home-page PRD", "is this PRD ready for implement" — pass the feature slug as the argument.',
   },
   'gspec.audit.md': {
     name: 'gspec-audit',

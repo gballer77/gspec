@@ -13,7 +13,7 @@ Use this mapping whenever the user's intent matches:
 - **Building, implementing, coding, scaffolding, shipping, or "making it real"** — invoke `gspec-implement`. This is the most commonly-missed skill. If the user asks you to write code for anything the specs describe (or a new capability that should be specced), route through `gspec-implement` rather than editing files directly. Generic prompts like "build it", "go", "keep going", "continue", or "do the next phase" should also invoke it when recent conversation has been about specs or planning.
 - **Defining the product, users, or vision** — invoke `gspec-profile`.
 - **Planning or writing a new feature / PRD** — invoke `gspec-feature`.
-- **Producing an ordered task plan from a feature PRD (with explicit dependencies and parallel-execution markers)** — invoke `gspec-tasks`. Run before `gspec-implement` for non-trivial features.
+- **Producing an ordered plan from a feature PRD (with explicit dependencies and parallel-execution markers)** — invoke `gspec-plan`. Run before `gspec-implement` for non-trivial features; when a plan file exists, `gspec-implement` skips its own plan-mode step.
 - **Choosing or revising the tech stack** — invoke `gspec-stack`.
 - **Defining visual design, tokens, or theme** — invoke `gspec-style`.
 - **Setting coding standards, testing, or workflow conventions** — invoke `gspec-practices`.
@@ -25,13 +25,17 @@ Use this mapping whenever the user's intent matches:
 
 If the user explicitly asks you to skip the skill and just do the work, honor that — but by default, prefer the skill.
 
+### Asking the user multiple questions
+
+When a skill needs feedback on more than one question, first preview all of them as a numbered list so the user knows the full scope, then ask them **one at a time** in the conversation. Never present multiple questions as a single numbered list expecting one combined reply — that forces the user to retype each question number alongside their answer. One question per turn keeps replies short and natural.
+
 ### When you make code changes, follow these rules:
 
 1. **Read the specs first** — Before making non-trivial changes, read the relevant gspec documents to understand existing decisions and constraints. At minimum, scan `gspec/profile.md` and any feature PRDs in `gspec/features/` related to your work.
 
 2. **Spec before you build** — If the user asks for a feature or capability that isn't covered by an existing feature PRD in `gspec/features/`, run the `gspec-feature` command to create a new feature PRD before implementing it. Every feature should be specified before it's built — don't skip straight to code.
 
-3. **Update feature checkboxes** — When you implement a capability defined in a feature PRD (`gspec/features/*.md`), change its checkbox from `- [ ]` to `- [x]`. **If a tasks file exists** at `gspec/features/<feature>.tasks.md`, also flip the checkbox of each completed task in that file. Only flip the PRD capability checkbox once every task whose `covers:` references it is checked.
+3. **Update feature checkboxes** — When you implement a capability defined in a feature PRD (`gspec/features/*.md`), change its checkbox from `- [ ]` to `- [x]`. **If a plan file exists** at `gspec/features/<feature>.plan.md`, also flip the checkbox of each completed task in that file. Only flip the PRD capability checkbox once every task whose `covers:` references it is checked.
 
 4. **Update specs that your changes contradict** — If your code change makes a spec statement incorrect (e.g., you changed the data model, switched a dependency, altered a UI pattern, or added a new API endpoint), update the spec to reflect reality. Common candidates:
    - `gspec/architecture.md` — project structure, data model, API routes, component hierarchy

@@ -5,6 +5,31 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.18.0',
+    date: 'May 11, 2026',
+    title: 'Plan, scoped analyze, and ambiguity detection',
+    summary: 'The /gspec-tasks command is renamed to /gspec-plan with task-files renamed to *.plan.md, /gspec-implement skips its own plan-mode approval when every in-scope feature already has an approved plan file, and /gspec-analyze accepts a feature slug to scope a run to one PRD and add an Ambiguity & Underspecification sweep that catches gaps inline (the work that previously would have required a separate /gspec-clarify phase).',
+    changes: [
+      {
+        type: 'changed',
+        description: '<strong>Renamed <code>/gspec-tasks</code> → <code>/gspec-plan</code></strong>. The sibling artifact moves from <code>gspec/features/&lt;feature&gt;.tasks.md</code> to <code>gspec/features/&lt;feature&gt;.plan.md</code>. Task IDs (T1, T2, …), <code>[P]</code> parallel-execution markers, <code>deps:</code> lines, and <code>covers:</code> traceback to PRD capabilities are all unchanged — only the command and filename were renamed to better reflect that the file is an approved <em>plan</em> the implementer executes, not a passive task list.',
+      },
+      {
+        type: 'changed',
+        description: '<code>/gspec-implement</code> now <strong>skips its own plan-mode approval step</strong> when every in-scope feature has a non-empty <code>*.plan.md</code> file. The plan was already reviewed and approved during <code>/gspec-plan</code> — re-approving the same content adds friction without value. Implement still presents a brief summary of what it will execute and waits for confirmation before starting work, but the heavyweight plan-mode editor flow is bypassed. Features without plan files keep the original plan-mode approval.',
+      },
+      {
+        type: 'added',
+        description: '<code>/gspec-analyze</code> now accepts an <strong>optional feature slug</strong> to scope a run. With no argument it scans all specs for cross-spec contradictions (existing behavior, unchanged). With a slug — e.g. <code>/gspec-analyze user-authentication</code> — it narrows to the named feature\'s PRD and plan plus the foundation specs, then adds an <strong>Ambiguity &amp; Underspecification</strong> sweep against the PRD itself: capabilities missing acceptance criteria, vague verbs ("manage", "handle"), undefined nouns referenced as if they exist, implicit state assumptions, missing edge cases, priority gaps, dependency hand-waving, and unmeasurable success metrics. Findings are framed as questions, not errors — resolve inline, mark as a Deferred Decision, or skip. The ambiguity sweep is automatically suppressed when the PRD already has a Deferred Decisions subsection covering the same questions, so it doesn\'t re-litigate intentional gaps.',
+      },
+      {
+        type: 'changed',
+        description: 'Slug resolution in scoped <code>/gspec-analyze</code> is strict — passing a slug-like input that doesn\'t match a file in <code>gspec/features/</code> stops the run and lists the available slugs rather than silently falling back to all-specs mode. Avoids running the wrong analysis on a typo.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the renamed and updated commands. <strong>If you have existing <code>*.tasks.md</code> files</strong>, rename them to <code>*.plan.md</code> (no content changes needed — only the filename and the <code>feature:</code> frontmatter slug, if any) — or run <code>/gspec-migrate</code>. The old <code>/gspec-tasks</code> command is no longer installed; use <code>/gspec-plan</code> instead. To start using scoped analyze on an existing feature, run <code>/gspec-analyze &lt;feature-slug&gt;</code> on a PRD before running <code>/gspec-plan</code> or <code>/gspec-implement</code> — especially recommended on PRDs that pre-date this release or that were imported from other tools.',
+  },
+  {
     version: '1.17.1',
     date: 'May 11, 2026',
     title: 'Fix: missing emitters module on install',

@@ -190,9 +190,9 @@ When generating multiple features from a large request:
 
 After saving each PRD, end your response with a brief next-step pointer:
 
-> *For larger features, run `/gspec-tasks <feature-slug>` to produce an ordered task plan with explicit dependencies and parallel-execution markers before running `/gspec-implement`. Trivial features can skip straight to `/gspec-implement`.*
+> *For larger features, run `/gspec-plan <feature-slug>` to produce an ordered plan with explicit dependencies and parallel-execution markers before running `/gspec-implement`. Trivial features can skip straight to `/gspec-implement`.*
 
-This is a one-line nudge, not a prompt — do not generate the tasks file from this skill, and do not block the user on it.
+This is a one-line nudge, not a prompt — do not generate the plan file from this skill, and do not block the user on it.
 
 ---
 

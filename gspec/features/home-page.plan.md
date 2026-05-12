@@ -3,11 +3,11 @@ spec-version: v1
 feature: home-page
 ---
 
-# Tasks: Home Page
+# Plan: Home Page
 
-> All capabilities of this feature are already shipped — every task here is `- [x]`. The file is preserved as a worked example of the gspec-tasks format and as the historical execution plan for the page.
+> All capabilities of this feature are already shipped — every task here is `- [x]`. The file is preserved as a worked example of the gspec-plan format and as the historical execution plan for the page.
 
-## Tasks
+## Plan
 
 - [x] **T1** **P0** scaffold the Astro page route at `src/pages/index.astro` and the shared `Layout.astro` it consumes
   - deps: —

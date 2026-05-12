@@ -173,13 +173,15 @@ A change is done when:
 
 ---
 
-## 10. When to Use `/gspec-tasks`
+## 10. When to Use `/gspec-plan`
 
-`/gspec-tasks` decomposes a feature PRD into an ordered, dependency-aware task list at `gspec/features/<feature>.tasks.md`. Use it as a planning step between `/gspec-feature` and `/gspec-implement` when:
+`/gspec-plan` decomposes a feature PRD into an ordered, dependency-aware plan at `gspec/features/<feature>.plan.md`. Use it as a planning step between `/gspec-feature` and `/gspec-implement` when:
 
 - The feature has more than ~3-4 capabilities and the build order is non-obvious
 - Capabilities have cross-dependencies that would benefit from being declared explicitly (`deps:` lines)
 - Some work is parallel-safe and you want that surfaced (`[P]` markers) so `/gspec-implement` can fan it out
 - You want a reviewable execution plan in writing before any code lands
+
+When a plan file exists for every in-scope feature, `/gspec-implement` skips its own plan-mode step — the plan was already approved during `/gspec-plan`.
 
 Skip it for trivial features — `/gspec-implement`'s checkbox-driven planning is sufficient when the order doesn't matter and there's nothing to parallelize.

@@ -25,7 +25,7 @@ These documents become the shared context for all subsequent AI interactions. Wh
 
 The only commands you *need* are the four fundamentals and `/gspec-implement`. Everything else exists to help when your project calls for it.
 
-The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `/gspec-implement` can take a plain-language description and start building. The remaining commands — `/gspec-research`, `/gspec-feature`, `/gspec-architect`, `/gspec-tasks`, `/gspec-analyze`, and `/gspec-audit` — add structure and rigor when the scope or complexity warrants it.
+The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `/gspec-implement` can take a plain-language description and start building. The remaining commands — `/gspec-research`, `/gspec-feature`, `/gspec-architect`, `/gspec-plan`, `/gspec-analyze`, and `/gspec-audit` — add structure and rigor when the scope or complexity warrants it.
 
 ```mermaid
 flowchart LR
@@ -43,7 +43,7 @@ flowchart LR
     technical blueprint"]
 
     Plan["5. Plan
-    ordered tasks"]
+    ordered plan"]
 
     Analyze["6. Analyze &amp; Audit
     reconcile specs
@@ -116,18 +116,18 @@ Use `/gspec-architect` when your feature involves significant technical complexi
 
 | Command | Role | What it produces |
 |---|---|---|
-| `/gspec-tasks` | Engineering Lead | A sibling `gspec/features/<feature>.tasks.md` file with stable task IDs, explicit `deps:` lines, and `[P]` markers for parallel-safe work |
+| `/gspec-plan` | Engineering Lead | A sibling `gspec/features/<feature>.plan.md` file with stable task IDs, explicit `deps:` lines, and `[P]` markers for parallel-safe work |
 
-Use `/gspec-tasks` after `/gspec-feature` (and after `/gspec-architect` when it exists) for any feature large enough that build order matters or that has work which could legitimately run in parallel. The output is what `/gspec-implement` consumes — when a tasks file exists for an in-scope feature, implement plans phases from it, respecting deps and surfacing `[P]`-marked tasks for parallel execution. Trivial features can skip this step and go straight to `/gspec-implement`, which falls back to PRD-checkbox-driven planning.
+Use `/gspec-plan` after `/gspec-feature` (and after `/gspec-architect` when it exists) for any feature large enough that build order matters or that has work which could legitimately run in parallel. The output is what `/gspec-implement` consumes — when every in-scope feature has a plan file, `/gspec-implement` skips its own plan-mode step and executes the plan file directly (the plan was already approved during `/gspec-plan`). Trivial features can skip this step and go straight to `/gspec-implement`, which falls back to PRD-checkbox-driven planning with its own plan-mode approval.
 
 **6. Analyze & Audit** *(optional)* — Reconcile discrepancies before building, and keep specs honest as the codebase evolves.
 
 | Command | Role | What it does |
 |---|---|---|
-| `/gspec-analyze` | Specification Analyst | Cross-references all specs against **each other**, identifies contradictions, and walks you through reconciling each one |
+| `/gspec-analyze` | Specification Analyst | Cross-references specs against **each other**, identifies contradictions, and walks you through reconciling each one. Optionally takes a feature slug to scope to one PRD and add an ambiguity sweep against the document itself |
 | `/gspec-audit` | Specification Auditor | Cross-references specs against the **actual codebase**, finds drift (stack mismatches, stale data models, design tokens that don't match the stylesheet, capability checkboxes that lie), and walks you through updating specs to match reality |
 
-Use `/gspec-analyze` after `/gspec-architect` (or any time multiple specs exist) to catch spec-to-spec conflicts before `/gspec-implement` sees them. For example, if the stack says PostgreSQL but the architecture references MongoDB.
+Use `/gspec-analyze` after `/gspec-architect` (or any time multiple specs exist) to catch spec-to-spec conflicts before `/gspec-implement` sees them — for example, if the stack says PostgreSQL but the architecture references MongoDB. Pass a feature slug (`/gspec-analyze user-authentication`) to scope the run to one PRD and surface ambiguity inside it — missing acceptance criteria, vague verbs, undefined nouns, implicit state assumptions, missing edge cases, and unmeasurable success metrics. Especially useful on aged or imported PRDs that may have accumulated unstated assumptions.
 
 Use `/gspec-audit` periodically — before a major release, after a long sprint, or any time you suspect docs have drifted from code. Audit reads package manifests, configs, source files, and test output, then asks you per-finding whether to update the spec to match the code, keep the spec and fix the code separately, or defer. Each finding is presented one at a time with the spec quote and the code evidence side by side. Audit never modifies code.
 
@@ -135,7 +135,7 @@ Use `/gspec-audit` periodically — before a major release, after a long sprint,
 
 | Command | Role | What it does |
 |---|---|---|
-| `/gspec-implement` | Senior Engineer | Reads all specs (including any `*.tasks.md` files), plans the build order, and implements |
+| `/gspec-implement` | Senior Engineer | Reads all specs (including any `*.plan.md` files), plans the build order, and implements |
 
 **Spec Sync** — gspec includes always-on spec sync that automatically keeps your specification documents in sync as the code evolves. This is installed alongside the skills and requires no manual intervention — when code changes affect spec-documented behavior, the sync rules prompt your AI tool to update the relevant gspec files.
 

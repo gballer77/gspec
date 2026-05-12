@@ -16,7 +16,7 @@ const sections = [
   { id: 'research', label: 'research', group: 'Research' },
   { id: 'feature', label: 'feature', group: 'Specify' },
   { id: 'architect', label: 'architect', group: 'Architect' },
-  { id: 'tasks', label: 'tasks', group: 'Plan' },
+  { id: 'plan', label: 'plan', group: 'Plan' },
   { id: 'analyze', label: 'analyze', group: 'Analyze' },
   { id: 'audit', label: 'audit', group: 'Analyze' },
   { id: 'implement', label: 'implement', group: 'Build' },
@@ -48,7 +48,7 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
           { name: 'Research', desc: 'research', required: false },
           { name: 'Specify', desc: 'feature', required: false },
           { name: 'Architect', desc: 'architect', required: false },
-          { name: 'Plan', desc: 'tasks', required: false },
+          { name: 'Plan', desc: 'plan', required: false },
           { name: 'Analyze', desc: 'analyze, audit', required: false },
           { name: 'Build', desc: 'implement', required: true },
         ].map((stage) => (
@@ -378,15 +378,15 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
 
   <!-- Plan Stage -->
   <CommandSection
-    id="tasks"
-    name="tasks"
+    id="plan"
+    name="plan"
     role="Engineering Lead"
-    description="Decomposes a feature PRD into an ordered, dependency-aware task plan with explicit parallel-execution markers. Sits between feature (the 'what') and implement (the 'how'). Reads the PRD plus the architecture and stack for ordering signals, then proposes 1–N concrete tasks per capability with stable IDs, deps lines, and [P] markers for tasks that are safe to run in parallel."
-    produces="A sibling file at gspec/features/<feature>.tasks.md with YAML frontmatter linking it back to the PRD, plus a single ## Tasks section containing ordered, checkboxed tasks. Each task carries a priority (P0/P1/P2), an optional [P] marker, a deps: line listing prerequisite task IDs, and a covers: line quoting the PRD capability text the task contributes to."
-    invocation={'/tasks "home-page"'}
+    description="Decomposes a feature PRD into an ordered, dependency-aware plan with explicit parallel-execution markers. Sits between feature (the 'what') and implement (the 'how'). Reads the PRD plus the architecture and stack for ordering signals, then proposes 1–N concrete tasks per capability with stable IDs, deps lines, and [P] markers for tasks that are safe to run in parallel. When a plan file exists, implement skips its own plan-mode step and executes the plan directly."
+    produces="A sibling file at gspec/features/<feature>.plan.md with YAML frontmatter linking it back to the PRD, plus a single ## Plan section containing ordered, checkboxed tasks. Each task carries a priority (P0/P1/P2), an optional [P] marker, a deps: line listing prerequisite task IDs, and a covers: line quoting the PRD capability text the task contributes to."
+    invocation={'/plan "home-page"'}
     questions={[
       'Which feature PRD to decompose (if multiple PRDs exist)',
-      'Whether to regenerate from scratch or extend an existing tasks file',
+      'Whether to regenerate from scratch or extend an existing plan file',
     ]}
     bestPractices={[
       'Run after feature (and after architect when it exists) so technical context informs the decomposition',
@@ -398,12 +398,12 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
       'Marking [P] on tasks that write to the same file as a sibling — one will overwrite the other',
       'Renumbering existing task IDs on regenerate — IDs are stable, append new ones at the next free number',
       'Inventing acceptance criteria for an underspecified PRD — fix the PRD with /feature first instead',
-      'Treating the tasks file as a rewrite of the PRD — capabilities stay in the PRD, execution stays in tasks',
+      'Treating the plan file as a rewrite of the PRD — capabilities stay in the PRD, execution stays in the plan',
     ]}
     related={[
-      { name: 'feature', relation: 'Tasks decomposes the PRD that feature produced — every task line traces back to a capability via covers:' },
-      { name: 'architect', relation: 'Tasks reads architecture for ordering signals (e.g., schema before API, API before UI)' },
-      { name: 'implement', relation: 'When a tasks file exists, implement plans phases from it — respecting deps and [P] markers — and updates task checkboxes as work completes' },
+      { name: 'feature', relation: 'Plan decomposes the PRD that feature produced — every task line traces back to a capability via covers:' },
+      { name: 'architect', relation: 'Plan reads architecture for ordering signals (e.g., schema before API, API before UI)' },
+      { name: 'implement', relation: 'When a plan file exists for every in-scope feature, implement skips plan mode and executes the plan directly — respecting deps and [P] markers — updating task checkboxes as work completes' },
       { name: 'analyze', relation: 'Analyze validates that every PRD capability is covered by at least one task and that no task references a missing capability' },
     ]}
   />
@@ -413,26 +413,31 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     id="analyze"
     name="analyze"
     role="Quality Analyst"
-    description="Cross-references all existing gspec documents and identifies contradictions, gaps, and inconsistencies between them. Run this before implement to ensure your specs tell a coherent story."
-    produces="An analysis report highlighting contradictions between specs, missing information, and recommended resolutions. Updates are applied directly to the relevant spec files."
-    invocation="/analyze"
+    description="Cross-references gspec documents and identifies discrepancies. Has two modes. (1) All-specs (no argument): scans every spec for contradictions across the full set — stack vs architecture, PRD vs architecture, plan vs PRD, etc. (2) Scoped (pass a feature slug): narrows to one feature's PRD and plan plus the foundation specs, then adds an Ambiguity & Underspecification sweep against the PRD itself, catching missing acceptance criteria, vague verbs, undefined nouns, implicit assumptions, missing edge cases, and unmeasurable success metrics. Findings are presented one at a time with resolution options; the user decides each individually."
+    produces="A list of findings — contradictions, or in scoped mode also ambiguity questions — each presented with the conflicting evidence (or, for ambiguity, the unclear text and a specific question). With your per-finding approval, affected spec files are updated in place. At the end, a summary of resolved, deferred, and skipped findings."
+    invocation={'/analyze\n# or, scoped to one feature:\n/analyze user-authentication'}
     questions={[
-      'This command is non-interactive — it reads all specs and produces findings automatically',
+      'Optional feature slug — when present, scope to that feature and run the ambiguity sweep; when absent, scan all specs for cross-spec conflicts',
+      'For each finding, whether to update the spec, mark it as a Deferred Decision, or skip',
     ]}
     bestPractices={[
-      'Run after architect and before implement for the most comprehensive analysis',
-      'Review findings and accept or reject each recommendation',
-      'Re-run after making significant changes to any spec',
-      'Especially useful when multiple people have contributed to different specs',
+      'Run all-specs analyze after architect and before implement for the most comprehensive sweep',
+      'Run scoped analyze on each feature PRD before /plan (or before /implement when skipping plan) to catch ambiguity early',
+      'Use scoped mode on aged or imported PRDs that may have accumulated implicit assumptions',
+      'Review findings and accept or reject each recommendation — do not blindly apply all',
+      'Re-run after significant edits to the targeted feature or to any foundation spec',
     ]}
     pitfalls={[
-      'Running analyze with only one or two specs — it needs multiple specs to find cross-references',
-      'Blindly accepting all suggestions without reviewing context',
-      'Skipping analyze when specs were written at different times — drift is common',
+      'Running all-specs analyze with only one or two specs — it needs multiple specs to find cross-references',
+      'Passing a feature slug that does not match a file in gspec/features/ — analyze will stop and ask you to pick from the available slugs rather than silently fall back',
+      'Skipping the ambiguity sweep on aged PRDs and trusting old documents that no longer reflect implicit team knowledge',
+      'Treating ambiguity questions as errors — they are deliberate prompts; the answer can be "mark this as a Deferred Decision" rather than resolving inline',
     ]}
     related={[
-      { name: 'architect', relation: 'Analyze catches contradictions between architecture and other specs' },
-      { name: 'implement', relation: 'Run analyze before implement to ensure specs are consistent' },
+      { name: 'feature', relation: 'Generation-time clarification in /feature catches ambiguity before the PRD is saved; scoped /analyze catches what slipped through or accumulated later' },
+      { name: 'plan', relation: 'Run scoped /analyze on a PRD before /plan so the plan is built from a clean spec' },
+      { name: 'architect', relation: 'All-specs /analyze catches contradictions between architecture and other specs' },
+      { name: 'implement', relation: 'Run /analyze before /implement to ensure specs are consistent and unambiguous' },
       { name: 'audit', relation: 'Analyze compares specs to other specs; audit compares specs to the codebase' },
     ]}
   />

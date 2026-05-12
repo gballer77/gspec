@@ -35,7 +35,7 @@ Read **every** available gspec document in this order:
 6. `gspec/architecture.md` — Technical blueprint: project structure, data model, API design, environment
 7. `gspec/research.md` — Competitive analysis and feature proposals (informational only — not audited against code)
 8. `gspec/features/*.md` — Individual feature requirements, priorities, and capability checkboxes
-9. `gspec/features/*.tasks.md` — When a feature has a tasks file, also read it. Tasks files declare a per-task execution checkbox state and `covers:` traceability to PRD capabilities; both are subject to drift checks against the code
+9. `gspec/features/*.plan.md` — When a feature has a plan file, also read it. Plan files declare a per-task execution checkbox state and `covers:` traceability to PRD capabilities; both are subject to drift checks against the code
 
 If the `gspec/` directory is empty, inform the user that there are no specs to audit and stop.
 
@@ -106,10 +106,10 @@ Systematically compare specs against the evidence from Phase 2. Look for these c
 - A feature PRD's acceptance criteria describe behavior that the code explicitly handles differently
 - A feature PRD references a data field, endpoint, or UI element whose implementation has diverged (e.g., PRD says "users can filter by tag", code has filter-by-category)
 
-#### Tasks Drift (only when a tasks file exists for the feature)
-- A task is marked `- [x]` in the tasks file but the code does not implement what the task describes
+#### Plan Drift (only when a plan file exists for the feature)
+- A task is marked `- [x]` in the plan file but the code does not implement what the task describes
 - A task is marked `- [ ]` but the code clearly implements it (the checkbox should be updated)
-- A task's `covers:` references capability text the PRD no longer contains (the PRD was edited but the tasks file wasn't refreshed — recommend regenerating via `/gspec-tasks`)
+- A task's `covers:` references capability text the PRD no longer contains (the PRD was edited but the plan file wasn't refreshed — recommend regenerating via `/gspec-plan`)
 - A capability is marked `- [x]` in the PRD but one or more of its covering tasks is still `- [ ]` (or vice versa) — flag the inconsistency and recommend the user reconcile state
 
 #### Orphan Capability (code implements a feature that has no PRD)

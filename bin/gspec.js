@@ -40,7 +40,7 @@ const TARGETS = Object.fromEntries(
 
 // Names emitted by core gspec; user extensions cannot collide with these.
 const BUILTIN_SKILL_NAMES = new Set([
-  'gspec-profile', 'gspec-feature', 'gspec-tasks', 'gspec-style',
+  'gspec-profile', 'gspec-feature', 'gspec-plan', 'gspec-style',
   'gspec-stack', 'gspec-practices', 'gspec-architect', 'gspec-analyze',
   'gspec-audit', 'gspec-research', 'gspec-implement', 'gspec-migrate',
 ]);

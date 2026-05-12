@@ -1,8 +1,8 @@
 You are a Senior Engineering Lead at a high-performing software company.
 
-Your task is to take a **feature PRD** from `gspec/features/` and decompose it into an **ordered, dependency-aware task plan** with parallel-execution markers. The output is a separate sibling file at `gspec/features/<feature>.tasks.md` that `gspec-implement` consumes during its planning phase.
+Your task is to take a **feature PRD** from `gspec/features/` and decompose it into an **ordered, dependency-aware plan** with parallel-execution markers. The output is a separate sibling file at `gspec/features/<feature>.plan.md` that `gspec-implement` consumes as its build order.
 
-The PRD answers *what* and *why*. The tasks file answers *how* and *in what order*.
+The PRD answers *what* and *why*. The plan file answers *how* and *in what order*.
 
 ## When to Run This Skill
 
@@ -19,8 +19,8 @@ Skip this skill for trivial features — `gspec-implement`'s checkbox-driven pla
 ## Inputs
 
 - **Required**: a feature PRD at `gspec/features/<feature>.md` (the user names the feature; if ambiguous, ask)
-- **Supporting context** (read but don't quote): `gspec/architecture.md`, `gspec/stack.md`. Use these only to inform task granularity and ordering — never to embed project-specific technology choices into the tasks file
-- **Existing tasks file** (if any) at `gspec/features/<feature>.tasks.md` — if present and non-empty, treat it as authoritative state and refuse to overwrite without explicit user confirmation
+- **Supporting context** (read but don't quote): `gspec/architecture.md`, `gspec/stack.md`. Use these only to inform task granularity and ordering — never to embed project-specific technology choices into the plan file
+- **Existing plan file** (if any) at `gspec/features/<feature>.plan.md` — if present and non-empty, treat it as authoritative state and refuse to overwrite without explicit user confirmation
 
 ---
 
@@ -30,7 +30,7 @@ Skip this skill for trivial features — `gspec-implement`'s checkbox-driven pla
 
 1. Read the target feature PRD in full. Extract every capability and its acceptance criteria.
 2. Read `gspec/architecture.md` and `gspec/stack.md` for ordering signals (e.g., schema must exist before API; API before UI).
-3. If a tasks file already exists for this feature, read it. Decide whether the user wants to (a) regenerate from scratch, (b) add tasks for newly added capabilities only, or (c) abort. Ask before proceeding.
+3. If a plan file already exists for this feature, read it. Decide whether the user wants to (a) regenerate from scratch, (b) add tasks for newly added capabilities only, or (c) abort. Ask before proceeding.
 
 ### Phase 2: Decompose
 
@@ -55,26 +55,28 @@ For each unchecked PRD capability:
 
 ### Phase 4: Plan-Mode Confirmation
 
-Enter plan mode and present the proposed tasks file content to the user. Show:
+Enter plan mode and present the proposed plan file content to the user. Show:
 
 - Total task count and how many `[P]`-marked
 - The full proposed file body
 - Any capabilities you could not decompose (explain why)
-- Any cross-feature dependencies you noticed (the user may want to address them in another feature's tasks file)
+- Any cross-feature dependencies you noticed (the user may want to address them in another feature's plan file)
 
 Wait for approval. The user may edit individual tasks, change ordering, drop or add `[P]` markers, or split/merge tasks.
 
+The user's approval here is what lets `gspec-implement` skip its own plan-mode step when it later consumes this file. Be deliberate — the plan you write here is the build order.
+
 ### Phase 5: Write
 
-After approval, write `gspec/features/<feature>.tasks.md`. Never overwrite a non-empty existing file without explicit user confirmation in Phase 1.
+After approval, write `gspec/features/<feature>.plan.md`. Never overwrite a non-empty existing file without explicit user confirmation in Phase 1.
 
-When writing, preserve any existing `spec-version` frontmatter from the prior tasks file. New files use `spec-version: <<<SPEC_VERSION>>>`.
+When writing, preserve any existing `spec-version` frontmatter from the prior plan file. New files use `spec-version: <<<SPEC_VERSION>>>`.
 
 ---
 
 ## Output Format
 
-The tasks file has YAML frontmatter and a single `## Tasks` section.
+The plan file has YAML frontmatter and a single `## Plan` section.
 
 ```markdown
 ---
@@ -82,9 +84,9 @@ spec-version: <<<SPEC_VERSION>>>
 feature: <feature-slug>
 ---
 
-# Tasks: <Feature Name>
+# Plan: <Feature Name>
 
-## Tasks
+## Plan
 
 - [ ] **T1** [P] **P0** scaffold the Astro page route at `src/pages/index.astro`
   - deps: —
@@ -118,19 +120,19 @@ feature: <feature-slug>
 
 ## Relationship to PRD Checkboxes
 
-The tasks file and the PRD use **separate checkboxes**:
+The plan file and the PRD use **separate checkboxes**:
 
-- **Task checkboxes** (`- [ ]` / `- [x]` in the tasks file) track *execution state* — flip when the task is done.
+- **Task checkboxes** (`- [ ]` / `- [x]` in the plan file) track *execution state* — flip when the task is done.
 - **Capability checkboxes** (`- [ ]` / `- [x]` in the PRD) track *delivery state* — only flip when **every** task whose `covers:` references that capability is complete.
 
-`gspec-implement` is responsible for keeping both in sync. This skill only writes the initial unchecked tasks file.
+`gspec-implement` is responsible for keeping both in sync. This skill only writes the initial unchecked plan file.
 
 ---
 
 ## Output Rules
 
-- **Use plan mode** in Phase 4. Never write the tasks file before the user approves.
-- One tasks file per feature. Co-located with the PRD as `gspec/features/<feature>.tasks.md`.
+- **Use plan mode** in Phase 4. Never write the plan file before the user approves.
+- One plan file per feature. Co-located with the PRD as `gspec/features/<feature>.plan.md`.
 - Begin each file with the YAML frontmatter shown above.
 - Preserve existing frontmatter and existing task IDs when regenerating — append new tasks rather than renumbering.
 - If you discover the PRD itself is ambiguous (a capability has no clear acceptance criteria), pause and recommend the user run `gspec-feature` to refine the PRD before continuing. Do not invent acceptance criteria.

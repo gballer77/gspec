@@ -12,6 +12,7 @@ Scan the `gspec/` directory for all spec files:
 - `gspec/*.md` (profile, stack, style, practices, architecture)
 - `gspec/style.html` (HTML design system, if present — the style guide may be in either Markdown or HTML)
 - `gspec/features/*.md` (individual feature PRDs)
+- `gspec/features/*.plan.md` (plan files; legacy `*.tasks.md` files are also scanned and renamed — see Migration Rules below)
 
 Do **not** migrate files under `gspec/design/` — those are external design mockups (HTML, SVG, PNG, JPG) that are dropped in manually and are not owned by gspec. Leave them untouched.
 
@@ -101,6 +102,12 @@ After migrating all files:
 - If capabilities lack checkboxes (old format), add unchecked checkboxes
 - If capabilities lack acceptance criteria (current format requires them), add placeholder criteria: "Acceptance criteria to be defined"
 - Preserve priority levels (P0, P1, P2)
+
+**Rename legacy `*.tasks.md` plan files to `*.plan.md`.** Before gspec renamed the `tasks` skill to `plan`, plan files lived at `gspec/features/<feature>.tasks.md`. During migration:
+- For every `gspec/features/*.tasks.md` file, rename it to `gspec/features/<same-slug>.plan.md` (use `git mv` when the project is a git repo so history is preserved; otherwise plain move)
+- Inside the renamed file, update the top-of-file heading from `# Tasks: <Feature Name>` to `# Plan: <Feature Name>` and the section heading from `## Tasks` to `## Plan`. Leave everything else (frontmatter, task IDs, `[P]` markers, `deps:`, `covers:`, checkbox states) unchanged
+- Preserve task IDs verbatim — `T1`, `T2`, etc. remain stable; do not renumber
+- Confirm the rename plan with the user before applying, in the same approval flow as other migrations
 
 **Handle missing sections gracefully.** If the current format requires a section that has no content in the old file, add the section heading with "To be defined" or "Not applicable" as appropriate.
 
