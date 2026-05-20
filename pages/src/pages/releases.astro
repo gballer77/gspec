@@ -5,6 +5,23 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.18.2',
+    date: 'May 20, 2026',
+    title: 'Trim every skill description to Claude Code\'s selection window',
+    summary: 'Every skill description is now under 250 characters — Claude Code\'s effective selection window. Previously most descriptions ran 400-900+ chars, so the trigger guidance past char 250 was silently dropped when Claude decided whether to invoke a skill. The build-time validator that landed in 1.18.1 now <strong>hard-fails</strong> at 250 characters (rather than warning) so this regression cannot ship again.',
+    changes: [
+      {
+        type: 'changed',
+        description: '<strong>All 12 skill descriptions trimmed to ≤250 characters.</strong> Claude Code truncates each description to 250 chars when injecting them into the system prompt for skill selection, so anything past char 250 was wasted token budget that never reached Claude\'s decision. The trimmed versions front-load the trigger verbs and the "when to use this" cue while keeping the same essential intent.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Validator tightened to hard-fail at 250 characters.</strong> Previously 1024 was the hard cap and 250 was just a warning. Since 250 is Claude Code\'s actual selection-window limit, treating it as the build-blocking cap is the only way to keep descriptions inside the window where Claude reads them. Trying to build a skill whose description exceeds 250 chars now stops the build with a clear error.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the regenerated skill files. No spec changes are needed.',
+  },
+  {
     version: '1.18.1',
     date: 'May 20, 2026',
     title: 'Fix: skill descriptions broke YAML parsing',
