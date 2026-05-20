@@ -48,11 +48,11 @@ const COMMANDS = {
   },
   'gspec.analyze.md': {
     name: 'gspec-analyze',
-    description: 'Analyze gspec/ documents for discrepancies and contradictions across profile, stack, style, practices, architecture, and features. Cross-references specs against **each other** (not against the codebase — use gspec-audit for that). Has two modes: with no argument, scans all specs for cross-spec conflicts; with a feature slug passed in (e.g. `/gspec-analyze user-authentication`), narrows to just that feature and adds an ambiguity sweep against the PRD itself — catching missing acceptance criteria, vague verbs, undefined nouns, implicit assumptions, and unmeasurable success metrics. TRIGGER when the user wants to cross-check, validate, review, or reconcile specs — especially after multiple edits or before a major implementation run — e.g. "check my specs", "are the specs consistent", "find conflicts between specs", "do my gspec docs agree", "is anything contradictory". ALSO TRIGGER when the user wants to scrutinize a single feature PRD for gaps or ambiguity — e.g. "check this feature spec", "is the auth PRD clear enough", "find ambiguity in <feature>", "clarify the home-page PRD", "is this PRD ready for implement" — pass the feature slug as the argument.',
+    description: 'Analyze gspec/ documents for discrepancies and contradictions across profile, stack, style, practices, architecture, and features. Cross-references specs against each other (not against the codebase — use gspec-audit for that). Two modes: no argument scans all specs for cross-spec conflicts; with a feature slug (e.g. `/gspec-analyze user-authentication`) it narrows to that feature and adds an ambiguity sweep — missing acceptance criteria, vague verbs, undefined nouns, implicit assumptions, unmeasurable success metrics. TRIGGER when the user wants to cross-check, validate, or reconcile specs — e.g. "check my specs", "are the specs consistent", "find conflicts between specs", "is anything contradictory". ALSO TRIGGER when scrutinizing a single feature PRD for gaps or ambiguity — e.g. "is the auth PRD clear enough", "find ambiguity in <feature>", "is this PRD ready for implement" — pass the feature slug as the argument.',
   },
   'gspec.audit.md': {
     name: 'gspec-audit',
-    description: 'Audit gspec/ documents against the actual codebase to find drift between what the specs say and what the code does, then walk the user through reconciling each discrepancy — typically by updating specs to match reality. Reads package manifests, config files, source code, and tests to detect stack/architecture/style/practice/feature drift, and detects **orphan capabilities** (coherent features the code implements that no PRD covers) — drafting a new feature PRD in gspec/features/ when the user accepts. TRIGGER when the user wants to check specs against code, catch documentation drift, verify specs still reflect the project, sync specs with reality, or find unspecced features in the codebase — e.g. "audit the specs", "check if specs match the code", "are my specs still accurate", "find spec drift", "update specs to match the code", "do my gspec docs reflect reality", "check specs against the codebase", "find features that aren\'t spec\'d", "what does the code do that we never wrote a PRD for". Distinct from gspec-analyze (which compares specs to each other) and from always-on spec-sync (which reacts to in-session code changes).',
+    description: 'Audit gspec/ documents against the actual codebase to find drift between what the specs say and what the code does, then walk the user through reconciling each discrepancy — typically by updating specs to match reality. Reads package manifests, config files, source code, and tests to detect stack/architecture/style/practice/feature drift, and detects orphan capabilities (coherent features the code implements that no PRD covers) — drafting a new PRD in gspec/features/ when the user accepts. TRIGGER when the user wants to check specs against code, catch documentation drift, sync specs with reality, or find unspecced features — e.g. "audit the specs", "check if specs match the code", "find spec drift", "update specs to match the code", "find features that aren\'t spec\'d". Distinct from gspec-analyze (specs vs. specs) and from always-on spec-sync (in-session code reactions).',
   },
   'gspec.research.md': {
     name: 'gspec-research',
@@ -60,7 +60,7 @@ const COMMANDS = {
   },
   'gspec.implement.md': {
     name: 'gspec-implement',
-    description: 'Implement the software defined by gspec/ documents — reads profile, stack, style (style.md or style.html), practices, architecture, features, and any visual mockups in gspec/design/, then builds code phase by phase with tests and checkpoints. **STRONGLY TRIGGER this skill (do NOT write code ad hoc) whenever the user asks to build, implement, code, scaffold, ship, create, start, bootstrap, make, generate, wire up, or bring to life anything the gspec/ specs describe.** Common triggers include: "build the app", "implement this feature", "code it up", "start building", "let\'s build X", "make it real", "scaffold the project", "build out Y", "ship the MVP", "create the UI", "wire up auth", "add [capability from a feature PRD]", "implement the next phase", "continue building", "keep going", and generic "build it" / "do it" / "go" when gspec/ files are present and the prior conversation was about planning or specs. Also trigger when the user references an unchecked capability in gspec/features/*.md. Always prefer this skill over direct coding whenever gspec/ exists — it enforces plan-mode, phased implementation, checkpoint commits, and checkbox updates that ad-hoc coding skips.',
+    description: 'Implement software defined by gspec/ documents — reads profile, stack, style, practices, architecture, features, and design mockups, then builds code phase by phase with tests and checkpoints. STRONGLY TRIGGER (do not write code ad hoc) whenever the user asks to build, implement, code, scaffold, ship, create, start, bootstrap, wire up, or "make real" anything the specs describe — e.g. "build the app", "implement this feature", "scaffold the project", "ship the MVP", "wire up auth", "implement the next phase", "continue building", and generic "build it" / "go" / "keep going" when gspec/ files exist and the conversation was about planning. Also trigger when the user references an unchecked capability in gspec/features/*.md. Prefer this skill over direct coding — it enforces plan-mode, phased implementation, checkpoint commits, and checkbox updates.',
   },
   'gspec.migrate.md': {
     name: 'gspec-migrate',
@@ -68,7 +68,44 @@ const COMMANDS = {
   },
 };
 
+// Frontmatter description limits across emit targets:
+//   - Claude Code: 1024 chars hard cap (rejected above), but only the first
+//     250 chars are kept when descriptions are injected into the system prompt
+//     for skill selection. Anything past 250 is silently dropped.
+//   - OpenCode: 1024 chars hard cap.
+//   - Codex / Antigravity / Cursor: no documented per-description cap.
+// We fail the build above 1024 and warn above 250 so authors front-load the
+// trigger signal where Claude Code can actually see it.
+const DESCRIPTION_HARD_MAX = 1024;
+const DESCRIPTION_SOFT_MAX = 250;
+
+function validateCommands(commands) {
+  const errors = [];
+  const warnings = [];
+  for (const [file, meta] of Object.entries(commands)) {
+    if (!meta.name) errors.push(`${file}: missing name`);
+    if (!meta.description) {
+      errors.push(`${file}: missing description`);
+      continue;
+    }
+    const len = meta.description.length;
+    if (len > DESCRIPTION_HARD_MAX) {
+      errors.push(`${file}: description is ${len} chars, exceeds hard cap of ${DESCRIPTION_HARD_MAX} (Claude Code / OpenCode reject above this)`);
+    } else if (len > DESCRIPTION_SOFT_MAX) {
+      warnings.push(`${file}: description is ${len} chars, exceeds Claude Code's ${DESCRIPTION_SOFT_MAX}-char selection window — content past char ${DESCRIPTION_SOFT_MAX} is dropped when Claude decides whether to invoke the skill`);
+    }
+  }
+  return { errors, warnings };
+}
+
 async function build(targetNames) {
+  const { errors, warnings } = validateCommands(COMMANDS);
+  for (const w of warnings) console.warn(`WARN  ${w}`);
+  if (errors.length) {
+    for (const e of errors) console.error(`ERROR ${e}`);
+    process.exit(1);
+  }
+
   const files = (await readdir(COMMANDS_DIR)).filter(f => f.endsWith('.md'));
 
   for (const targetName of targetNames) {

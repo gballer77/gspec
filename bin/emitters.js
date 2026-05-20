@@ -4,10 +4,25 @@ import { join } from 'node:path';
 // Placeholder pattern used in generic command files
 export const PLACEHOLDER_RE = /<<<\w+>>>/g;
 
+// Emit a YAML scalar safely. Skill descriptions contain ": ", embedded "…"
+// examples, and other characters that break unquoted plain scalars, so every
+// value goes out as a double-quoted scalar with the minimal escape set
+// required by the YAML 1.2 spec (backslash, double-quote, and control chars).
+function yamlScalar(value) {
+  const str = String(value);
+  const escaped = str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')
+    .replace(/\t/g, '\\t');
+  return `"${escaped}"`;
+}
+
 export function buildFrontmatter(fields) {
   const lines = ['---'];
   for (const [key, value] of Object.entries(fields)) {
-    lines.push(`${key}: ${value}`);
+    lines.push(`${key}: ${yamlScalar(value)}`);
   }
   lines.push('---');
   return lines.join('\n');
