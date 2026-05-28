@@ -136,6 +136,7 @@ Use `/gspec-audit` periodically — before a major release, after a long sprint,
 | Command | Role | What it does |
 |---|---|---|
 | `/gspec-implement` | Senior Engineer | Reads all specs (including any `*.plan.md` files), plans the build order, and implements |
+| `/gspec-coverage` | Senior Engineer | Audits test coverage across the codebase, identifies coverage gaps and test failures, distinguishes stale tests from real bugs, and updates tests to close gaps |
 
 **Spec Sync** — gspec includes always-on spec sync that automatically keeps your specification documents in sync as the code evolves. This is installed alongside the skills and requires no manual intervention — when code changes affect spec-documented behavior, the sync rules prompt your AI tool to update the relevant gspec files.
 

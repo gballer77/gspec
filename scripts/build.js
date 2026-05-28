@@ -66,6 +66,10 @@ const COMMANDS = {
     name: 'gspec-migrate',
     description: 'Migrate gspec/ files to the current spec format when upgrading gspec. TRIGGER when the user sees an outdated-version warning or asks to upgrade specs — e.g. "migrate my specs", "my specs are outdated", "fix the spec-version warning".',
   },
+  'gspec.coverage.md': {
+    name: 'gspec-coverage',
+    description: 'Analyze test coverage for the application to identify stale test cases and/or gaps in coverage. **STRONGLY TRIGGER this skill (do NOT write code ad hoc) whenever the user asks for coverage reports or to update, add, or refactor tests.**'
+  }
 };
 
 // Frontmatter description cap.
