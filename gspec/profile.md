@@ -120,24 +120,7 @@ Once generated, these Markdown documents live in a `gspec/` directory in your re
   - Project scaffolding tools (Yeoman, create-*-app) — generate initial structure but don't maintain living specs.
 - **White space:** gspec occupies the gap between "no AI context" and "fully manual context files" by providing structured, role-guided specification generation with automated sync.
 
-## 8. Business Model
-
-### Revenue Model
-
-gspec is free and open source under the MIT license. There is no monetization planned at this stage.
-
-### Customer Acquisition
-
-- Developers discover gspec through npm (`npx gspec`), GitHub, and word-of-mouth in AI-assisted development communities.
-- The zero-friction install experience (single command, no account) supports organic adoption.
-
-### Growth Strategy
-
-- Grow through community adoption and contributions.
-- Expand platform support as new AI coding tools emerge.
-- Build credibility through real-world usage and community feedback.
-
-## 9. Brand & Positioning
+## 8. Brand & Positioning
 
 ### Brand Personality
 
@@ -154,22 +137,7 @@ For small development teams using AI coding tools, gspec is the open-source spec
 - **Elevator pitch:** "gspec gives your AI coding tools the product context they're missing — structured specs that live in your repo and stay in sync with your code."
 - **Core message:** Your AI tools are only as good as the context you give them. gspec makes that context structured, comprehensive, and self-maintaining.
 
-## 10. Success Metrics
-
-### Business Metrics
-
-- npm download growth (weekly installs)
-- GitHub stars and forks
-- Active contributors
-
-### User Metrics
-
-- Number of projects with gspec installed
-- Spec documents generated per project
-- Community engagement (issues, discussions, PRs)
-- User retention (repeat usage across projects)
-
-## 11. Public-Facing Information
+## 9. Public-Facing Information
 
 ### Website Copy Elements
 
@@ -187,29 +155,7 @@ For small development teams using AI coding tools, gspec is the open-source spec
 
 Not applicable at this stage.
 
-## 12. Product Roadmap Vision
-
-### Current Focus
-
-- Stabilize the core specification workflow (profile → style → stack → practices → features → architect → implement)
-- Support four AI coding platforms (Claude Code, Cursor, Antigravity, Codex)
-- Automated spec-sync to keep documents current
-
-### Near-Term (3–6 months)
-
-- Refine command output quality and consistency
-- Expand community adoption and gather feedback
-- Improve migration tooling for version upgrades
-- Add agent-specific instructions built at build time
-
-### Long-Term Vision (1–2 years)
-
-- Become the standard specification layer for AI-assisted development
-- Support additional AI coding platforms as they emerge
-- Develop richer cross-document analysis and consistency checking
-- Enable team collaboration patterns around shared specifications
-
-## 13. Risks & Assumptions
+## 10. Risks & Assumptions
 
 ### Key Assumptions
 

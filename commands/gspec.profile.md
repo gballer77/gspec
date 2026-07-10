@@ -31,7 +31,6 @@ You should:
   - The product type is ambiguous
   - The target audience or user is unclear
   - The core value proposition is ambiguous
-  - *(Commercial products only)* The business model or monetization strategy is unspecified
   - *(Commercial products only)* Competitive positioning is unknown
 - **When asking questions**, offer 2-3 specific suggestions to guide the discussion
 - Write for the audience the product actually has (internal stakeholders, end users, contributors, the public, etc.)
@@ -39,6 +38,7 @@ You should:
 - Focus on the "what" and "why", not the "how"
 - Use clear, jargon-free language where possible
 - **Mark sections as "Not Applicable"** when they don't apply to this product, and briefly note why (e.g., "Not applicable — internal tool, no external market"). Do not fabricate content to fill a section.
+- **Do not include business model, pricing, or success metrics sections** unless the user explicitly asks for them — those are go-to-market concerns, not product identity.
 
 ---
 
@@ -124,23 +124,7 @@ You should:
 - Indirect competitors, alternatives, or incumbent approaches
 - White space or gaps this product fills
 
-### 8. Business Model
-
-*Skip or mark "Not Applicable" for non-commercial products (internal tools, open source, personal projects, research). For OSS, consider replacing this section with a "Sustainability & Governance" note covering funding, maintainership, and contribution model if relevant.*
-
-#### Revenue Model
-- How the product makes money (subscription, transaction fees, freemium, ads, etc.)
-- Pricing strategy (high-level)
-
-#### Customer Acquisition
-- How customers discover and adopt the product
-- Key channels
-
-#### Growth Strategy
-- How the product plans to scale
-- Expansion opportunities
-
-### 9. Brand & Positioning
+### 8. Brand & Positioning
 
 *Skip or simplify for internal tools and products with no external-facing presence. Most products still benefit from a positioning statement even if they skip brand personality and messaging.*
 
@@ -155,24 +139,7 @@ You should:
 - Core messages to communicate consistently
 - Elevator pitch
 
-### 10. Success Metrics
-
-*Adapt to the product type. Always include user/adoption metrics if meaningful. Include business metrics only for commercial products.*
-
-#### Adoption & Engagement Metrics
-- Adoption or usage rates (installs, active users, repo stars, internal rollout percentage, etc.)
-- Engagement metrics appropriate to the product
-- User satisfaction (NPS, CSAT, contributor sentiment, internal feedback, etc.)
-
-#### Business Metrics *(commercial products only)*
-- Revenue targets
-- Paid user growth goals
-- Market share objectives
-
-#### Project Health Metrics *(optional, especially for OSS / internal tools)*
-- Contributor count, issue response time, release cadence, uptime, etc.
-
-### 11. Public-Facing Information (Optional)
+### 9. Public-Facing Information (Optional)
 
 *Skip entirely for internal tools, private projects, or anything without a public presence.*
 
@@ -191,21 +158,7 @@ You should:
 - Media kit essentials
 - Key talking points
 
-### 12. Product Roadmap Vision
-
-#### Current Focus
-- What's being built now
-- Immediate priorities
-
-#### Near-Term (Next)
-- Planned enhancements
-- Next major milestones
-
-#### Long-Term Vision (Later)
-- Future capabilities
-- Strategic direction
-
-### 13. Risks & Assumptions
+### 10. Risks & Assumptions
 
 #### Key Assumptions
 - What we believe to be true
