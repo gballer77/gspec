@@ -353,10 +353,31 @@ async function findExistingFiles(target, cwd) {
 
   if (target.layout === 'flat') {
     const srcEntries = await readdir(target.sourceDir);
-    for (const file of srcEntries.filter(f => f.endsWith('.mdc'))) {
+    for (const file of srcEntries.filter(f => f.endsWith(target.fileExt))) {
       try {
         await stat(join(destBase, file));
         existing.push(file);
+      } catch (e) {
+        if (e.code !== 'ENOENT') throw e;
+      }
+    }
+  } else if (target.layout === 'dual') {
+    const commandFiles = await readdir(join(target.sourceDir, 'commands'));
+    for (const file of commandFiles.filter(f => f.endsWith(target.fileExt))) {
+      try {
+        await stat(join(destBase, 'commands', file));
+        existing.push(`commands/${file}`);
+      } catch (e) {
+        if (e.code !== 'ENOENT') throw e;
+      }
+    }
+    const skillEntries = await readdir(join(target.sourceDir, 'skills'));
+    for (const entry of skillEntries) {
+      const info = await stat(join(target.sourceDir, 'skills', entry));
+      if (!info.isDirectory()) continue;
+      try {
+        await stat(join(destBase, 'skills', entry, 'SKILL.md'));
+        existing.push(`skills/${entry}/SKILL.md`);
       } catch (e) {
         if (e.code !== 'ENOENT') throw e;
       }
@@ -398,16 +419,44 @@ async function installDirectory(target, cwd) {
   return skills.length;
 }
 
+async function installDual(target, cwd) {
+  const commandsSrc = join(target.sourceDir, 'commands');
+  const commandsDest = join(cwd, target.installDir, 'commands');
+  await mkdir(commandsDest, { recursive: true });
+  const commandFiles = (await readdir(commandsSrc)).filter(f => f.endsWith(target.fileExt));
+  for (const file of commandFiles) {
+    const content = await readFile(join(commandsSrc, file), 'utf-8');
+    await writeFile(join(commandsDest, file), content, 'utf-8');
+  }
+
+  const skillsSrc = join(target.sourceDir, 'skills');
+  const entries = await readdir(skillsSrc);
+  const skills = [];
+  for (const entry of entries) {
+    const info = await stat(join(skillsSrc, entry));
+    if (info.isDirectory()) skills.push(entry);
+  }
+  for (const skill of skills) {
+    const destDir = join(cwd, target.installDir, 'skills', skill);
+    await mkdir(destDir, { recursive: true });
+    const content = await readFile(join(skillsSrc, skill, 'SKILL.md'), 'utf-8');
+    await writeFile(join(destDir, 'SKILL.md'), content, 'utf-8');
+    console.log(`  ${chalk.green('+')} ${skill} ${chalk.dim('(command + skill)')}`);
+  }
+
+  return skills.length;
+}
+
 async function installFlat(target, cwd) {
   const entries = await readdir(target.sourceDir);
-  const files = entries.filter(f => f.endsWith('.mdc'));
+  const files = entries.filter(f => f.endsWith(target.fileExt));
   const destDir = join(cwd, target.installDir);
   await mkdir(destDir, { recursive: true });
 
   for (const file of files) {
     const content = await readFile(join(target.sourceDir, file), 'utf-8');
     await writeFile(join(destDir, file), content, 'utf-8');
-    const name = file.replace(/\.mdc$/, '');
+    const name = file.slice(0, -target.fileExt.length);
     console.log(`  ${chalk.green('+')} ${name}`);
   }
 
@@ -454,7 +503,9 @@ async function install(targetName, cwd) {
 
   const count = target.layout === 'flat'
     ? await installFlat(target, cwd)
-    : await installDirectory(target, cwd);
+    : target.layout === 'dual'
+      ? await installDual(target, cwd)
+      : await installDirectory(target, cwd);
 
   console.log(chalk.bold(`\n${count} skills installed to ${target.installDir}/\n`));
 

@@ -54,6 +54,7 @@ export const TARGETS = {
     distSubdir: 'cursor',
     installDir: '.cursor/commands',
     layout: 'flat',
+    fileExt: '.mdc',
     // .cursor/commands/<name>.mdc (flat file)
     async emit(outDir, content, meta) {
       const frontmatter = buildFrontmatter({
@@ -102,18 +103,35 @@ export const TARGETS = {
   opencode: {
     label: 'Open Code',
     distSubdir: 'opencode',
-    installDir: '.opencode/skills',
-    layout: 'directory',
-    // .opencode/skills/<name>/SKILL.md
+    installDir: '.opencode',
+    layout: 'dual',
+    fileExt: '.md',
+    // Dual emission — opencode splits Claude Code's skill behavior across two
+    // mechanisms, so each prompt ships twice:
+    //   .opencode/commands/<name>.md    slash command the user invokes (/gspec-*)
+    //   .opencode/skills/<name>/SKILL.md skill the agent auto-loads by description
+    // On a name collision opencode's slash menu prefers the file command, so
+    // both can coexist safely.
     async emit(outDir, content, meta) {
-      const frontmatter = buildFrontmatter({
+      // opencode commands support $ARGUMENTS substitution, same as Claude Code
+      const commandFrontmatter = buildFrontmatter({
+        description: meta.description,
+      });
+      const commandBody = content.replace(PLACEHOLDER_RE, '$ARGUMENTS');
+      const commandsDir = join(outDir, 'commands');
+      await mkdir(commandsDir, { recursive: true });
+      await writeFile(join(commandsDir, `${meta.name}.md`), commandFrontmatter + '\n\n' + commandBody, 'utf-8');
+
+      // Skill content is loaded as context, not expanded as a template, so
+      // strip the placeholder lines rather than mapping them to $ARGUMENTS
+      const skillFrontmatter = buildFrontmatter({
         name: meta.name,
         description: meta.description,
       });
-      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
-      const skillDir = join(outDir, meta.name);
+      const skillBody = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      const skillDir = join(outDir, 'skills', meta.name);
       await mkdir(skillDir, { recursive: true });
-      await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
+      await writeFile(join(skillDir, 'SKILL.md'), skillFrontmatter + '\n\n' + skillBody, 'utf-8');
     },
   },
 };
