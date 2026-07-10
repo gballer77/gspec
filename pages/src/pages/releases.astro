@@ -5,6 +5,23 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.18.3',
+    date: 'July 10, 2026',
+    title: 'Fix: Open Code never surfaced /gspec-* slash commands',
+    summary: 'The Open Code target previously installed only skills to <code>.opencode/skills/</code>, but Open Code does not surface skills as slash commands — they sit behind the <code>/skills</code> picker and the agent\'s skill tool, so the documented <code>/gspec-*</code> invocations never resolved. Each prompt now installs twice: as a slash command in <code>.opencode/commands/</code> and as a skill in <code>.opencode/skills/</code>.',
+    changes: [
+      {
+        type: 'fixed',
+        description: '<strong>Open Code slash commands work.</strong> Each gspec prompt is now emitted to <code>.opencode/commands/&lt;name&gt;.md</code>, which Open Code registers as a real <code>/gspec-*</code> slash command with <code>$ARGUMENTS</code> substitution — the invocation style the post-install instructions have always described.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Dual emission for Open Code.</strong> The skill form still installs to <code>.opencode/skills/&lt;name&gt;/SKILL.md</code> so the agent can auto-load a gspec prompt when the task matches its description (e.g. "build the login feature" without a slash command). On a name collision Open Code\'s slash menu prefers the file command, so the two coexist safely.',
+      },
+    ],
+    migration: 'Run <code>npx gspec --target opencode</code> to install the new layout, then restart any running Open Code session (config loads once at startup). Installs from earlier gspec versions can delete the superseded <code>.opencode/skills/gspec-*</code> directories first for a clean slate — the installer recreates them in the new dual layout.',
+  },
+  {
     version: '1.18.2',
     date: 'May 20, 2026',
     title: 'Trim every skill description to Claude Code\'s selection window',
