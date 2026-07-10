@@ -165,7 +165,7 @@ The CLI will ask which platform you're installing for:
 | Cursor | `.cursor/commands/` |
 | Antigravity | `.agent/skills/` |
 | Codex | `.agents/skills/` |
-| Open Code | `.opencode/skills/` |
+| Open Code | `.opencode/commands/` + `.opencode/skills/` |
 
 You can skip the prompt by passing a target directly:
 
@@ -257,7 +257,7 @@ Most specs are Markdown. The style guide can also be a self-contained HTML file 
 | [Cursor](https://www.cursor.com/) | Commands format | Supported |
 | [Antigravity](https://www.antigravity.dev/) | Skills format | Supported |
 | [Codex](https://developers.openai.com/codex/cli/) | Skills format | Supported |
-| [Open Code](https://opencode.ai/) | Skills format | Supported |
+| [Open Code](https://opencode.ai/) | Commands + skills | Supported |
 
 ## Project Status
 
