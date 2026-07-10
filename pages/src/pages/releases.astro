@@ -5,6 +5,27 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.19.0',
+    date: 'July 10, 2026',
+    title: 'The profile now describes the destination, not the journey',
+    summary: 'The product profile is refocused on product identity — what the product is, who it serves, and why it exists. Roadmap, business model, and success metrics sections are no longer part of the generated profile: feature PRDs and their capability checkboxes already define what exists now and what comes next, and go-to-market content is produced only when explicitly requested.',
+    changes: [
+      {
+        type: 'removed',
+        description: '<strong>Product Roadmap Vision section removed from <code>/gspec-profile</code>.</strong> The Current Focus / Near-Term / Long-Term horizons duplicated state that feature PRDs track precisely through prioritized capabilities and checkboxes — and unlike PRDs, the relative time windows ("3–6 months") had no anchor and silently went stale. The profile describes what the product will be; features define how it gets there.',
+      },
+      {
+        type: 'removed',
+        description: '<strong>Business Model and Success Metrics sections removed from <code>/gspec-profile</code>.</strong> Revenue model, pricing, customer acquisition, growth strategy, and metrics targets are go-to-market concerns, not product identity. The profile no longer asks clarifying questions about monetization. If you want this content in your profile, ask for it explicitly when running the command — the spec now includes those sections only on request.',
+      },
+      {
+        type: 'changed',
+        description: 'The generated profile is now ten sections: Overview, Mission &amp; Vision, Target Audience, Value Proposition, Product Description, Use Cases, Market &amp; Competition, Brand &amp; Positioning, Public-Facing Information, and Risks &amp; Assumptions.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the updated skill files. Existing <code>gspec/profile.md</code> files keep working as-is — remove their Roadmap, Business Model, and Success Metrics sections whenever convenient (roadmap content belongs in feature PRDs). New profiles generated with <code>/gspec-profile</code> use the trimmed structure automatically.',
+  },
+  {
     version: '1.18.3',
     date: 'July 10, 2026',
     title: 'Fix: Open Code never surfaced /gspec-* slash commands',
