@@ -28,3 +28,17 @@ Use this as the definition of done (writer) and the rubric (validator):
 
 ## Required sections (a complete stack spec)
 Overview · Clarifications (only if decisions were deferred) · Core Technology Stack (languages, runtime) · Frontend · Backend · Infrastructure & DevOps · Data & Storage · Authentication & Security · Monitoring & Observability · Testing Infrastructure · Third-Party Integrations · Development Tools · Migration & Compatibility · Technology Decisions & Tradeoffs · Technology-Specific Practices.
+
+## Quality bar — an architecture spec is good when it… (the architecture deliverable)
+The architect also authors the **technical architecture** (`gspec/architecture.md`) — the blueprint bridging features to code. It is good when it:
+1. **Concrete & prescriptive** — real file paths, entity names, and endpoint paths; tells the implementer exactly what to build, not what to consider.
+2. **Technology-aware** — references the actual technologies from `stack.md` by name (unlike PRDs, which are tech-agnostic).
+3. **Feature-traceable** — every element (entity, endpoint, component) maps back to the feature(s) it serves.
+4. **Complete for the system type** — project structure (directory tree + naming), data model (a Mermaid `erDiagram` + entity detail), API design, page/component architecture, service/integration, auth, and environment/config; irrelevant layers marked **Not Applicable**.
+5. **Resolves ambiguity** — a Technical Gap Analysis captures the gaps found in the specs and their resolutions, so the implementer makes no architectural decisions; no unresolved open questions remain.
+6. **Profile-agnostic** — technology-aware, but free of product/business identity.
+
+Use Mermaid for the data model (`erDiagram`), page hierarchy (`graph`), and the primary auth flow (`sequenceDiagram`).
+
+## Required sections (a complete architecture spec)
+Overview · Project Structure (directory layout + naming) · Data Model (`erDiagram` + entity details) · API Design *(or N/A)* · Page & Component Architecture *(or N/A)* · Service & Integration Architecture *(or N/A)* · Authentication & Authorization *(or N/A)* · Environment & Configuration · Technical Gap Analysis · Open Decisions (only if deferred).

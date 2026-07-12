@@ -28,6 +28,16 @@ export const V2_SKILLS = [
     description: 'Spec-steward persona — keeping specs consistent (analyze), faithful to code (audit), and current in format (migrate): find substantive conflicts, present neutrally, resolve surgically. Preloaded by the cross-referencer agent.',
   },
   {
+    name: 'gspec-designer',
+    source: 'skills/personas/gspec-designer.md',
+    description: 'Designer persona — how to build a token-driven, accessible, profile-agnostic visual system, plus the quality bar for the style guide (markdown or renderable HTML). Preloaded by the style writer and validator agents.',
+  },
+  {
+    name: 'gspec-practices',
+    source: 'skills/personas/gspec-practices.md',
+    description: 'Practice-lead persona — actionable engineering standards (testing philosophy, code quality, git, CI/CD structure, DoD) and the practices quality bar; bounded vs the stack. Preloaded by the practices writer and validator agents.',
+  },
+  {
     name: 'gspec-conventions',
     source: 'skills/conventions/gspec-conventions.md',
     description: 'Shared gspec spec formatting: frontmatter/spec-version, "Not Applicable" handling, and the capability checkbox + acceptance-criteria format.',
@@ -90,6 +100,75 @@ export const V2_AGENTS = [
     model: 'opus',
     memory: 'project',
   },
+  {
+    name: 'style-writer',
+    source: 'agents/style-writer.md',
+    description: 'Write the visual style guide (gspec/style.html or style.md, in the format the brief specifies) from a resolved brief, acting as the designer. Delegated by /gspec-style; returns a summary.',
+    skills: ['gspec-designer', 'gspec-conventions', 'gspec-agnosticism'],
+    tools: 'Read, Write, Edit, Glob, Grep',
+    memory: 'project',
+  },
+  {
+    name: 'style-validator',
+    source: 'agents/style-validator.md',
+    description: 'Validate the style guide (gspec/style.html or style.md) against the designer quality bar and return a structured verdict. Read-only.',
+    skills: ['gspec-qa', 'gspec-designer', 'gspec-conventions'],
+    tools: 'Read, Grep, Glob',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
+    name: 'practices-writer',
+    source: 'agents/practices-writer.md',
+    description: 'Write gspec/practices.md from a resolved brief, acting as the practice lead. Delegated by /gspec-practices; runs in isolation and returns a summary.',
+    skills: ['gspec-practices', 'gspec-conventions', 'gspec-agnosticism'],
+    tools: 'Read, Write, Edit, Glob, Grep',
+    memory: 'project',
+  },
+  {
+    name: 'practices-validator',
+    source: 'agents/practices-validator.md',
+    description: 'Validate gspec/practices.md against the practices quality bar and return a structured verdict. Read-only.',
+    skills: ['gspec-qa', 'gspec-practices', 'gspec-conventions'],
+    tools: 'Read, Grep, Glob',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
+    name: 'feature-writer',
+    source: 'agents/feature-writer.md',
+    description: 'Write one gspec/features/<slug>.md PRD from a resolved brief, acting as the product manager (technology- and profile-agnostic). Delegated by /gspec-feature (also research, audit); returns a summary.',
+    skills: ['gspec-product', 'gspec-conventions', 'gspec-agnosticism'],
+    tools: 'Read, Write, Edit, Glob, Grep',
+    memory: 'project',
+  },
+  {
+    name: 'feature-validator',
+    source: 'agents/feature-validator.md',
+    description: 'Validate a feature PRD against the product quality bar, including the single-PRD ambiguity sweep (moved here from analyze). Read-only; returns a structured verdict.',
+    skills: ['gspec-qa', 'gspec-product', 'gspec-conventions'],
+    tools: 'Read, Grep, Glob',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
+    name: 'architecture-writer',
+    source: 'agents/architecture-writer.md',
+    description: 'Read the foundation + feature specs and write gspec/architecture.md (technology-aware, Mermaid diagrams, gap analysis) from resolved gap decisions. Delegated by /gspec-architect; returns a summary.',
+    skills: ['gspec-architect', 'gspec-conventions', 'gspec-agnosticism'],
+    tools: 'Read, Write, Edit, Glob, Grep',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
+    name: 'architecture-validator',
+    source: 'agents/architecture-validator.md',
+    description: 'Validate gspec/architecture.md against the architecture quality bar and return a structured verdict. Read-only.',
+    skills: ['gspec-qa', 'gspec-architect', 'gspec-conventions'],
+    tools: 'Read, Grep, Glob',
+    model: 'opus',
+    memory: 'project',
+  },
 ];
 
 export const V2_COMMANDS = [
@@ -113,6 +192,26 @@ export const V2_COMMANDS = [
     source: 'commands/gspec-analyze.md',
     description: 'Find and reconcile contradictions between gspec specs (spec↔spec), one at a time, updating existing specs. Delegates spec-cross-referencer. TRIGGER to cross-check or reconcile specs (not spec-vs-code, which is audit).',
   },
+  {
+    name: 'gspec-style',
+    source: 'commands/gspec-style.md',
+    description: 'Define or update the visual style guide (style.html or style.md) — tokens, color, type, components. Interviews as the designer, delegates style-writer, gates on style-validator (--no-qa skips). TRIGGER to define or revise the design system or theme.',
+  },
+  {
+    name: 'gspec-practices',
+    source: 'commands/gspec-practices.md',
+    description: 'Define or update gspec/practices.md — coding standards, testing philosophy, git workflow, CI/CD structure, definition of done. Delegates practices-writer, gates on practices-validator (--no-qa skips). TRIGGER to set engineering conventions.',
+  },
+  {
+    name: 'gspec-feature',
+    source: 'commands/gspec-feature.md',
+    description: 'Plan and write feature PRDs in gspec/features/ (what & why, tech-agnostic, portable). Assesses scope, may decompose, delegates feature-writer, gates on feature-validator (--no-qa skips). TRIGGER to plan, spec, or draft a feature/PRD.',
+  },
+  {
+    name: 'gspec-architect',
+    source: 'commands/gspec-architect.md',
+    description: 'Define or update gspec/architecture.md — structure, data model, API, components. Resolves technical gaps, delegates architecture-writer, gates on architecture-validator (--no-qa skips). TRIGGER to design codebase structure before building.',
+  },
 ];
 
 // Targets that receive the full v2 artifact split. Others keep the legacy
@@ -123,4 +222,12 @@ export const V2_TARGETS = new Set(['claude']);
 // v2 target the legacy emit skips these — the v2 build emits their replacement;
 // on non-v2 targets they still build the legacy skill, so those installs are
 // unchanged.
-export const MIGRATED_LEGACY = new Set(['gspec.stack.md', 'gspec.profile.md', 'gspec.analyze.md']);
+export const MIGRATED_LEGACY = new Set([
+  'gspec.stack.md',
+  'gspec.profile.md',
+  'gspec.analyze.md',
+  'gspec.style.md',
+  'gspec.practices.md',
+  'gspec.feature.md',
+  'gspec.architect.md',
+]);

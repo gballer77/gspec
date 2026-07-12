@@ -24,3 +24,15 @@ Use as the definition of done (writer) and the rubric (validator):
 
 ## Required sections (a complete profile)
 Product Overview · Mission & Vision · Target Audience · Value Proposition · Product Description (what it is / what it isn't) · Use Cases & Scenarios · Market & Competition *(or N/A)* · Brand & Positioning *(or N/A)* · Public-Facing Information *(optional / or N/A)* · Risks & Assumptions.
+
+## Quality bar — a feature PRD is good when it… (the feature deliverable)
+The product strategist also authors **feature PRDs** (`gspec/features/<slug>.md`). Unlike the profile, a PRD is portable and identity-free. It is good when it:
+1. **Is an implementation-ready blueprint of what & why** — not a project plan; no timelines, sprints, estimates, or team assignments.
+2. **Right-sized** — one focused feature per PRD; a large request is decomposed into independent features (each delivering distinct user value), confirmed with the user before writing.
+3. **Portable** — technology-agnostic **and** profile-agnostic (generic roles, no specific tech, no project identity), so the PRD is reusable across stacks and products.
+4. **Capabilities are tracked & testable** — each capability is an unchecked checkbox with a P0/P1/P2 priority and 2–4 observable acceptance criteria.
+5. **Complete & bounded** — includes exactly Overview, Users & Use Cases, Scope (in/out/deferred), Capabilities, Dependencies, Assumptions & Risks, Success Metrics, and Implementation Context; no extra sections; no open questions embedded (unresolved items become Deferred Decisions).
+6. **Unambiguous** — no vague verbs without a what/when, no undefined nouns, edge/failure cases covered, dependencies named specifically, success metrics measurable. (This is the ambiguity check the feature validator enforces — it moved here from analyze.)
+
+## Required sections (a feature PRD)
+Overview · Users & Use Cases · Scope (in / out / deferred) · Capabilities (checkboxes + priority + acceptance criteria) · Dependencies · Assumptions & Risks · Success Metrics · Implementation Context.
