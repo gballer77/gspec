@@ -634,6 +634,49 @@ async function installSpecSync(targetName, cwd) {
   }
 }
 
+// gspec ships two PostToolUse hooks (Claude Code only) — near-term, model-free
+// guards. They live in the package's hooks/ dir and install to .claude/hooks/,
+// registered in .claude/settings.json.
+const HOOK_SCRIPTS = ['gspec-agnosticism-guard.mjs', 'gspec-spec-integrity.mjs'];
+
+async function installHooks(targetName, cwd) {
+  if (targetName !== 'claude') return; // hooks are Claude Code-specific (settings.json)
+
+  const hooksSrc = join(__dirname, '..', 'hooks');
+  const hooksDest = join(cwd, '.claude', 'hooks');
+  await mkdir(hooksDest, { recursive: true });
+  for (const f of HOOK_SCRIPTS) {
+    await writeFile(join(hooksDest, f), await readFile(join(hooksSrc, f), 'utf-8'), 'utf-8');
+  }
+
+  // Merge into .claude/settings.json — create or merge, never clobber other
+  // settings, and idempotent on re-install (drop any prior gspec hook entry).
+  const settingsPath = join(cwd, '.claude', 'settings.json');
+  let settings = {};
+  try {
+    settings = JSON.parse(await readFile(settingsPath, 'utf-8'));
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+  settings.hooks = settings.hooks || {};
+  const existing = Array.isArray(settings.hooks.PostToolUse) ? settings.hooks.PostToolUse : [];
+  const isGspec = (entry) => (entry?.hooks || []).some(
+    (h) => typeof h.command === 'string' && h.command.includes('/.claude/hooks/gspec-'),
+  );
+  const kept = existing.filter((e) => !isGspec(e));
+  kept.push({
+    matcher: 'Write|Edit|MultiEdit',
+    hooks: HOOK_SCRIPTS.map((f) => ({
+      type: 'command',
+      command: `node "$CLAUDE_PROJECT_DIR/.claude/hooks/${f}"`,
+      timeout: 10,
+    })),
+  });
+  settings.hooks.PostToolUse = kept;
+  await writeFile(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
+  console.log(`  ${chalk.green('+')} Installed ${HOOK_SCRIPTS.length} gspec hooks → .claude/hooks/ + settings.json`);
+}
+
 const MIGRATE_COMMANDS = {
   claude: '/gspec-migrate',
   cursor: '/gspec-migrate',
@@ -1478,6 +1521,8 @@ program
     await seedFromSavedSpecs(process.cwd());
 
     await installSpecSync(targetName, process.cwd());
+
+    await installHooks(targetName, process.cwd());
 
     await checkGspecFiles(process.cwd(), targetName);
 

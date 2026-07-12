@@ -12,6 +12,7 @@
         "dist/",
         "commands/",
         "templates/",
+        "hooks/",
         "README.md"
     ],
     "scripts": {
