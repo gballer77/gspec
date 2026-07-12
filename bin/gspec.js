@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
 import chalk from 'chalk';
 import { TARGETS as EMITTER_TARGETS } from './emitters.js';
+import { runPipeline } from './pipeline.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = join(__dirname, '..', 'dist');
@@ -1716,6 +1717,22 @@ extensionCmd
   .description('Remove a user extension from ~/.gspec/extensions/ (does not uninstall already-emitted copies)')
   .action(async (name) => {
     await extensionRemove(name);
+  });
+
+program
+  .command('pipeline [idea]')
+  .description('Run the autonomous "idea → built" pipeline (Claude Code only)')
+  .option('--no-qa', 'skip the QA validator gates (on by default)')
+  .option('--resume', 'resume an existing run from where it paused')
+  .option('--dry-run', 'print the stage plan without invoking claude')
+  .action(async (idea, opts) => {
+    await runPipeline({
+      idea,
+      cwd: process.cwd(),
+      noQa: !opts.qa,
+      resume: !!opts.resume,
+      dryRun: !!opts.dryRun,
+    });
   });
 
 program.parse();
