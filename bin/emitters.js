@@ -28,31 +28,20 @@ export function buildFrontmatter(fields) {
   return lines.join('\n');
 }
 
-// Dual emission shared by targets that split Claude Code's skill behavior across
-// two mechanisms: a slash command the user invokes (/gspec-*) and a skill the
-// agent auto-loads by description. Each prompt ships twice. Targets differ only
-// in where the command file lives (`commandsSubdir`); the skill always lands in
-// `skills/<name>/SKILL.md`.
-async function emitDual(outDir, content, meta, commandsSubdir) {
-  // Command files support $ARGUMENTS substitution, same as Claude Code.
-  const commandFrontmatter = buildFrontmatter({
-    description: meta.description,
-  });
-  const commandBody = content.replace(PLACEHOLDER_RE, '$ARGUMENTS');
-  const commandsDir = join(outDir, commandsSubdir);
-  await mkdir(commandsDir, { recursive: true });
-  await writeFile(join(commandsDir, `${meta.name}.md`), commandFrontmatter + '\n\n' + commandBody, 'utf-8');
-
-  // Skill content is loaded as context, not expanded as a template, so strip
-  // the placeholder lines rather than mapping them to $ARGUMENTS.
-  const skillFrontmatter = buildFrontmatter({
-    name: meta.name,
-    description: meta.description,
-  });
-  const skillBody = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
-  const skillDir = join(outDir, 'skills', meta.name);
-  await mkdir(skillDir, { recursive: true });
-  await writeFile(join(skillDir, 'SKILL.md'), skillFrontmatter + '\n\n' + skillBody, 'utf-8');
+// Agent frontmatter differs from skill frontmatter: it carries a `skills:` list
+// (emitted as a YAML flow list of bare slugs), a `tools` comma string, and
+// optional `model`/`memory` scalars. name/model/memory are simple slugs emitted
+// unquoted; description goes out as a quoted scalar (it contains ": " and "…").
+export function buildAgentFrontmatter(meta) {
+  const lines = ['---'];
+  lines.push(`name: ${meta.name}`);
+  lines.push(`description: ${yamlScalar(meta.description)}`);
+  if (meta.skills && meta.skills.length) lines.push(`skills: [${meta.skills.join(', ')}]`);
+  if (meta.tools) lines.push(`tools: ${meta.tools}`);
+  if (meta.model) lines.push(`model: ${meta.model}`);
+  if (meta.memory) lines.push(`memory: ${meta.memory}`);
+  lines.push('---');
+  return lines.join('\n');
 }
 
 // Platform target definitions: how to emit a skill file for each AI tool.
@@ -74,6 +63,24 @@ export const TARGETS = {
       const skillDir = join(outDir, meta.name);
       await mkdir(skillDir, { recursive: true });
       await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
+    },
+    // v2: agents install to .claude/agents/<name>.md
+    async emitAgent(outDir, content, meta) {
+      const frontmatter = buildAgentFrontmatter(meta);
+      // Agents receive a delegated brief, not slash-command args — drop any
+      // leftover <<<PLACEHOLDER>>> lines rather than mapping them to $ARGUMENTS.
+      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      const dir = join(outDir, 'agents');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, `${meta.name}.md`), frontmatter + '\n\n' + body, 'utf-8');
+    },
+    // v2: commands install to .claude/commands/<name>.md and support $ARGUMENTS
+    async emitCommand(outDir, content, meta) {
+      const frontmatter = buildFrontmatter({ description: meta.description });
+      const body = content.replace(PLACEHOLDER_RE, '$ARGUMENTS');
+      const dir = join(outDir, 'commands');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, `${meta.name}.md`), frontmatter + '\n\n' + body, 'utf-8');
     },
   },
   cursor: {
@@ -133,31 +140,32 @@ export const TARGETS = {
     installDir: '.opencode',
     layout: 'dual',
     fileExt: '.md',
-    commandsSubdir: 'commands',
-    // opencode splits skill behavior across two mechanisms:
+    // Dual emission — opencode splits Claude Code's skill behavior across two
+    // mechanisms, so each prompt ships twice:
     //   .opencode/commands/<name>.md    slash command the user invokes (/gspec-*)
     //   .opencode/skills/<name>/SKILL.md skill the agent auto-loads by description
     // On a name collision opencode's slash menu prefers the file command, so
     // both can coexist safely.
     async emit(outDir, content, meta) {
-      await emitDual(outDir, content, meta, this.commandsSubdir);
-    },
-  },
-  pi: {
-    label: 'Pi',
-    distSubdir: 'pi',
-    installDir: '.pi',
-    layout: 'dual',
-    fileExt: '.md',
-    commandsSubdir: 'prompts',
-    // Pi mirrors opencode's dual model but names the command directory
-    // differently:
-    //   .pi/prompts/<name>.md        prompt template the user invokes (/gspec-*)
-    //   .pi/skills/<name>/SKILL.md   skill the agent auto-loads by description
-    // Pi prompt templates expand shell-style placeholders ($ARGUMENTS / $@),
-    // so the same $ARGUMENTS substitution Claude Code uses applies here.
-    async emit(outDir, content, meta) {
-      await emitDual(outDir, content, meta, this.commandsSubdir);
+      // opencode commands support $ARGUMENTS substitution, same as Claude Code
+      const commandFrontmatter = buildFrontmatter({
+        description: meta.description,
+      });
+      const commandBody = content.replace(PLACEHOLDER_RE, '$ARGUMENTS');
+      const commandsDir = join(outDir, 'commands');
+      await mkdir(commandsDir, { recursive: true });
+      await writeFile(join(commandsDir, `${meta.name}.md`), commandFrontmatter + '\n\n' + commandBody, 'utf-8');
+
+      // Skill content is loaded as context, not expanded as a template, so
+      // strip the placeholder lines rather than mapping them to $ARGUMENTS
+      const skillFrontmatter = buildFrontmatter({
+        name: meta.name,
+        description: meta.description,
+      });
+      const skillBody = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      const skillDir = join(outDir, 'skills', meta.name);
+      await mkdir(skillDir, { recursive: true });
+      await writeFile(join(skillDir, 'SKILL.md'), skillFrontmatter + '\n\n' + skillBody, 'utf-8');
     },
   },
 };

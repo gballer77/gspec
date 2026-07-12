@@ -389,6 +389,7 @@ async function findExistingFiles(target, cwd) {
     for (const entry of srcEntries) {
       const info = await stat(join(target.sourceDir, entry));
       if (!info.isDirectory()) continue;
+      if (entry === 'agents' || entry === 'commands') continue; // v2 sibling classes, not skills
       try {
         await stat(join(destBase, entry, 'SKILL.md'));
         existing.push(`${entry}/SKILL.md`);
@@ -403,22 +404,50 @@ async function findExistingFiles(target, cwd) {
 
 async function installDirectory(target, cwd) {
   const entries = await readdir(target.sourceDir);
+  const skillsInstallDir = join(cwd, target.installDir); // e.g. .claude/skills
+  const baseDir = dirname(skillsInstallDir);             // e.g. .claude
+
   const skills = [];
   for (const entry of entries) {
     const info = await stat(join(target.sourceDir, entry));
-    if (info.isDirectory()) skills.push(entry);
+    if (!info.isDirectory()) continue;
+    if (entry === 'agents' || entry === 'commands') continue; // v2 sibling classes, handled below
+    skills.push(entry);
   }
 
   for (const skill of skills) {
     const srcPath = join(target.sourceDir, skill, 'SKILL.md');
-    const destDir = join(cwd, target.installDir, skill);
+    const destDir = join(skillsInstallDir, skill);
     await mkdir(destDir, { recursive: true });
     const content = await readFile(srcPath, 'utf-8');
     await writeFile(join(destDir, 'SKILL.md'), content, 'utf-8');
     console.log(`  ${chalk.green('+')} ${skill}`);
   }
 
-  return skills.length;
+  // v2 emits agents/ and commands/ as sibling classes under the tool's base dir
+  // (e.g. .claude/agents, .claude/commands). Present only for targets that build
+  // them (currently Claude); a no-op elsewhere.
+  let extra = 0;
+  for (const cls of ['agents', 'commands']) {
+    const clsSrc = join(target.sourceDir, cls);
+    let files;
+    try {
+      files = (await readdir(clsSrc)).filter((f) => f.endsWith('.md'));
+    } catch (e) {
+      if (e.code === 'ENOENT') continue;
+      throw e;
+    }
+    const clsDest = join(baseDir, cls);
+    await mkdir(clsDest, { recursive: true });
+    for (const file of files) {
+      const content = await readFile(join(clsSrc, file), 'utf-8');
+      await writeFile(join(clsDest, file), content, 'utf-8');
+      console.log(`  ${chalk.green('+')} ${cls}/${file.replace(/\.md$/, '')}`);
+      extra++;
+    }
+  }
+
+  return skills.length + extra;
 }
 
 async function installDual(target, cwd) {

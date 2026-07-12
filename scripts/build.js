@@ -4,6 +4,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { TARGETS } from '../bin/emitters.js';
+import { V2_SKILLS, V2_AGENTS, V2_COMMANDS, V2_TARGETS, MIGRATED_LEGACY } from '../manifest.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -95,14 +96,50 @@ function validateCommands(commands) {
   return errors;
 }
 
+// v2 manifest validation — skill/command descriptions share the same effective
+// cap as legacy (auto-invocation truncation); agents have no cap but must carry
+// name/description and a non-empty skills[] preload list.
+function validateV2() {
+  const errors = [];
+  for (const meta of [...V2_SKILLS, ...V2_COMMANDS]) {
+    if (!meta.name) errors.push(`v2 ${meta.source || '?'}: missing name`);
+    if (!meta.description) { errors.push(`v2 ${meta.name || meta.source}: missing description`); continue; }
+    if (meta.description.length > DESCRIPTION_MAX) {
+      errors.push(`v2 ${meta.name}: description is ${meta.description.length} chars, exceeds cap of ${DESCRIPTION_MAX}`);
+    }
+  }
+  for (const meta of V2_AGENTS) {
+    if (!meta.name) errors.push(`v2 agent ${meta.source || '?'}: missing name`);
+    if (!meta.description) errors.push(`v2 agent ${meta.name || meta.source}: missing description`);
+    if (!meta.skills || meta.skills.length === 0) errors.push(`v2 agent ${meta.name}: missing skills[] preload list`);
+  }
+  return errors;
+}
+
+async function readSource(relPath) {
+  const raw = await readFile(join(ROOT, relPath), 'utf-8');
+  return raw.replace(VERSION_RE, pkg.version).replace(SPEC_VERSION_RE, SPEC_VERSION);
+}
+
+// Emit the v2 artifact classes for a v2-enabled target. Skills reuse the skill
+// emitter; agents and commands use their dedicated emitters.
+async function emitV2(target, outDir) {
+  let skills = 0, agents = 0, commands = 0;
+  for (const meta of V2_SKILLS) { await target.emit(outDir, await readSource(meta.source), meta); skills++; }
+  for (const meta of V2_AGENTS) { await target.emitAgent(outDir, await readSource(meta.source), meta); agents++; }
+  for (const meta of V2_COMMANDS) { await target.emitCommand(outDir, await readSource(meta.source), meta); commands++; }
+  console.log(`  + v2: ${skills} skills, ${agents} agents, ${commands} commands`);
+}
+
 async function build(targetNames) {
-  const errors = validateCommands(COMMANDS);
+  const errors = [...validateCommands(COMMANDS), ...validateV2()];
   if (errors.length) {
     for (const e of errors) console.error(`ERROR ${e}`);
     process.exit(1);
   }
 
-  const files = (await readdir(COMMANDS_DIR)).filter(f => f.endsWith('.md'));
+  const legacyFiles = Object.keys(COMMANDS);
+  const v2SkillNames = new Set(V2_SKILLS.map((s) => s.name));
 
   for (const targetName of targetNames) {
     const target = TARGETS[targetName];
@@ -112,22 +149,29 @@ async function build(targetNames) {
     }
 
     const outDir = join(DIST_DIR, target.distSubdir);
+    const isV2 = V2_TARGETS.has(targetName);
 
     let count = 0;
-    for (const file of files) {
+    for (const file of legacyFiles) {
+      // On a v2 target, skip legacy sources superseded by v2 artifacts.
+      if (isV2 && MIGRATED_LEGACY.has(file)) continue;
       const meta = COMMANDS[file];
-      if (!meta) {
-        console.warn(`No metadata for ${file}, skipping`);
-        continue;
-      }
-
       const raw = await readFile(join(COMMANDS_DIR, file), 'utf-8');
       const content = raw.replace(VERSION_RE, pkg.version).replace(SPEC_VERSION_RE, SPEC_VERSION);
-      await target.emit(outDir, content, meta);
+      // On a v2 target, a legacy command whose name is claimed by a v2 skill
+      // (e.g. gspec-architect) is emitted to its v2 home — commands/ — so the
+      // skills/ slot is free for the persona skill. All others stay skills.
+      if (isV2 && v2SkillNames.has(meta.name)) {
+        await target.emitCommand(outDir, content, meta);
+      } else {
+        await target.emit(outDir, content, meta);
+      }
       count++;
     }
 
     console.log(`Built ${count} skills → dist/${targetName}/`);
+
+    if (isV2) await emitV2(target, outDir);
   }
 }
 
