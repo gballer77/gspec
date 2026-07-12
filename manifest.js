@@ -38,6 +38,11 @@ export const V2_SKILLS = [
     description: 'Practice-lead persona — actionable engineering standards (testing philosophy, code quality, git, CI/CD structure, DoD) and the practices quality bar; bounded vs the stack. Preloaded by the practices writer and validator agents.',
   },
   {
+    name: 'gspec-engineer',
+    source: 'skills/personas/gspec-engineer.md',
+    description: 'Engineer persona — decompose a PRD into an ordered plan and implement specs into working code: capability↔task↔code traceability, follow specs exactly, never descope. Preloaded by the plan-decomposer, plan-validator, and implementer agents.',
+  },
+  {
     name: 'gspec-conventions',
     source: 'skills/conventions/gspec-conventions.md',
     description: 'Shared gspec spec formatting: frontmatter/spec-version, "Not Applicable" handling, and the capability checkbox + acceptance-criteria format.',
@@ -169,6 +174,34 @@ export const V2_AGENTS = [
     model: 'opus',
     memory: 'project',
   },
+  {
+    name: 'plan-decomposer',
+    source: 'agents/plan-decomposer.md',
+    description: 'Decompose a feature PRD into an ordered, dependency-aware plan draft ([P] markers, deps, covers), acting as the engineer. Read-only, returns the draft; delegated by /gspec-plan.',
+    skills: ['gspec-engineer', 'gspec-conventions'],
+    tools: 'Read, Grep, Glob',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
+    name: 'plan-validator',
+    source: 'agents/plan-validator.md',
+    description: 'Validate a feature plan against the engineer plan quality bar (coverage, acyclic deps, safe [P], stable IDs). Read-only; returns a structured verdict.',
+    skills: ['gspec-qa', 'gspec-engineer', 'gspec-conventions'],
+    tools: 'Read, Grep, Glob',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
+    name: 'implementer',
+    source: 'agents/implementer.md',
+    description: 'Implement an assigned scope (one PRD / a phase / all) into working code, acting as the engineer: follow the specs, write and run tests, flip checkboxes. Delegated by /gspec-implement and the pipeline; returns a summary.',
+    // One agent, scope is a runtime parameter (not split per-type). The only agent with Bash.
+    skills: ['gspec-engineer', 'gspec-practices', 'gspec-conventions'],
+    tools: 'Read, Write, Edit, Glob, Grep, Bash',
+    model: 'opus',
+    memory: 'project',
+  },
 ];
 
 export const V2_COMMANDS = [
@@ -212,6 +245,16 @@ export const V2_COMMANDS = [
     source: 'commands/gspec-architect.md',
     description: 'Define or update gspec/architecture.md — structure, data model, API, components. Resolves technical gaps, delegates architecture-writer, gates on architecture-validator (--no-qa skips). TRIGGER to design codebase structure before building.',
   },
+  {
+    name: 'gspec-plan',
+    source: 'commands/gspec-plan.md',
+    description: 'Decompose a feature PRD into an ordered plan (features/<slug>.plan.md) with parallel markers. Delegates plan-decomposer, plan-mode approval, gates on plan-validator (--no-qa skips). TRIGGER to sequence work or build a plan from a PRD.',
+  },
+  {
+    name: 'gspec-implement',
+    source: 'commands/gspec-implement.md',
+    description: 'Implement software defined by gspec specs — phased, tested, checkpointed. Assesses progress, plans build order (or reuses plan files), delegates implementer per phase. STRONGLY TRIGGER to build, implement, code, scaffold, or ship specced work.',
+  },
 ];
 
 // Targets that receive the full v2 artifact split. Others keep the legacy
@@ -230,4 +273,6 @@ export const MIGRATED_LEGACY = new Set([
   'gspec.practices.md',
   'gspec.feature.md',
   'gspec.architect.md',
+  'gspec.plan.md',
+  'gspec.implement.md',
 ]);
