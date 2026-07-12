@@ -202,6 +202,43 @@ export const V2_AGENTS = [
     model: 'opus',
     memory: 'project',
   },
+  {
+    name: 'codebase-inspector',
+    source: 'agents/codebase-inspector.md',
+    description: 'Inspect the codebase for drift vs the specs (spec↔code) and orphan capabilities, acting as the steward. Read-only (never modifies code or specs); returns impact-ordered findings. Delegated by /gspec-audit.',
+    // Singular investigator (substrate = the code). Reads code, so it needs Bash.
+    skills: ['gspec-steward', 'gspec-conventions'],
+    tools: 'Read, Grep, Glob, Bash',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
+    name: 'spec-migrator',
+    source: 'agents/spec-migrator.md',
+    description: 'Reformat one gspec document to the current spec-version, preserving all content, acting as the steward. Delegated by /gspec-migrate; returns a summary of changes.',
+    skills: ['gspec-steward', 'gspec-conventions'],
+    tools: 'Read, Write, Edit',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
+    name: 'competitor-researcher',
+    source: 'agents/competitor-researcher.md',
+    description: 'Research one competitor via public web sources and return a structured teardown (features, UX, strengths, weaknesses), acting as the product strategist. Read-only; fanned out by /gspec-research.',
+    // Singular investigator, fanned out one-per-competitor. The only agent with web tools.
+    skills: ['gspec-product'],
+    tools: 'WebSearch, WebFetch, Read',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
+    name: 'research-writer',
+    source: 'agents/research-writer.md',
+    description: 'Write gspec/research.md (competitive matrix, categorized findings, gap analysis) from synthesized research, acting as the product strategist. Delegated by /gspec-research; returns a summary.',
+    skills: ['gspec-product', 'gspec-conventions', 'gspec-agnosticism'],
+    tools: 'Read, Write, Edit, Glob, Grep',
+    memory: 'project',
+  },
 ];
 
 export const V2_COMMANDS = [
@@ -255,6 +292,21 @@ export const V2_COMMANDS = [
     source: 'commands/gspec-implement.md',
     description: 'Implement software defined by gspec specs — phased, tested, checkpointed. Assesses progress, plans build order (or reuses plan files), delegates implementer per phase. STRONGLY TRIGGER to build, implement, code, scaffold, or ship specced work.',
   },
+  {
+    name: 'gspec-audit',
+    source: 'commands/gspec-audit.md',
+    description: 'Audit gspec specs against the codebase for drift (spec↔code) and unspecced features, one at a time; updates specs, drafts orphan PRDs, never code. Delegates codebase-inspector. TRIGGER to check specs vs code or find drift.',
+  },
+  {
+    name: 'gspec-migrate',
+    source: 'commands/gspec-migrate.md',
+    description: 'Migrate gspec documents to the current spec format, preserving all content. Inventories versions, delegates spec-migrator per file, renames legacy plan files. TRIGGER on an outdated-version warning or to upgrade specs.',
+  },
+  {
+    name: 'gspec-research',
+    source: 'commands/gspec-research.md',
+    description: 'Research competitors from gspec/profile.md and produce a competitive analysis (gspec/research.md) with gap identification; fans out competitor-researcher, optionally drafts feature PRDs. TRIGGER for market/competitor research or feature gaps.',
+  },
 ];
 
 // Targets that receive the full v2 artifact split. Others keep the legacy
@@ -275,4 +327,7 @@ export const MIGRATED_LEGACY = new Set([
   'gspec.architect.md',
   'gspec.plan.md',
   'gspec.implement.md',
+  'gspec.audit.md',
+  'gspec.migrate.md',
+  'gspec.research.md',
 ]);
