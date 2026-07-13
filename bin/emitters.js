@@ -189,18 +189,27 @@ export const TARGETS = {
   antigravity: {
     label: 'Antigravity',
     distSubdir: 'antigravity',
-    installDir: '.agent/skills',
-    layout: 'directory',
-    // .agent/skills/<name>/SKILL.md
-    async emit(outDir, content, meta) {
-      const frontmatter = buildFrontmatter({
-        name: meta.name,
-        description: meta.description,
-      });
+    installDir: '.agents',
+    layout: 'antigravity',
+    // Antigravity (Google) has NO agent FILES (sub-agents are spawned at runtime
+    // via the Agent Manager / define_subagent). So personas/conventions are
+    // SKILLS and each /gspec-* command is a self-contained WORKFLOW (the composed
+    // body — nothing to delegate to). Current default dirs are PLURAL `.agents/`
+    // (singular `.agent/` is the legacy fallback).
+    async emitSkill(outDir, content, meta) {
+      const frontmatter = buildFrontmatter({ name: meta.name, description: meta.description });
       const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
-      const skillDir = join(outDir, meta.name);
-      await mkdir(skillDir, { recursive: true });
-      await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
+      const dir = join(outDir, 'skills', meta.name);
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
+    },
+    // .agents/workflows/<name>.md — description frontmatter; invoke /<name>; no args
+    async emitWorkflow(outDir, content, meta) {
+      const frontmatter = buildFrontmatter({ description: meta.description });
+      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      const dir = join(outDir, 'workflows');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, `${meta.name}.md`), frontmatter + '\n\n' + body, 'utf-8');
     },
   },
   codex: {

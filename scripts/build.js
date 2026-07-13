@@ -196,6 +196,19 @@ async function composeDegraded(cap) {
   return parts.join('\n');
 }
 
+// Antigravity has no agent files, so it gets persona/convention SKILLS + one
+// self-contained WORKFLOW per capability (the composed body — nothing to delegate to).
+async function emitAntigravity(target, outDir) {
+  let skills = 0, workflows = 0;
+  for (const meta of V2_SKILLS) { await target.emitSkill(outDir, await readSource(meta.source), meta); skills++; }
+  for (const cap of DEGRADE_CAPABILITIES) {
+    const meta = V2_COMMANDS.find((c) => c.name === cap.command);
+    await target.emitWorkflow(outDir, await composeDegraded(cap), meta);
+    workflows++;
+  }
+  console.log(`Built ${skills} skills + ${workflows} workflows → dist/${target.distSubdir}/ (antigravity)`);
+}
+
 async function build(targetNames) {
   const errors = [...validateCommands(COMMANDS), ...validateV2()];
   if (errors.length) {
@@ -213,12 +226,14 @@ async function build(targetNames) {
     const outDir = join(DIST_DIR, target.distSubdir);
 
     if (V2_TARGETS.has(targetName)) {
-      // Full v2 split: skills + agents + commands (Claude Code).
+      // Full v2 split: skills + agents + commands (native-agent targets).
       await emitV2(target, outDir);
       console.log(`Built v2 split → dist/${targetName}/`);
+    } else if (targetName === 'antigravity') {
+      await emitAntigravity(target, outDir);
     } else {
-      // Degrade: one self-contained composed file per capability, emitted in the
-      // target's native format by its existing emit().
+      // Degrade fallback: one self-contained composed file per capability (no
+      // target currently uses this branch).
       let count = 0;
       for (const cap of DEGRADE_CAPABILITIES) {
         const meta = V2_COMMANDS.find((c) => c.name === cap.command);

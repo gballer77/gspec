@@ -353,9 +353,10 @@ async function findExistingFiles(target, cwd) {
     throw e;
   }
 
-  // OpenCode/Codex/Cursor native layouts write agent/command/skill subdirs — skip
-  // the overwrite pre-check; install overwrites in place.
-  if (['opencode', 'codex', 'cursor'].includes(target.layout)) return existing;
+  // Multi-dir native layouts (opencode/codex/cursor/antigravity) write agent/
+  // command/skill/workflow subdirs — skip the overwrite pre-check; install
+  // overwrites in place.
+  if (['opencode', 'codex', 'cursor', 'antigravity'].includes(target.layout)) return existing;
 
   if (target.layout === 'flat') {
     const srcEntries = await readdir(target.sourceDir);
@@ -603,6 +604,43 @@ async function installCursor(target, cwd) {
   return count;
 }
 
+// Antigravity native layout: skills/<name>/SKILL.md + workflows/<name>.md (under .agents/)
+async function installAntigravity(target, cwd) {
+  const base = join(cwd, target.installDir); // .agents
+  let count = 0;
+
+  const skillsSrc = join(target.sourceDir, 'skills');
+  try {
+    for (const entry of await readdir(skillsSrc)) {
+      const info = await stat(join(skillsSrc, entry));
+      if (!info.isDirectory()) continue;
+      const destDir = join(base, 'skills', entry);
+      await mkdir(destDir, { recursive: true });
+      await writeFile(join(destDir, 'SKILL.md'), await readFile(join(skillsSrc, entry, 'SKILL.md'), 'utf-8'), 'utf-8');
+      console.log(`  ${chalk.green('+')} skills/${entry}`);
+      count++;
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+
+  const wfSrc = join(target.sourceDir, 'workflows');
+  try {
+    const files = (await readdir(wfSrc)).filter((f) => f.endsWith('.md'));
+    const dest = join(base, 'workflows');
+    await mkdir(dest, { recursive: true });
+    for (const f of files) {
+      await writeFile(join(dest, f), await readFile(join(wfSrc, f), 'utf-8'), 'utf-8');
+      console.log(`  ${chalk.green('+')} workflows/${f.replace(/\.md$/, '')}`);
+      count++;
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+
+  return count;
+}
+
 async function installFlat(target, cwd) {
   const entries = await readdir(target.sourceDir);
   const files = entries.filter(f => f.endsWith(target.fileExt));
@@ -667,7 +705,9 @@ async function install(targetName, cwd) {
           ? await installCodex(target, cwd)
           : target.layout === 'cursor'
             ? await installCursor(target, cwd)
-            : await installDirectory(target, cwd);
+            : target.layout === 'antigravity'
+              ? await installAntigravity(target, cwd)
+              : await installDirectory(target, cwd);
 
   console.log(chalk.bold(`\n${count} skills installed to ${target.installDir}/\n`));
 
@@ -692,9 +732,11 @@ const SPEC_SYNC = {
     wrap: (content) => `---\ndescription: gspec specification sync — keeps living specs in sync with code changes\nalwaysApply: true\n---\n\n${content}`,
   },
   antigravity: {
-    file: '.agent/rules/gspec.mdc',
+    // Antigravity now defaults to plural `.agents/rules/` with `.md` (the old
+    // `.agent/rules/gspec.mdc` was the legacy path + wrong extension).
+    file: '.agents/rules/gspec.md',
     mode: 'create',
-    wrap: (content) => `---\ndescription: gspec specification sync — keeps living specs in sync with code changes\nalwaysApply: true\n---\n\n${content}`,
+    wrap: (content) => `---\ndescription: gspec specification sync — keeps living specs in sync with code changes\n---\n\n${content}`,
   },
   codex: {
     file: 'AGENTS.md',
