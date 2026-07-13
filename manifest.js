@@ -314,7 +314,7 @@ export const V2_COMMANDS = [
 // (no `skills:` field), so its agents inline the persona (see build.js). Every
 // other target gets the DEGRADE build: one self-contained composed file per
 // capability (see DEGRADE_CAPABILITIES + composeDegraded in build.js).
-export const V2_TARGETS = new Set(['claude', 'opencode']);
+export const V2_TARGETS = new Set(['claude', 'opencode', 'codex']);
 
 // Degrade map: for targets without sub-agents, each capability is emitted as ONE
 // self-contained file composed from the v2 sources — the command flow + its

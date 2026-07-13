@@ -125,7 +125,12 @@ async function readSource(relPath) {
 // emitter; agents and commands use their dedicated emitters.
 async function emitV2(target, outDir) {
   let skills = 0, agents = 0, commands = 0;
-  for (const meta of V2_SKILLS) { await target.emitSkill(outDir, await readSource(meta.source), meta); skills++; }
+  // Persona/convention skill catalog. Skipped where commands share the skills
+  // namespace (Codex) — there the persona is inlined into agents, so a standalone
+  // catalog would only collide with the command-skills.
+  if (target.emitSkills !== false) {
+    for (const meta of V2_SKILLS) { await target.emitSkill(outDir, await readSource(meta.source), meta); skills++; }
+  }
   for (const meta of V2_AGENTS) {
     // Claude preloads skills via `skills:` frontmatter; targets that can't (e.g.
     // OpenCode) get the persona inlined into the agent body.

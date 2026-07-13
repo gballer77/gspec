@@ -353,9 +353,9 @@ async function findExistingFiles(target, cwd) {
     throw e;
   }
 
-  // OpenCode's native layout (agent/ + command/ + skills/) — skip the overwrite
+  // OpenCode/Codex native layouts write to multiple bases — skip the overwrite
   // pre-check; install overwrites in place.
-  if (target.layout === 'opencode') return existing;
+  if (target.layout === 'opencode' || target.layout === 'codex') return existing;
 
   if (target.layout === 'flat') {
     const srcEntries = await readdir(target.sourceDir);
@@ -525,6 +525,43 @@ async function installOpenCode(target, cwd) {
   return count;
 }
 
+// Codex native layout: skills → .agents/skills/<name>/SKILL.md (personas +
+// command-as-skill), TOML agents → .codex/agents/<name>.toml.
+async function installCodex(target, cwd) {
+  let count = 0;
+
+  const skillsSrc = join(target.sourceDir, 'skills');
+  try {
+    for (const entry of await readdir(skillsSrc)) {
+      const info = await stat(join(skillsSrc, entry));
+      if (!info.isDirectory()) continue;
+      const destDir = join(cwd, '.agents', 'skills', entry);
+      await mkdir(destDir, { recursive: true });
+      await writeFile(join(destDir, 'SKILL.md'), await readFile(join(skillsSrc, entry, 'SKILL.md'), 'utf-8'), 'utf-8');
+      console.log(`  ${chalk.green('+')} .agents/skills/${entry}`);
+      count++;
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+
+  const agentsSrc = join(target.sourceDir, 'agents');
+  try {
+    const files = (await readdir(agentsSrc)).filter((f) => f.endsWith('.toml'));
+    const dest = join(cwd, '.codex', 'agents');
+    await mkdir(dest, { recursive: true });
+    for (const f of files) {
+      await writeFile(join(dest, f), await readFile(join(agentsSrc, f), 'utf-8'), 'utf-8');
+      console.log(`  ${chalk.green('+')} .codex/agents/${f.replace(/\.toml$/, '')}`);
+      count++;
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+
+  return count;
+}
+
 async function installFlat(target, cwd) {
   const entries = await readdir(target.sourceDir);
   const files = entries.filter(f => f.endsWith(target.fileExt));
@@ -585,7 +622,9 @@ async function install(targetName, cwd) {
       ? await installDual(target, cwd)
       : target.layout === 'opencode'
         ? await installOpenCode(target, cwd)
-        : await installDirectory(target, cwd);
+        : target.layout === 'codex'
+          ? await installCodex(target, cwd)
+          : await installDirectory(target, cwd);
 
   console.log(chalk.bold(`\n${count} skills installed to ${target.installDir}/\n`));
 

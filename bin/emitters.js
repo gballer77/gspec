@@ -66,6 +66,31 @@ export function buildOpenCodeAgentFrontmatter(meta) {
   return lines.join('\n');
 }
 
+// Codex agent = a standalone TOML file (.codex/agents/<name>.toml). The system
+// prompt is the INLINE, triple-quoted `developer_instructions`; `model` is
+// omitted (Codex uses its own gpt ids); permission is `sandbox_mode` only. The
+// persona is inlined into `body` upstream (Codex can only reference skills by
+// filesystem path, which we can't assume at build time).
+function tomlBasicString(s) {
+  return '"' + String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n]+/g, ' ') + '"';
+}
+function codexSandbox(toolsStr) {
+  const list = String(toolsStr || '').split(',').map((s) => s.trim().toLowerCase());
+  return list.includes('write') || list.includes('edit') ? 'workspace-write' : 'read-only';
+}
+export function buildCodexAgent(meta, body) {
+  const safe = body.replace(/'''/g, "'' '").trimEnd(); // guard the literal-string terminator
+  return [
+    `name = "${meta.name}"`,
+    `description = ${tomlBasicString(meta.description)}`,
+    `sandbox_mode = "${codexSandbox(meta.tools)}"`,
+    "developer_instructions = '''",
+    safe,
+    "'''",
+    '',
+  ].join('\n');
+}
+
 // Platform target definitions: how to emit a skill file for each AI tool.
 // Used by both `scripts/build.js` (writing to dist/) and `bin/gspec.js`
 // (writing user-installed extensions directly to a project's install dir).
@@ -149,17 +174,33 @@ export const TARGETS = {
     label: 'Codex',
     distSubdir: 'codex',
     installDir: '.agents/skills',
-    layout: 'directory',
-    // .agents/skills/<name>/SKILL.md
-    async emit(outDir, content, meta) {
-      const frontmatter = buildFrontmatter({
-        name: meta.name,
-        description: meta.description,
-      });
+    layout: 'codex',
+    // Codex has native sub-agents (TOML at .codex/agents/) + skills (.agents/
+    // skills/). Its custom-prompt commands are deprecated, so /gspec-* entry
+    // points are emitted as skills too. Agents can't reliably reference project-
+    // relative skills, so the persona is inlined into developer_instructions.
+    preloadsSkills: false,
+    // Commands share the skills/ namespace here, so skip the standalone persona/
+    // convention skill catalog (it's inlined into agents) to avoid name clashes.
+    emitSkills: false,
+    // dist: skills/<name>/SKILL.md  →  .agents/skills/<name>/SKILL.md
+    async emitSkill(outDir, content, meta) {
+      const frontmatter = buildFrontmatter({ name: meta.name, description: meta.description });
       const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
-      const skillDir = join(outDir, meta.name);
-      await mkdir(skillDir, { recursive: true });
-      await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
+      const dir = join(outDir, 'skills', meta.name);
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
+    },
+    // Commands become skills — Codex custom prompts are deprecated.
+    async emitCommand(outDir, content, meta) {
+      return this.emitSkill(outDir, content, meta);
+    },
+    // dist: agents/<name>.toml  →  .codex/agents/<name>.toml (persona inlined)
+    async emitAgent(outDir, content, meta) {
+      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      const dir = join(outDir, 'agents');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, `${meta.name}.toml`), buildCodexAgent(meta, body), 'utf-8');
     },
   },
   opencode: {
