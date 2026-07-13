@@ -4,7 +4,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { TARGETS } from '../bin/emitters.js';
-import { V2_SKILLS, V2_AGENTS, V2_COMMANDS, V2_TARGETS, MIGRATED_LEGACY } from '../manifest.js';
+import { V2_SKILLS, V2_AGENTS, V2_COMMANDS, V2_TARGETS, DEGRADE_CAPABILITIES } from '../manifest.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -125,10 +125,70 @@ async function readSource(relPath) {
 // emitter; agents and commands use their dedicated emitters.
 async function emitV2(target, outDir) {
   let skills = 0, agents = 0, commands = 0;
-  for (const meta of V2_SKILLS) { await target.emit(outDir, await readSource(meta.source), meta); skills++; }
-  for (const meta of V2_AGENTS) { await target.emitAgent(outDir, await readSource(meta.source), meta); agents++; }
+  for (const meta of V2_SKILLS) { await target.emitSkill(outDir, await readSource(meta.source), meta); skills++; }
+  for (const meta of V2_AGENTS) {
+    // Claude preloads skills via `skills:` frontmatter; targets that can't (e.g.
+    // OpenCode) get the persona inlined into the agent body.
+    const body = target.preloadsSkills ? await readSource(meta.source) : await composeAgentBody(meta);
+    await target.emitAgent(outDir, body, meta);
+    agents++;
+  }
   for (const meta of V2_COMMANDS) { await target.emitCommand(outDir, await readSource(meta.source), meta); commands++; }
-  console.log(`  + v2: ${skills} skills, ${agents} agents, ${commands} commands`);
+  console.log(`  + v2: ${skills} skills, ${agents} agents, ${commands} commands → dist/${target.distSubdir}/`);
+}
+
+// Inline an agent's persona/convention skills into its body, for targets whose
+// agents can't preload skills (OpenCode). Claude uses the `skills:` field instead.
+async function composeAgentBody(agent) {
+  const names = agent.skills || [];
+  if (names.length === 0) return readSource(agent.source);
+  const parts = ['> **Persona & conventions** (inlined — this platform does not preload skills; apply all of the following throughout your work).'];
+  for (const name of names) {
+    const s = V2_SKILLS.find((x) => x.name === name);
+    if (s) parts.push(`\n## ${name}\n\n${await readSource(s.source)}`);
+  }
+  parts.push('\n---\n\n# Your task\n');
+  parts.push(await readSource(agent.source));
+  return parts.join('\n');
+}
+
+// --- degrade (non-Claude targets) -----------------------------------------
+//
+// Targets without sub-agents get ONE self-contained composed file per
+// capability, assembled from the v2 sources so there's a single source of truth.
+
+const DEGRADE_PREAMBLE = `> **Single-file mode.** On this platform gspec runs as one self-contained prompt — there are no separate sub-agents. Perform the whole flow yourself: where a step says "delegate to the … agent," do that work directly using the **task & output** reference below; where it describes a **QA gate**, self-review your result against the **quality self-review** reference (there is no separate validator). Apply the **persona & conventions** reference throughout.`;
+
+const dedup = (arr) => [...new Set(arr)];
+
+// Compose one degraded artifact: command flow + its persona/convention skills +
+// the primary agent's task + (folded in as self-review) its validator.
+async function composeDegraded(cap) {
+  const cmd = V2_COMMANDS.find((c) => c.name === cap.command);
+  const produce = cap.produce ? V2_AGENTS.find((a) => a.name === cap.produce) : null;
+  const check = cap.check ? V2_AGENTS.find((a) => a.name === cap.check) : null;
+  const also = cap.also ? V2_AGENTS.find((a) => a.name === cap.also) : null;
+  const skillNames = cap.skills || dedup([...(produce?.skills || []), ...(check?.skills || [])]);
+
+  const parts = [DEGRADE_PREAMBLE, '', await readSource(cmd.source)];
+
+  if (skillNames.length) {
+    parts.push('\n---\n\n# Reference — persona & conventions');
+    for (const name of skillNames) {
+      const s = V2_SKILLS.find((x) => x.name === name);
+      if (s) parts.push(`\n## ${name}\n\n${await readSource(s.source)}`);
+    }
+  }
+
+  const taskAgents = [produce, also].filter(Boolean);
+  if (taskAgents.length) {
+    parts.push('\n---\n\n# Reference — task & output');
+    for (const a of taskAgents) parts.push(`\n## ${a.name}\n\n${await readSource(a.source)}`);
+  }
+
+  if (check) parts.push(`\n---\n\n# Reference — quality self-review\n\n${await readSource(check.source)}`);
+
+  return parts.join('\n');
 }
 
 async function build(targetNames) {
@@ -138,9 +198,6 @@ async function build(targetNames) {
     process.exit(1);
   }
 
-  const legacyFiles = Object.keys(COMMANDS);
-  const v2SkillNames = new Set(V2_SKILLS.map((s) => s.name));
-
   for (const targetName of targetNames) {
     const target = TARGETS[targetName];
     if (!target) {
@@ -149,29 +206,22 @@ async function build(targetNames) {
     }
 
     const outDir = join(DIST_DIR, target.distSubdir);
-    const isV2 = V2_TARGETS.has(targetName);
 
-    let count = 0;
-    for (const file of legacyFiles) {
-      // On a v2 target, skip legacy sources superseded by v2 artifacts.
-      if (isV2 && MIGRATED_LEGACY.has(file)) continue;
-      const meta = COMMANDS[file];
-      const raw = await readFile(join(COMMANDS_DIR, file), 'utf-8');
-      const content = raw.replace(VERSION_RE, pkg.version).replace(SPEC_VERSION_RE, SPEC_VERSION);
-      // On a v2 target, a legacy command whose name is claimed by a v2 skill
-      // (e.g. gspec-architect) is emitted to its v2 home — commands/ — so the
-      // skills/ slot is free for the persona skill. All others stay skills.
-      if (isV2 && v2SkillNames.has(meta.name)) {
-        await target.emitCommand(outDir, content, meta);
-      } else {
-        await target.emit(outDir, content, meta);
+    if (V2_TARGETS.has(targetName)) {
+      // Full v2 split: skills + agents + commands (Claude Code).
+      await emitV2(target, outDir);
+      console.log(`Built v2 split → dist/${targetName}/`);
+    } else {
+      // Degrade: one self-contained composed file per capability, emitted in the
+      // target's native format by its existing emit().
+      let count = 0;
+      for (const cap of DEGRADE_CAPABILITIES) {
+        const meta = V2_COMMANDS.find((c) => c.name === cap.command);
+        await target.emit(outDir, await composeDegraded(cap), { name: meta.name, description: meta.description });
+        count++;
       }
-      count++;
+      console.log(`Built ${count} composed capabilities → dist/${targetName}/ (degrade)`);
     }
-
-    console.log(`Built ${count} skills → dist/${targetName}/`);
-
-    if (isV2) await emitV2(target, outDir);
   }
 }
 

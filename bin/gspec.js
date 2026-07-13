@@ -353,6 +353,10 @@ async function findExistingFiles(target, cwd) {
     throw e;
   }
 
+  // OpenCode's native layout (agent/ + command/ + skills/) — skip the overwrite
+  // pre-check; install overwrites in place.
+  if (target.layout === 'opencode') return existing;
+
   if (target.layout === 'flat') {
     const srcEntries = await readdir(target.sourceDir);
     for (const file of srcEntries.filter(f => f.endsWith(target.fileExt))) {
@@ -480,6 +484,47 @@ async function installDual(target, cwd) {
   return skills.length;
 }
 
+// OpenCode native layout: skills/<name>/SKILL.md + agent/<name>.md + command/<name>.md
+async function installOpenCode(target, cwd) {
+  const base = join(cwd, target.installDir); // .opencode
+  let count = 0;
+
+  const skillsSrc = join(target.sourceDir, 'skills');
+  try {
+    for (const entry of await readdir(skillsSrc)) {
+      const info = await stat(join(skillsSrc, entry));
+      if (!info.isDirectory()) continue;
+      const destDir = join(base, 'skills', entry);
+      await mkdir(destDir, { recursive: true });
+      await writeFile(join(destDir, 'SKILL.md'), await readFile(join(skillsSrc, entry, 'SKILL.md'), 'utf-8'), 'utf-8');
+      console.log(`  ${chalk.green('+')} skills/${entry}`);
+      count++;
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+
+  for (const cls of ['agent', 'command']) {
+    const src = join(target.sourceDir, cls);
+    let files;
+    try {
+      files = (await readdir(src)).filter((f) => f.endsWith('.md'));
+    } catch (e) {
+      if (e.code === 'ENOENT') continue;
+      throw e;
+    }
+    const dest = join(base, cls);
+    await mkdir(dest, { recursive: true });
+    for (const f of files) {
+      await writeFile(join(dest, f), await readFile(join(src, f), 'utf-8'), 'utf-8');
+      console.log(`  ${chalk.green('+')} ${cls}/${f.replace(/\.md$/, '')}`);
+      count++;
+    }
+  }
+
+  return count;
+}
+
 async function installFlat(target, cwd) {
   const entries = await readdir(target.sourceDir);
   const files = entries.filter(f => f.endsWith(target.fileExt));
@@ -538,7 +583,9 @@ async function install(targetName, cwd) {
     ? await installFlat(target, cwd)
     : target.layout === 'dual'
       ? await installDual(target, cwd)
-      : await installDirectory(target, cwd);
+      : target.layout === 'opencode'
+        ? await installOpenCode(target, cwd)
+        : await installDirectory(target, cwd);
 
   console.log(chalk.bold(`\n${count} skills installed to ${target.installDir}/\n`));
 

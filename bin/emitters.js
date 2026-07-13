@@ -44,6 +44,28 @@ export function buildAgentFrontmatter(meta) {
   return lines.join('\n');
 }
 
+// OpenCode agent frontmatter. OpenCode has no `skills:` preload and no per-agent
+// memory; the persona is inlined into the body upstream. `tools` is a boolean
+// MAP (not a list); `model` is omitted so OpenCode uses its configured default
+// (its ids are provider/model-id, which we can't assume). name comes from the
+// filename. Read/grep/glob/list default to allowed; we only restrict the rest.
+function opencodeToolsMap(toolsStr) {
+  const list = String(toolsStr || '').split(',').map((s) => s.trim().toLowerCase());
+  const has = (t) => list.includes(t);
+  const write = has('write') || has('edit');
+  return { write, edit: write, bash: has('bash'), webfetch: has('webfetch'), websearch: has('websearch') };
+}
+
+export function buildOpenCodeAgentFrontmatter(meta) {
+  const lines = ['---'];
+  lines.push(`description: ${yamlScalar(meta.description)}`);
+  lines.push('mode: subagent');
+  lines.push('tools:');
+  for (const [k, v] of Object.entries(opencodeToolsMap(meta.tools))) lines.push(`  ${k}: ${v}`);
+  lines.push('---');
+  return lines.join('\n');
+}
+
 // Platform target definitions: how to emit a skill file for each AI tool.
 // Used by both `scripts/build.js` (writing to dist/) and `bin/gspec.js`
 // (writing user-installed extensions directly to a project's install dir).
@@ -53,6 +75,9 @@ export const TARGETS = {
     distSubdir: 'claude',
     installDir: '.claude/skills',
     layout: 'directory',
+    // Claude subagents preload skills via the `skills:` frontmatter field, so
+    // v2 agents keep their persona out-of-line (as reusable skills).
+    preloadsSkills: true,
     // .claude/skills/<name>/SKILL.md
     async emit(outDir, content, meta) {
       const frontmatter = buildFrontmatter({
@@ -63,6 +88,9 @@ export const TARGETS = {
       const skillDir = join(outDir, meta.name);
       await mkdir(skillDir, { recursive: true });
       await writeFile(join(skillDir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
+    },
+    async emitSkill(outDir, content, meta) {
+      return this.emit(outDir, content, meta);
     },
     // v2: agents install to .claude/agents/<name>.md
     async emitAgent(outDir, content, meta) {
@@ -138,34 +166,36 @@ export const TARGETS = {
     label: 'Open Code',
     distSubdir: 'opencode',
     installDir: '.opencode',
-    layout: 'dual',
+    layout: 'opencode',
     fileExt: '.md',
-    // Dual emission — opencode splits Claude Code's skill behavior across two
-    // mechanisms, so each prompt ships twice:
-    //   .opencode/commands/<name>.md    slash command the user invokes (/gspec-*)
-    //   .opencode/skills/<name>/SKILL.md skill the agent auto-loads by description
-    // On a name collision opencode's slash menu prefers the file command, so
-    // both can coexist safely.
-    async emit(outDir, content, meta) {
-      // opencode commands support $ARGUMENTS substitution, same as Claude Code
-      const commandFrontmatter = buildFrontmatter({
-        description: meta.description,
-      });
-      const commandBody = content.replace(PLACEHOLDER_RE, '$ARGUMENTS');
-      const commandsDir = join(outDir, 'commands');
-      await mkdir(commandsDir, { recursive: true });
-      await writeFile(join(commandsDir, `${meta.name}.md`), commandFrontmatter + '\n\n' + commandBody, 'utf-8');
-
-      // Skill content is loaded as context, not expanded as a template, so
-      // strip the placeholder lines rather than mapping them to $ARGUMENTS
-      const skillFrontmatter = buildFrontmatter({
-        name: meta.name,
-        description: meta.description,
-      });
-      const skillBody = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
-      const skillDir = join(outDir, 'skills', meta.name);
-      await mkdir(skillDir, { recursive: true });
-      await writeFile(join(skillDir, 'SKILL.md'), skillFrontmatter + '\n\n' + skillBody, 'utf-8');
+    // OpenCode has native sub-agents + skills + commands (it converged on Claude
+    // Code's model), but agents CANNOT preload skills — so the persona is inlined
+    // into each agent body upstream (see composeAgentBody in build.js). Dirs:
+    // agent/ + command/ (singular, per the loader/CLI) and skills/ (plural).
+    preloadsSkills: false,
+    // .opencode/skills/<name>/SKILL.md — persona/convention catalog (on-demand)
+    async emitSkill(outDir, content, meta) {
+      const frontmatter = buildFrontmatter({ name: meta.name, description: meta.description });
+      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      const dir = join(outDir, 'skills', meta.name);
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
+    },
+    // .opencode/agent/<name>.md — the persona is already inlined into `content`
+    async emitAgent(outDir, content, meta) {
+      const frontmatter = buildOpenCodeAgentFrontmatter(meta);
+      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      const dir = join(outDir, 'agent');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, `${meta.name}.md`), frontmatter + '\n\n' + body, 'utf-8');
+    },
+    // .opencode/command/<name>.md — native delegation to agents; $ARGUMENTS ok
+    async emitCommand(outDir, content, meta) {
+      const frontmatter = buildFrontmatter({ description: meta.description });
+      const body = content.replace(PLACEHOLDER_RE, '$ARGUMENTS');
+      const dir = join(outDir, 'command');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, `${meta.name}.md`), frontmatter + '\n\n' + body, 'utf-8');
     },
   },
 };

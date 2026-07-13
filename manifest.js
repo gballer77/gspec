@@ -309,9 +309,34 @@ export const V2_COMMANDS = [
   },
 ];
 
-// Targets that receive the full v2 artifact split. Others keep the legacy
-// single-skill build (see build.js) until their degrade path is implemented.
-export const V2_TARGETS = new Set(['claude']);
+// Targets that receive the full v2 artifact split (skills + agents + commands),
+// each in its native format. Claude preloads skills into agents; OpenCode can't
+// (no `skills:` field), so its agents inline the persona (see build.js). Every
+// other target gets the DEGRADE build: one self-contained composed file per
+// capability (see DEGRADE_CAPABILITIES + composeDegraded in build.js).
+export const V2_TARGETS = new Set(['claude', 'opencode']);
+
+// Degrade map: for targets without sub-agents, each capability is emitted as ONE
+// self-contained file composed from the v2 sources — the command flow + its
+// persona/convention skills + the primary agent's task + the validator as a
+// self-review. `produce` = the agent that does the work; `check` = its validator
+// (folded in as self-review); `also` = an extra agent body to include; `skills`
+// overrides the inlined skill set when there is no `produce` agent.
+export const DEGRADE_CAPABILITIES = [
+  { command: 'gspec-profile',   produce: 'profile-writer',      check: 'profile-validator' },
+  { command: 'gspec-stack',     produce: 'stack-writer',        check: 'stack-validator' },
+  { command: 'gspec-practices', produce: 'practices-writer',    check: 'practices-validator' },
+  { command: 'gspec-style',     produce: 'style-writer',        check: 'style-validator' },
+  { command: 'gspec-feature',   produce: 'feature-writer',      check: 'feature-validator' },
+  { command: 'gspec-architect', produce: 'architecture-writer', check: 'architecture-validator' },
+  { command: 'gspec-plan',      produce: 'plan-decomposer',     check: 'plan-validator' },
+  { command: 'gspec-implement', produce: 'implementer' },
+  { command: 'gspec-analyze',   produce: 'spec-cross-referencer' },
+  { command: 'gspec-audit',     produce: 'codebase-inspector' },
+  { command: 'gspec-migrate',   produce: 'spec-migrator' },
+  { command: 'gspec-research',  produce: 'competitor-researcher', also: 'research-writer' },
+  { command: 'gspec-qa',        skills: ['gspec-qa'] },
+];
 
 // Legacy source files (in commands/) that are superseded by v2 artifacts. On a
 // v2 target the legacy emit skips these — the v2 build emits their replacement;
