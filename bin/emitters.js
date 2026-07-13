@@ -91,6 +91,23 @@ export function buildCodexAgent(meta, body) {
   ].join('\n');
 }
 
+// Cursor agent frontmatter: exactly name/description/model/readonly/is_background
+// (no `tools` field — permission is the `readonly` boolean; model defaults to
+// inherit). No skill preload, so the persona is inlined into the body upstream.
+function cursorReadonly(toolsStr) {
+  const list = String(toolsStr || '').split(',').map((s) => s.trim().toLowerCase());
+  return !(list.includes('write') || list.includes('edit'));
+}
+export function buildCursorAgentFrontmatter(meta) {
+  const lines = ['---'];
+  lines.push(`name: ${meta.name}`);
+  lines.push(`description: ${yamlScalar(meta.description)}`);
+  lines.push('model: inherit');
+  if (cursorReadonly(meta.tools)) lines.push('readonly: true');
+  lines.push('---');
+  return lines.join('\n');
+}
+
 // Platform target definitions: how to emit a skill file for each AI tool.
 // Used by both `scripts/build.js` (writing to dist/) and `bin/gspec.js`
 // (writing user-installed extensions directly to a project's install dir).
@@ -139,18 +156,34 @@ export const TARGETS = {
   cursor: {
     label: 'Cursor',
     distSubdir: 'cursor',
-    installDir: '.cursor/commands',
-    layout: 'flat',
-    fileExt: '.mdc',
-    // .cursor/commands/<name>.mdc (flat file)
-    async emit(outDir, content, meta) {
-      const frontmatter = buildFrontmatter({
-        description: meta.description,
-      });
-      // Cursor has no $ARGUMENTS convention; strip the placeholder lines
+    installDir: '.cursor',
+    layout: 'cursor',
+    // Cursor 2.4+ has native sub-agents (.cursor/agents/<n>.md, markdown body =
+    // prompt, no `tools` field — permission via `readonly`), skills
+    // (.cursor/skills/<n>/SKILL.md), and commands (.cursor/commands/<n>.md — NO
+    // frontmatter, no arg substitution). Agents can't preload skills, so the
+    // persona is inlined into the body. (Fixes the old .mdc + frontmatter bug.)
+    preloadsSkills: false,
+    async emitSkill(outDir, content, meta) {
+      const frontmatter = buildFrontmatter({ name: meta.name, description: meta.description });
       const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
-      await mkdir(outDir, { recursive: true });
-      await writeFile(join(outDir, `${meta.name}.mdc`), frontmatter + '\n\n' + body, 'utf-8');
+      const dir = join(outDir, 'skills', meta.name);
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, 'SKILL.md'), frontmatter + '\n\n' + body, 'utf-8');
+    },
+    async emitAgent(outDir, content, meta) {
+      const frontmatter = buildCursorAgentFrontmatter(meta);
+      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      const dir = join(outDir, 'agents');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, `${meta.name}.md`), frontmatter + '\n\n' + body, 'utf-8');
+    },
+    // Cursor commands: .md, NO frontmatter, no argument substitution.
+    async emitCommand(outDir, content, meta) {
+      const body = content.replace(/^.*<<<\w+>>>.*$\n?/gm, '');
+      const dir = join(outDir, 'commands');
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, `${meta.name}.md`), body, 'utf-8');
     },
   },
   antigravity: {
