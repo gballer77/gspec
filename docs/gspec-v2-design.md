@@ -290,6 +290,7 @@ The 12 `/gspec-*` names and the `gspec/*.md` doc set are preserved throughout.
   - **Judgment part** — the `implementation-validator` agent (preloads `gspec-qa` + `gspec-engineer`/`gspec-practices`) interprets failures and checks that the in-scope acceptance criteria + Definition of Done are actually met (summarize test logs, don't dump them).
   - **`gspec-architect` quality bar gains:** a multi-deployable system must define the deployables / build-test table. **`gspec-audit`** catches drift between that table (+ `verify.sh`) and the actual code.
   - Optionally backed by the opt-in QA-gate-floor hook: block marking a capability `[x]` unless build+test passed.
+- **Review deferred decisions after production** — a step added to every producer command flow: after the writer returns, present any **deferred decisions / notable assumptions** it recorded, **one at a time**, and offer to **resolve** (re-delegate a revision with the answer) or **accept** the deferral. Closes the loop for questions the front-loaded interview couldn't anticipate — the agent discovers them *while writing*, and a labeled deferral won't be flagged by QA (validators treat it as intentional), so an explicit review is the only place it gets back to the user. Prompt-level change to the command bodies — no new plumbing. **In the autonomous pipeline** there's no user to ask mid-run, so instead collect all deferred decisions across stages and surface them in the **final assumptions report** (makes that report load-bearing).
 
 ---
 
