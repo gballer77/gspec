@@ -4,13 +4,14 @@ This project uses **gspec** for living product specifications stored in `gspec/`
 
 These specs define what the product is, how it should look, what technology it uses, and what features it supports. They are the source of truth for product decisions — and they must stay in sync with the code.
 
-### Prefer gspec skills over ad-hoc work
+### Prefer gspec commands over ad-hoc work
 
-Because `gspec/` exists in this project, **route the user's request through the matching gspec skill** instead of producing the equivalent output ad hoc. This applies even when the user's phrasing is casual (e.g. "just build it", "let's code this", "write a quick spec"). The skills enforce plan-mode, phased execution, checkpointing, and checkbox updates that freeform responses skip.
+Because `gspec/` exists in this project, **route the user's request through the matching `gspec-*` command** instead of producing the equivalent output ad hoc. This applies even when the user's phrasing is casual (e.g. "just build it", "let's code this", "write a quick spec"). Each command runs the right specialist (architect, product, designer, engineer, QA reviewer) with a built-in **quality-review gate** — a separate checker validates the result before it's done (skip with `--no-qa`) — plus the phased execution, checkpointing, and checkbox updates that freeform responses skip.
 
 Use this mapping whenever the user's intent matches:
 
-- **Building, implementing, coding, scaffolding, shipping, or "making it real"** — invoke `gspec-implement`. This is the most commonly-missed skill. If the user asks you to write code for anything the specs describe (or a new capability that should be specced), route through `gspec-implement` rather than editing files directly. Generic prompts like "build it", "go", "keep going", "continue", or "do the next phase" should also invoke it when recent conversation has been about specs or planning.
+- **Building, implementing, coding, scaffolding, shipping, or "making it real"** — invoke `gspec-implement`. This is the most commonly-missed command. If the user asks you to write code for anything the specs describe (or a new capability that should be specced), route through `gspec-implement` rather than editing files directly. Generic prompts like "build it", "go", "keep going", "continue", or "do the next phase" should also invoke it when recent conversation has been about specs or planning.
+- **Building an entire product from an idea, end-to-end and mostly unattended** — run `gspec-pipeline` (`gspec pipeline "<idea>"`), which drives profile → stack → practices → style → features → architecture → plan → implementation, gating each spec through QA. Best for greenfield "build me X" requests; it generates only the specs that are missing.
 - **Defining the product, users, or vision** — invoke `gspec-profile`.
 - **Planning or writing a new feature / PRD** — invoke `gspec-feature`.
 - **Producing an ordered plan from a feature PRD (with explicit dependencies and parallel-execution markers)** — invoke `gspec-plan`. Run before `gspec-implement` for non-trivial features; when a plan file exists, `gspec-implement` skips its own plan-mode step.
@@ -21,15 +22,18 @@ Use this mapping whenever the user's intent matches:
 - **Researching competitors or finding feature gaps** — invoke `gspec-research`.
 - **Finding contradictions between specs** — invoke `gspec-analyze`.
 - **Checking specs against the actual codebase (drift audit)** — invoke `gspec-audit`.
+- **Checking a spec's quality against its bar** — invoke `gspec-qa` (one spec, or all of them). Every spec-writing command already runs this as a gate when it produces a spec (skip with `--no-qa`); use `gspec-qa` to re-check on demand.
 - **Upgrading outdated spec files** — invoke `gspec-migrate`.
 
-If the user explicitly asks you to skip the skill and just do the work, honor that — but by default, prefer the skill.
+If the user explicitly asks you to skip the command and just do the work, honor that — but by default, prefer the command.
 
 ### Asking the user multiple questions
 
 When a skill needs feedback on more than one question, first preview all of them as a numbered list so the user knows the full scope, then ask them **one at a time** in the conversation. Never present multiple questions as a single numbered list expecting one combined reply — that forces the user to retype each question number alongside their answer. One question per turn keeps replies short and natural.
 
 ### When you make code changes, follow these rules:
+
+> **Apply the project's practices and style as you code.** `gspec/practices.md` (engineering standards, testing philosophy, definition of done) and `gspec/style.md` / `gspec/style.html` (design tokens, component styling) are this project's **coding rules** — follow them on *every* code change, in any flow, not only when running `gspec-implement`. `gspec/stack.md`'s "Technology-Specific Practices" section governs framework idioms. These specs define *how* code is written here; treat them as always-on conventions.
 
 1. **Read the specs first** — Before making non-trivial changes, read the relevant gspec documents to understand existing decisions and constraints. At minimum, scan `gspec/profile.md` and any feature PRDs in `gspec/features/` related to your work.
 
