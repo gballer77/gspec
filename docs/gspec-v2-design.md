@@ -1,6 +1,6 @@
 # gspec v2 — Design
 
-- **Status:** Layers 1–5 built on `v2-agent-refactor`; the `implementation-validator` code gate has landed.
+- **Status:** Layers 1–5 built on `v2-agent-refactor`; the `implementation-validator` code gate has landed. **Next queued: the learning loop ("training") — recorded in §13, not yet built.**
 - **Branch:** `v2-agent-refactor`
 - **Date:** 2026-07-11
 - **Design reference:** `~/Downloads/agent-learning-architecture-handoff.md` — a conceptual handoff, **adapted, not followed verbatim**.
@@ -284,7 +284,11 @@ The 12 `/gspec-*` names and the `gspec/*.md` doc set are preserved throughout.
 
 ## 13. Deferred / future
 
-- **Learning loop:** per-agent memory *activation*, the distiller (memory → reviewed skill diff), the `gspec-orchestrator` "mini-me" judgment skill the pipeline preloads and that is trainable.
+- **Learning loop ("training") — the next build. Recorded plan, not yet built.** Turns the dormant per-agent `memory:` silos (already keyed by agent name, `memory: project`) into a producer≠checker-style improvement loop where agents get better across runs. Sequenced:
+  - **T1 — Activate per-agent memory.** Give each agent a `MEMORY.md` convention and a capture path so a run's lessons persist into its silo. Gate every write behind the **feedback address-tag** hook (§9): a memory carries a target+layer address so it's attributable, scoped, and reversible — never an anonymous blob.
+  - **T2 — The distiller.** A step/agent that reads an agent's accumulated memory and proposes a **reviewed skill diff** (memory → a concrete change to the persona/convention skill), *never* a silent auto-edit. Ships behind the **skill-write guard** hook (§9): direct writes to committed skill files are blocked, forcing the reviewed pending-diff path. Producer≠checker holds — the distiller *proposes*; a human (or a checker agent) *approves* before a skill changes.
+  - **T3 — `gspec-orchestrator` "mini-me" skill.** A trainable judgment skill the pipeline preloads to make the scope / granularity / fan-out calls the driver currently hard-codes in `bin/pipeline.js`, improved over time by the same distiller loop.
+  - **T4 — Loop hooks.** The three §9 "with loop" hooks land here: **skill-write guard** (enables T2), **feedback address-tag** (enables T1), and **subagent capture** (`SubagentStop` → snapshot the return / trigger review) to feed the loop.
 - **Enforcement hooks** beyond near-term (QA-gate floor + the three loop hooks).
 - **Implementation verification gate (`implementation-validator`)** — **✅ built (this branch).** The producer≠checker for code (supersedes the vague "code-reviewer" idea). A two-part gate that honors `--no-qa`; this bullet is the as-built contract:
   - **Deterministic part — build + test only** (not the full lint/typecheck/practices pipeline, for now). Multi-deployable / polyglot aware: one project may ship e.g. a TypeScript frontend + a Java backend, each with its own toolchain and working dir. The **deployables table** (name · dir · build · test) lives in **`architecture.md`**, *not* `stack.md` — stack is the tooling *palette* (what *could* build/test; portable, profile-agnostic), architecture is the concrete structure (what *does* exist; technology-aware; already owns Project Structure + Project Setup). The `implementer` generates a committed **`verify.sh`** from that table during scaffolding — fail-fast, prints `FAIL: <deployable>:<phase>`, hand-editable for setup a command-list can't express (test DB, env, `docker compose`). The **pipeline driver runs `bash verify.sh`** deterministically (exit code = the gate); on failure it re-delegates the `implementer` with the concrete errors — the strongest self-heal loop in the pipeline.
