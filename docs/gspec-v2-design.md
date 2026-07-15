@@ -1,6 +1,6 @@
 # gspec v2 — Design
 
-- **Status:** Draft for review (no code written yet)
+- **Status:** Layers 1–5 built on `v2-agent-refactor`; the `implementation-validator` code gate has landed.
 - **Branch:** `v2-agent-refactor`
 - **Date:** 2026-07-11
 - **Design reference:** `~/Downloads/agent-learning-architecture-handoff.md` — a conceptual handoff, **adapted, not followed verbatim**.
@@ -118,8 +118,9 @@ Tools: `Read, Write, Edit, Glob, Grep`. Model: inherit (bump `architecture-write
 | `practices-validator` | qa + practices + conventions | `practices.md` | /gspec-practices gate, /gspec-qa |
 | `style-validator` | qa + designer + conventions | `style.md`/`.html` | /gspec-style gate, /gspec-qa |
 | `plan-validator` *(opt)* | qa + engineer | a plan (coverage, acyclic `deps:`, safe `[P]`) | /gspec-plan gate, /gspec-qa |
+| `implementation-validator` *(code gate)* | qa + engineer + practices | a **built scope**: `verify.sh` build+test result + acceptance criteria / DoD | /gspec-implement gate, pipeline |
 
-Tools: `Read, Grep, Glob` **only** — no Write/Edit (they judge, they don't fix). Model: strong.
+Tools: `Read, Grep, Glob` **only** — no Write/Edit (they judge, they don't fix); the `implementation-validator` additionally gets `Bash` to run `verify.sh`. Model: strong.
 
 **Verdict contract:** per-criterion pass/fail + evidence + the specific fix (not a rewrite), emitted as machine-readable output so commands/runtime can gate on it.
 
@@ -181,7 +182,7 @@ Every writer is followed by its validator — a **different agent** that **share
 
 The **checker trio**: `analyze` (spec↔spec consistency) · `audit` (spec↔code fidelity) · `qa` (spec↔quality-bar). QA absorbs `analyze`'s current single-PRD ambiguity sweep, so `analyze` becomes purely cross-spec.
 
-> `/gspec-implement`'s output is code, not a spec. **Planned (see §13): an `implementation-validator`** gives it a real producer≠checker gate — a *deterministic* build+test run (via a generated `verify.sh`) plus model judgment of the acceptance criteria / Definition of Done — rather than trusting the implementer's own tests.
+> `/gspec-implement`'s output is code, not a spec. Its producer≠checker gate is the **`implementation-validator`** (built): a *deterministic* build+test run — the driver runs a generated `verify.sh`, exit code = the gate — plus model judgment of the acceptance criteria / Definition of Done, rather than trusting the implementer's own tests. Full contract in §13.
 
 ---
 
@@ -205,7 +206,7 @@ intake(interview)
   → features      [ feature-writer → feature-validator  ×N ]
   → architecture  [ architecture-writer → architecture-validator ]
   → plan          [ plan-decomposer → plan-validator ]
-  → implement     [ implementer — orchestrator picks scope (per feature/phase), fan-out independent scopes on [P] ]
+  → implement     [ implementer (picks scope; [P] fan-out) → verify.sh build+test (driver-run) → implementation-validator (criteria/DoD); one self-heal on failure ]
   → reconcile     [ codebase-inspector audit → drift report ]
 ```
 
@@ -285,7 +286,7 @@ The 12 `/gspec-*` names and the `gspec/*.md` doc set are preserved throughout.
 
 - **Learning loop:** per-agent memory *activation*, the distiller (memory → reviewed skill diff), the `gspec-orchestrator` "mini-me" judgment skill the pipeline preloads and that is trainable.
 - **Enforcement hooks** beyond near-term (QA-gate floor + the three loop hooks).
-- **Implementation verification gate (`implementation-validator`)** — the producer≠checker for code (supersedes the vague "code-reviewer" idea; now concrete). A two-part gate that honors `--no-qa`:
+- **Implementation verification gate (`implementation-validator`)** — **✅ built (this branch).** The producer≠checker for code (supersedes the vague "code-reviewer" idea). A two-part gate that honors `--no-qa`; this bullet is the as-built contract:
   - **Deterministic part — build + test only** (not the full lint/typecheck/practices pipeline, for now). Multi-deployable / polyglot aware: one project may ship e.g. a TypeScript frontend + a Java backend, each with its own toolchain and working dir. The **deployables table** (name · dir · build · test) lives in **`architecture.md`**, *not* `stack.md` — stack is the tooling *palette* (what *could* build/test; portable, profile-agnostic), architecture is the concrete structure (what *does* exist; technology-aware; already owns Project Structure + Project Setup). The `implementer` generates a committed **`verify.sh`** from that table during scaffolding — fail-fast, prints `FAIL: <deployable>:<phase>`, hand-editable for setup a command-list can't express (test DB, env, `docker compose`). The **pipeline driver runs `bash verify.sh`** deterministically (exit code = the gate); on failure it re-delegates the `implementer` with the concrete errors — the strongest self-heal loop in the pipeline.
   - **Judgment part** — the `implementation-validator` agent (preloads `gspec-qa` + `gspec-engineer`/`gspec-practices`) interprets failures and checks that the in-scope acceptance criteria + Definition of Done are actually met (summarize test logs, don't dump them).
   - **`gspec-architect` quality bar gains:** a multi-deployable system must define the deployables / build-test table. **`gspec-audit`** catches drift between that table (+ `verify.sh`) and the actual code.

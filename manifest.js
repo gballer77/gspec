@@ -203,6 +203,16 @@ export const V2_AGENTS = [
     memory: 'project',
   },
   {
+    name: 'implementation-validator',
+    source: 'agents/implementation-validator.md',
+    description: 'The producer≠checker gate for code: run verify.sh (build+test) and judge in-scope acceptance criteria + Definition of Done, returning a structured verdict. Read-only; delegated by /gspec-implement and the pipeline implement gate.',
+    // Reads code + runs verify.sh, so it needs Bash — but never Write/Edit (it judges, doesn't fix).
+    skills: ['gspec-qa', 'gspec-engineer', 'gspec-practices'],
+    tools: 'Read, Grep, Glob, Bash',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
     name: 'codebase-inspector',
     source: 'agents/codebase-inspector.md',
     description: 'Inspect the codebase for drift vs the specs (spec↔code) and orphan capabilities, acting as the steward. Read-only (never modifies code or specs); returns impact-ordered findings. Delegated by /gspec-audit.',
@@ -330,7 +340,7 @@ export const DEGRADE_CAPABILITIES = [
   { command: 'gspec-feature',   produce: 'feature-writer',      check: 'feature-validator' },
   { command: 'gspec-architect', produce: 'architecture-writer', check: 'architecture-validator' },
   { command: 'gspec-plan',      produce: 'plan-decomposer',     check: 'plan-validator' },
-  { command: 'gspec-implement', produce: 'implementer' },
+  { command: 'gspec-implement', produce: 'implementer', check: 'implementation-validator' },
   { command: 'gspec-analyze',   produce: 'spec-cross-referencer' },
   { command: 'gspec-audit',     produce: 'codebase-inspector' },
   { command: 'gspec-migrate',   produce: 'spec-migrator' },

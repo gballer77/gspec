@@ -32,7 +32,7 @@ export const STAGES = [
   { id: 'features',     title: 'Feature PRDs',      type: 'features',   writer: 'feature-writer',      validator: 'feature-validator' },
   { id: 'architecture', title: 'Architecture',      type: 'gated',      writer: 'architecture-writer', validator: 'architecture-validator', outputs: ['gspec/architecture.md'] },
   { id: 'plan',         title: 'Plans',             type: 'plan',       writer: 'plan-decomposer',     validator: 'plan-validator' },
-  { id: 'implement',    title: 'Implementation',    type: 'implement',  agent: 'implementer' },
+  { id: 'implement',    title: 'Implementation',    type: 'implement',  agent: 'implementer', validator: 'implementation-validator' },
   { id: 'reconcile',    title: 'Reconcile audit',   type: 'audit',      agent: 'codebase-inspector' },
 ];
 
@@ -147,6 +147,28 @@ function parseVerdict(text) {
   return m ? m[1].toUpperCase() : null;
 }
 
+// Deterministic build+test gate: the driver runs verify.sh ITSELF (no model
+// judgment) — its exit code IS the gate. See docs/gspec-v2-design.md §13
+// (implementation-validator, deterministic part). Captures stdout+stderr so the
+// failure can be fed back to the implementer.
+function runVerify(ctx) {
+  return new Promise((resolve) => {
+    if (ctx.dryRun) { log(chalk.dim('      would run: bash verify.sh')); return resolve({ code: 0, output: '(dry run)' }); }
+    const child = spawn('bash', ['verify.sh'], { cwd: ctx.cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+    let output = '';
+    child.stdout.on('data', (d) => { output += d.toString(); });
+    child.stderr.on('data', (d) => { output += d.toString(); });
+    child.on('error', (e) => resolve({ code: 1, output: `verify.sh could not run: ${e.message}` }));
+    child.on('close', (code) => resolve({ code: code ?? 1, output }));
+  });
+}
+
+// Keep the tail of large tool output when feeding a failure back into a prompt.
+function tail(text, n = 4000) {
+  const s = String(text);
+  return s.length > n ? '…\n' + s.slice(-n) : s;
+}
+
 // --- stage prompts --------------------------------------------------------
 
 function stageBrief(stage, brief, extra = '') {
@@ -237,9 +259,38 @@ async function runStage(stage, ctx) {
     }
 
     case 'implement': {
-      const out = await runAgent(stage.agent, stageBrief(stage, brief, 'Implement all in-scope, unchecked work. Scaffold if greenfield; write and run tests; flip checkboxes as you go.'), ctx, { allowedTools: 'Bash' });
-      // code isn't a spec — the checker is tests + the DoD, run inside the agent.
-      return { status: out.code === 0 ? 'done' : 'failed', verdict: 'n/a', reason: out.code === 0 ? undefined : `${stage.agent} exited ${out.code}` };
+      const buildPrompt = stageBrief(stage, brief, 'Implement all in-scope, unchecked work. Scaffold if greenfield; generate/maintain verify.sh from the architecture Deployables table; write and run tests; flip checkboxes as you go.');
+      let out = await runAgent(stage.agent, buildPrompt, ctx, { allowedTools: 'Bash' });
+      if (out.code !== 0) return { status: 'failed', reason: `${stage.agent} exited ${out.code}` };
+      if (ctx.noQa) return { status: 'done', verdict: 'skipped' };
+
+      // Gate part 1 — deterministic build+test. The driver runs verify.sh; a
+      // non-zero exit re-delegates the implementer once with the exact failure.
+      if (await pathExists(ctx.cwd, 'verify.sh')) {
+        let v = await runVerify(ctx);
+        if (v.code !== 0) {
+          log(chalk.yellow('      verify.sh failed — one self-heal…'));
+          const fix = `${buildPrompt}\n\nverify.sh failed (exit ${v.code}). Fix the code so build+test pass; do not weaken the tests to make them pass. Output:\n${tail(v.output)}`;
+          out = await runAgent(stage.agent, fix, ctx, { allowedTools: 'Bash' });
+          if (out.code !== 0) return { status: 'failed', reason: `${stage.agent} (verify self-heal) exited ${out.code}` };
+          v = await runVerify(ctx);
+          if (v.code !== 0) return { status: 'failed', reason: 'verify.sh still failing after one self-heal', verdict: 'FAIL' };
+        }
+      }
+
+      // Gate part 2 — judgment. implementation-validator checks the in-scope
+      // acceptance criteria + Definition of Done; one self-heal on FAIL.
+      if (!stage.validator) return { status: 'done', verdict: 'PASS' };
+      const jvTarget = 'the implemented scope';
+      let jv = await runAgent(stage.validator, validatorPrompt(stage, jvTarget), ctx, { allowedTools: 'Bash' });
+      if (parseVerdict(jv.text) === 'PASS') return { status: 'done', verdict: 'PASS' };
+      log(chalk.yellow('      implementation QA flagged issues — one revision…'));
+      const revise = `${buildPrompt}\n\nThe implementation failed QA. Address this verdict, then ensure verify.sh still passes:\n${jv.text}`;
+      out = await runAgent(stage.agent, revise, ctx, { allowedTools: 'Bash' });
+      if (out.code !== 0) return { status: 'failed', reason: `${stage.agent} (QA revision) exited ${out.code}` };
+      jv = await runAgent(stage.validator, validatorPrompt(stage, jvTarget), ctx, { allowedTools: 'Bash' });
+      if (parseVerdict(jv.text) === 'PASS') return { status: 'done', verdict: 'PASS' };
+      return { status: 'failed', reason: 'implementation QA gate did not pass after one revision', verdict: parseVerdict(jv.text) || 'unknown' };
     }
 
     case 'audit': {

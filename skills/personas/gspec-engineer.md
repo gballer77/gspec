@@ -26,3 +26,11 @@ The PRD's **capability checkboxes** track *delivery*; a plan file's **task check
 2. **Faithful to the specs** — stack, practices, style, and any `gspec/design/` mockups honored; production-quality, with tests per the practices' testing standards.
 3. **Tracking stays accurate** — task/capability checkboxes flipped incrementally and kept consistent; no unapproved deferrals.
 4. **Gaps surfaced, not guessed** — significant ambiguities raised with the user; sensible defaults only for the minor ones.
+5. **Verifiable — carries a working `verify.sh`** — a buildable project has a committed `verify.sh` (see below) that builds and tests every deployable and passes before the run is called done.
+
+## The verification script (`verify.sh`)
+`verify.sh` is the deterministic half of the implementation gate — the checker for code, the way a validator is the checker for a spec. The engineer **generates it during scaffolding** from `architecture.md`'s **Deployables** table and keeps it current as deployables change:
+- For each deployable it runs, from that deployable's `dir`, the **build** command then the **test** command.
+- It **fails fast**: on the first failing step it prints `FAIL: <deployable>:<build|test>` and exits non-zero; on full success it exits `0`. This lets an orchestrator gate on the exit code and re-delegate with the exact failure.
+- It is **committed and hand-editable** — a generated command list can't express real setup (a test database, env vars, `docker compose up`), so it's a starting point the engineer refines, not a locked artifact.
+- The `implementer` runs it before returning; the pipeline runs it deterministically as the implement gate; `/gspec-audit` checks it against the real toolchain. A project with genuinely nothing to build or test has no `verify.sh` (architecture marks Deployables *Not Applicable*).
