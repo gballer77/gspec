@@ -810,13 +810,17 @@ async function installSpecSync(targetName, cwd) {
 // event in .claude/settings.json. PostToolUse guards flag after a write; the
 // PreToolUse memory guard blocks an untagged agent-memory write before it lands
 // (the learning loop's feedback address-tag hook).
+// Each hook declares its lifecycle event and matcher. Tool hooks match tool
+// names (Write|Edit|MultiEdit); the SubagentStop capture hook matches agent_type
+// (`*` = every subagent — it filters internally on a FAIL verdict).
+const TOOL_MATCHER = 'Write|Edit|MultiEdit';
 const HOOK_SPECS = [
-  { file: 'gspec-agnosticism-guard.mjs', event: 'PostToolUse' },
-  { file: 'gspec-spec-integrity.mjs', event: 'PostToolUse' },
-  { file: 'gspec-memory-address-tag.mjs', event: 'PreToolUse' },
-  { file: 'gspec-skill-write-guard.mjs', event: 'PreToolUse' },
+  { file: 'gspec-agnosticism-guard.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
+  { file: 'gspec-spec-integrity.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
+  { file: 'gspec-memory-address-tag.mjs', event: 'PreToolUse', matcher: TOOL_MATCHER },
+  { file: 'gspec-skill-write-guard.mjs', event: 'PreToolUse', matcher: TOOL_MATCHER },
+  { file: 'gspec-subagent-capture.mjs', event: 'SubagentStop', matcher: '*' },
 ];
-const HOOK_MATCHER = 'Write|Edit|MultiEdit';
 
 async function installHooks(targetName, cwd) {
   if (targetName !== 'claude') return; // hooks are Claude Code-specific (settings.json)
@@ -841,20 +845,19 @@ async function installHooks(targetName, cwd) {
   const isGspec = (entry) => (entry?.hooks || []).some(
     (h) => typeof h.command === 'string' && h.command.includes('/.claude/hooks/gspec-'),
   );
-  // One gspec entry per lifecycle event; idempotent (drop prior gspec entries).
+  const hookCmd = (s) => ({ type: 'command', command: `node "$CLAUDE_PROJECT_DIR/.claude/hooks/${s.file}"`, timeout: 10 });
+  // One gspec entry per (event, matcher); idempotent (drop prior gspec entries
+  // per event, keeping any non-gspec hooks the user has).
   const byEvent = {};
   for (const spec of HOOK_SPECS) (byEvent[spec.event] = byEvent[spec.event] || []).push(spec);
   for (const [event, specs] of Object.entries(byEvent)) {
     const existing = Array.isArray(settings.hooks[event]) ? settings.hooks[event] : [];
     const kept = existing.filter((e) => !isGspec(e));
-    kept.push({
-      matcher: HOOK_MATCHER,
-      hooks: specs.map((s) => ({
-        type: 'command',
-        command: `node "$CLAUDE_PROJECT_DIR/.claude/hooks/${s.file}"`,
-        timeout: 10,
-      })),
-    });
+    const byMatcher = {};
+    for (const s of specs) (byMatcher[s.matcher] = byMatcher[s.matcher] || []).push(s);
+    for (const [matcher, ms] of Object.entries(byMatcher)) {
+      kept.push({ matcher, hooks: ms.map(hookCmd) });
+    }
     settings.hooks[event] = kept;
   }
   await writeFile(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
