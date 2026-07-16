@@ -59,6 +59,19 @@ export const V2_SKILLS = [
   },
 ];
 
+// Learning-loop skills — Claude-only (per-agent `memory:` is a Claude Code
+// feature; the other targets have no silo). The build emits these and appends
+// them to every agent's `skills:` ONLY for a target with `learningLoop: true`
+// (currently just claude), so they never leak into the non-Claude inline/degrade
+// bodies. Kept out of V2_SKILLS for exactly that reason. See docs §13 (T1).
+export const LEARNING_SKILLS = [
+  {
+    name: 'gspec-memory',
+    source: 'skills/conventions/gspec-memory.md',
+    description: 'Per-agent memory convention: feedback-driven capture, the target+layer address tag, and lean curation of MEMORY.md. Preloaded by every agent on Claude Code.',
+  },
+];
+
 export const V2_AGENTS = [
   {
     name: 'stack-writer',

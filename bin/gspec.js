@@ -805,10 +805,17 @@ async function installSpecSync(targetName, cwd) {
   }
 }
 
-// gspec ships two PostToolUse hooks (Claude Code only) — near-term, model-free
-// guards. They live in the package's hooks/ dir and install to .claude/hooks/,
-// registered in .claude/settings.json.
-const HOOK_SCRIPTS = ['gspec-agnosticism-guard.mjs', 'gspec-spec-integrity.mjs'];
+// gspec ships model-free hook guards (Claude Code only). They live in the
+// package's hooks/ dir and install to .claude/hooks/, registered per lifecycle
+// event in .claude/settings.json. PostToolUse guards flag after a write; the
+// PreToolUse memory guard blocks an untagged agent-memory write before it lands
+// (the learning loop's feedback address-tag hook).
+const HOOK_SPECS = [
+  { file: 'gspec-agnosticism-guard.mjs', event: 'PostToolUse' },
+  { file: 'gspec-spec-integrity.mjs', event: 'PostToolUse' },
+  { file: 'gspec-memory-address-tag.mjs', event: 'PreToolUse' },
+];
+const HOOK_MATCHER = 'Write|Edit|MultiEdit';
 
 async function installHooks(targetName, cwd) {
   if (targetName !== 'claude') return; // hooks are Claude Code-specific (settings.json)
@@ -816,8 +823,8 @@ async function installHooks(targetName, cwd) {
   const hooksSrc = join(__dirname, '..', 'hooks');
   const hooksDest = join(cwd, '.claude', 'hooks');
   await mkdir(hooksDest, { recursive: true });
-  for (const f of HOOK_SCRIPTS) {
-    await writeFile(join(hooksDest, f), await readFile(join(hooksSrc, f), 'utf-8'), 'utf-8');
+  for (const spec of HOOK_SPECS) {
+    await writeFile(join(hooksDest, spec.file), await readFile(join(hooksSrc, spec.file), 'utf-8'), 'utf-8');
   }
 
   // Merge into .claude/settings.json — create or merge, never clobber other
@@ -830,22 +837,60 @@ async function installHooks(targetName, cwd) {
     if (e.code !== 'ENOENT') throw e;
   }
   settings.hooks = settings.hooks || {};
-  const existing = Array.isArray(settings.hooks.PostToolUse) ? settings.hooks.PostToolUse : [];
   const isGspec = (entry) => (entry?.hooks || []).some(
     (h) => typeof h.command === 'string' && h.command.includes('/.claude/hooks/gspec-'),
   );
-  const kept = existing.filter((e) => !isGspec(e));
-  kept.push({
-    matcher: 'Write|Edit|MultiEdit',
-    hooks: HOOK_SCRIPTS.map((f) => ({
-      type: 'command',
-      command: `node "$CLAUDE_PROJECT_DIR/.claude/hooks/${f}"`,
-      timeout: 10,
-    })),
-  });
-  settings.hooks.PostToolUse = kept;
+  // One gspec entry per lifecycle event; idempotent (drop prior gspec entries).
+  const byEvent = {};
+  for (const spec of HOOK_SPECS) (byEvent[spec.event] = byEvent[spec.event] || []).push(spec);
+  for (const [event, specs] of Object.entries(byEvent)) {
+    const existing = Array.isArray(settings.hooks[event]) ? settings.hooks[event] : [];
+    const kept = existing.filter((e) => !isGspec(e));
+    kept.push({
+      matcher: HOOK_MATCHER,
+      hooks: specs.map((s) => ({
+        type: 'command',
+        command: `node "$CLAUDE_PROJECT_DIR/.claude/hooks/${s.file}"`,
+        timeout: 10,
+      })),
+    });
+    settings.hooks[event] = kept;
+  }
   await writeFile(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
-  console.log(`  ${chalk.green('+')} Installed ${HOOK_SCRIPTS.length} gspec hooks → .claude/hooks/ + settings.json`);
+  console.log(`  ${chalk.green('+')} Installed ${HOOK_SPECS.length} gspec hooks → .claude/hooks/ + settings.json`);
+}
+
+// Per-agent memory scope (the learning loop) — where the Claude native agents'
+// silos live. Chosen at init and stamped into each installed agent's `memory:`
+// field. Claude-only (the other targets have no per-agent memory). Non-TTY
+// installs (CI) keep the built-in default of `project`.
+async function applyMemoryScope(targetName, cwd) {
+  if (targetName !== 'claude') return;
+  const agentsDir = join(cwd, '.claude', 'agents');
+  let files;
+  try { files = (await readdir(agentsDir)).filter((f) => f.endsWith('.md')); }
+  catch (e) { if (e.code === 'ENOENT') return; throw e; }
+  if (files.length === 0) return;
+
+  let scope = 'project';
+  if (process.stdin.isTTY) {
+    scope = await promptSelect(
+      'Where should agent memory (the learning loop) live?',
+      [
+        { slug: 'project', description: 'committed to .claude/agent-memory/ — shared with your team via version control' },
+        { slug: 'local', description: 'private to .claude/agent-memory-local/ — this clone only (gitignored)' },
+      ],
+    );
+  }
+
+  let stamped = 0;
+  for (const f of files) {
+    const p = join(agentsDir, f);
+    const content = await readFile(p, 'utf-8');
+    const updated = content.replace(/^memory:\s*\S+\s*$/m, `memory: ${scope}`);
+    if (updated !== content) { await writeFile(p, updated, 'utf-8'); stamped++; }
+  }
+  console.log(`  ${chalk.green('+')} Agent memory scope: ${chalk.bold(scope)} (${stamped} agents)`);
 }
 
 const MIGRATE_COMMANDS = {
@@ -1694,6 +1739,8 @@ program
     await installSpecSync(targetName, process.cwd());
 
     await installHooks(targetName, process.cwd());
+
+    await applyMemoryScope(targetName, process.cwd());
 
     await checkGspecFiles(process.cwd(), targetName);
 

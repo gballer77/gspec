@@ -120,6 +120,9 @@ export const TARGETS = {
     // Claude subagents preload skills via the `skills:` frontmatter field, so
     // v2 agents keep their persona out-of-line (as reusable skills).
     preloadsSkills: true,
+    // Claude is the only target with per-agent `memory:` — so it's the only one
+    // that gets the learning-loop skills (gspec-memory) emitted + preloaded.
+    learningLoop: true,
     // .claude/skills/<name>/SKILL.md
     async emit(outDir, content, meta) {
       const frontmatter = buildFrontmatter({

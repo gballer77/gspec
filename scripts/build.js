@@ -4,7 +4,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { TARGETS } from '../bin/emitters.js';
-import { V2_SKILLS, V2_AGENTS, V2_COMMANDS, V2_TARGETS, DEGRADE_CAPABILITIES } from '../manifest.js';
+import { V2_SKILLS, V2_AGENTS, V2_COMMANDS, V2_TARGETS, DEGRADE_CAPABILITIES, LEARNING_SKILLS } from '../manifest.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -128,14 +128,23 @@ async function emitV2(target, outDir) {
   // Persona/convention skill catalog. Skipped where commands share the skills
   // namespace (Codex) — there the persona is inlined into agents, so a standalone
   // catalog would only collide with the command-skills.
+  // Learning-loop skills (gspec-memory) only ship to targets with per-agent
+  // memory — currently just Claude. Elsewhere they'd only add dead weight to the
+  // inline/degrade bodies, so they never enter the skill list or agent skills[].
+  const learningSkills = target.learningLoop ? LEARNING_SKILLS : [];
   if (target.emitSkills !== false) {
-    for (const meta of V2_SKILLS) { await target.emitSkill(outDir, await readSource(meta.source), meta); skills++; }
+    for (const meta of [...V2_SKILLS, ...learningSkills]) { await target.emitSkill(outDir, await readSource(meta.source), meta); skills++; }
   }
   for (const meta of V2_AGENTS) {
+    // On a learning-loop target, every memory-bearing agent also preloads the
+    // gspec-memory convention (appended here so it stays out of the manifest).
+    const emitMeta = (learningSkills.length && meta.memory)
+      ? { ...meta, skills: [...(meta.skills || []), ...learningSkills.map((s) => s.name)] }
+      : meta;
     // Claude preloads skills via `skills:` frontmatter; targets that can't (e.g.
     // OpenCode) get the persona inlined into the agent body.
-    const body = target.preloadsSkills ? await readSource(meta.source) : await composeAgentBody(meta);
-    await target.emitAgent(outDir, body, meta);
+    const body = target.preloadsSkills ? await readSource(emitMeta.source) : await composeAgentBody(emitMeta);
+    await target.emitAgent(outDir, body, emitMeta);
     agents++;
   }
   for (const meta of V2_COMMANDS) { await target.emitCommand(outDir, await readSource(meta.source), meta); commands++; }

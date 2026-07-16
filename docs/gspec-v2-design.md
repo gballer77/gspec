@@ -1,6 +1,6 @@
 # gspec v2 — Design
 
-- **Status:** Layers 1–5 built on `v2-agent-refactor`; the `implementation-validator` code gate has landed. **Next queued: the learning loop ("training") — recorded in §13, not yet built.**
+- **Status:** Layers 1–5 built on `v2-agent-refactor`; the `implementation-validator` code gate has landed. **Learning loop ("training") started — T1 (per-agent memory + feedback address-tag hook) built; T2–T4 next (§13).**
 - **Branch:** `v2-agent-refactor`
 - **Date:** 2026-07-11
 - **Design reference:** `~/Downloads/agent-learning-architecture-handoff.md` — a conceptual handoff, **adapted, not followed verbatim**.
@@ -224,7 +224,7 @@ Deterministic shell on lifecycle events, **no model judgment**. They upgrade *so
 | **spec integrity check** | `PostToolUse` · Write/Edit on `gspec/*.md` | valid frontmatter + current `spec-version` | near-term |
 | **QA-gate floor** *(opt-in only)* | `Stop`/`PostToolUse` · capability→`[x]` in `features/*.md` | a validator verdict exists on disk, else block | opt-in only |
 | **skill-write guard** | `PreToolUse` · Write/Edit on committed skill files | block direct writes → force the reviewed pending-diff path | with loop |
-| **feedback address-tag** | `PreToolUse` · Write on agent-memory/feedback | require a target+layer address tag | with loop |
+| **feedback address-tag** | `PreToolUse` · Write on agent-memory | require a target+layer address tag | ✅ T1 (built) |
 | **subagent capture** *(opt)* | `SubagentStop` | snapshot return / trigger review | with loop |
 
 Because QA gates are **optional** (on-by-default, opt-out), the **QA-gate floor ships opt-in only** — never a default; a team that wants hard enforcement enables it.
@@ -284,8 +284,8 @@ The 12 `/gspec-*` names and the `gspec/*.md` doc set are preserved throughout.
 
 ## 13. Deferred / future
 
-- **Learning loop ("training") — the next build. Recorded plan, not yet built.** Turns the dormant per-agent `memory:` silos (already keyed by agent name, `memory: project`) into a producer≠checker-style improvement loop where agents get better across runs. Sequenced:
-  - **T1 — Activate per-agent memory.** Give each agent a `MEMORY.md` convention and a capture path so a run's lessons persist into its silo. Gate every write behind the **feedback address-tag** hook (§9): a memory carries a target+layer address so it's attributable, scoped, and reversible — never an anonymous blob.
+- **Learning loop ("training") — in progress. T1 built; T2–T4 recorded below.** Turns the dormant per-agent `memory:` silos (already keyed by agent name, `memory: project`) into a producer≠checker-style improvement loop where agents get better across runs. Sequenced:
+  - **T1 — Activate per-agent memory. ✅ built.** Each Claude agent preloads a new `gspec-memory` convention skill, and its `memory:` silo auto-loads at startup. Capture is **feedback-driven** — a lesson is written only on a QA verdict or a user correction, never on a clean run — and every lesson carries a **target+layer address tag**, enforced by the **feedback address-tag** hook (§9; `PreToolUse`, blocks an untagged agent-memory write). **Default-on**; the silo **scope (project vs local) is chosen at `gspec` init** and stamped into each agent's `memory:` field. Claude-only — the other targets have no silo, so the skill/hook ship only there.
   - **T2 — The distiller.** A step/agent that reads an agent's accumulated memory and proposes a **reviewed skill diff** (memory → a concrete change to the persona/convention skill), *never* a silent auto-edit. Ships behind the **skill-write guard** hook (§9): direct writes to committed skill files are blocked, forcing the reviewed pending-diff path. Producer≠checker holds — the distiller *proposes*; a human (or a checker agent) *approves* before a skill changes.
   - **T3 — `gspec-orchestrator` "mini-me" skill.** A trainable judgment skill the pipeline preloads to make the scope / granularity / fan-out calls the driver currently hard-codes in `bin/pipeline.js`, improved over time by the same distiller loop.
   - **T4 — Loop hooks.** The three §9 "with loop" hooks land here: **skill-write guard** (enables T2), **feedback address-tag** (enables T1), and **subagent capture** (`SubagentStop` → snapshot the return / trigger review) to feed the loop.
