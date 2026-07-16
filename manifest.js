@@ -43,6 +43,11 @@ export const V2_SKILLS = [
     description: 'Engineer persona — decompose a PRD into an ordered plan and implement specs into working code: capability↔task↔code traceability, follow specs exactly, never descope. Preloaded by the plan-decomposer, plan-validator, and implementer agents.',
   },
   {
+    name: 'gspec-orchestrator',
+    source: 'skills/personas/gspec-orchestrator.md',
+    description: 'Build-orchestrator judgment — break an implementation run into right-sized scopes, order them by dependency, and fan out only file-disjoint scopes (the build-plan wave contract). Preloaded by the build-orchestrator agent and /gspec-implement.',
+  },
+  {
     name: 'gspec-conventions',
     source: 'skills/conventions/gspec-conventions.md',
     description: 'Shared gspec spec formatting: frontmatter/spec-version, "Not Applicable" handling, and the capability checkbox + acceptance-criteria format.',
@@ -226,6 +231,16 @@ export const V2_AGENTS = [
     memory: 'project',
   },
   {
+    name: 'build-orchestrator',
+    source: 'agents/build-orchestrator.md',
+    description: 'Turn the in-scope features/plans into an ordered, fan-out-aware build plan (waves of file-disjoint implementer scopes), acting with the orchestrator judgment. Read-only — plans, never builds. Delegated by the pipeline implement stage.',
+    // Read-only planner; memory: project makes its scope/fan-out judgment trainable via /gspec-distill.
+    skills: ['gspec-orchestrator', 'gspec-engineer', 'gspec-conventions'],
+    tools: 'Read, Grep, Glob',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
     name: 'codebase-inspector',
     source: 'agents/codebase-inspector.md',
     description: 'Inspect the codebase for drift vs the specs (spec↔code) and orphan capabilities, acting as the steward. Read-only (never modifies code or specs); returns impact-ordered findings. Delegated by /gspec-audit.',
@@ -368,7 +383,7 @@ export const DEGRADE_CAPABILITIES = [
   { command: 'gspec-feature',   produce: 'feature-writer',      check: 'feature-validator' },
   { command: 'gspec-architect', produce: 'architecture-writer', check: 'architecture-validator' },
   { command: 'gspec-plan',      produce: 'plan-decomposer',     check: 'plan-validator' },
-  { command: 'gspec-implement', produce: 'implementer', check: 'implementation-validator' },
+  { command: 'gspec-implement', produce: 'implementer', check: 'implementation-validator', alsoSkills: ['gspec-orchestrator'] },
   { command: 'gspec-analyze',   produce: 'spec-cross-referencer' },
   { command: 'gspec-audit',     produce: 'codebase-inspector' },
   { command: 'gspec-migrate',   produce: 'spec-migrator' },

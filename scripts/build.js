@@ -182,7 +182,10 @@ async function composeDegraded(cap) {
   const produce = cap.produce ? V2_AGENTS.find((a) => a.name === cap.produce) : null;
   const check = cap.check ? V2_AGENTS.find((a) => a.name === cap.check) : null;
   const also = cap.also ? V2_AGENTS.find((a) => a.name === cap.also) : null;
-  const skillNames = cap.skills || dedup([...(produce?.skills || []), ...(check?.skills || [])]);
+  // Skills to inline: the produce+check agents' skills, plus any `alsoSkills`
+  // the capability adds (e.g. gspec-orchestrator for the implement fan-out
+  // judgment, which lives on the pipeline-only build-orchestrator agent).
+  const skillNames = cap.skills || dedup([...(produce?.skills || []), ...(check?.skills || []), ...(cap.alsoSkills || [])]);
 
   const parts = [DEGRADE_PREAMBLE, '', await readSource(cmd.source)];
 

@@ -32,7 +32,7 @@ export const STAGES = [
   { id: 'features',     title: 'Feature PRDs',      type: 'features',   writer: 'feature-writer',      validator: 'feature-validator' },
   { id: 'architecture', title: 'Architecture',      type: 'gated',      writer: 'architecture-writer', validator: 'architecture-validator', outputs: ['gspec/architecture.md'] },
   { id: 'plan',         title: 'Plans',             type: 'plan',       writer: 'plan-decomposer',     validator: 'plan-validator' },
-  { id: 'implement',    title: 'Implementation',    type: 'implement',  agent: 'implementer', validator: 'implementation-validator' },
+  { id: 'implement',    title: 'Implementation',    type: 'implement',  agent: 'implementer', orchestrator: 'build-orchestrator', validator: 'implementation-validator' },
   { id: 'reconcile',    title: 'Reconcile audit',   type: 'audit',      agent: 'codebase-inspector' },
 ];
 
@@ -259,9 +259,33 @@ async function runStage(stage, ctx) {
     }
 
     case 'implement': {
+      // The monolithic brief — the fallback build, and the self-heal prompt (a
+      // full "fix whatever's broken" pass) used by the gates below.
       const buildPrompt = stageBrief(stage, brief, 'Implement all in-scope, unchecked work. Scaffold if greenfield; generate/maintain verify.sh from the architecture Deployables table; write and run tests; flip checkboxes as you go.');
-      let out = await runAgent(stage.agent, buildPrompt, ctx, { allowedTools: 'Bash' });
-      if (out.code !== 0) return { status: 'failed', reason: `${stage.agent} exited ${out.code}` };
+
+      // Orchestrate (design §13 T3): the build-orchestrator turns the specs into
+      // an ordered wave plan; the driver runs it, fanning out file-disjoint
+      // scopes within a wave. No usable plan → one monolithic implement call.
+      let plan = null;
+      if (stage.orchestrator) {
+        const p = await runAgent(stage.orchestrator, stageBrief(stage, brief, 'Plan this implementation run: read the in-scope features/plans and return ONLY the ordered wave build-plan JSON.'), ctx);
+        plan = p.code === 0 ? parseBuildPlan(p.text) : null;
+      }
+
+      let out;
+      if (plan) {
+        log(chalk.dim(`      orchestrated: ${plan.length} wave(s), ${plan.reduce((n, w) => n + w.length, 0)} scope(s)`));
+        for (let i = 0; i < plan.length; i++) {
+          const wave = plan[i];
+          const runs = await Promise.all(wave.map((scope) =>
+            runAgent(stage.agent, stageBrief(stage, brief, `Build ONLY this scope (one isolated implementer run): ${scope.instruction}\nGenerate/maintain verify.sh; write and run tests; flip checkboxes for the work you complete.`), ctx, { allowedTools: 'Bash' })));
+          const bad = runs.findIndex((r) => r.code !== 0);
+          if (bad >= 0) return { status: 'failed', reason: `implementer scope "${wave[bad].label}" (wave ${i + 1}/${plan.length}) exited ${runs[bad].code}` };
+        }
+      } else {
+        out = await runAgent(stage.agent, buildPrompt, ctx, { allowedTools: 'Bash' });
+        if (out.code !== 0) return { status: 'failed', reason: `${stage.agent} exited ${out.code}` };
+      }
       if (ctx.noQa) return { status: 'done', verdict: 'skipped' };
 
       // Gate part 1 — deterministic build+test. The driver runs verify.sh; a
@@ -301,6 +325,28 @@ async function runStage(stage, ctx) {
     default:
       return { status: 'failed', reason: `unknown stage type ${stage.type}` };
   }
+}
+
+// Parse the build-orchestrator's plan (a fenced JSON block of ordered waves,
+// each a list of {label, instruction} scopes). Returns a normalized array of
+// waves (arrays of scopes), or null if nothing usable — the caller then falls
+// back to a single monolithic implement call. Defensive: the plan is model
+// output, so tolerate a stray fence/prose and drop malformed scopes.
+function parseBuildPlan(text) {
+  const fence = String(text).match(/```(?:json)?\s*([\s\S]*?)```/);
+  const raw = (fence ? fence[1] : text).trim();
+  let obj;
+  try { obj = JSON.parse(raw); } catch { return null; }
+  const waves = Array.isArray(obj?.waves) ? obj.waves : null;
+  if (!waves) return null;
+  const norm = [];
+  for (const wave of waves) {
+    const scopes = (Array.isArray(wave) ? wave : [])
+      .filter((s) => s && typeof s.instruction === 'string' && s.instruction.trim())
+      .map((s) => ({ label: String(s.label || 'scope').trim(), instruction: s.instruction.trim() }));
+    if (scopes.length) norm.push(scopes);
+  }
+  return norm.length ? norm : null;
 }
 
 // The decomposer returns the plan body possibly wrapped in prose/fences; keep
