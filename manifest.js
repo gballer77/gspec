@@ -262,6 +262,16 @@ export const V2_AGENTS = [
     tools: 'Read, Write, Edit, Glob, Grep',
     memory: 'project',
   },
+  {
+    name: 'distiller',
+    source: 'agents/distiller.md',
+    description: "Read agents' accumulated memory and propose reviewed skill improvements (surgical diffs with provenance), acting as the steward. Read-only — proposes, never applies. Delegated by /gspec-distill (learning loop).",
+    // memory: project auto-attaches gspec-memory so it understands the lesson format.
+    skills: ['gspec-steward', 'gspec-qa'],
+    tools: 'Read, Grep, Glob',
+    model: 'opus',
+    memory: 'project',
+  },
 ];
 
 export const V2_COMMANDS = [
@@ -330,6 +340,11 @@ export const V2_COMMANDS = [
     source: 'commands/gspec-research.md',
     description: 'Research competitors from gspec/profile.md and produce a competitive analysis (gspec/research.md) with gap identification; fans out competitor-researcher, optionally drafts feature PRDs. TRIGGER for market/competitor research or feature gaps.',
   },
+  {
+    name: 'gspec-distill',
+    source: 'commands/gspec-distill.md',
+    description: 'Review lessons agents accumulated in memory and promote worthy ones into their skills — one at a time, surgically, with approval. Delegates the distiller; applies approved edits. TRIGGER to review agent lessons or improve skills from memory.',
+  },
 ];
 
 // Targets that receive the full v2 artifact split (skills + agents + commands),
@@ -358,6 +373,7 @@ export const DEGRADE_CAPABILITIES = [
   { command: 'gspec-audit',     produce: 'codebase-inspector' },
   { command: 'gspec-migrate',   produce: 'spec-migrator' },
   { command: 'gspec-research',  produce: 'competitor-researcher', also: 'research-writer' },
+  { command: 'gspec-distill',   produce: 'distiller' },
   { command: 'gspec-qa',        skills: ['gspec-qa'] },
 ];
 

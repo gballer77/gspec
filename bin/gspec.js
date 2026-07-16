@@ -814,6 +814,7 @@ const HOOK_SPECS = [
   { file: 'gspec-agnosticism-guard.mjs', event: 'PostToolUse' },
   { file: 'gspec-spec-integrity.mjs', event: 'PostToolUse' },
   { file: 'gspec-memory-address-tag.mjs', event: 'PreToolUse' },
+  { file: 'gspec-skill-write-guard.mjs', event: 'PreToolUse' },
 ];
 const HOOK_MATCHER = 'Write|Edit|MultiEdit';
 

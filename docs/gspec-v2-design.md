@@ -1,6 +1,6 @@
 # gspec v2 — Design
 
-- **Status:** Layers 1–5 built on `v2-agent-refactor`; the `implementation-validator` code gate has landed. **Learning loop ("training") started — T1 (per-agent memory + feedback address-tag hook) built; T2–T4 next (§13).**
+- **Status:** Layers 1–5 built on `v2-agent-refactor`; the `implementation-validator` code gate has landed. **Learning loop ("training") underway — T1 (per-agent memory) and T2 (the distiller + `/gspec-distill` + skill-write guard) built; T3–T4 next (§13).**
 - **Branch:** `v2-agent-refactor`
 - **Date:** 2026-07-11
 - **Design reference:** `~/Downloads/agent-learning-architecture-handoff.md` — a conceptual handoff, **adapted, not followed verbatim**.
@@ -158,7 +158,7 @@ memory: project
 
 ## 7. Layer 3 — Commands
 
-14 `/gspec-*` entry points. Each runs in the main session, loads its persona skill, holds every interview/approval, and delegates isolated work to agents. **Agents never talk to the human.**
+15 `/gspec-*` entry points. Each runs in the main session, loads its persona skill, holds every interview/approval, and delegates isolated work to agents. **Agents never talk to the human.**
 
 | Command | Loads persona | Orchestrates | Deliverable |
 |---|---|---|---|
@@ -175,6 +175,7 @@ memory: project
 | `/gspec-migrate` | steward | spec-migrator ×files → confirm → apply | reformatted specs |
 | `/gspec-implement` | engineer | codebase-inspector (progress) → plan-decomposer (if missing) → implementer ×scope | code + checkboxes |
 | `/gspec-qa` **(new)** | qa | the relevant `*-validator`(s), fan-out across one or all specs | verdicts (+ optional fix loop) |
+| `/gspec-distill` **(new)** | steward | distiller → present proposed skill edits one-at-a-time → apply approved + prune memory | improved skills (learning loop) |
 | `/gspec-pipeline` **(new)** | — (driver) | fallback path for the pipeline (see Layer 4) | built project |
 
 ### The producer≠checker gate
@@ -223,7 +224,7 @@ Deterministic shell on lifecycle events, **no model judgment**. They upgrade *so
 | **profile-agnosticism guard** | `PostToolUse` · Write/Edit on stack/practices/style/architecture | no leaked product/company identity → block/flag | near-term |
 | **spec integrity check** | `PostToolUse` · Write/Edit on `gspec/*.md` | valid frontmatter + current `spec-version` | near-term |
 | **QA-gate floor** *(opt-in only)* | `Stop`/`PostToolUse` · capability→`[x]` in `features/*.md` | a validator verdict exists on disk, else block | opt-in only |
-| **skill-write guard** | `PreToolUse` · Write/Edit on committed skill files | block direct writes → force the reviewed pending-diff path | with loop |
+| **skill-write guard** | `PreToolUse` · Write/Edit under `.claude/skills/` | block edits to generated skills → force the `/gspec-distill` path | ✅ T2 (built) |
 | **feedback address-tag** | `PreToolUse` · Write on agent-memory | require a target+layer address tag | ✅ T1 (built) |
 | **subagent capture** *(opt)* | `SubagentStop` | snapshot return / trigger review | with loop |
 
@@ -284,11 +285,11 @@ The 12 `/gspec-*` names and the `gspec/*.md` doc set are preserved throughout.
 
 ## 13. Deferred / future
 
-- **Learning loop ("training") — in progress. T1 built; T2–T4 recorded below.** Turns the dormant per-agent `memory:` silos (already keyed by agent name, `memory: project`) into a producer≠checker-style improvement loop where agents get better across runs. Sequenced:
+- **Learning loop ("training") — in progress. T1–T2 built; T3–T4 recorded below.** Turns the dormant per-agent `memory:` silos (already keyed by agent name, `memory: project`) into a producer≠checker-style improvement loop where agents get better across runs. Sequenced:
   - **T1 — Activate per-agent memory. ✅ built.** Each Claude agent preloads a new `gspec-memory` convention skill, and its `memory:` silo auto-loads at startup. Capture is **feedback-driven** — a lesson is written only on a QA verdict or a user correction, never on a clean run — and every lesson carries a **target+layer address tag**, enforced by the **feedback address-tag** hook (§9; `PreToolUse`, blocks an untagged agent-memory write). **Default-on**; the silo **scope (project vs local) is chosen at `gspec` init** and stamped into each agent's `memory:` field. Claude-only — the other targets have no silo, so the skill/hook ship only there.
-  - **T2 — The distiller.** A step/agent that reads an agent's accumulated memory and proposes a **reviewed skill diff** (memory → a concrete change to the persona/convention skill), *never* a silent auto-edit. Ships behind the **skill-write guard** hook (§9): direct writes to committed skill files are blocked, forcing the reviewed pending-diff path. Producer≠checker holds — the distiller *proposes*; a human (or a checker agent) *approves* before a skill changes.
+  - **T2 — The distiller. ✅ built.** The `distiller` agent (steward + QA, read-only) reads agents' address-tagged memory and proposes **surgical skill edits** with provenance and a confidence; `/gspec-distill` presents each one-at-a-time, applies the approved ones in the main session, and prunes the graduated lessons — the distiller never writes a skill itself. The **skill-write guard** hook (§9; `PreToolUse`) is the hard floor: it blocks any Write/Edit to an installed `.claude/skills/` file (a generated artifact — agents carrying `memory:` have Write/Edit auto-enabled, so tool restrictions alone can't stop them). Durable promotion lands in the gspec **source** skills (not under `.claude/`, so unguarded) and reinstalls. Producer≠checker holds — propose, then human-approve. *(Cross-reading another agent's silo via the Read tool works but is not an officially-documented Claude Code capability — noted dependency.)*
   - **T3 — `gspec-orchestrator` "mini-me" skill.** A trainable judgment skill the pipeline preloads to make the scope / granularity / fan-out calls the driver currently hard-codes in `bin/pipeline.js`, improved over time by the same distiller loop.
-  - **T4 — Loop hooks.** The three §9 "with loop" hooks land here: **skill-write guard** (enables T2), **feedback address-tag** (enables T1), and **subagent capture** (`SubagentStop` → snapshot the return / trigger review) to feed the loop.
+  - **T4 — Loop hooks.** T1 shipped the **feedback address-tag** hook and T2 the **skill-write guard**; T4 adds the last §9 "with loop" hook, **subagent capture** (`SubagentStop` → snapshot the return / trigger review), so lessons are captured automatically rather than relying on each agent to self-record.
 - **Enforcement hooks** beyond near-term (QA-gate floor + the three loop hooks).
 - **Implementation verification gate (`implementation-validator`)** — **✅ built (this branch).** The producer≠checker for code (supersedes the vague "code-reviewer" idea). A two-part gate that honors `--no-qa`; this bullet is the as-built contract:
   - **Deterministic part — build + test only** (not the full lint/typecheck/practices pipeline, for now). Multi-deployable / polyglot aware: one project may ship e.g. a TypeScript frontend + a Java backend, each with its own toolchain and working dir. The **deployables table** (name · dir · build · test) lives in **`architecture.md`**, *not* `stack.md` — stack is the tooling *palette* (what *could* build/test; portable, profile-agnostic), architecture is the concrete structure (what *does* exist; technology-aware; already owns Project Structure + Project Setup). The `implementer` generates a committed **`verify.sh`** from that table during scaffolding — fail-fast, prints `FAIL: <deployable>:<phase>`, hand-editable for setup a command-list can't express (test DB, env, `docker compose`). The **pipeline driver runs `bash verify.sh`** deterministically (exit code = the gate); on failure it re-delegates the `implementer` with the concrete errors — the strongest self-heal loop in the pipeline.
