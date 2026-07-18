@@ -58,7 +58,7 @@ spec-version: v1
 ### Code Organization
 
 - **File structure:** Group by function — install logic, platform detection, skill management, and spec-sync are separate modules
-  - The GitHub Pages website lives in the `pages/` folder with its own `package.json`, separate from the CLI package
+  - The GitHub Pages website lives in the `website/` folder with its own `package.json`, separate from the CLI package
 - **Naming conventions:**
   - Shell scripts: `kebab-case.sh`
   - Skill files: `gspec-<command-name>` matching the slash command name
@@ -322,7 +322,7 @@ rules:
     source: "§6 Performance"
     action: gate
     event: ci
-    applies_to: ["pages/**"]
+    applies_to: ["website/**"]
     severity: warn
 
   # --- judge: LLM reviewer subagent; not text-decidable ---

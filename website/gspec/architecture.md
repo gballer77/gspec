@@ -34,7 +34,7 @@ The gspec website is a static Astro 5.x site deployed to GitHub Pages. It consis
 ### Directory Layout
 
 ```
-pages/
+website/
 ├── src/
 │   ├── pages/                      # Astro file-based routing
 │   │   ├── index.astro             # Home page (marketing landing)
@@ -368,9 +368,9 @@ npm run preview      # Serves dist/ at localhost:4321
 
 A single workflow handles build and deploy:
 
-- **Trigger:** Push to `main` when files under `pages/` change, or PRs to `main` touching `pages/`
-- **Build step:** Checkout → setup Node 20 → `cd pages && npm ci && npm run build`
-- **Deploy step (main only):** Deploy `pages/dist/` to GitHub Pages via `actions/deploy-pages`
+- **Trigger:** Push to `main` when files under `website/` change, or PRs to `main` touching `website/`
+- **Build step:** Checkout → setup Node 20 → `cd website && npm ci && npm run build`
+- **Deploy step (main only):** Deploy `website/dist/` to GitHub Pages via `actions/deploy-pages`
 - Path filtering ensures CLI-only changes don't trigger website builds
 
 ## 9. Technical Gap Analysis

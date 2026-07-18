@@ -71,7 +71,7 @@ Not Applicable — static site with no client-side application state. Any intera
   - Rapid prototyping without writing custom CSS files
   - Excellent responsive design utilities built in
   - `@tailwindcss/typography` plugin for long-form Markdown content styling
-- **Design token mapping:** Visual design values defined in `pages/style.md` (when created) map to Tailwind's `theme.extend` configuration in `tailwind.config.mjs`. Custom colors, fonts, and spacing scales are defined there as Tailwind theme tokens rather than as raw CSS variables.
+- **Design token mapping:** Visual design values defined in `website/gspec/style.md` (when created) map to Tailwind's `theme.extend` configuration in `tailwind.config.mjs`. Custom colors, fonts, and spacing scales are defined there as Tailwind theme tokens rather than as raw CSS variables.
 
 ---
 
@@ -170,7 +170,7 @@ Not Applicable.
 ### Package Management
 
 - **npm** — Package manager
-- Website has its own `package.json` in the `pages/` directory, separate from the CLI's root `package.json`
+- Website has its own `package.json` in the `website/` directory, separate from the CLI's root `package.json`
 - Key dependencies:
   - `astro` — Static site generator
   - `@astrojs/tailwind` — Tailwind CSS integration
@@ -180,7 +180,7 @@ Not Applicable.
 ### Project Structure
 
 ```
-pages/
+website/
 ├── src/
 │   ├── pages/        # Astro file-based routing
 │   ├── layouts/      # Page layouts (BaseLayout.astro, DocsLayout.astro)
@@ -257,7 +257,7 @@ Not Applicable.
 ### Library Usage Patterns
 
 #### Tailwind CSS in Astro
-- Configure design tokens in `tailwind.config.mjs` under `theme.extend` — map from `pages/style.md` definitions
+- Configure design tokens in `tailwind.config.mjs` under `theme.extend` — map from `website/gspec/style.md` definitions
 - Use `@apply` sparingly and only in Astro `<style>` blocks for repeated patterns — prefer utility classes in templates
 - Use Tailwind's responsive prefixes (`sm:`, `md:`, `lg:`) rather than custom media queries
 - Use `@tailwindcss/typography` with the `prose` class for all long-form Markdown content
