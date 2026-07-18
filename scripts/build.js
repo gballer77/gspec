@@ -4,7 +4,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { TARGETS } from '../lib/emitters.js';
-import { V2_SKILLS, V2_AGENTS, V2_COMMANDS, V2_TARGETS, DEGRADE_CAPABILITIES, LEARNING_SKILLS } from '../manifest.js';
+import { V2_SKILLS, V2_AGENTS, V2_COMMANDS, V2_TARGETS, DEGRADE_CAPABILITIES, LEARNING_SKILLS } from './manifest.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
