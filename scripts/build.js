@@ -8,7 +8,9 @@ import { V2_SKILLS, V2_AGENTS, V2_COMMANDS, V2_TARGETS, DEGRADE_CAPABILITIES, LE
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
-const COMMANDS_DIR = join(ROOT, 'commands');
+// The primitive sources (agents/, commands/, skills/) live under plugin/; every
+// manifest `source:` path is resolved relative to this root by readSource().
+const SOURCE_ROOT = join(ROOT, 'plugin');
 const DIST_DIR = join(ROOT, 'dist');
 const pkg = JSON.parse(await readFile(join(ROOT, 'package.json'), 'utf-8'));
 
@@ -117,7 +119,7 @@ function validateV2() {
 }
 
 async function readSource(relPath) {
-  const raw = await readFile(join(ROOT, relPath), 'utf-8');
+  const raw = await readFile(join(SOURCE_ROOT, relPath), 'utf-8');
   return raw.replace(VERSION_RE, pkg.version).replace(SPEC_VERSION_RE, SPEC_VERSION);
 }
 

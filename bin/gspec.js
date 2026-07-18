@@ -719,8 +719,9 @@ async function install(targetName, cwd) {
   console.log(chalk.bold(`  Created gspec/ directory with README.md\n`));
 }
 
-// Spec-sync instructions: platform-specific config for "always-on" agent rules
-const SPEC_SYNC = {
+// gspec preamble: platform-specific config for the "always-on" agent-rules block
+// injected into each target's instructions file (CLAUDE.md / AGENTS.md / .mdc).
+const PREAMBLE_TARGETS = {
   claude: {
     file: 'CLAUDE.md',
     mode: 'append', // append to existing file or create new
@@ -757,13 +758,18 @@ const SPEC_SYNC = {
   },
 };
 
-const GSPEC_SECTION_MARKER = '<!-- gspec:spec-sync -->';
+const GSPEC_SECTION_MARKER = '<!-- gspec:preamble -->';
+// Markers written by older gspec versions. Matched on read so a re-install
+// replaces a project's existing block in place instead of appending a duplicate;
+// the block is always rewritten with the current GSPEC_SECTION_MARKER.
+const GSPEC_LEGACY_MARKERS = ['<!-- gspec:spec-sync -->'];
+const GSPEC_MARKER_ALT = [GSPEC_SECTION_MARKER, ...GSPEC_LEGACY_MARKERS].join('|');
 
-async function installSpecSync(targetName, cwd) {
-  const config = SPEC_SYNC[targetName];
+async function installPreamble(targetName, cwd) {
+  const config = PREAMBLE_TARGETS[targetName];
   if (!config) return;
 
-  const templatePath = join(__dirname, '..', 'templates', 'spec-sync.md');
+  const templatePath = join(__dirname, '..', 'templates', 'preamble.md');
   const template = await readFile(templatePath, 'utf-8');
   const wrapped = config.wrap(template);
   const destPath = join(cwd, config.file);
@@ -779,10 +785,13 @@ async function installSpecSync(targetName, cwd) {
 
     const markedContent = `${GSPEC_SECTION_MARKER}\n${wrapped}\n${GSPEC_SECTION_MARKER}`;
 
-    if (existing.includes(GSPEC_SECTION_MARKER)) {
+    // Detect the current marker or any legacy one so re-installs replace the
+    // block in place (and migrate the delimiters to the current marker).
+    const hasMarker = new RegExp(GSPEC_MARKER_ALT).test(existing);
+    if (hasMarker) {
       // Replace existing gspec section
       const updated = existing.replace(
-        new RegExp(`${GSPEC_SECTION_MARKER}[\\s\\S]*?${GSPEC_SECTION_MARKER}`),
+        new RegExp(`(?:${GSPEC_MARKER_ALT})[\\s\\S]*?(?:${GSPEC_MARKER_ALT})`),
         markedContent,
       );
       await writeFile(destPath, updated, 'utf-8');
@@ -834,7 +843,7 @@ const HOOK_SUPPORT_FILES = ['gspec-enforce-core.mjs'];
 async function installHooks(targetName, cwd) {
   if (targetName !== 'claude') return; // hooks are Claude Code-specific (settings.json)
 
-  const hooksSrc = join(__dirname, '..', 'hooks');
+  const hooksSrc = join(__dirname, '..', 'plugin', 'hooks');
   const hooksDest = join(cwd, '.claude', 'hooks');
   await mkdir(hooksDest, { recursive: true });
   for (const spec of HOOK_SPECS) {
@@ -1752,7 +1761,7 @@ program
 
     await seedFromSavedSpecs(process.cwd());
 
-    await installSpecSync(targetName, process.cwd());
+    await installPreamble(targetName, process.cwd());
 
     await installHooks(targetName, process.cwd());
 

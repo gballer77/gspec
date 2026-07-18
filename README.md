@@ -201,7 +201,7 @@ gspec restore playbook/my-starter
 
 ## Extensions
 
-Author your own skills and have them auto-installed alongside the built-in `gspec-*` commands in every project. Extensions live in `~/.gspec/extensions/` as Markdown files with `name` and `description` frontmatter and the same shape as anything in `commands/`.
+Author your own skills and have them auto-installed alongside the built-in `gspec-*` commands in every project. Extensions live in `~/.gspec/extensions/` as Markdown files with `name` and `description` frontmatter and the same shape as anything in `plugin/commands/`.
 
 ```bash
 gspec extension save ./my-deploy.md   # Install a local skill file as a user extension
