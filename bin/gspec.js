@@ -812,15 +812,24 @@ async function installSpecSync(targetName, cwd) {
 // (the learning loop's feedback address-tag hook).
 // Each hook declares its lifecycle event and matcher. Tool hooks match tool
 // names (Write|Edit|MultiEdit); the SubagentStop capture hook matches agent_type
-// (`*` = every subagent — it filters internally on a FAIL verdict).
+// (`*` = every subagent — it filters internally on a FAIL verdict); the Stop
+// reconcile hook pairs with the reconcile-marker PostToolUse hook to nudge a
+// spec update when a session wrote source code but nothing under gspec/.
 const TOOL_MATCHER = 'Write|Edit|MultiEdit';
 const HOOK_SPECS = [
   { file: 'gspec-agnosticism-guard.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-spec-integrity.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
+  { file: 'gspec-reconcile-marker.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-memory-address-tag.mjs', event: 'PreToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-skill-write-guard.mjs', event: 'PreToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-subagent-capture.mjs', event: 'SubagentStop', matcher: '*' },
+  { file: 'gspec-reconcile.mjs', event: 'Stop', matcher: '*' },
+  { file: 'gspec-practices-enforce.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
 ];
+
+// Non-hook files the hooks import at runtime. Copied alongside HOOK_SPECS but
+// never wired into settings.json (they are libraries, not lifecycle hooks).
+const HOOK_SUPPORT_FILES = ['gspec-enforce-core.mjs'];
 
 async function installHooks(targetName, cwd) {
   if (targetName !== 'claude') return; // hooks are Claude Code-specific (settings.json)
@@ -830,6 +839,9 @@ async function installHooks(targetName, cwd) {
   await mkdir(hooksDest, { recursive: true });
   for (const spec of HOOK_SPECS) {
     await writeFile(join(hooksDest, spec.file), await readFile(join(hooksSrc, spec.file), 'utf-8'), 'utf-8');
+  }
+  for (const file of HOOK_SUPPORT_FILES) {
+    await writeFile(join(hooksDest, file), await readFile(join(hooksSrc, file), 'utf-8'), 'utf-8');
   }
 
   // Merge into .claude/settings.json — create or merge, never clobber other

@@ -18,7 +18,7 @@ spec-version: v1
 ### Testing Standards
 
 #### Unit Tests
-- **Coverage expectation:** Solid coverage of all non-trivial logic — parsing, file generation, CLI argument handling, version detection, and platform-specific install paths
+- **Coverage expectation:** New or changed non-trivial logic — parsing, file generation, CLI argument handling, version detection, and platform-specific install paths — must ship with a test in the same change. Trivial wrappers and prose content are exempt (see below)
 - **What to test:**
   - Functions that transform data (e.g., parsing frontmatter, generating file paths, resolving platform directories)
   - Edge cases in CLI argument parsing and validation
@@ -117,7 +117,7 @@ Not Applicable — solo developer. Use tests and self-review of diffs before com
   - Default: Only output that the user needs to see (install progress, success/failure)
   - Verbose (`--verbose` or `-v`): Include file paths being written, platform detection results, and skip reasons
   - No debug logging in released code — use verbose mode instead
-- **Never swallow errors silently** — if a file copy fails, report it. Don't continue as if it succeeded
+- **Never swallow errors silently** — no error branch may `exit 0` or return without emitting a message. If a file copy fails, report it and exit non-zero; don't continue as if it succeeded
 
 ---
 
@@ -183,5 +183,164 @@ A change is done when:
 - You want a reviewable execution plan in writing before any code lands
 
 When a plan file exists for every in-scope feature, `/gspec-implement` skips its own plan-mode step — the plan was already approved during `/gspec-plan`.
+
+---
+
+## 11. Enforcement
+
+This section declares how the practices above are enforced, so they run as hooks
+rather than living only as advisory context. It is a structured, machine-readable
+companion to the prose — the prose remains the "why," this block is the "what runs."
+
+The block is read live by the `gspec-practices-enforce` PostToolUse hook
+(installed with gspec on Claude Code). After each file write it runs the built-in
+deterministic checks whose `applies_to` matches the edited file and surfaces
+`error`-severity violations back to the editor. Because the hook reads this block
+at runtime, editing a rule takes effect on the next write — there is nothing to
+generate or regenerate. Rules are keyed by `id`.
+
+Currently enforced by the hook: `max-nesting`, `max-function-length`, and
+`file-naming` (shell files). `format`, `block`, `gate`, and `judge` actions are
+declared here for their tooling (formatters, git hooks, CI, and LLM review) and
+are not run by the PostToolUse hook.
+
+`action` taxonomy:
+
+- `format` — auto-fix and rewrite the edited file (formatter config is the source of truth; do not restate values here)
+- `lint` — inspect the edited file and report findings
+- `block` — reject the change before it lands (PreToolUse `exit 2`, or a git hook)
+- `gate` — end-of-turn / CI check (Stop hook or CI job)
+- `judge` — delegate to an LLM `reviewer` subagent; not text-decidable
+
+```yaml
+version: 1
+rules:
+  # --- format: auto-fix on write; formatter config is the source of truth ---
+  - id: code-format
+    source: "§2 Code Quality"
+    action: format
+    event: PostToolUse
+    applies_to: ["*.sh", "*.js", "*.md"]
+    config: .editorconfig          # indent/tabs/quotes/line-length live here, not in this block
+    # tool resolved from stack.md (e.g. prettier + shfmt)
+
+  # --- lint: report on the edited file ---
+  - id: max-nesting
+    source: "§2 Code Quality"
+    action: lint
+    event: PostToolUse
+    applies_to: ["*.sh"]
+    severity: error
+    params: { max_depth: 3 }
+  - id: max-function-length
+    source: "§2 Code Quality"
+    action: lint
+    event: PostToolUse
+    applies_to: ["*.sh", "*.js"]
+    severity: error
+    params: { max_lines: 40 }
+  - id: max-branches
+    source: "§2 Code Quality"
+    action: lint
+    event: PostToolUse
+    applies_to: ["*.sh"]
+    severity: warn
+    params: { max_conditional_branches: 4 }
+  - id: file-naming
+    source: "§2 Code Organization"
+    action: lint
+    event: PostToolUse
+    applies_to: ["*.sh"]
+    severity: error
+    params: { pattern: kebab-case }
+  - id: test-file-naming
+    source: "§2 Test Organization"
+    action: lint
+    event: PostToolUse
+    applies_to: ["*.test.sh", "*.test.js"]
+    severity: warn
+    params: { pattern: "<module>.test.<ext>" }
+  - id: error-branch-nonzero-exit
+    source: "§5 Error Handling"
+    action: lint
+    event: PostToolUse
+    applies_to: ["*.sh"]
+    severity: error
+  - id: skill-files-not-executable
+    source: "§7 Security"
+    action: lint
+    event: PostToolUse
+    applies_to: ["skills/**"]
+    severity: error
+    params: { mode: non-executable }
+
+  # --- block: reject before the change lands ---
+  - id: no-secrets
+    source: "§7 Security"
+    action: block
+    event: PreToolUse
+    applies_to: ["*"]
+    severity: error
+    # tool resolved from stack.md (e.g. gitleaks)
+  - id: no-raw-path-interpolation
+    source: "§7 Security"
+    action: block
+    event: PreToolUse
+    applies_to: ["*.sh"]
+    severity: error
+  - id: commit-message-format
+    source: "§3 Git Practices"
+    action: block
+    event: git:commit-msg          # git hook, not a Claude Code hook
+    severity: error
+    params: { imperative: true, max_subject: 72 }
+  - id: semver-tags
+    source: "§3 Git Practices"
+    action: block
+    event: git:pre-push
+    severity: error
+    params: { pattern: "v<major>.<minor>.<patch>" }
+
+  # --- gate: end-of-turn / CI checks ---
+  - id: definition-of-done
+    source: "§9 Definition of Done"
+    action: gate
+    event: Stop
+    severity: error
+  - id: tests-for-new-logic
+    source: "§2 When to Write Tests"
+    action: gate
+    event: Stop
+    severity: error
+  - id: install-under-5s
+    source: "§6 Performance"
+    action: gate
+    event: ci
+    severity: warn
+    params: { max_seconds: 5 }
+  - id: lighthouse-perfect
+    source: "§6 Performance"
+    action: gate
+    event: ci
+    applies_to: ["pages/**"]
+    severity: warn
+
+  # --- judge: LLM reviewer subagent; not text-decidable ---
+  - id: comment-the-why
+    source: "§4 Documentation"
+    action: judge
+    event: Stop
+    severity: warn
+  - id: one-logical-change-per-commit
+    source: "§3 Git Practices"
+    action: judge
+    event: Stop
+    severity: warn
+  - id: error-message-quality
+    source: "§5 Error Handling"
+    action: judge
+    event: Stop
+    severity: warn
+```
 
 Skip it for trivial features — `/gspec-implement`'s checkbox-driven planning is sufficient when the order doesn't matter and there's nothing to parallelize.

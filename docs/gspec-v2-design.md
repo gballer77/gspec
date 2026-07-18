@@ -227,6 +227,7 @@ Deterministic shell on lifecycle events, **no model judgment**. They upgrade *so
 | **skill-write guard** | `PreToolUse` · Write/Edit under `.claude/skills/` | block edits to generated skills → force the `/gspec-distill` path | ✅ T2 (built) |
 | **feedback address-tag** | `PreToolUse` · Write on agent-memory | require a target+layer address tag | ✅ T1 (built) |
 | **subagent capture** | `SubagentStop` · matcher `*` | append a failing verdict to the capture log | ✅ T4 (built) |
+| **spec-reconcile nudge** | `PostToolUse` marker + `Stop` | session wrote source but nothing under `gspec/` → block the stop once with the changed-file list (session-scoped tmpdir marker, not git state) | ✅ built |
 
 Because QA gates are **optional** (on-by-default, opt-out), the **QA-gate floor ships opt-in only** — never a default; a team that wants hard enforcement enables it.
 
