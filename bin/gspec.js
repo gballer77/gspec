@@ -7,8 +7,8 @@ import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
 import chalk from 'chalk';
-import { TARGETS as EMITTER_TARGETS } from './emitters.js';
-import { runPipeline } from './pipeline.js';
+import { TARGETS as EMITTER_TARGETS } from '../lib/emitters.js';
+import { runPipeline } from '../lib/pipeline.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = join(__dirname, '..', 'dist');
