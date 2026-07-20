@@ -5,6 +5,23 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '1.20.0',
+    date: 'July 20, 2026',
+    title: 'gspec now installs into Pi',
+    summary: 'Pi (<a href="https://pi.dev/">pi.dev</a>) joins Claude Code, Cursor, Antigravity, Codex, and Open Code as a supported target. <code>npx gspec --target pi</code> installs every gspec prompt twice — as a <code>/gspec-*</code> slash command in <code>.pi/prompts/</code> and as an auto-loading skill in <code>.pi/skills/</code> — and appends the spec-sync rules to <code>AGENTS.md</code>.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>Pi is a first-class install target.</strong> Select it in the interactive picker or pass <code>--target pi</code>. Each prompt emits to <code>.pi/prompts/&lt;name&gt;.md</code> as a slash command with <code>$ARGUMENTS</code> substitution, and to <code>.pi/skills/&lt;name&gt;/SKILL.md</code> as a skill Pi auto-loads when a task matches its description. Spec-sync guidance is appended to <code>AGENTS.md</code>, which Pi loads as project instructions.',
+      },
+      {
+        type: 'changed',
+        description: 'The dual-emission logic Open Code introduced is now a shared helper parameterized by command directory, so Pi (<code>prompts/</code>) and Open Code (<code>commands/</code>) build from one code path.',
+      },
+    ],
+    migration: 'Run <code>npx gspec --target pi</code> in your project, then restart any running Pi session so it picks up the new <code>.pi/</code> resources and <code>AGENTS.md</code>. No spec changes are needed.',
+  },
+  {
     version: '1.19.0',
     date: 'July 10, 2026',
     title: 'The profile now describes the destination, not the journey',
