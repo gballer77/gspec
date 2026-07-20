@@ -21,6 +21,7 @@
         "build:antigravity": "node scripts/build.js antigravity",
         "build:codex": "node scripts/build.js codex",
         "build:opencode": "node scripts/build.js opencode",
+        "build:pi": "node scripts/build.js pi",
         "prepublishOnly": "npm run build"
     },
     "author": "Baller Software",

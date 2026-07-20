@@ -151,6 +151,7 @@ The CLI will ask which platform you're installing for:
 | Antigravity | `.agent/skills/` |
 | Codex | `.agents/skills/` |
 | Open Code | `.opencode/skills/` |
+| Pi | `.pi/prompts/` + `.pi/skills/` |
 
 You can skip the prompt by passing a target directly:
 
@@ -160,6 +161,7 @@ npx gspec --target cursor
 npx gspec --target antigravity
 npx gspec --target codex
 npx gspec --target opencode
+npx gspec --target pi
 ```
 
 That's it. The commands are immediately available in your AI tool.
@@ -231,6 +233,7 @@ Most specs are Markdown. The style guide can also be a self-contained HTML file 
 | [Antigravity](https://www.antigravity.dev/) | Skills format | Supported |
 | [Codex](https://developers.openai.com/codex/cli/) | Skills format | Supported |
 | [Open Code](https://opencode.ai/) | Skills format | Supported |
+| [Pi](https://pi.dev/) | Prompts + skills | Supported |
 
 ## Project Status
 
