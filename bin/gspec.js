@@ -51,6 +51,7 @@ const TARGET_CHOICES = [
   { key: '3', name: 'antigravity', label: 'Antigravity' },
   { key: '4', name: 'codex', label: 'Codex' },
   { key: '5', name: 'opencode', label: 'Open Code' },
+  { key: '6', name: 'pi', label: 'Pi' },
 ];
 
 function promptTarget() {
@@ -63,7 +64,7 @@ function promptTarget() {
   console.log();
 
   return new Promise((resolve) => {
-    rl.question(chalk.bold('  Select [1-5]: '), (answer) => {
+    rl.question(chalk.bold('  Select [1-6]: '), (answer) => {
       rl.close();
       const trimmed = answer.trim().toLowerCase();
 
@@ -76,7 +77,7 @@ function promptTarget() {
       if (byName) return resolve(byName.name);
 
       console.error(chalk.red(`\nInvalid selection: "${answer.trim()}"`));
-      console.error(`Valid options: 1, 2, 3, 4, 5, claude, cursor, antigravity, codex, opencode`);
+      console.error(`Valid options: 1, 2, 3, 4, 5, 6, claude, cursor, antigravity, codex, opencode, pi`);
       process.exit(1);
     });
   });
@@ -362,11 +363,12 @@ async function findExistingFiles(target, cwd) {
       }
     }
   } else if (target.layout === 'dual') {
-    const commandFiles = await readdir(join(target.sourceDir, 'commands'));
+    const commandsSubdir = target.commandsSubdir;
+    const commandFiles = await readdir(join(target.sourceDir, commandsSubdir));
     for (const file of commandFiles.filter(f => f.endsWith(target.fileExt))) {
       try {
-        await stat(join(destBase, 'commands', file));
-        existing.push(`commands/${file}`);
+        await stat(join(destBase, commandsSubdir, file));
+        existing.push(`${commandsSubdir}/${file}`);
       } catch (e) {
         if (e.code !== 'ENOENT') throw e;
       }
@@ -420,8 +422,9 @@ async function installDirectory(target, cwd) {
 }
 
 async function installDual(target, cwd) {
-  const commandsSrc = join(target.sourceDir, 'commands');
-  const commandsDest = join(cwd, target.installDir, 'commands');
+  const commandsSubdir = target.commandsSubdir;
+  const commandsSrc = join(target.sourceDir, commandsSubdir);
+  const commandsDest = join(cwd, target.installDir, commandsSubdir);
   await mkdir(commandsDest, { recursive: true });
   const commandFiles = (await readdir(commandsSrc)).filter(f => f.endsWith(target.fileExt));
   for (const file of commandFiles) {
@@ -544,6 +547,13 @@ const SPEC_SYNC = {
     mode: 'append',
     wrap: (content) => content,
   },
+  pi: {
+    // Pi loads project instructions from AGENTS.md in the current directory
+    // (concatenated with ~/.pi/agent/AGENTS.md and any parents).
+    file: 'AGENTS.md',
+    mode: 'append',
+    wrap: (content) => content,
+  },
 };
 
 const GSPEC_SECTION_MARKER = '<!-- gspec:spec-sync -->';
@@ -600,6 +610,7 @@ const MIGRATE_COMMANDS = {
   antigravity: '/gspec-migrate',
   codex: '/gspec-migrate',
   opencode: '/gspec-migrate',
+  pi: '/gspec-migrate',
 };
 
 function parseSpecVersion(content) {
@@ -1420,7 +1431,7 @@ program
   .name('gspec')
   .description('Install gspec specification commands')
   .version(pkg.version)
-  .option('-t, --target <target>', 'target platform (claude, cursor, antigravity, codex, opencode)')
+  .option('-t, --target <target>', 'target platform (claude, cursor, antigravity, codex, opencode, pi)')
   .action(async (opts) => {
     console.log(BANNER);
 
