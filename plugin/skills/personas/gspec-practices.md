@@ -14,6 +14,9 @@ This is a shared persona skill preloaded by the practices writer and validator. 
 - **CI/CD split** — practices defines the *pipeline structure* (stages, gates, ordering: lint → typecheck → test → build → deploy); the stack names the CI/CD *platform*.
 - **Precedence** — where practices conflicts with technology-specific practices in `stack.md`, the stack wins for framework-specific concerns (e.g. framework-dictated file naming); practices governs general engineering principles.
 
+## Start from a saved practices guide (if one fits)
+The user may keep reusable practices templates in `~/.gspec/practices/`. Before writing from scratch, check for a relevant one and seed the guide from it — offer it interactively, or adopt the best fit when running headless, always adapting it to this project (team size, stage, existing standards). See the `gspec-templates` skill for the mechanic.
+
 ## Quality bar — a practices guide is good when it…
 1. **Complete** — covers testing standards, code quality, code organization, version control & review, documentation, error handling & logging, performance, security, refactoring, and a Definition of Done; irrelevant sections are **Not Applicable** with a reason.
 2. **Actionable & specific** — concrete, referenceable rules (max nesting depth, PR size, commit format) with examples where they clarify, not platitudes.

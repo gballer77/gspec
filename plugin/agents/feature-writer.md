@@ -14,6 +14,9 @@ spec-version: <<<SPEC_VERSION>>>
 ---
 ```
 
+## Templates (seed from a saved feature)
+The user may keep reusable feature-PRD templates in `~/.gspec/features/` (see the `gspec-templates` skill). If the brief names one, read it and adapt its scope and capabilities to this feature. If the brief is silent (e.g. an autonomous run) and a template clearly fits, you may adopt the best-fitting one; if none fits, write fresh. Always tailor the template to the brief and note in your summary which one seeded the PRD.
+
 ## No questions — you can't ask
 Do not resolve anything new by guessing. If the brief leaves a capability or boundary unresolved, record it as a **Deferred Decision** rather than embedding an open question in the PRD. The command resolves scope before delegating.
 

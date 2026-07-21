@@ -18,6 +18,7 @@ function isGuardedSpec(rel) {
   if (base === 'profile.md') return false; // the profile IS product identity
   if (base.toLowerCase() === 'readme.md') return false;
   if (rel.startsWith('gspec/features/') && base.endsWith('.md')) return true;
+  if (rel.startsWith('gspec/tasks/') && base.endsWith('.md')) return true;
   return ['stack.md', 'practices.md', 'architecture.md', 'style.md', 'style.html', 'research.md'].includes(base);
 }
 

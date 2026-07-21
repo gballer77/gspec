@@ -12,9 +12,9 @@
 //
 // Passive: always exit 0 — a capture hook must never disrupt a run. Fails OPEN.
 // NOTE: SubagentStop is documented to fire on subagent (Task-tool) completion;
-// whether it fires for the pipeline's headless `claude -p --agent` subprocesses
+// whether it fires for the build's headless `claude -p --agent` subprocesses
 // is undocumented, so this mainly captures the interactive /gspec-* path. The
-// pipeline has its own capture channel (verdicts in .gspec/pipeline/run.json).
+// build has its own capture channel (verdicts in .gspec/build/run.json).
 
 import { readFileSync, appendFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';

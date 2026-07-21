@@ -26,6 +26,9 @@ Use this as the definition of done (writer) and the rubric (validator):
 7. **Profile-agnostic** — no product / company / business identity in the title, headings, or body; generic terms ("the application", "the system") only. (See the `gspec-agnosticism` skill. Note: the stack is deliberately *technology*-aware — only *product* identity is excluded.)
 8. **Actionable** — an engineer could set up the project from it without further questions on the core choices.
 
+## Start from a saved stack (if one fits)
+The user may keep reusable stack templates in `~/.gspec/stacks/`. Before writing a stack from scratch, check for a relevant one and seed the spec from it — offer it interactively, or adopt the best fit when running headless, always adapting it to this project. See the `gspec-templates` skill for the mechanic. (This applies to the **stack** only; the architecture spec is project-specific and is never templated.)
+
 ## Required sections (a complete stack spec)
 Overview · Clarifications (only if decisions were deferred) · Core Technology Stack (languages, runtime) · Frontend · Backend · Infrastructure & DevOps · Data & Storage · Authentication & Security · Monitoring & Observability · Testing Infrastructure · Third-Party Integrations · Development Tools · Migration & Compatibility · Technology Decisions & Tradeoffs · Technology-Specific Practices.
 

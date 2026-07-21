@@ -20,7 +20,7 @@ The direction is drawn from the handoff doc's agent-team + learning-loop vision,
 **Goals**
 - Cleanly separate reusable *persona/method* knowledge (skills) from *tangible deliverable jobs* (agents), with thin `/gspec-*` commands as the conversational surface.
 - Add the **producer≠checker quality gate** gspec lacks (QA — optional, on by default).
-- Add a **deterministic pipeline runtime** so a one-shot "idea → built" run scales without overflowing context.
+- Add a **deterministic build runtime** so a one-shot "idea → built" run scales without overflowing context.
 - Keep every current user working through the transition.
 
 **Non-goals (this phase)** *(the first two were later delivered — see §13 T1–T4; kept here as the original phasing.)*
@@ -73,6 +73,9 @@ Each persona skill carries an explicit **"quality bar"** section — the checkab
 | `gspec-conventions` | Frontmatter + `spec-version` handling, capability-checkbox + acceptance-criteria format, "Not Applicable" handling | every writer & validator |
 | `gspec-agnosticism` | Profile-agnosticism + technology-agnostic vocabulary | every non-profile writer/validator |
 | `gspec-authoring` | Clarification protocol (ask + offer 2–3 options), one-at-a-time approval loop, surgical-update protocol | interactive commands, checkers, editors |
+| `gspec-templates` | The user's `~/.gspec` saved-spec library (`stacks/`·`styles/`·`practices/`·`features/`): match a relevant template, offer it interactively (or adopt the best fit headless), and adapt it to the project | the four writer agents whose spec type has a library (stack/style/practices/feature) |
+
+The library lives in the user's **home** `~/.gspec/` (distinct from a project's own `.gspec/` runtime folder). Only these four spec types are templated; `profile.md` and `architecture.md` are inherently project-specific and are never seeded from a template. Discovery/offer happens in the interactive command (which resolves `~` and passes the chosen template's absolute path into the writer's brief); the isolated writer adapts it and records provenance. Validators are unchanged — templates seed authoring, not QA.
 
 ### Sample
 
@@ -118,7 +121,7 @@ Tools: `Read, Write, Edit, Glob, Grep`. Model: inherit (bump `architecture-write
 | `practices-validator` | qa + practices + conventions | `practices.md` | /gspec-practices gate, /gspec-qa |
 | `style-validator` | qa + designer + conventions | `style.md`/`.html` | /gspec-style gate, /gspec-qa |
 | `plan-validator` *(opt)* | qa + engineer | a plan (coverage, acyclic `deps:`, safe `[P]`) | /gspec-plan gate, /gspec-qa |
-| `implementation-validator` *(code gate)* | qa + engineer + practices | a **built scope**: `verify.sh` build+test result + acceptance criteria / DoD | /gspec-implement gate, pipeline |
+| `implementation-validator` *(code gate)* | qa + engineer + practices | a **built scope**: `verify.sh` build+test result + acceptance criteria / DoD | /gspec-implement gate, build |
 
 Tools: `Read, Grep, Glob` **only** — no Write/Edit (they judge, they don't fix); the `implementation-validator` additionally gets `Bash` to run `verify.sh`. Model: strong.
 
@@ -139,7 +142,7 @@ Tools: `Read, Grep, Glob` (+ `Bash` for `codebase-inspector`; `WebSearch, WebFet
 | Agent | Preloads | Job | Used by |
 |---|---|---|---|
 | `plan-decomposer` | engineer + conventions | PRD → ordered, dependency-aware plan | plan, implement |
-| `implementer` | engineer + practices | **scope of {PRDs+plans} → code + checkbox updates + tests.** Scope = single PRD / a batch (phase) / all — a **runtime parameter**. The orchestrator picks granularity (fan out per feature/phase, parallelize independent scopes); the single "all" call is only for small projects / the autonomous pipeline's single pass. | implement, pipeline |
+| `implementer` | engineer + practices | **scope of {PRDs+plans} → code + checkbox updates + tests.** Scope = single PRD / a batch (phase) / all — a **runtime parameter**. The orchestrator picks granularity (fan out per feature/phase, parallelize independent scopes); the single "all" call is only for small projects / the autonomous build's single pass. | implement, build |
 | `spec-migrator` | steward + conventions | Reformat a spec to the current `spec-version` (content-preserving) | migrate |
 
 ### Sample
@@ -164,7 +167,7 @@ memory: project
 |---|---|---|---|
 | `/gspec-profile` | product | profile-writer → profile-validator | profile.md |
 | `/gspec-feature` | product | (scope interview) → feature-writer ×N → feature-validator ×N | feature PRDs |
-| `/gspec-plan` | engineer | plan-decomposer → plan-validator | plan.md |
+| `/gspec-plan` | engineer | plan-decomposer → plan-validator | tasks/<slug>.md |
 | `/gspec-stack` | architect | stack-writer → stack-validator | stack.md |
 | `/gspec-practices` | practices | practices-writer → practices-validator | practices.md |
 | `/gspec-style` | designer | style-writer → style-validator | style.md/html |
@@ -176,7 +179,7 @@ memory: project
 | `/gspec-implement` | engineer | codebase-inspector (progress) → plan-decomposer (if missing) → implementer ×scope | code + checkboxes |
 | `/gspec-qa` **(new)** | qa | the relevant `*-validator`(s), fan-out across one or all specs | verdicts (+ optional fix loop) |
 | `/gspec-distill` **(new)** | steward | distiller → present proposed skill edits one-at-a-time → apply approved + prune memory | improved skills (learning loop) |
-| `/gspec-pipeline` **(new)** | — (driver) | fallback path for the pipeline (see Layer 4) | built project |
+| `/gspec-build` **(new)** | — (driver) | fallback path for the build (see Layer 4) | built project |
 
 ### The producer≠checker gate
 Every writer is followed by its validator — a **different agent** that **shares the domain persona skill** (so both agree on the bar, but the checker isn't grading its own work). Gate model = **optional, on by default (opt-out)**: the auto-gate runs after each write unless skipped (a `--no-qa` flag or a project config), and `/gspec-qa` is always available on demand. Producer-command flow: `interview → write → [ validate → present verdict → fix / re-delegate / waive ] → done`, where the bracketed gate is skippable. Producer≠checker still holds **structurally** (validators are separate agents); it just isn't always *invoked*.
@@ -191,14 +194,15 @@ The **checker trio**: `analyze` (spec↔spec consistency) · `audit` (spec↔cod
 
 The piece that makes gspec a framework rather than a prompt bundle.
 
-**`gspec pipeline "<idea>"`** — a deterministic node driver (in `bin/`) that takes an idea and drives the whole chain to a built product.
+**`gspec build "<idea>"`** — a deterministic node driver (in `bin/`) that takes an idea and drives the whole chain to a built product.
 
 - **Run mode:** front-load, then autonomous. One upfront interview captures the decisions the run pivots on (product identity, stack/style lean, scope); then it runs unattended.
 - **Span:** idea → built, adaptive. Generates only the *missing* foundations (skip-if-present), then features → architecture → plan → implement → final audit. Works greenfield and on existing projects.
-- **Execution model — why a script, not a command:** a markdown command runs in one accumulating main-session context, which overflows on large builds and can't resume. The driver instead holds the loop in **code** and spawns **each stage/agent as an isolated headless run** (`claude -p` / Agent SDK) — a fresh context every time, nothing accumulates.
+- **Execution model — why a script, not a command:** a markdown command runs in one accumulating main-session context, which overflows on large builds and can't resume. The driver instead holds the loop in **code** and spawns **each stage/agent as an isolated headless run** — a fresh context every time, nothing accumulates.
+- **Engine-agnostic (`lib/engines.js`).** Which CLI performs each headless run is abstracted behind an engine adapter — `claude`, `codex`, or `pi` (`--engine`, default `claude`; recorded in the run manifest so a resume stays on the same engine). "Run a session AS a named agent" is only native to Claude (`--agent`); Codex (`codex exec`) and Pi (`pi -p`) have no such flag and can't reach their in-session sub-agents from the CLI, so those adapters read the installed agent's inlined instruction body (`.codex/agents/<name>.toml`, `.pi/agents/<name>.md`) and inject it ahead of the stage prompt. Permissions map per engine (Claude `--permission-mode`/`--allowedTools`; Codex `--sandbox workspace-write`→`danger-full-access` for build/audit; Pi `-p -a`, with `PI_PERMISSION_LEVEL` as the escape hatch since base Pi doesn't document a print-mode tool auto-approve — the one unverified spot, flagged for a live probe).
 - **Files are the shared state.** gspec's intermediate artifacts are files; each stage reads inputs from `gspec/` and writes outputs to `gspec/`, returning a compact status. The driver holds only control state (stage pointer + verdicts).
 - **Resumable** via an on-disk run manifest — crash on phase 40 of 60, restart from 40.
-- **QA gates default on in the pipeline too** (skippable via `--no-qa`). **Self-healing gate:** on a validator failure, the writer gets one revision attempt from the verdict; still failing → pause/flag (never ships a bad spec).
+- **QA gates default on in the build too** (skippable via `--no-qa`). **Self-healing gate:** on a validator failure, the writer gets one revision attempt from the verdict; still failing → pause/flag (never ships a bad spec).
 
 **Sequence & gates:**
 ```
@@ -211,7 +215,7 @@ intake(interview)
   → reconcile     [ codebase-inspector audit → drift report ]
 ```
 
-The same runtime is also the right home for large `/gspec-implement` runs. `/gspec-pipeline` (the markdown command) remains as the small-build + non-Claude-target fallback (context-lean, pure-routing, accepts a size ceiling, no resume).
+The same runtime is also the right home for large `/gspec-implement` runs. `/gspec-build` (the markdown command) remains as the small-build + non-Claude-target fallback (context-lean, pure-routing, accepts a size ceiling, no resume).
 
 ---
 
@@ -242,7 +246,7 @@ Because QA gates are **optional** (on-by-default, opt-out), the **QA-gate floor 
 - **`/gspec-stack`** (slice-#1 template): interview → `stack-writer(brief)` → `stack-validator(stack.md)` → present verdict → on fail, converse + re-delegate to `stack-writer` (or human waives) → done.
 - **`/gspec-audit`**: `codebase-inspector` returns drift + orphans → present each one-at-a-time → apply a surgical edit, or delegate `feature-writer` for an orphan PRD → each written/edited spec passes its validator before close.
 - **`/gspec-research`**: fan out `competitor-researcher` across N competitors → synthesize + walk findings with the user → `research-writer` produces research.md → accepted findings become PRDs via `feature-writer` (each gated by `feature-validator`).
-- **`gspec pipeline`**: as in Layer 4 — each bracketed stage is one isolated headless run; the node driver advances the manifest between them.
+- **`gspec build`**: as in Layer 4 — each bracketed stage is one isolated headless run; the node driver advances the manifest between them.
 
 ---
 
@@ -255,7 +259,7 @@ skills/conventions/*.md   shared house rules
 agents/*.md               task-agents (declare skills:/tools/model)
 commands/*.md             thin /gspec-* entry points
 manifest.js               per-artifact metadata (class, name, description, preloaded skills, tools, model) — replaces build.js's single COMMANDS map
-bin/ (runtime driver)     gspec pipeline orchestrator + run-manifest/state layer + headless spawning
+bin/ (runtime driver)     gspec build orchestrator + run-manifest/state layer + headless spawning
 hooks/*                   hook scripts (near-term first)
 ```
 
@@ -279,7 +283,7 @@ The 12 `/gspec-*` names and the `gspec/*.md` doc set are preserved throughout.
 2. **Remaining personas → writers → validators → commands** (profile, feature, style, practices, architect, research).
 3. **Investigators/transformers** → `analyze` / `audit` / `migrate` / `research` / `implement`.
 4. **Near-term hooks** (agnosticism guard, integrity check).
-5. **Runtime (`gspec pipeline`)** — built last; it orchestrates everything else.
+5. **Runtime (`gspec build`)** — built last; it orchestrates everything else.
 6. *(Later phase)* **Hardening**: QA-gate hook, then the learning loop + its hooks + the distiller + the `gspec-orchestrator` judgment skill.
 
 ---
@@ -289,16 +293,16 @@ The 12 `/gspec-*` names and the `gspec/*.md` doc set are preserved throughout.
 - **Learning loop ("training") — in progress. T1–T2 built; T3–T4 recorded below.** Turns the dormant per-agent `memory:` silos (already keyed by agent name, `memory: project`) into a producer≠checker-style improvement loop where agents get better across runs. Sequenced:
   - **T1 — Activate per-agent memory. ✅ built.** Each Claude agent preloads a new `gspec-memory` convention skill, and its `memory:` silo auto-loads at startup. Capture is **feedback-driven** — a lesson is written only on a QA verdict or a user correction, never on a clean run — and every lesson carries a **target+layer address tag**, enforced by the **feedback address-tag** hook (§9; `PreToolUse`, blocks an untagged agent-memory write). **Default-on**; the silo **scope (project vs local) is chosen at `gspec` init** and stamped into each agent's `memory:` field. Claude-only — the other targets have no silo, so the skill/hook ship only there.
   - **T2 — The distiller. ✅ built.** The `distiller` agent (steward + QA, read-only) reads agents' address-tagged memory and proposes **surgical skill edits** with provenance and a confidence; `/gspec-distill` presents each one-at-a-time, applies the approved ones in the main session, and prunes the graduated lessons — the distiller never writes a skill itself. The **skill-write guard** hook (§9; `PreToolUse`) is the hard floor: it blocks any Write/Edit to an installed `.claude/skills/` file (a generated artifact — agents carrying `memory:` have Write/Edit auto-enabled, so tool restrictions alone can't stop them). Durable promotion lands in the gspec **source** skills (not under `.claude/`, so unguarded) and reinstalls. Producer≠checker holds — propose, then human-approve. *(Cross-reading another agent's silo via the Read tool works but is not an officially-documented Claude Code capability — noted dependency.)*
-  - **T3 — `gspec-orchestrator` "mini-me" skill. ✅ built.** The scope / granularity / fan-out judgment moved out of hard-coded JS into a trainable skill. Because the driver is JS (it can't literally preload a skill), the pipeline realizes "preload" by spawning a **`build-orchestrator`** agent (preloads `gspec-orchestrator` + `gspec-engineer`; read-only) that reads the features/plans and returns an ordered **wave build-plan** (JSON: waves run in order; file-disjoint scopes within a wave run concurrently). The `implement` stage executes the plan — fanning out same-wave scopes to parallel implementer runs — and falls back to the old monolithic "implement all" call when no usable plan comes back. `/gspec-implement` applies the same skill's judgment to sequence its phased build. `build-orchestrator` carries `memory: project`, so its scope/fan-out judgment is **trainable via the same distiller loop** (T2) — a wrong parallelization becomes a lesson, then a `/gspec-distill` skill edit.
-  - **T4 — Subagent-capture hook. ✅ built.** T1 shipped the **feedback address-tag** hook and T2 the **skill-write guard**; T4 adds the last §9 "with loop" hook, **subagent capture** (`SubagentStop`, matcher `*`): when a subagent returns a **FAILing QA verdict** — the feedback signal a lesson should come from — it appends a compact record (timestamp · `agent_type` · verdict excerpt) to `.gspec/agent-runs/feedback-log.md`. So capture no longer depends solely on a corrected agent self-recording; the `distiller` reads that log as **corroborating evidence** (a recurring failure mode there strengthens a proposal), and `/gspec-distill` clears resolved entries. Model-free, passive (always exit 0), fail-open, feedback-driven (FAIL only → low noise). **Known limitation:** `SubagentStop` is documented for Task-tool subagent completion; whether it fires for the pipeline's headless `claude -p --agent` subprocesses is undocumented, so this primarily captures the **interactive** `/gspec-*` path — the pipeline already records verdicts in `.gspec/pipeline/run.json`.
+  - **T3 — `gspec-orchestrator` "mini-me" skill. ✅ built.** The scope / granularity / fan-out judgment moved out of hard-coded JS into a trainable skill. Because the driver is JS (it can't literally preload a skill), the build realizes "preload" by spawning a **`build-orchestrator`** agent (preloads `gspec-orchestrator` + `gspec-engineer`; read-only) that reads the features/plans and returns an ordered **wave build-plan** (JSON: waves run in order; file-disjoint scopes within a wave run concurrently). The `implement` stage executes the plan — fanning out same-wave scopes to parallel implementer runs — and falls back to the old monolithic "implement all" call when no usable plan comes back. `/gspec-implement` applies the same skill's judgment to sequence its phased build. `build-orchestrator` carries `memory: project`, so its scope/fan-out judgment is **trainable via the same distiller loop** (T2) — a wrong parallelization becomes a lesson, then a `/gspec-distill` skill edit.
+  - **T4 — Subagent-capture hook. ✅ built.** T1 shipped the **feedback address-tag** hook and T2 the **skill-write guard**; T4 adds the last §9 "with loop" hook, **subagent capture** (`SubagentStop`, matcher `*`): when a subagent returns a **FAILing QA verdict** — the feedback signal a lesson should come from — it appends a compact record (timestamp · `agent_type` · verdict excerpt) to `.gspec/agent-runs/feedback-log.md`. So capture no longer depends solely on a corrected agent self-recording; the `distiller` reads that log as **corroborating evidence** (a recurring failure mode there strengthens a proposal), and `/gspec-distill` clears resolved entries. Model-free, passive (always exit 0), fail-open, feedback-driven (FAIL only → low noise). **Known limitation:** `SubagentStop` is documented for Task-tool subagent completion; whether it fires for the build's headless `claude -p --agent` subprocesses is undocumented, so this primarily captures the **interactive** `/gspec-*` path — the build already records verdicts in `.gspec/build/run.json`.
   - **Loop status:** capture (T1 self-record + T4 auto) → address-tagged memory → distiller proposal (T2) → human-approved skill edit → better agents next run; the orchestrator judgment (T3) rides the same rails. The learning loop is closed.
 - **Enforcement hooks** beyond near-term (QA-gate floor + the three loop hooks).
 - **Implementation verification gate (`implementation-validator`)** — **✅ built (this branch).** The producer≠checker for code (supersedes the vague "code-reviewer" idea). A two-part gate that honors `--no-qa`; this bullet is the as-built contract:
-  - **Deterministic part — build + test only** (not the full lint/typecheck/practices pipeline, for now). Multi-deployable / polyglot aware: one project may ship e.g. a TypeScript frontend + a Java backend, each with its own toolchain and working dir. The **deployables table** (name · dir · build · test) lives in **`architecture.md`**, *not* `stack.md` — stack is the tooling *palette* (what *could* build/test; portable, profile-agnostic), architecture is the concrete structure (what *does* exist; technology-aware; already owns Project Structure + Project Setup). The `implementer` generates a committed **`verify.sh`** from that table during scaffolding — fail-fast, prints `FAIL: <deployable>:<phase>`, hand-editable for setup a command-list can't express (test DB, env, `docker compose`). The **pipeline driver runs `bash verify.sh`** deterministically (exit code = the gate); on failure it re-delegates the `implementer` with the concrete errors — the strongest self-heal loop in the pipeline.
+  - **Deterministic part — build + test only** (not the full lint/typecheck/practices pipeline, for now). Multi-deployable / polyglot aware: one project may ship e.g. a TypeScript frontend + a Java backend, each with its own toolchain and working dir. The **deployables table** (name · dir · build · test) lives in **`architecture.md`**, *not* `stack.md` — stack is the tooling *palette* (what *could* build/test; portable, profile-agnostic), architecture is the concrete structure (what *does* exist; technology-aware; already owns Project Structure + Project Setup). The `implementer` generates a committed **`verify.sh`** from that table during scaffolding — fail-fast, prints `FAIL: <deployable>:<phase>`, hand-editable for setup a command-list can't express (test DB, env, `docker compose`). The **build driver runs `bash verify.sh`** deterministically (exit code = the gate); on failure it re-delegates the `implementer` with the concrete errors — the strongest self-heal loop in the build.
   - **Judgment part** — the `implementation-validator` agent (preloads `gspec-qa` + `gspec-engineer`/`gspec-practices`) interprets failures and checks that the in-scope acceptance criteria + Definition of Done are actually met (summarize test logs, don't dump them).
   - **`gspec-architect` quality bar gains:** a multi-deployable system must define the deployables / build-test table. **`gspec-audit`** catches drift between that table (+ `verify.sh`) and the actual code.
   - Optionally backed by the opt-in QA-gate-floor hook: block marking a capability `[x]` unless build+test passed.
-- **Review deferred decisions after production** — a step added to every producer command flow: after the writer returns, present any **deferred decisions / notable assumptions** it recorded, **one at a time**, and offer to **resolve** (re-delegate a revision with the answer) or **accept** the deferral. Closes the loop for questions the front-loaded interview couldn't anticipate — the agent discovers them *while writing*, and a labeled deferral won't be flagged by QA (validators treat it as intentional), so an explicit review is the only place it gets back to the user. Prompt-level change to the command bodies — no new plumbing. **In the autonomous pipeline** there's no user to ask mid-run, so instead collect all deferred decisions across stages and surface them in the **final assumptions report** (makes that report load-bearing).
+- **Review deferred decisions after production** — a step added to every producer command flow: after the writer returns, present any **deferred decisions / notable assumptions** it recorded, **one at a time**, and offer to **resolve** (re-delegate a revision with the answer) or **accept** the deferral. Closes the loop for questions the front-loaded interview couldn't anticipate — the agent discovers them *while writing*, and a labeled deferral won't be flagged by QA (validators treat it as intentional), so an explicit review is the only place it gets back to the user. Prompt-level change to the command bodies — no new plumbing. **In the autonomous build** there's no user to ask mid-run, so instead collect all deferred decisions across stages and surface them in the **final assumptions report** (makes that report load-bearing).
 
 ---
 
@@ -313,8 +317,8 @@ The 12 `/gspec-*` names and the `gspec/*.md` doc set are preserved throughout.
 | 5 | Multi-target | Claude-first, degrade gracefully |
 | 6 | Quality Assurance | Added; gate is **optional, on by default (opt-out)** — `--no-qa`/config skips, `/gspec-qa` always on-demand; enforcement hook is opt-in only |
 | 7 | First slice | `stack` write+validate+gate |
-| 8 | Pipeline behavior | Front-load then autonomous; idea → built (adaptive) |
-| 9 | Pipeline execution | Deterministic orchestration **script/runtime**, not a command |
+| 8 | Build behavior | Front-load then autonomous; idea → built (adaptive) |
+| 9 | Build execution | Deterministic orchestration **script/runtime**, not a command |
 | 10 | Hooks | First-class Layer 5, phased |
 
 ## 15. Open questions

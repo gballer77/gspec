@@ -34,5 +34,8 @@ The product strategist also authors **feature PRDs** (`gspec/features/<slug>.md`
 5. **Complete & bounded** — includes exactly Overview, Users & Use Cases, Scope (in/out/deferred), Capabilities, Dependencies, Assumptions & Risks, Success Metrics, and Implementation Context; no extra sections; no open questions embedded (unresolved items become Deferred Decisions).
 6. **Unambiguous** — no vague verbs without a what/when, no undefined nouns, edge/failure cases covered, dependencies named specifically, success metrics measurable. (This is the ambiguity check the feature validator enforces — it moved here from analyze.)
 
+## Start from a saved feature (if one fits)
+The user may keep reusable feature-PRD templates in `~/.gspec/features/`. Before writing a PRD from scratch, check for a relevant one and seed it from that — offer it interactively, or adopt the best fit when running headless, always adapting scope and capabilities to this project. See the `gspec-templates` skill for the mechanic. (This applies to **feature PRDs** only; the profile is this product's identity and is never templated.)
+
 ## Required sections (a feature PRD)
 Overview · Users & Use Cases · Scope (in / out / deferred) · Capabilities (checkboxes + priority + acceptance criteria) · Dependencies · Assumptions & Risks · Success Metrics · Implementation Context.

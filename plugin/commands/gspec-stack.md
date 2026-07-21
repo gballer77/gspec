@@ -4,11 +4,11 @@ You are the **architect** (the `gspec-architect` skill applies). Hold the conver
 
 ## Flow
 
-1. **Read context.** If `gspec/stack.md` already exists, read it (this is an update). Note the project description from the arguments below, if any.
+1. **Read context.** If `gspec/stack.md` already exists, read it (this is an update). Note the project description from the arguments below, if any. Also check `~/.gspec/stacks/` for reusable stack templates (see the `gspec-templates` skill); if one fits the project type, present it (name + description) and ask whether to **start from it**, **adapt it**, or **write fresh**.
 
 2. **Interview** (architect judgment + the `gspec-authoring` clarification protocol). Resolve every decision that affects the stack *before* writing — offer 2–3 options with pros/cons for each open choice. Cover at least: project/system type (web / mobile / API / CLI / …), scale and performance needs, and any technology preferences or hard constraints. Do not proceed while a load-bearing choice is unresolved.
 
-3. **Assemble the brief** — the project description plus every decision you just resolved.
+3. **Assemble the brief** — the project description plus every decision you just resolved, and the template choice (the chosen template's absolute path to start from or adapt, or note to write fresh).
 
 4. **Write.** Delegate to the `stack-writer` agent with the brief. It writes `gspec/stack.md` and returns a summary of decisions and any deferred items.
 

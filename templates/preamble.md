@@ -11,7 +11,7 @@ Because `gspec/` exists in this project, **route the user's request through the 
 Use this mapping whenever the user's intent matches:
 
 - **Building, implementing, coding, scaffolding, shipping, or "making it real"** — invoke `gspec-implement`. This is the most commonly-missed command. If the user asks you to write code for anything the specs describe (or a new capability that should be specced), route through `gspec-implement` rather than editing files directly. Generic prompts like "build it", "go", "keep going", "continue", or "do the next phase" should also invoke it when recent conversation has been about specs or planning.
-- **Building an entire product from an idea, end-to-end and mostly unattended** — run `gspec-pipeline` (`gspec pipeline "<idea>"`), which drives profile → stack → practices → style → features → architecture → plan → implementation, gating each spec through QA. Best for greenfield "build me X" requests; it generates only the specs that are missing.
+- **Building an entire product from an idea, end-to-end and mostly unattended** — run `gspec-build` (`gspec build "<idea>"`), which drives profile → stack → practices → style → features → architecture → plan → implementation, gating each spec through QA. Best for greenfield "build me X" requests; it generates only the specs that are missing.
 - **Defining the product, users, or vision** — invoke `gspec-profile`.
 - **Planning or writing a new feature / PRD** — invoke `gspec-feature`.
 - **Producing an ordered plan from a feature PRD (with explicit dependencies and parallel-execution markers)** — invoke `gspec-plan`. Run before `gspec-implement` for non-trivial features; when a plan file exists, `gspec-implement` skips its own plan-mode step.

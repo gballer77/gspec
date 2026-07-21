@@ -62,6 +62,11 @@ export const V2_SKILLS = [
     source: 'skills/conventions/gspec-authoring.md',
     description: 'Shared interaction craft: the clarification protocol, one-at-a-time approval, and surgical spec updates.',
   },
+  {
+    name: 'gspec-templates',
+    source: 'skills/conventions/gspec-templates.md',
+    description: "The user's ~/.gspec saved-spec library (stacks/styles/practices/features): match a relevant template, offer it interactively (or adopt the best fit headless), and adapt it. Preloaded by the four writer agents with a library.",
+  },
 ];
 
 // Learning-loop skills — Claude-only (per-agent `memory:` is a Claude Code
@@ -82,7 +87,7 @@ export const V2_AGENTS = [
     name: 'stack-writer',
     source: 'agents/stack-writer.md',
     description: 'Write gspec/stack.md from a resolved brief, acting as the architect. Delegated by /gspec-stack; runs in isolation and returns a summary.',
-    skills: ['gspec-architect', 'gspec-conventions', 'gspec-agnosticism'],
+    skills: ['gspec-architect', 'gspec-conventions', 'gspec-agnosticism', 'gspec-templates'],
     tools: 'Read, Write, Edit, Glob, Grep',
     memory: 'project',
   },
@@ -127,7 +132,7 @@ export const V2_AGENTS = [
     name: 'style-writer',
     source: 'agents/style-writer.md',
     description: 'Write the visual style guide (gspec/style.html or style.md, in the format the brief specifies) from a resolved brief, acting as the designer. Delegated by /gspec-style; returns a summary.',
-    skills: ['gspec-designer', 'gspec-conventions', 'gspec-agnosticism'],
+    skills: ['gspec-designer', 'gspec-conventions', 'gspec-agnosticism', 'gspec-templates'],
     tools: 'Read, Write, Edit, Glob, Grep',
     memory: 'project',
   },
@@ -144,7 +149,7 @@ export const V2_AGENTS = [
     name: 'practices-writer',
     source: 'agents/practices-writer.md',
     description: 'Write gspec/practices.md from a resolved brief, acting as the practice lead. Delegated by /gspec-practices; runs in isolation and returns a summary.',
-    skills: ['gspec-practices', 'gspec-conventions', 'gspec-agnosticism'],
+    skills: ['gspec-practices', 'gspec-conventions', 'gspec-agnosticism', 'gspec-templates'],
     tools: 'Read, Write, Edit, Glob, Grep',
     memory: 'project',
   },
@@ -161,7 +166,7 @@ export const V2_AGENTS = [
     name: 'feature-writer',
     source: 'agents/feature-writer.md',
     description: 'Write one gspec/features/<slug>.md PRD from a resolved brief, acting as the product manager (technology- and profile-agnostic). Delegated by /gspec-feature (also research, audit); returns a summary.',
-    skills: ['gspec-product', 'gspec-conventions', 'gspec-agnosticism'],
+    skills: ['gspec-product', 'gspec-conventions', 'gspec-agnosticism', 'gspec-templates'],
     tools: 'Read, Write, Edit, Glob, Grep',
     memory: 'project',
   },
@@ -213,7 +218,7 @@ export const V2_AGENTS = [
   {
     name: 'implementer',
     source: 'agents/implementer.md',
-    description: 'Implement an assigned scope (one PRD / a phase / all) into working code, acting as the engineer: follow the specs, write and run tests, flip checkboxes. Delegated by /gspec-implement and the pipeline; returns a summary.',
+    description: 'Implement an assigned scope (one PRD / a phase / all) into working code, acting as the engineer: follow the specs, write and run tests, flip checkboxes. Delegated by /gspec-implement and the build; returns a summary.',
     // One agent, scope is a runtime parameter (not split per-type). The only agent with Bash.
     skills: ['gspec-engineer', 'gspec-practices', 'gspec-conventions'],
     tools: 'Read, Write, Edit, Glob, Grep, Bash',
@@ -223,7 +228,7 @@ export const V2_AGENTS = [
   {
     name: 'implementation-validator',
     source: 'agents/implementation-validator.md',
-    description: 'The producer≠checker gate for code: run verify.sh (build+test) and judge in-scope acceptance criteria + Definition of Done, returning a structured verdict. Read-only; delegated by /gspec-implement and the pipeline implement gate.',
+    description: 'The producer≠checker gate for code: run verify.sh (build+test) and judge in-scope acceptance criteria + Definition of Done, returning a structured verdict. Read-only; delegated by /gspec-implement and the build implement gate.',
     // Reads code + runs verify.sh, so it needs Bash — but never Write/Edit (it judges, doesn't fix).
     skills: ['gspec-qa', 'gspec-engineer', 'gspec-practices'],
     tools: 'Read, Grep, Glob, Bash',
@@ -233,7 +238,7 @@ export const V2_AGENTS = [
   {
     name: 'build-orchestrator',
     source: 'agents/build-orchestrator.md',
-    description: 'Turn the in-scope features/plans into an ordered, fan-out-aware build plan (waves of file-disjoint implementer scopes), acting with the orchestrator judgment. Read-only — plans, never builds. Delegated by the pipeline implement stage.',
+    description: 'Turn the in-scope features/plans into an ordered, fan-out-aware build plan (waves of file-disjoint implementer scopes), acting with the orchestrator judgment. Read-only — plans, never builds. Delegated by the build implement stage.',
     // Read-only planner; memory: project makes its scope/fan-out judgment trainable via /gspec-distill.
     skills: ['gspec-orchestrator', 'gspec-engineer', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
@@ -333,7 +338,7 @@ export const V2_COMMANDS = [
   {
     name: 'gspec-plan',
     source: 'commands/gspec-plan.md',
-    description: 'Decompose a feature PRD into an ordered plan (features/<slug>.plan.md) with parallel markers. Delegates plan-decomposer, plan-mode approval, gates on plan-validator (--no-qa skips). TRIGGER to sequence work or build a plan from a PRD.',
+    description: 'Decompose a feature PRD into an ordered plan (gspec/tasks/<slug>.md) with parallel markers. Delegates plan-decomposer, plan-mode approval, gates on plan-validator (--no-qa skips). TRIGGER to sequence work or build a plan from a PRD.',
   },
   {
     name: 'gspec-implement',
@@ -359,6 +364,11 @@ export const V2_COMMANDS = [
     name: 'gspec-distill',
     source: 'commands/gspec-distill.md',
     description: 'Review lessons agents accumulated in memory and promote worthy ones into their skills — one at a time, surgically, with approval. Delegates the distiller; applies approved edits. TRIGGER to review agent lessons or improve skills from memory.',
+  },
+  {
+    name: 'gspec-build',
+    source: 'commands/gspec-build.md',
+    description: 'Run the autonomous "idea → built" build: holds the one-time intake here, then runs `gspec build` over every stage (profile → … → implement) unattended, on Claude Code, Codex, or Pi (--engine). TRIGGER to autonomously build an idea.',
   },
 ];
 

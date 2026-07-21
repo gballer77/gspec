@@ -116,7 +116,7 @@ Use `/gspec-architect` when your feature involves significant technical complexi
 
 | Command | Role | What it produces |
 |---|---|---|
-| `/gspec-plan` | Engineering Lead | A sibling `gspec/features/<feature>.plan.md` file with stable task IDs, explicit `deps:` lines, and `[P]` markers for parallel-safe work |
+| `/gspec-plan` | Engineering Lead | A `gspec/tasks/<feature>.md` file with stable task IDs, explicit `deps:` lines, and `[P]` markers for parallel-safe work |
 
 Use `/gspec-plan` after `/gspec-feature` (and after `/gspec-architect` when it exists) for any feature large enough that build order matters or that has work which could legitimately run in parallel. The output is what `/gspec-implement` consumes — when every in-scope feature has a plan file, `/gspec-implement` skips its own plan-mode step and executes the plan file directly (the plan was already approved during `/gspec-plan`). Trivial features can skip this step and go straight to `/gspec-implement`, which falls back to PRD-checkbox-driven planning with its own plan-mode approval.
 
@@ -135,7 +135,7 @@ Use `/gspec-audit` periodically — before a major release, after a long sprint,
 
 | Command | Role | What it does |
 |---|---|---|
-| `/gspec-implement` | Senior Engineer | Reads all specs (including any `*.plan.md` files), plans the build order, and implements |
+| `/gspec-implement` | Senior Engineer | Reads all specs (including any `gspec/tasks/*.md` plan files), plans the build order, and implements |
 
 **Spec Sync** — gspec includes always-on spec sync that automatically keeps your specification documents in sync as the code evolves. This is installed alongside the skills and requires no manual intervention — when code changes affect spec-documented behavior, the sync rules prompt your AI tool to update the relevant gspec files.
 
@@ -231,7 +231,11 @@ project-root/
     │   ├── dashboard.html
     │   ├── checkout-flow.png
     │   └── ...
-    └── features/
+    ├── features/           # Feature PRDs (what & why)
+    │   ├── user-authentication.md
+    │   ├── dashboard-analytics.md
+    │   └── ...
+    └── tasks/              # Ordered, dependency-aware plans (one per feature)
         ├── user-authentication.md
         ├── dashboard-analytics.md
         └── ...

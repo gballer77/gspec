@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
 import chalk from 'chalk';
 import { TARGETS as EMITTER_TARGETS } from '../lib/emitters.js';
-import { runPipeline } from '../lib/pipeline.js';
+import { runBuild } from '../lib/build.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = join(__dirname, '..', 'dist');
@@ -2073,15 +2073,19 @@ extensionCmd
   });
 
 program
-  .command('pipeline [idea]')
-  .description('Run the autonomous "idea → built" pipeline (Claude Code only)')
+  .command('build [idea]')
+  .description('Run the autonomous "idea → built" build on Claude Code, Codex, or Pi')
+  .option('--engine <name>', 'execution engine: claude | codex | pi', 'claude')
+  .option('--pi-permission-level <level>', 'Pi only: value for PI_PERMISSION_LEVEL if a stage stalls on tool approval')
   .option('--no-qa', 'skip the QA validator gates (on by default)')
   .option('--resume', 'resume an existing run from where it paused')
-  .option('--dry-run', 'print the stage plan without invoking claude')
+  .option('--dry-run', 'print the stage plan without invoking the engine')
   .action(async (idea, opts) => {
-    await runPipeline({
+    await runBuild({
       idea,
       cwd: process.cwd(),
+      engine: opts.engine,
+      piPermissionLevel: opts.piPermissionLevel,
       noQa: !opts.qa,
       resume: !!opts.resume,
       dryRun: !!opts.dryRun,

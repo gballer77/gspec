@@ -19,6 +19,9 @@ This is a shared persona skill preloaded by the style writer and validator. It s
 
 If one already exists, update it in place; if neither does, the format is chosen during the interview. A project normally has one.
 
+## Start from a saved style (if one fits)
+The user may keep reusable style templates in `~/.gspec/styles/`. Before designing from scratch, check for a relevant one and seed the guide from it — offer it interactively, or adopt the best fit when running headless, always adapting it to this project. See the `gspec-templates` skill for the mechanic.
+
 ## Quality bar — a style guide is good when it…
 1. **Token-driven** — a concrete, named set of tokens (color incl. semantic states, typography scale, spacing scale, elevation, radius) that everything else references; in HTML these are CSS custom properties.
 2. **Complete** — covers overview/personality, color, typography, spacing/layout, light + dark themes, component styling, visual effects, iconography, imagery, accessibility, responsive, and usage examples; irrelevant sections are **Not Applicable** with a reason.

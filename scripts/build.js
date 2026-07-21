@@ -31,7 +31,7 @@ const COMMANDS = {
   },
   'gspec.plan.md': {
     name: 'gspec-plan',
-    description: 'Decompose a feature PRD into an ordered, dependency-aware plan with parallel-execution markers, written to <feature>.plan.md. Runs between gspec-feature and gspec-implement. TRIGGER when the user wants to sequence work or build a plan from a PRD.',
+    description: 'Decompose a feature PRD into an ordered, dependency-aware plan with parallel markers, written to gspec/tasks/<feature>.md. Runs between gspec-feature and gspec-implement. TRIGGER when the user wants to sequence work or build a plan from a PRD.',
   },
   'gspec.style.md': {
     name: 'gspec-style',
@@ -186,7 +186,8 @@ async function composeDegraded(cap) {
   const also = cap.also ? V2_AGENTS.find((a) => a.name === cap.also) : null;
   // Skills to inline: the produce+check agents' skills, plus any `alsoSkills`
   // the capability adds (e.g. gspec-orchestrator for the implement fan-out
-  // judgment, which lives on the pipeline-only build-orchestrator agent).
+  // judgment, which lives on the build-orchestrator agent used only by the
+  // autonomous `gspec build`).
   const skillNames = cap.skills || dedup([...(produce?.skills || []), ...(check?.skills || []), ...(cap.alsoSkills || [])]);
 
   const parts = [DEGRADE_PREAMBLE, '', await readSource(cmd.source)];
