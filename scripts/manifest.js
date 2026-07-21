@@ -363,11 +363,13 @@ export const V2_COMMANDS = [
 ];
 
 // Targets that receive the full v2 artifact split (skills + agents + commands),
-// each in its native format. Claude preloads skills into agents; OpenCode can't
-// (no `skills:` field), so its agents inline the persona (see build.js). Every
-// other target gets the DEGRADE build: one self-contained composed file per
-// capability (see DEGRADE_CAPABILITIES + composeDegraded in build.js).
-export const V2_TARGETS = new Set(['claude', 'opencode', 'codex', 'cursor']);
+// each in its native format. Claude preloads skills into agents; OpenCode, Pi,
+// and the rest can't (their `skills:` field selects scopes, not a named subset),
+// so their agents inline the persona (see build.js). Pi's sub-agents come from
+// the pi-subagents extension, a documented install prerequisite. Every other
+// target gets the DEGRADE build: one self-contained composed file per capability
+// (see DEGRADE_CAPABILITIES + composeDegraded in build.js).
+export const V2_TARGETS = new Set(['claude', 'opencode', 'codex', 'cursor', 'pi']);
 
 // Degrade map: for targets without sub-agents, each capability is emitted as ONE
 // self-contained file composed from the v2 sources — the command flow + its

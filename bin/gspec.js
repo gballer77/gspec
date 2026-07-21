@@ -354,10 +354,10 @@ async function findExistingFiles(target, cwd) {
     throw e;
   }
 
-  // Multi-dir native layouts (opencode/codex/cursor/antigravity) write agent/
+  // Multi-dir native layouts (opencode/codex/cursor/antigravity/pi) write agent/
   // command/skill/workflow subdirs — skip the overwrite pre-check; install
   // overwrites in place.
-  if (['opencode', 'codex', 'cursor', 'antigravity'].includes(target.layout)) return existing;
+  if (['opencode', 'codex', 'cursor', 'antigravity', 'pi'].includes(target.layout)) return existing;
 
   if (target.layout === 'flat') {
     const srcEntries = await readdir(target.sourceDir);
@@ -507,6 +507,49 @@ async function installOpenCode(target, cwd) {
   }
 
   for (const cls of ['agent', 'command']) {
+    const src = join(target.sourceDir, cls);
+    let files;
+    try {
+      files = (await readdir(src)).filter((f) => f.endsWith('.md'));
+    } catch (e) {
+      if (e.code === 'ENOENT') continue;
+      throw e;
+    }
+    const dest = join(base, cls);
+    await mkdir(dest, { recursive: true });
+    for (const f of files) {
+      await writeFile(join(dest, f), await readFile(join(src, f), 'utf-8'), 'utf-8');
+      console.log(`  ${chalk.green('+')} ${cls}/${f.replace(/\.md$/, '')}`);
+      count++;
+    }
+  }
+
+  return count;
+}
+
+// Pi native layout: skills/<name>/SKILL.md + agents/<name>.md + prompts/<name>.md
+// (all under .pi/). The agents/ files are consumed by the pi-subagents extension
+// (a documented install prerequisite — see the post-install note).
+async function installPi(target, cwd) {
+  const base = join(cwd, target.installDir); // .pi
+  let count = 0;
+
+  const skillsSrc = join(target.sourceDir, 'skills');
+  try {
+    for (const entry of await readdir(skillsSrc)) {
+      const info = await stat(join(skillsSrc, entry));
+      if (!info.isDirectory()) continue;
+      const destDir = join(base, 'skills', entry);
+      await mkdir(destDir, { recursive: true });
+      await writeFile(join(destDir, 'SKILL.md'), await readFile(join(skillsSrc, entry, 'SKILL.md'), 'utf-8'), 'utf-8');
+      console.log(`  ${chalk.green('+')} skills/${entry}`);
+      count++;
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+
+  for (const cls of ['agents', 'prompts']) {
     const src = join(target.sourceDir, cls);
     let files;
     try {
@@ -708,7 +751,9 @@ async function install(targetName, cwd) {
             ? await installCursor(target, cwd)
             : target.layout === 'antigravity'
               ? await installAntigravity(target, cwd)
-              : await installDirectory(target, cwd);
+              : target.layout === 'pi'
+                ? await installPi(target, cwd)
+                : await installDirectory(target, cwd);
 
   console.log(chalk.bold(`\n${count} skills installed to ${target.installDir}/\n`));
 
@@ -1769,6 +1814,25 @@ program
     await applyMemoryScope(targetName, process.cwd());
 
     await checkGspecFiles(process.cwd(), targetName);
+
+    // Pi delegates the whole gspec flow to sub-agents (installed to .pi/agents/),
+    // which Pi only understands with the pi-subagents extension. Surface it as a
+    // hard prerequisite so the install isn't silently half-wired.
+    if (targetName === 'pi') {
+      console.log();
+      console.log(chalk.bold.yellow('  ═══ Required: pi-subagents extension ════════════════════════'));
+      console.log();
+      console.log(chalk.bold.white('  gspec runs as sub-agents on Pi. Install the extension:'));
+      console.log();
+      console.log(`    ${chalk.bold.cyan('pi install npm:pi-subagents')}`);
+      console.log();
+      console.log(`  The ${chalk.bold('/gspec-*')} prompts in ${chalk.bold('.pi/prompts/')} delegate to the sub-agents`);
+      console.log(`  in ${chalk.bold('.pi/agents/')}. Without the extension Pi can't spawn them and`);
+      console.log(`  the commands won't work as designed.`);
+      console.log();
+      console.log(chalk.bold.yellow('  ═════════════════════════════════════════════════════════════'));
+      console.log();
+    }
 
     // Post-install: instruct user to generate profile.md (only if it doesn't already exist)
     const profilePath = join(process.cwd(), 'gspec', 'profile.md');

@@ -166,7 +166,9 @@ The CLI will ask which platform you're installing for:
 | Antigravity | `.agent/skills/` |
 | Codex | `.agents/skills/` |
 | Open Code | `.opencode/commands/` + `.opencode/skills/` |
-| Pi | `.pi/prompts/` + `.pi/skills/` |
+| Pi | `.pi/prompts/` + `.pi/skills/` + `.pi/agents/` |
+
+> **Pi requires the [pi-subagents](https://pi.dev/packages/pi-subagents) extension.** gspec delegates its workflow to sub-agents in `.pi/agents/`, which Pi only understands with that extension installed: `pi install npm:pi-subagents`. The installer prints this reminder after a Pi install.
 
 You can skip the prompt by passing a target directly:
 
@@ -260,7 +262,7 @@ Most specs are Markdown. The style guide can also be a self-contained HTML file 
 | [Antigravity](https://www.antigravity.dev/) | Skills format | Supported |
 | [Codex](https://developers.openai.com/codex/cli/) | Skills format | Supported |
 | [Open Code](https://opencode.ai/) | Commands + skills | Supported |
-| [Pi](https://pi.dev/) | Prompts + skills | Supported |
+| [Pi](https://pi.dev/) | Prompts + skills + agents | Supported (needs [pi-subagents](https://pi.dev/packages/pi-subagents)) |
 
 ## Project Status
 
