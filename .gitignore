@@ -13,6 +13,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Decision audit trail (written by the decision-audit.sh PostToolUse hook)
+.decision-audit.jsonl
+
 # Install artifacts (created by running gspec locally)
 .claude/**
 !.claude/skills/

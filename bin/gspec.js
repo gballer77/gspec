@@ -28,6 +28,7 @@ const BANNER = `
   ${chalk.cyan('║')}                                              ${chalk.cyan('║')}
   ${chalk.cyan('╚══════════════════════════════════════════════╝')}
   ${chalk.white('═════════════════════════════baller.software═══')}
+  ${chalk.dim(`v${pkg.version}`)}
 `;
 
 // Derive install-side TARGETS from the shared emitter config so we have one source of truth.
