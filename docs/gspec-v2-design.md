@@ -211,9 +211,11 @@ intake(interview)
   → features      [ feature-writer → feature-validator  ×N ]
   → architecture  [ architecture-writer → architecture-validator ]
   → plan          [ plan-decomposer → plan-validator ]
-  → implement     [ build-orchestrator → wave build-plan → implementer ×scope ([P] fan-out within a wave) → verify.sh build+test (driver-run) → implementation-validator (criteria/DoD); one self-heal on failure ]
+  → implement     [ build-orchestrator → wave build-plan → implementer ×scope ([P] fan-out within a wave, continuation loop per scope) → verify.sh build+test (driver-run) → implementation-validator (criteria/DoD); one self-heal on failure ]
   → reconcile     [ codebase-inspector audit → drift report ]
 ```
+
+**Per-scope continuation loop (small-context resilience).** A single implementer run has a finite context window; on a small model (e.g. 128K) a large scope can exhaust it mid-build. Because progress is durable in the filesystem — the plan `- [ ]`→`- [x]` checkboxes, with checked tasks immutable (hook-enforced) — the driver does not try to *detect* exhaustion (unreliable and engine-specific: Claude headless auto-compacts rather than exiting cleanly). Instead it watches the unchecked-task count for each scope (from the scope's `plan` file(s), emitted by the build-orchestrator) and, while that count keeps dropping, spawns a **fresh** implementer agent to resume from the reduced set. It stops when the count hits zero (scope complete), after `MAX_STALLS` runs make no progress (genuinely stuck — falls through to the QA gate rather than looping), or at `MAX_SCOPE_RUNS`. The monolithic fallback path (no usable wave plan) gets the same loop, tracking all `gspec/tasks/*.md`.
 
 The same runtime is also the right home for large `/gspec-implement` runs. `/gspec-build` (the markdown command) remains as the small-build + non-Claude-target fallback (context-lean, pure-routing, accepts a size ceiling, no resume).
 
@@ -229,6 +231,7 @@ Deterministic shell on lifecycle events, **no model judgment**. They upgrade *so
 | **spec integrity check** | `PostToolUse` · Write/Edit on `gspec/*.md` | valid frontmatter + current `spec-version` | near-term |
 | **QA-gate floor** *(opt-in only)* | `Stop`/`PostToolUse` · capability→`[x]` in `features/*.md` | a validator verdict exists on disk, else block | opt-in only |
 | **skill-write guard** | `PreToolUse` · Write/Edit under `.claude/skills/` | block edits to generated skills → force the `/gspec-distill` path | ✅ T2 (built) |
+| **task immutability** | `PreToolUse` · Write/Edit on `gspec/tasks/*.md` | block any edit that alters/removes a checked-off (`- [x]`) task → replanning appends new tasks (`supersedes:`), never rewrites history | ✅ built |
 | **feedback address-tag** | `PreToolUse` · Write on agent-memory | require a target+layer address tag | ✅ T1 (built) |
 | **subagent capture** | `SubagentStop` · matcher `*` | append a failing verdict to the capture log | ✅ T4 (built) |
 | **spec-reconcile nudge** | `PostToolUse` marker + `Stop` | session wrote source but nothing under `gspec/` → block the stop once with the changed-file list (session-scoped tmpdir marker, not git state) | ✅ built |

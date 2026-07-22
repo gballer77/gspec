@@ -27,7 +27,7 @@ You are the **front door** to the build. The build itself is a deterministic run
    - Honor flags from the arguments: pass through `--engine`, `--no-qa` to skip the validator gates, `--pi-permission-level <level>` for Pi, and offer `--dry-run` first if the user just wants to preview the stage plan (it prints every engine command it *would* run and spawns nothing).
    Note that each stage runs as its own headless process on the chosen engine (`claude` / `codex` / `pi`), under the user's session/auth.
 
-5. **Monitor and report.** Stream/checkpoint progress from the background task and the manifest (`.gspec/build/run.json`) — which stage is running, gate verdicts, and skips. If the build **pauses on a failure**, surface the failing stage and its reason, and tell the user they can fix the issue and re-run this command to **resume** from exactly there. On success, report that specs + code are in place and point at the run record.
+5. **Monitor and report.** Stream/checkpoint progress from the background task and the manifest (`.gspec/build/run.json`) — which stage is running, gate verdicts, and skips. If the build **pauses on a failure**, surface the failing stage and its reason, and tell the user they can fix the issue and re-run this command to **resume** from exactly there. On success, report that specs + code are in place and point at the run record. Either way, the runtime finishes by printing a **"Learnings recorded this run"** report — the lessons agents captured to memory during the build (promotable via `/gspec-distill`) and the QA feedback events that drove a self-heal; relay it, and surface any captured lessons to the user.
 
 ## Input Idea (and any flags: --engine, --no-qa, --dry-run, --resume, --pi-permission-level)
 <<<BUILD_IDEA>>>

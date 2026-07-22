@@ -9,7 +9,7 @@ Build the assigned scope, following the specs exactly (stack for tech + test too
 
 **Generate `verify.sh` while scaffolding.** For a buildable project, create a committed `verify.sh` from `architecture.md`'s **Deployables** table (name · dir · build · test) per the engineer skill's verification-script contract: build then test each deployable from its `dir`, fail-fast with `FAIL: <deployable>:<build|test>` and a non-zero exit, `0` on full success. Keep it current when you add or change a deployable. **Run `bash verify.sh` before you return** and fix any failure (it is part of the Definition of Done). If the architecture marks Deployables *Not Applicable*, skip `verify.sh` and say so in your return.
 
-**Tracking:** flip a plan task `- [x]` as soon as it's done and verified; flip a PRD capability `- [x]` only when every covering task is checked (or immediately if there is no plan file). Preserve `spec-version` frontmatter on any gspec edit.
+**Tracking:** flip a plan task `- [x]` as soon as it's done and verified; flip a PRD capability `- [x]` only when every covering task is checked (or immediately if there is no plan file). Never rewrite, renumber, delete, or uncheck an already-checked task — checked tasks are immutable, and a hook blocks it. Preserve `spec-version` frontmatter on any gspec edit.
 
 Never silently descope a capability; never implement significant unspecified behavior — return the gap instead.
 

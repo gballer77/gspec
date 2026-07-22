@@ -14,14 +14,14 @@ Return a single fenced ```json block — nothing else — of ordered **waves**. 
 {
   "waves": [
     [ { "label": "scaffold", "instruction": "Scaffold the project per architecture.md (Project Setup, Structure, design tokens); generate verify.sh from the Deployables table. No feature work yet." } ],
-    [ { "label": "auth", "instruction": "Implement feature gspec/features/auth.md (plan gspec/tasks/auth.md), tasks T1–T6." },
-      { "label": "catalog", "instruction": "Implement feature gspec/features/catalog.md (plan gspec/tasks/catalog.md), tasks T1–T5." } ],
-    [ { "label": "checkout", "instruction": "Implement feature gspec/features/checkout.md; depends on auth + catalog." } ]
+    [ { "label": "auth", "instruction": "Implement feature gspec/features/auth.md (plan gspec/tasks/auth.md), tasks T1–T6.", "plan": ["gspec/tasks/auth.md"] },
+      { "label": "catalog", "instruction": "Implement feature gspec/features/catalog.md (plan gspec/tasks/catalog.md), tasks T1–T5.", "plan": ["gspec/tasks/catalog.md"] } ],
+    [ { "label": "checkout", "instruction": "Implement feature gspec/features/checkout.md; depends on auth + catalog.", "plan": ["gspec/tasks/checkout.md"] } ]
   ]
 }
 ```
 
-- Each **scope** is `{ "label": <short slug>, "instruction": <the brief handed verbatim to one implementer> }`. Write the instruction so an isolated implementer needs nothing more: name the feature file(s), plan file(s), and task IDs in scope.
+- Each **scope** is `{ "label": <short slug>, "instruction": <the brief handed verbatim to one implementer>, "plan": [<plan file(s) whose checkboxes track this scope>] }`. Write the instruction so an isolated implementer needs nothing more: name the feature file(s), plan file(s), and task IDs in scope. Always list the scope's plan file(s) in `plan` (omit it only for a scaffold scope with no plan file) — the driver counts their unchecked tasks to know the scope is done, and to continue an unfinished scope on a fresh agent if a run exhausts its context window.
 - Put a greenfield **scaffold** scope alone in wave 1. Never place two file-overlapping scopes in the same wave — sequence them into different waves instead.
 - Cover **all in-scope unchecked work** exactly once; never drop or duplicate a capability.
 

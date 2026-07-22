@@ -12,6 +12,7 @@ This is a shared persona skill preloaded by the plan and implementation agents. 
 The PRD's **capability checkboxes** track *delivery*; a plan file's **task checkboxes** track *execution*. Rules:
 - Tasks carry a `covers:` line quoting the PRD capability text verbatim, and stable IDs (`T1`, `T2`, …) never renumbered on regenerate — append new ones.
 - Flip a task `- [x]` when it's done and verified. Flip a PRD capability `- [x]` only when **every** task covering it is checked (or immediately, if the feature has no plan file).
+- **A checked task is immutable.** Once `- [x]`, it is frozen — the historical record of what was built. Never edit its text/`deps:`/`covers:`, never renumber, delete, reorder-away, or uncheck it. When replanning changes work a checked task covered, leave it exactly as-is and **append a new task** (next free ID) carrying a `supersedes: T<n>` line naming the checked task(s) it replaces. History is appended, never rewritten. A deterministic hook (`gspec-task-immutability`) blocks any write that would alter a checked task.
 - `[P]` marks a parallel-safe task: its deps are all complete AND it writes no files a `[P]` sibling writes. When in doubt, omit `[P]` — false parallelism costs more than missed parallelism.
 
 ## Quality bar — a plan is good when it…
@@ -19,7 +20,7 @@ The PRD's **capability checkboxes** track *delivery*; a plan file's **task check
 2. **Correctly ordered** — a topological order where every `deps:` points strictly backwards; no cycles.
 3. **Honest parallelism** — `[P]` only where deps are met and no file overlap.
 4. **Tasks are right-sized** — each completable and verifiable in one pass (≈1–3 files); one imperative sentence, concrete files, no code, no estimates, no invented tech.
-5. **Traceable** — every task has an accurate `covers:` quote; IDs stable and unique.
+5. **Traceable** — every task has an accurate `covers:` quote; IDs stable and unique; every checked task preserved verbatim; each `supersedes:` names a real checked task.
 
 ## Quality bar — an implementation is good when it…
 1. **Satisfies the acceptance criteria** — every criterion under an implemented capability is met before its box is checked.

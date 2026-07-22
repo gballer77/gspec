@@ -877,6 +877,7 @@ const HOOK_SPECS = [
   { file: 'gspec-reconcile-marker.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-memory-address-tag.mjs', event: 'PreToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-skill-write-guard.mjs', event: 'PreToolUse', matcher: TOOL_MATCHER },
+  { file: 'gspec-task-immutability.mjs', event: 'PreToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-subagent-capture.mjs', event: 'SubagentStop', matcher: '*' },
   { file: 'gspec-reconcile.mjs', event: 'Stop', matcher: '*' },
   { file: 'gspec-practices-enforce.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
