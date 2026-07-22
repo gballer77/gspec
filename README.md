@@ -1,6 +1,6 @@
 # gspec
 
-**Structured product specifications for AI-assisted development.**
+**Living specs, and an agent team that builds from them.**
 
 AI coding tools are powerful, but they build better software when they understand *what* you're building and *why*. gspec gives your AI tools that context — a set of living specification documents that define your product, guide implementation, and stay in sync as your project evolves.
 
@@ -21,9 +21,30 @@ gspec installs as a set of slash commands (skills) in your AI coding tool. Each 
 
 These documents become the shared context for all subsequent AI interactions. When you implement features, your AI reads the specs. When the code changes, gspec's always-on spec sync keeps them in sync automatically.
 
-### The Workflow
+There are two ways to work with gspec: let it **build autonomously** from an idea, or drive the **spec-by-spec** workflow yourself. Both produce the same living specs.
 
-The only commands you *need* are the four fundamentals and `/gspec-implement`. Everything else exists to help when your project calls for it.
+### Autonomous build
+
+New in 2.0: `/gspec-build` turns a plain-language idea into a working, spec-backed codebase in a single run. Answer a short intake interview (or pass the idea directly) and gspec drives the whole pipeline unattended — profile, stack, practices, style, feature PRDs, architecture, an ordered plan, and the implementation — with an independent validator gating every stage and a deterministic `verify.sh` check on the build.
+
+```bash
+/gspec-build                    # in your harness — brief interview, then unattended
+/gspec-build "a URL shortener"  # skip the interview, pass the idea directly
+```
+
+It also runs headless from the CLI, for CI or scripted project setup:
+
+```bash
+gspec build "a URL shortener" --engine claude   # engines: claude · codex · pi
+gspec build --dry-run "an idea"                 # preview the stage plan
+gspec build --resume                            # continue a paused run
+```
+
+The autonomous build has a wired engine for **Claude Code**, **Codex**, and **Pi**. On other harnesses, use the spec-by-spec workflow below.
+
+### The spec-by-spec workflow
+
+Driving each step yourself, or applying gspec to an existing codebase? Run the commands one at a time. The only commands you *need* are the four fundamentals and `/gspec-implement`; everything else exists to help when your project calls for it.
 
 The fundamentals give your AI tool enough context to build well — it knows what the product is, how it should look, what technologies to use, and what engineering standards to follow. From there, `/gspec-implement` can take a plain-language description and start building. The remaining commands — `/gspec-research`, `/gspec-feature`, `/gspec-architect`, `/gspec-plan`, `/gspec-analyze`, and `/gspec-audit` — add structure and rigor when the scope or complexity warrants it.
 
@@ -255,7 +276,7 @@ Most specs are Markdown. The style guide can also be a self-contained HTML file 
 
 **Research and architecture own discovery.** Feature proposals and technical gap analysis happen *before* implementation — in `/gspec-research` and `/gspec-architect` respectively. `/gspec-research` surfaces new feature ideas through competitive analysis and product-driven reasoning. `/gspec-architect` identifies technical gaps and resolves ambiguities. This separation keeps `/gspec-implement` focused on building what the specs define, rather than proposing scope changes mid-build.
 
-**Platform-agnostic.** A single set of source commands builds for Claude Code, Cursor, Antigravity, and Codex. The build system handles platform-specific formatting so the commands stay consistent across tools.
+**Platform-agnostic.** A single source tree builds for Claude Code, Cursor, Antigravity, Codex, Open Code, and Pi. The build system handles platform-specific formatting so the commands stay consistent across tools.
 
 ## Supported Platforms
 
