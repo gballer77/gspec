@@ -222,7 +222,7 @@ Most specs are Markdown. The style guide can also be a self-contained HTML file 
 
 **Research and architecture own discovery.** Feature proposals and technical gap analysis happen *before* implementation — in `/gspec-research` and `/gspec-architect` respectively. `/gspec-research` surfaces new feature ideas through competitive analysis and product-driven reasoning. `/gspec-architect` identifies technical gaps and resolves ambiguities. This separation keeps `/gspec-implement` focused on building what the specs define, rather than proposing scope changes mid-build.
 
-**Platform-agnostic.** A single set of source commands builds for Claude Code, Cursor, Antigravity, and Codex. The build system handles platform-specific formatting so the commands stay consistent across tools.
+**Platform-agnostic.** A single source tree builds for Claude Code, Cursor, Antigravity, Codex, Open Code, and Pi. The build system handles platform-specific formatting so the commands stay consistent across tools.
 
 ## Supported Platforms
 

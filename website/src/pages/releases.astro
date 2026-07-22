@@ -5,6 +5,39 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '2.0.0',
+    date: 'July 22, 2026',
+    title: 'gspec 2.0 — an agent-team framework with an autonomous build',
+    summary: 'The biggest release yet. gspec is no longer a flat set of spec-generating commands — it is now an <strong>agent-team framework</strong> with a deterministic runtime. The organizing idea: skills are the brains, agents are the hands, commands are the conversations, the runtime is the driver, and hooks are the hard floors. Headline additions: an <strong>autonomous build pipeline</strong> (<code>/gspec-build</code>), a self-improving <strong>learning loop</strong>, <strong>producer ≠ checker quality gates</strong>, and deterministic <strong>enforcement hooks</strong>. Every previous command still works — each is now a thin orchestrator backed by specialized agents.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>Autonomous build (<code>/gspec-build</code>).</strong> A deterministic runtime takes an idea and drives nine stages end to end — profile → stack → practices → style → features → architecture → plan → implement → reconcile. Each stage runs as an isolated agent behind a validator gate. Foundation stages are skip-if-present, so it works on greenfield and existing projects. Runs are resumable via an on-disk manifest, self-heal on validator failure, and end with a learnings report. Available where a headless engine is wired: Claude Code, Codex, and Pi.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Producer ≠ checker quality gates.</strong> The agent that writes a spec or a slice of code is never the one that approves it. Eight read-only validator agents return structured verdicts; a new <code>/gspec-qa</code> command runs the same gate on demand. The implementation gate is backed by a generated <code>verify.sh</code> that builds and tests every deployable.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Learning loop.</strong> Failing verdicts and user corrections are captured to per-agent memory, tagged by layer. The new <code>/gspec-distill</code> command reviews recurring lessons and promotes them into the skills themselves, with your approval — so corrections become durable expertise instead of evaporating.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Deterministic enforcement hooks.</strong> Shell guards on lifecycle events turn soft conventions into hard floors — task immutability (checked-off work can\'t be silently rewritten), spec integrity, profile agnosticism, and practices enforcement — on both the interactive and build paths. Codex gets floor parity via a turn-boundary Stop-hook gate.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Every command is now agent-backed.</strong> The twelve familiar commands (profile, style, stack, practices, research, feature, architect, plan, analyze, audit, implement, migrate) are re-implemented as thin conversational orchestrators that load a persona skill and delegate the real work to isolated agents behind a quality gate. Fifteen commands in total (adding build, qa, distill).',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Claude-first, degrade gracefully.</strong> One source tree builds for all six targets. Claude Code gets the full skills / agents / commands / hooks split; other harnesses collapse each agent back into a skill or command and enforce what their platform allows. See the <a href="/platforms/">platform capabilities</a> matrix for the honest, harness-by-harness picture.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install 2.0. Your existing <code>gspec/</code> specs keep working — run <code>/gspec-migrate</code> if a format prompt appears. The autonomous build and learning loop are additive; nothing about the interactive command workflow you already use has been removed.',
+  },
+  {
     version: '1.20.0',
     date: 'July 20, 2026',
     title: 'gspec now installs into Pi',

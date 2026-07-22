@@ -1,0 +1,58 @@
+---
+const base = import.meta.env.BASE_URL;
+
+const highlights = [
+  { title: 'One command', body: 'Run /gspec-build, answer a short intake, and the pipeline drives specs → plan → code on its own.' },
+  { title: 'Nine gated stages', body: 'Each stage is an isolated agent checked by an independent validator. Producer never grades its own work.' },
+  { title: 'Builds that verify', body: 'A generated verify.sh builds and tests every deployable. The run pauses rather than shipping something broken.' },
+];
+---
+
+<section class="py-16 lg:py-24">
+  <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+    <div class="rounded-3xl border border-[var(--border-primary-subtle)] bg-[var(--bg-primary-subtle)] p-8 sm:p-10 lg:p-12">
+      <div class="max-w-2xl">
+        <span class="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--badge-accent-text)] bg-[var(--badge-accent-bg)] px-3 py-1 rounded-full mb-4">
+          New in 2.0
+        </span>
+        <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
+          From idea to built product — autonomously
+        </h2>
+        <p class="text-[var(--text-secondary)] leading-relaxed mb-8">
+          gspec is no longer just a spec generator. Its autonomous build takes your idea and drives the whole
+          workflow deterministically — with quality gates that catch their own mistakes and a run you can resume.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-3 gap-4 mb-8">
+        {highlights.map((h) => (
+          <div class="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-5">
+            <h3 class="font-semibold text-[var(--text-primary)] mb-1.5 text-sm">{h.title}</h3>
+            <p class="text-sm text-[var(--text-secondary)] leading-relaxed">{h.body}</p>
+          </div>
+        ))}
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <a
+          href={`${base}build/`}
+          class="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-[var(--text-accent)] border border-[var(--border-primary-subtle)] bg-[var(--bg-surface)] hover:border-neutral-600 transition-all duration-200"
+        >
+          Explore the build pipeline
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+          </svg>
+        </a>
+        <a
+          href={`${base}how-it-works/`}
+          class="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-[var(--text-body)] hover:text-[var(--text-primary)] transition-colors duration-200"
+        >
+          How the agent team works
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

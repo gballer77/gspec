@@ -1,4 +1,6 @@
 ---
+const base = import.meta.env.BASE_URL;
+
 const platforms = [
   { name: 'Claude Code', icon: 'terminal' },
   { name: 'Cursor', icon: 'cursor' },
@@ -29,5 +31,14 @@ const platforms = [
         </div>
       ))}
     </div>
+    <p class="text-[var(--text-secondary)] mt-8">
+      Support isn’t identical across harnesses.{' '}
+      <a
+        href={`${base}platforms/`}
+        class="text-[var(--text-accent)] font-medium hover:text-primary-300 underline underline-offset-4 decoration-[var(--border-primary-subtle)] hover:decoration-current transition-colors duration-200"
+      >
+        Compare platform capabilities →
+      </a>
+    </p>
   </div>
 </section>

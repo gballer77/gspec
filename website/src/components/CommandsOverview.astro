@@ -1,4 +1,6 @@
 ---
+const base = import.meta.env.BASE_URL;
+
 const groups = [
   {
     stage: 'Define',
@@ -17,16 +19,20 @@ const groups = [
       { name: 'research', role: 'Market Analyst', description: 'Analyze competitors and identify feature gaps' },
       { name: 'feature', role: 'Product Manager', description: 'Write one or more PRDs with prioritized capabilities and acceptance criteria' },
       { name: 'architect', role: 'Technical Architect', description: 'Design the technical blueprint — data model, APIs, project structure' },
-      { name: 'plan', role: 'Engineering Lead', description: 'Decompose a feature PRD into an ordered, dependency-aware plan with parallel-execution markers — implement consumes this and skips its own plan mode' },
-      { name: 'analyze', role: 'Quality Analyst', description: 'Cross-reference all specs and resolve contradictions, or pass a feature slug to scrutinize a single PRD for ambiguity' },
+      { name: 'plan', role: 'Engineering Lead', description: 'Decompose a feature PRD into an ordered, dependency-aware plan with parallel-execution markers' },
+      { name: 'analyze', role: 'Quality Analyst', description: 'Cross-reference all specs and resolve contradictions, or scrutinize a single PRD for ambiguity' },
       { name: 'audit', role: 'Specification Auditor', description: 'Check specs against the actual codebase and update them to match reality' },
     ],
   },
   {
-    stage: 'Build',
-    description: 'Implement with full context',
+    stage: 'Build & beyond',
+    description: 'Implement, verify, and improve',
     commands: [
+      { name: 'build', role: 'Build Orchestrator', description: 'Autonomously drive the whole workflow — from an idea to working, verified code', highlight: true },
       { name: 'implement', role: 'Senior Developer', description: 'Read all specs and build software with complete project context' },
+      { name: 'qa', role: 'QA Lead', description: 'Run the producer ≠ checker quality gate over your specs and code on demand', highlight: true },
+      { name: 'distill', role: 'Steward', description: 'Promote lessons captured during runs into durable, reusable skills', highlight: true },
+      { name: 'migrate', role: 'Migration Specialist', description: 'Upgrade existing gspec files to the current format' },
     ],
   },
 ];
@@ -35,10 +41,11 @@ const groups = [
 <section class="py-16 lg:py-24">
   <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
     <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] text-center mb-4 tracking-tight">
-      12 commands, one workflow
+      Fifteen commands, backed by an agent team
     </h2>
     <p class="text-[var(--text-secondary)] text-center mb-12 max-w-2xl mx-auto">
-      Each command adopts a professional perspective to guide you through comprehensive product definition.
+      Each command adopts a professional perspective and delegates the real work to specialized agents behind a
+      quality gate. <a href={`${base}how-it-works/`} class="text-[var(--text-accent)] font-medium hover:text-primary-300 underline underline-offset-4 decoration-[var(--border-primary-subtle)] hover:decoration-current transition-colors duration-200">See how it works →</a>
     </p>
 
     <div class="grid lg:grid-cols-3 gap-6 lg:gap-8">
@@ -48,10 +55,18 @@ const groups = [
           <p class="text-sm text-[var(--text-secondary)] mb-4">{group.description}</p>
           <div class="flex flex-col gap-3">
             {group.commands.map((cmd) => (
-              <div class="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-4 hover:border-neutral-600 transition-colors duration-200">
-                <div class="flex items-center gap-2 mb-1.5">
+              <div class:list={[
+                'rounded-lg border p-4 transition-colors duration-200',
+                cmd.highlight
+                  ? 'border-[var(--border-primary-subtle)] bg-[var(--bg-primary-subtle)] hover:border-neutral-600'
+                  : 'border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-neutral-600',
+              ]}>
+                <div class="flex items-center gap-2 mb-1.5 flex-wrap">
                   <code class="text-sm font-mono font-medium text-[var(--text-accent)]">{cmd.name}</code>
                   <span class="text-xs text-[var(--text-muted)]">{cmd.role}</span>
+                  {cmd.highlight && (
+                    <span class="text-[10px] font-medium uppercase tracking-wider text-[var(--badge-accent-text)] bg-[var(--badge-accent-bg)] px-1.5 py-0.5 rounded">New</span>
+                  )}
                 </div>
                 <p class="text-sm text-[var(--text-secondary)] leading-relaxed">{cmd.description}</p>
               </div>

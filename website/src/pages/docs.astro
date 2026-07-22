@@ -19,19 +19,23 @@ const sections = [
   { id: 'plan', label: 'plan', group: 'Plan' },
   { id: 'analyze', label: 'analyze', group: 'Analyze' },
   { id: 'audit', label: 'audit', group: 'Analyze' },
+  { id: 'build', label: 'build', group: 'Build' },
   { id: 'implement', label: 'implement', group: 'Build' },
+  { id: 'qa', label: 'qa', group: 'Build' },
+  { id: 'distill', label: 'distill', group: 'Maintenance' },
+  { id: 'migrate', label: 'migrate', group: 'Maintenance' },
 ];
 
 const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group ? 3 : 2 }));
 ---
 
-<SidebarLayout title="Documentation — gspec" description="Complete command reference for gspec — workflow overview and detailed documentation for all 12 commands.">
+<SidebarLayout title="Documentation — gspec" description="Complete command reference for gspec — workflow overview and detailed documentation for all 15 commands.">
   <SidebarNav sections={sections} slot="sidebar" />
   <TableOfContents headings={headings} slot="toc" />
 
   <h1>Documentation</h1>
   <p class="text-lg text-[var(--text-secondary)] !mt-2 !mb-12">
-    Complete reference for the gspec workflow and all 12 commands.
+    Complete reference for the gspec workflow and all 15 commands.
   </p>
 
   <!-- Workflow Overview -->
@@ -71,6 +75,15 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
     <p>
       Only <strong>Define</strong> and <strong>Build</strong> are required. The four Define commands (profile, style, stack, practices) establish your product foundation. The implement command reads all specs and builds software. Everything in between adds optional depth — use what your project needs.
     </p>
+
+    <div class="not-prose my-8 rounded-xl border border-[var(--border-primary-subtle)] bg-[var(--bg-primary-subtle)] p-5">
+      <p class="text-sm text-[var(--text-body)] leading-relaxed !m-0">
+        <strong class="text-[var(--text-primary)]">Don't want to run each stage yourself?</strong>
+        The <code class="font-mono text-[var(--text-accent)]">build</code> command runs this entire workflow
+        autonomously — from an idea to working, verified code — with a quality gate at every stage.
+        <a href={`${import.meta.env.BASE_URL}build/`}>See the autonomous build →</a>
+      </p>
+    </div>
     <p>
       Most specs are Markdown files stored in a <code>gspec/</code> directory in your repository. The style guide can alternatively be a self-contained HTML design system (<code>style.html</code>) that renders tokens and component previews directly in a browser — useful for design-aware AI tools. An optional <code>gspec/design/</code> folder holds mockups (HTML, SVG, PNG, JPG) exported from external design tools; the implement command reads them as authoritative visual guidance. All files are version-controlled, human-readable, and automatically kept in sync through gspec's spec-sync system.
     </p>
@@ -476,6 +489,35 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
 
   <!-- Build Stage -->
   <CommandSection
+    id="build"
+    name="build"
+    role="Build Orchestrator"
+    description="Runs the entire gspec workflow autonomously — from a plain-language idea to working, verified code. Holds a single up-front intake interview, then launches a deterministic runtime that drives nine stages in order (profile → stack → practices → style → features → architecture → plan → implement → reconcile). Each stage runs as an isolated agent gated by an independent validator (producer ≠ checker). Foundation specs that already exist are reused, not regenerated, so build works on greenfield and existing projects alike. Runs on harnesses with a wired headless engine — today Claude Code, Codex, and Pi."
+    produces="A working product: specs in gspec/, an ordered plan, and implemented code that passes a generated verify.sh build-and-test gate. The run is tracked in a resumable on-disk manifest, self-heals on validator failure (one revision attempt, then pauses), and ends by recording the learnings captured during the run."
+    invocation="/build"
+    questions={[
+      'A plain-language description of what you want to build',
+      'Essentials the intake needs up front (audience, platform, key constraints) — asked once, so the run doesn\'t stop to re-ask',
+    ]}
+    bestPractices={[
+      'Use build to go from zero to a working baseline, then switch to individual commands for hands-on refinement',
+      'Run it in a supported harness (Claude Code, Codex, or Pi) — other harnesses get the full interactive workflow but not the autonomous build',
+      'Let existing specs stand — build skips foundation stages whose spec already exists',
+      'Review the learnings report at the end; it feeds the distill step',
+    ]}
+    pitfalls={[
+      'Expecting an autonomous build on a harness without a wired engine — use the interactive commands there instead',
+      'Treating it as fully unattended — a failing quality gate pauses the run for your input by design',
+      'Skipping the intake — a vague idea produces a vague foundation',
+    ]}
+    related={[
+      { name: 'implement', relation: 'Build runs implement as its implementation stage, gated by verify.sh and the implementation validator' },
+      { name: 'qa', relation: 'Build applies the same producer ≠ checker quality gate that qa runs on demand' },
+      { name: 'distill', relation: 'Build records learnings each run; distill promotes recurring ones into skills' },
+    ]}
+  />
+
+  <CommandSection
     id="implement"
     name="implement"
     role="Senior Developer"
@@ -506,6 +548,84 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
       { name: 'practices', relation: 'Implement reads practices for code quality and testing standards' },
       { name: 'feature', relation: 'Implement builds against feature PRD capabilities' },
       { name: 'architect', relation: 'Implement reads architecture for project structure and data model' },
+    ]}
+  />
+
+  <CommandSection
+    id="qa"
+    name="qa"
+    role="QA Lead"
+    description="Runs gspec's quality gate on demand. Delegates to read-only validator agents that check your specs and code against their acceptance criteria and quality bars, then presents each verdict. It embodies the producer ≠ checker principle: the agent that grades the work is never the one that wrote it. qa never edits — it only judges and reports, leaving the fixes to you or to the relevant command."
+    produces="A set of validator verdicts — pass or fail with specific reasoning per finding — across the specs and/or code you point it at. No files are modified."
+    invocation="/qa"
+    questions={[
+      'What to check — a spec type, a feature, or the implementation',
+      'Any acceptance criteria or definition-of-done to weigh the verdict against',
+    ]}
+    bestPractices={[
+      'Run qa before a release or before handing work off, as an independent second opinion',
+      'Use it to sanity-check specs an agent produced before you build against them',
+      'Treat a failing verdict as a prompt to fix the source, then re-run',
+    ]}
+    pitfalls={[
+      'Expecting qa to fix what it finds — it is read-only by design',
+      'Ignoring verdicts because they are advisory in interactive use — during an autonomous build the same gate is enforced',
+    ]}
+    related={[
+      { name: 'build', relation: 'Build runs this gate automatically after every producer stage' },
+      { name: 'audit', relation: 'Audit checks specs against code drift; qa checks work against its acceptance criteria and quality bars' },
+    ]}
+  />
+
+  <CommandSection
+    id="distill"
+    name="distill"
+    role="Steward"
+    description="The reviewer half of gspec's learning loop. When validators reject work or you correct an agent, those lessons are captured to per-agent memory, tagged with the layer they belong to. distill reviews those accumulated lessons and proposes surgical edits that promote recurring ones into the skills themselves — presented one at a time for your approval — then prunes lessons that have graduated. Corrections become durable, reusable expertise instead of evaporating after a session."
+    produces="Approved edits to skill files that fold in recurring lessons, plus pruning of the memory entries that have graduated. Every change is reviewed and approved by you before it is applied."
+    invocation="/distill"
+    questions={[
+      'Which captured lessons to review (all, or scoped to a layer or agent)',
+      'For each proposed skill edit, whether to apply, modify, or skip',
+    ]}
+    bestPractices={[
+      'Run distill periodically after several build or interactive sessions, once lessons have accumulated',
+      'Review each proposed edit — distill suggests, you decide',
+      'Let it prune graduated lessons so memory stays focused on what is still unresolved',
+    ]}
+    pitfalls={[
+      'Running it with no captured feedback yet — there is nothing to distill on a fresh install',
+      'Blindly approving every proposed edit — skills are load-bearing, so review the wording',
+    ]}
+    related={[
+      { name: 'build', relation: 'Build records the learnings that distill later reviews' },
+      { name: 'qa', relation: 'A failing qa verdict is one of the signals captured for distillation' },
+    ]}
+  />
+
+  <!-- Maintenance -->
+  <CommandSection
+    id="migrate"
+    name="migrate"
+    role="Migration Specialist"
+    description="Upgrades existing gspec documents to the current format when you move to a newer version of gspec. Reads your existing specs, maps them onto the latest structure, and rewrites them in place — preserving all of your content while updating headings, frontmatter, and section organization to match what the current commands expect."
+    produces="Your existing gspec/ files, rewritten to the current format with content preserved. Version metadata (spec-version frontmatter, or the style.html version comment) is updated to reflect the new format."
+    invocation="/migrate"
+    questions={[
+      'Which specs to migrate (all, or a specific file) when formats differ',
+      'How to resolve any content that does not map cleanly onto the new structure',
+    ]}
+    bestPractices={[
+      'Run migrate right after upgrading gspec, before running other commands against old specs',
+      'Commit your specs first so the rewrite is easy to review as a diff',
+      'Run audit afterward to confirm the migrated specs still match your code',
+    ]}
+    pitfalls={[
+      'Running migrate when specs are already current — it is only needed on a version bump that changes formats',
+      'Not reviewing the diff — migrate preserves content but reorganizes structure',
+    ]}
+    related={[
+      { name: 'audit', relation: 'Run migrate to fix outdated formats, then audit to check the migrated specs against code' },
     ]}
   />
 

@@ -7,8 +7,11 @@ const currentPath = Astro.url.pathname;
 
 const links = [
   { href: base, label: 'Home' },
+  { href: `${base}build/`, label: 'Build' },
+  { href: `${base}how-it-works/`, label: 'How it works' },
   { href: `${base}getting-started/`, label: 'Getting Started' },
   { href: `${base}docs/`, label: 'Docs' },
+  { href: `${base}platforms/`, label: 'Platforms' },
   { href: `${base}starters/`, label: 'Save & Restore' },
   { href: `${base}releases/`, label: 'Releases' },
   { href: `${base}what-is-sdd/`, label: 'What is SDD?' },
@@ -22,7 +25,7 @@ const links = [
     </a>
 
     <!-- Desktop nav -->
-    <nav class="hidden md:flex items-center gap-1">
+    <nav class="hidden lg:flex items-center gap-1">
       {links.map((link) => (
         <a
           href={link.href}
@@ -42,7 +45,7 @@ const links = [
     </nav>
 
     <!-- Mobile controls -->
-    <div class="flex items-center gap-1 md:hidden">
+    <div class="flex items-center gap-1 lg:hidden">
       <ThemeToggle />
       <button
         type="button"

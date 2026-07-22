@@ -86,7 +86,7 @@ Developers adopting AI coding tools face a recurring problem: their AI lacks pro
 ### Platform Support
 
 - [x] **P1**: Page includes a platform support section showing compatible AI coding tools
-  - Displays supported platforms (Claude Code, Cursor, Antigravity, Codex)
+  - Displays supported platforms (Claude Code, Cursor, Antigravity, Codex, Open Code, Pi)
   - Each platform is visually identifiable (name and/or logo)
   - Section reinforces the "platform-agnostic" value proposition
 
@@ -120,7 +120,7 @@ Developers adopting AI coding tools face a recurring problem: their AI lacks pro
 ### Assumptions
 
 - The install command (`npx gspec`) is stable and will remain the primary installation method
-- The list of supported platforms (Claude Code, Cursor, Antigravity, Codex) is current
+- The list of supported platforms (Claude Code, Cursor, Antigravity, Codex, Open Code, Pi) is current
 - The workflow stages and command set reflected in the project README are up to date
 - Getting Started and Docs pages will be built as separate features; the home page only needs to link to them
 

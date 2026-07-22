@@ -8,35 +8,43 @@ import CopyButton from '../components/CopyButton.astro';
 const sections = [
   { id: 'intro', label: 'Introduction' },
   { id: 'install', label: 'Install' },
-  { id: 'profile', label: 'Profile' },
-  { id: 'style', label: 'Style' },
-  { id: 'stack', label: 'Stack' },
-  { id: 'practices', label: 'Practices' },
-  { id: 'feature', label: 'Feature' },
-  { id: 'implement', label: 'Implement' },
+  { id: 'choose-path', label: 'Choose your path' },
+  { id: 'build-when', label: 'When to use it', group: 'Autonomous build' },
+  { id: 'build-run', label: 'Run the build', group: 'Autonomous build' },
+  { id: 'build-result', label: 'What you get', group: 'Autonomous build' },
+  { id: 'profile', label: 'Profile', group: 'Spec by spec' },
+  { id: 'style', label: 'Style', group: 'Spec by spec' },
+  { id: 'stack', label: 'Stack', group: 'Spec by spec' },
+  { id: 'practices', label: 'Practices', group: 'Spec by spec' },
+  { id: 'feature', label: 'Feature', group: 'Spec by spec' },
+  { id: 'implement', label: 'Implement', group: 'Spec by spec' },
   { id: 'next-steps', label: 'Next Steps' },
 ];
 
-const headings = sections.map((s) => ({ id: s.id, label: s.label, level: 2 }));
+const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group ? 3 : 2 }));
 ---
 
-<SidebarLayout title="Getting Started — gspec" description="Learn how to use gspec by walking through a complete example project.">
+<SidebarLayout title="Getting Started — gspec" description="Get started with gspec two ways — the autonomous build for greenfield projects, or spec by spec for hands-on control.">
   <SidebarNav sections={sections} slot="sidebar" />
   <TableOfContents headings={headings} slot="toc" />
 
   <h1>Getting Started</h1>
   <p class="text-lg text-[var(--text-secondary)] !mt-2 !mb-12">
-    Walk through the full gspec workflow using a fictional task management app called <strong>TaskFlow</strong>.
+    Two ways to use gspec: let it build autonomously, or drive the workflow one spec at a time.
   </p>
 
   <!-- Introduction -->
   <section id="intro">
     <h2>Introduction</h2>
     <p>
-      <strong>TaskFlow</strong> is a lightweight task management app for small teams. We'll use it as our example project to walk through every core gspec command — from defining your product profile to implementing features with full AI context.
+      gspec meets you where your project is. There are two paths through it, and they share the same specs — so you can start with one and switch to the other at any time:
     </p>
+    <ul>
+      <li><strong>Autonomous build</strong> — describe your idea once and let <code>/gspec-build</code> drive the whole workflow to working code. Best for <strong>greenfield</strong> projects and fast prototypes.</li>
+      <li><strong>Spec by spec</strong> — run each command yourself, reviewing as you go. Best when you want hands-on control, or when you're layering gspec onto an existing codebase.</li>
+    </ul>
     <p>
-      By the end of this guide, you'll have a complete mental model of how gspec works and how each spec builds on the last. You can follow along with your own project or just read through to understand the flow.
+      Both paths produce the same living specs in your <code>gspec/</code> directory. Pick a path below — everything the autonomous build does, you can also do by hand.
     </p>
   </section>
 
@@ -44,34 +52,147 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: 2 }));
   <section id="install">
     <h2>Install</h2>
     <p>
-      Run a single command to install gspec into your AI coding tool:
+      Either way, start by installing gspec into your AI coding tool:
     </p>
     <CodeBlock code="npx gspec" lang="shell" />
     <p>
-      The CLI will prompt you to select your platform — <strong>Claude Code</strong>, <strong>Cursor</strong>, <strong>Antigravity</strong>, <strong>Codex</strong>, <strong>Open Code</strong>, or <strong>Pi</strong>. It installs structured specification skills as slash commands in your tool of choice.
+      The CLI will prompt you to select your platform — <strong>Claude Code</strong>, <strong>Cursor</strong>, <strong>Antigravity</strong>, <strong>Codex</strong>, <strong>Open Code</strong>, or <strong>Pi</strong>. It installs the gspec commands, skills, and agents into your tool of choice.
     </p>
     <p>
       <strong>Pi</strong> runs gspec through sub-agents, so it needs the <a href="https://pi.dev/packages/pi-subagents">pi-subagents</a> extension: <code>pi install npm:pi-subagents</code>. The installer reminds you after a Pi install.
     </p>
     <p>
-      If you have saved specs in <code>~/.gspec/</code> from a previous project, the installer will offer to seed your new project from them — either from a playbook or by picking individual specs. This is optional — you can skip it and generate each spec from scratch using the commands.
-    </p>
-    <p>
-      That's it. No accounts, no config files, no dependencies. The skills are plain Markdown files installed into your project. Learn more about <a href={`${import.meta.env.BASE_URL}starters/`}>saving and reusing specs</a> across projects.
+      If you have saved specs in <code>~/.gspec/</code> from a previous project, the installer will offer to seed your new project from them — either from a playbook or by picking individual specs. This is optional. Learn more about <a href={`${import.meta.env.BASE_URL}starters/`}>saving and reusing specs</a> across projects.
     </p>
   </section>
 
-  <!-- Profile -->
-  <section id="profile">
-    <h2>Profile</h2>
+  <!-- Choose your path (tab switcher) -->
+  <section id="choose-path">
+    <h2>Choose your path</h2>
     <p>
-      The profile command defines <em>what your product is, who it serves, and why it exists</em>. It adopts the perspective of a Product Strategist and asks you about your product's identity, target audience, and value proposition.
+      Pick how you want to work. You can switch tabs at any time — the specs are shared between both paths.
     </p>
-    <CodeBlock code="/profile" lang="command" />
-    <p>
-      The command guides you through a conversation about your product. For TaskFlow, we'd describe it as a task management app for small dev teams. Here's a condensed excerpt of what it produces:
-    </p>
-    <CodeBlock code={`# TaskFlow — Product Profile
+
+    <div class="not-prose my-8" role="tablist" aria-label="Getting started path">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button
+          type="button"
+          role="tab"
+          data-tab-btn="build"
+          aria-selected="true"
+          class="gs-tab flex-1 text-left px-5 py-4 rounded-xl border transition-colors duration-200"
+        >
+          <span class="flex items-center gap-2 mb-1">
+            <span class="font-semibold text-[var(--text-primary)]">Autonomous build</span>
+            <span class="text-[10px] font-medium uppercase tracking-wider text-[var(--badge-accent-text)] bg-[var(--badge-accent-bg)] px-1.5 py-0.5 rounded">Greenfield</span>
+          </span>
+          <span class="block text-sm text-[var(--text-secondary)] leading-snug">One command builds the whole thing. Best for new projects and prototypes.</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          data-tab-btn="spec"
+          aria-selected="false"
+          class="gs-tab flex-1 text-left px-5 py-4 rounded-xl border transition-colors duration-200"
+        >
+          <span class="flex items-center gap-2 mb-1">
+            <span class="font-semibold text-[var(--text-primary)]">Spec by spec</span>
+            <span class="text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)] bg-[var(--bg-surface-raised)] px-1.5 py-0.5 rounded">Hands-on</span>
+          </span>
+          <span class="block text-sm text-[var(--text-secondary)] leading-snug">Run each command yourself. Best for control and existing codebases.</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL: Autonomous build ============ -->
+  <div data-tab-panel="build">
+    <section id="build-when">
+      <h2>When to use it</h2>
+      <div class="not-prose my-6 rounded-xl border border-[var(--border-primary-subtle)] bg-[var(--bg-primary-subtle)] p-5">
+        <p class="text-sm text-[var(--text-body)] leading-relaxed !m-0">
+          <strong class="text-[var(--text-primary)]">Best for greenfield.</strong> If you're starting a brand-new project
+          from zero — or spinning up a prototype fast — the autonomous build is the shortest path from idea to
+          running code. There's nothing to set up first; the build creates your foundation specs as it goes.
+        </p>
+      </div>
+      <p>
+        It works on <strong>existing projects</strong> too — foundation specs you already have are reused, not
+        regenerated — but this path shines on zero-to-one work where there's little or nothing yet.
+      </p>
+      <p>
+        The autonomous build needs a harness with a wired engine: <strong>Claude Code</strong>,
+        <strong>Codex</strong>, or <strong>Pi</strong>. On other harnesses, use the <a href="#choose-path" data-tab-link="spec">spec-by-spec path</a> instead.
+      </p>
+    </section>
+
+    <section id="build-run">
+      <h2>Run the build</h2>
+      <p>
+        After installing, run it one of two ways. From inside your coding harness, use the slash command — pass
+        your idea in quotes, or run it bare to be interviewed:
+      </p>
+      <CodeBlock code={'/gspec-build "a habit tracker with streaks and reminders"'} lang="command" />
+      <p>
+        Or run it headless as a script from your terminal or CI, choosing the engine and resuming a paused run as needed:
+      </p>
+      <CodeBlock code={`gspec build "a habit tracker with streaks and reminders"
+gspec build --engine codex --resume`} lang="shell" />
+      <p>
+        If you pass an idea directly, the build uses it as the brief; if you leave it off, it opens with a short
+        <strong>intake interview</strong> — a few questions about your idea and the essentials (audience, platform,
+        key constraints). Either way you answer up front; the run won't stop to re-ask. Then a deterministic runtime
+        drives all nine stages in order:
+      </p>
+      <ol>
+        <li><strong>profile</strong> — product identity and positioning</li>
+        <li><strong>stack</strong> — technology and infrastructure</li>
+        <li><strong>practices</strong> — standards and quality gates</li>
+        <li><strong>style</strong> — design system</li>
+        <li><strong>features</strong> — prioritized feature PRDs</li>
+        <li><strong>architecture</strong> — data models, APIs, structure</li>
+        <li><strong>plan</strong> — ordered, dependency-aware tasks</li>
+        <li><strong>implement</strong> — write the code</li>
+        <li><strong>reconcile</strong> — sync the specs back to reality</li>
+      </ol>
+      <p>
+        Every stage runs as an isolated agent checked by an independent validator (the writer never grades its own
+        work), and the implementation stage is backed by a generated <code>verify.sh</code> that builds and tests the
+        project. If a gate fails, the run gets one revision attempt, then pauses for you rather than shipping
+        something broken.
+      </p>
+    </section>
+
+    <section id="build-result">
+      <h2>What you get</h2>
+      <p>
+        When the run finishes you have a working baseline: living specs in <code>gspec/</code>, an ordered plan, and
+        implemented code that passed its own build-and-test gate. The run is tracked in a resumable manifest — if it
+        stops, restart it and it picks up where it left off — and it ends by recording the learnings it captured
+        along the way.
+      </p>
+      <p>
+        From here, switch to the <a href="#choose-path" data-tab-link="spec">spec-by-spec path</a> whenever you want
+        to refine a specific spec by hand. For the full mechanics of the pipeline, see the
+        <a href={`${import.meta.env.BASE_URL}build/`}>autonomous build page</a>.
+      </p>
+    </section>
+  </div>
+
+  <!-- ============ PANEL: Spec by spec ============ -->
+  <div data-tab-panel="spec" class="hidden">
+    <section id="profile">
+      <h2>Profile</h2>
+      <p>
+        We'll walk this path using a fictional task management app called <strong>TaskFlow</strong>. The profile
+        command defines <em>what your product is, who it serves, and why it exists</em>. It adopts the perspective of
+        a Product Strategist and asks you about your product's identity, target audience, and value proposition.
+      </p>
+      <CodeBlock code="/profile" lang="command" />
+      <p>
+        The command guides you through a conversation about your product. For TaskFlow, we'd describe it as a task management app for small dev teams. Here's a condensed excerpt of what it produces:
+      </p>
+      <CodeBlock code={`# TaskFlow — Product Profile
 
 ## Product Overview
 - **Product Name:** TaskFlow
@@ -86,82 +207,77 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: 2 }));
 ## Value Proposition
 Lightweight task management that lives close to the code.
 No enterprise overhead, no learning curve.`} lang="markdown" />
-    <p>
-      The profile becomes the foundation that all other specs reference. Your AI tools now know who you're building for and why.
-    </p>
-  </section>
+      <p>
+        The profile becomes the foundation that all other specs reference. Your AI tools now know who you're building for and why.
+      </p>
+    </section>
 
-  <!-- Style -->
-  <section id="style">
-    <h2>Style</h2>
-    <p>
-      The style command generates a <em>visual design system</em> — colors, typography, spacing, component patterns, and design tokens. It adopts the perspective of a UI Designer.
-    </p>
-    <CodeBlock code="/style" lang="command" />
-    <p>
-      It reads your profile first, then asks about your design vision, target platforms, and visual personality. Pick an output format — a renderable HTML design system (<code>style.html</code>) that design-aware AI tools can inspect directly, or a Markdown style guide (<code>style.md</code>). Either way, the output includes hex colors, font stacks, spacing scales, and component specifications.
-    </p>
-    <p>
-      Your AI coding tools can now make UI decisions that match your intended design language — consistent colors, proper spacing, correct typography. Drop mockups from external design tools (Figma, v0, Framer AI) into <code>gspec/design/</code> and <code>/implement</code> will use them as authoritative layout guidance.
-    </p>
-  </section>
+    <section id="style">
+      <h2>Style</h2>
+      <p>
+        The style command generates a <em>visual design system</em> — colors, typography, spacing, component patterns, and design tokens. It adopts the perspective of a UI Designer.
+      </p>
+      <CodeBlock code="/style" lang="command" />
+      <p>
+        It reads your profile first, then asks about your design vision, target platforms, and visual personality. Pick an output format — a renderable HTML design system (<code>style.html</code>) that design-aware AI tools can inspect directly, or a Markdown style guide (<code>style.md</code>). Either way, the output includes hex colors, font stacks, spacing scales, and component specifications.
+      </p>
+      <p>
+        Your AI coding tools can now make UI decisions that match your intended design language — consistent colors, proper spacing, correct typography. Drop mockups from external design tools (Figma, v0, Framer AI) into <code>gspec/design/</code> and <code>/implement</code> will use them as authoritative layout guidance.
+      </p>
+    </section>
 
-  <!-- Stack -->
-  <section id="stack">
-    <h2>Stack</h2>
-    <p>
-      The stack command defines your <em>technology choices</em> — frameworks, languages, infrastructure, and architectural patterns. It adopts the perspective of a Solutions Architect.
-    </p>
-    <CodeBlock code="/stack" lang="command" />
-    <p>
-      It asks about your runtime, frontend/backend frameworks, database, hosting, and key libraries. The output documents every technology decision with rationale.
-    </p>
-    <p>
-      For TaskFlow, we might choose Next.js, PostgreSQL, and Vercel. Now when your AI writes code, it uses the right frameworks, follows the right patterns, and imports the right libraries — without you repeating this in every prompt.
-    </p>
-  </section>
+    <section id="stack">
+      <h2>Stack</h2>
+      <p>
+        The stack command defines your <em>technology choices</em> — frameworks, languages, infrastructure, and architectural patterns. It adopts the perspective of a Solutions Architect.
+      </p>
+      <CodeBlock code="/stack" lang="command" />
+      <p>
+        It asks about your runtime, frontend/backend frameworks, database, hosting, and key libraries. The output documents every technology decision with rationale.
+      </p>
+      <p>
+        For TaskFlow, we might choose Next.js, PostgreSQL, and Vercel. Now when your AI writes code, it uses the right frameworks, follows the right patterns, and imports the right libraries — without you repeating this in every prompt.
+      </p>
+    </section>
 
-  <!-- Practices -->
-  <section id="practices">
-    <h2>Practices</h2>
-    <p>
-      The practices command establishes <em>development standards</em> — testing conventions, code quality rules, git workflow, and error handling patterns. It adopts the perspective of an Engineering Lead.
-    </p>
-    <CodeBlock code="/practices" lang="command" />
-    <p>
-      It asks about your team size, testing philosophy, code review process, and deployment workflow. The output covers everything from naming conventions to your definition of done.
-    </p>
-    <p>
-      This means your AI produces code that follows <em>your</em> standards — right test framework, right patterns, right commit message format. No more AI-generated code that uses Jest when you're a Vitest team.
-    </p>
-  </section>
+    <section id="practices">
+      <h2>Practices</h2>
+      <p>
+        The practices command establishes <em>development standards</em> — testing conventions, code quality rules, git workflow, and error handling patterns. It adopts the perspective of an Engineering Lead.
+      </p>
+      <CodeBlock code="/practices" lang="command" />
+      <p>
+        It asks about your team size, testing philosophy, code review process, and deployment workflow. The output covers everything from naming conventions to your definition of done.
+      </p>
+      <p>
+        This means your AI produces code that follows <em>your</em> standards — right test framework, right patterns, right commit message format. No more AI-generated code that uses Jest when you're a Vitest team.
+      </p>
+    </section>
 
-  <!-- Feature -->
-  <section id="feature">
-    <h2>Feature</h2>
-    <p>
-      The feature command writes a <em>product requirements document (PRD)</em> for an individual feature. It adopts the perspective of a Product Manager and produces prioritized capabilities with acceptance criteria.
-    </p>
-    <CodeBlock code='/feature "Task board with drag-and-drop columns"' lang="command" />
-    <p>
-      The command engages you in a conversation — asking about user stories, scope boundaries, and edge cases. It then generates a structured PRD with P0/P1/P2 prioritized capabilities, each with testable acceptance criteria.
-    </p>
-    <p>
-      This gives your AI implementation clear, scoped requirements to build against — not a vague description, but a structured spec with explicit success criteria.
-    </p>
-  </section>
+    <section id="feature">
+      <h2>Feature</h2>
+      <p>
+        The feature command writes a <em>product requirements document (PRD)</em> for an individual feature. It adopts the perspective of a Product Manager and produces prioritized capabilities with acceptance criteria.
+      </p>
+      <CodeBlock code='/feature "Task board with drag-and-drop columns"' lang="command" />
+      <p>
+        The command engages you in a conversation — asking about user stories, scope boundaries, and edge cases. It then generates a structured PRD with P0/P1/P2 prioritized capabilities, each with testable acceptance criteria.
+      </p>
+      <p>
+        This gives your AI implementation clear, scoped requirements to build against — not a vague description, but a structured spec with explicit success criteria.
+      </p>
+    </section>
 
-  <!-- Implement -->
-  <section id="implement">
-    <h2>Implement</h2>
-    <p>
-      The implement command reads <em>all existing specs</em> — profile, style, stack, practices, features, and architecture — and builds your software with the full picture.
-    </p>
-    <CodeBlock code="/implement" lang="command" />
-    <p>
-      It doesn't just read one spec — it synthesizes them all. It knows your audience (profile), your design language (style), your technology choices (stack), your code standards (practices), and your feature requirements. Here's a condensed view of what it does:
-    </p>
-    <CodeBlock code={`Reading specs...
+    <section id="implement">
+      <h2>Implement</h2>
+      <p>
+        The implement command reads <em>all existing specs</em> — profile, style, stack, practices, features, and architecture — and builds your software with the full picture.
+      </p>
+      <CodeBlock code="/implement" lang="command" />
+      <p>
+        It doesn't just read one spec — it synthesizes them all. It knows your audience (profile), your design language (style), your technology choices (stack), your code standards (practices), and your feature requirements. Here's a condensed view of what it does:
+      </p>
+      <CodeBlock code={`Reading specs...
   ✓ profile.md — TaskFlow, task management for small teams
   ✓ style.html — Renderable design system, 3 component variants
   ✓ design/task-board.html — Mockup from external design tool
@@ -175,24 +291,87 @@ Building task-board feature...
   ✓ Created src/components/TaskCard.tsx
   ✓ Updated capabilities: [x] P0: Board displays columns
   ✓ Updated capabilities: [x] P0: Drag task between columns`} lang="output" />
-    <p>
-      As it builds, it checks off capabilities in your feature PRD — giving you a clear picture of progress.
-    </p>
-  </section>
+      <p>
+        As it builds, it checks off capabilities in your feature PRD — giving you a clear picture of progress. Want gspec to run this whole sequence for you? That's the <a href="#choose-path" data-tab-link="build">autonomous build</a>.
+      </p>
+    </section>
+  </div>
 
   <!-- Next Steps -->
   <section id="next-steps">
     <h2>Next Steps</h2>
     <p>
-      You've seen the core workflow: <strong>Define</strong> → <strong>Feature</strong> → <strong>Implement</strong>. But gspec offers more depth for projects that need it.
+      Whichever path you took, gspec offers more depth for projects that need it:
     </p>
     <ul>
       <li><a href={`${import.meta.env.BASE_URL}docs/#research`}><code>research</code></a> — Analyze competitors and identify feature gaps before committing to a roadmap</li>
       <li><a href={`${import.meta.env.BASE_URL}docs/#architect`}><code>architect</code></a> — Design a technical blueprint with data models, APIs, and project structure</li>
       <li><a href={`${import.meta.env.BASE_URL}docs/#analyze`}><code>analyze</code></a> — Cross-reference all specs and resolve contradictions before implementing</li>
+      <li><a href={`${import.meta.env.BASE_URL}docs/#qa`}><code>qa</code></a> — Run the producer ≠ checker quality gate on your specs and code on demand</li>
+      <li><a href={`${import.meta.env.BASE_URL}how-it-works/`}>How it works</a> — The five-layer agent-team architecture behind every command</li>
     </ul>
     <p>
-      Explore the <a href={`${import.meta.env.BASE_URL}docs/`}>full documentation</a> for detailed coverage of every command. Or start with your own project — run <code>npx gspec</code> and build your first spec.
+      Explore the <a href={`${import.meta.env.BASE_URL}docs/`}>full documentation</a> for detailed coverage of every command. Or start with your own project — run <code>npx gspec</code>.
     </p>
   </section>
 </SidebarLayout>
+
+<style>
+  .gs-tab {
+    border-color: var(--border-default);
+    background-color: var(--bg-surface);
+  }
+  .gs-tab[aria-selected='true'] {
+    border-color: var(--border-primary-subtle);
+    background-color: var(--bg-primary-subtle);
+  }
+  .gs-tab:hover {
+    border-color: var(--text-muted);
+  }
+</style>
+
+<script>
+  function initGettingStartedTabs() {
+    const btns = Array.from(
+      document.querySelectorAll('[data-tab-btn]')
+    ) as HTMLElement[];
+    const panels = Array.from(
+      document.querySelectorAll('[data-tab-panel]')
+    ) as HTMLElement[];
+    if (!btns.length || !panels.length) return;
+
+    function activate(name: string) {
+      panels.forEach((p) => p.classList.toggle('hidden', p.dataset.tabPanel !== name));
+      btns.forEach((b) =>
+        b.setAttribute('aria-selected', b.dataset.tabBtn === name ? 'true' : 'false')
+      );
+    }
+
+    btns.forEach((b) =>
+      b.addEventListener('click', () => activate(b.dataset.tabBtn!))
+    );
+
+    // Any in-page anchor whose target lives inside a panel switches to that panel first.
+    // Explicit data-tab-link overrides (used for cross-path links).
+    document.querySelectorAll('a[href^="#"]').forEach((a) => {
+      a.addEventListener('click', () => {
+        const el = a as HTMLElement;
+        const explicit = el.dataset.tabLink;
+        if (explicit) {
+          activate(explicit);
+          return;
+        }
+        const id = (a.getAttribute('href') || '').slice(1);
+        if (!id) return;
+        const target = document.getElementById(id);
+        const panel = target?.closest('[data-tab-panel]') as HTMLElement | null;
+        if (panel && panel.dataset.tabPanel) activate(panel.dataset.tabPanel);
+      });
+    });
+
+    activate('build');
+  }
+
+  initGettingStartedTabs();
+  document.addEventListener('astro:after-swap', initGettingStartedTabs);
+</script>

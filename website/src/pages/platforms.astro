@@ -1,0 +1,290 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+// Capability data sourced from ../docs/harness-parity.md (verified July 2026).
+// State semantics — see the legend:
+//   'full'    → supported today with hard, deterministic guarantees
+//   'partial' → available today but advisory/soft, or runtime-managed (not harness-native)
+//   'none'    → not available today
+const capabilities = [
+  { key: 'spec', label: 'Spec authoring', blurb: 'Skills, agents, and commands for writing and maintaining specs.' },
+  { key: 'build', label: 'Autonomous build', blurb: 'Headless, spec-driven implementation runs where an engine adapter exists.' },
+  { key: 'enforceInteractive', label: 'Enforcement — interactive', blurb: 'Deterministic spec-integrity floors during hands-on /gspec-* use.' },
+  { key: 'enforceBuild', label: 'Enforcement — build', blurb: 'The same floors enforced during autonomous build runs.' },
+  { key: 'learning', label: 'Learning loop', blurb: 'Per-agent memory plus feedback capture that improves future runs.' },
+];
+
+const harnesses = [
+  {
+    name: 'Claude Code',
+    tagline: 'The reference target — full-fidelity gspec support on both the interactive and build paths.',
+    states: { spec: 'full', build: 'full', enforceInteractive: 'full', enforceBuild: 'full', learning: 'full' },
+    tech: {
+      'File-write hook': 'Yes — Pre/PostToolUse on Write/Edit',
+      'Tool interception': 'Any tool',
+      'Native per-agent memory': 'Yes — memory: silos',
+      'Headless engine': 'Yes — wired',
+    },
+    notes: [
+      'Full support. Every spec floor is a hard, deterministic block enforced by Pre/PostToolUse hooks on file writes.',
+      'Native per-agent memory silos auto-load into each agent, powering the feedback-capture and distill learning loop.',
+      'Wired headless build engine, so the same guarantees hold on the autonomous build path.',
+    ],
+  },
+  {
+    name: 'Codex',
+    tagline: 'OpenAI’s coding agent. A wired build engine with strong autonomous-build parity, but its hooks fire on the Bash tool only.',
+    states: { spec: 'full', build: 'full', enforceInteractive: 'partial', enforceBuild: 'full', learning: 'partial' },
+    tech: {
+      'File-write hook': 'No — hooks fire on Bash only',
+      'Tool interception': 'Bash only (PreToolUse deny, PostToolUse audit + additionalContext)',
+      'Native per-agent memory': 'No — AGENTS.md instructions',
+      'Headless engine': 'Yes — wired',
+    },
+    notes: [
+      'Full spec authoring and full build-path enforcement: the gspec runtime driver runs the writer/validator QA gates and verify.sh deterministically, independent of any harness hook.',
+      'Partial — interactive enforcement: Codex hooks cannot observe a file write (Bash-only), so the floors can’t be hard-blocked during interactive use. They ship as inlined instructions in the composed agent bodies (advisory). True hard enforcement would require routing spec writes through an MCP write-mediator.',
+      'Partial — learning loop: the build records QA-feedback learnings today, but there is no harness-native per-agent memory (AGENTS.md only); full memory injection and distill are runtime-managed and on the roadmap.',
+    ],
+  },
+  {
+    name: 'Cursor',
+    tagline: 'Closest to native enforcement parity thanks to file-edit hooks, but not yet a wired build engine.',
+    states: { spec: 'full', build: 'none', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
+    tech: {
+      'File-write hook': 'Yes — onPreEdit / onPostEdit',
+      'Tool interception': 'Editor-event hooks',
+      'Native per-agent memory': 'No — rules / AGENTS.md',
+      'Headless engine': 'Yes — cursor-agent -p (adapter not yet wired)',
+    },
+    notes: [
+      'Full spec authoring via native sub-agents, skills, and commands.',
+      'Partial — interactive enforcement: the floors are inlined instructions today (advisory), but Cursor’s onPreEdit / onPostEdit hooks do observe file edits, so porting the guards there would restore hard-block semantics (planned).',
+      'None — autonomous build and build-path enforcement: no build-engine adapter is wired yet. cursor-agent -p exists, so adding one is straightforward.',
+      'None — learning loop: no native per-agent memory. A runtime-managed silo would come once a build adapter lands.',
+    ],
+  },
+  {
+    name: 'OpenCode',
+    tagline: 'Open-source agent with a complete plugin system. Not yet a wired build engine.',
+    states: { spec: 'full', build: 'none', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
+    tech: {
+      'File-write hook': 'Yes — plugin tool-execution interception',
+      'Tool interception': 'Any tool, via 25+ lifecycle events',
+      'Native per-agent memory': 'No — community "mem" plugins',
+      'Headless engine': 'Yes — opencode run (adapter not yet wired)',
+    },
+    notes: [
+      'Full spec authoring via native sub-agents, skills, and commands.',
+      'Partial — interactive enforcement: advisory (inlined) today. A gspec OpenCode plugin could intercept tool execution across 25+ lifecycle events to block or validate writes, and persist a real memory silo (planned).',
+      'None — autonomous build and build-path enforcement: no adapter is wired yet. opencode run exists.',
+      'None — learning loop: no native memory (community plugins aside). A runtime-managed silo is planned alongside a build adapter.',
+    ],
+  },
+  {
+    name: 'Pi',
+    tagline: 'Extension-complete agent and a wired build engine — the fullest non-Claude parity available.',
+    states: { spec: 'full', build: 'full', enforceInteractive: 'partial', enforceBuild: 'full', learning: 'partial' },
+    tech: {
+      'File-write hook': 'Yes — tool_call block / modify',
+      'Tool interception': 'Any tool, via the extension API',
+      'Native per-agent memory': 'No — episodic-memory extensions exist',
+      'Headless engine': 'Yes — wired, via pi-subagents',
+    },
+    notes: [
+      'Full spec authoring and full build-path enforcement: a wired build engine (via the pi-subagents extension), with the runtime driver gating every build run deterministically.',
+      'Partial — interactive enforcement: advisory (inlined) today, but Pi’s extension tool_call hook can block or modify any tool call — a true pre-write block matching Claude — so a gspec Pi extension would deliver hard interactive enforcement (planned).',
+      'Partial — learning loop: build-path learning capture exists today; there is no native per-agent memory yet, though Pi has episodic-memory extensions to adopt or fork (planned).',
+    ],
+  },
+  {
+    name: 'Antigravity',
+    tagline: 'Workflow-based agent with native JSON lifecycle hooks. Not yet a wired build engine.',
+    states: { spec: 'full', build: 'none', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
+    tech: {
+      'File-write hook': 'Yes — JSON hooks incl. after-file-edit',
+      'Tool interception': 'Before-tool / after-edit / session-start',
+      'Native per-agent memory': 'No',
+      'Headless engine': 'Yes — agy -p (adapter not yet wired)',
+    },
+    notes: [
+      'Full spec authoring: ships skills plus one self-contained workflow per capability (sub-agents are spawned at runtime, so there are no agent files).',
+      'Partial — interactive enforcement: advisory (inlined in the workflows) today. Antigravity’s JSON lifecycle hooks include after-file-edit and are honored in headless runs, so the write-guards can port similarly to Cursor (planned).',
+      'None — autonomous build and build-path enforcement: no adapter is wired yet. agy -p exists.',
+      'None — learning loop: no native memory. A runtime-managed silo is planned.',
+    ],
+  },
+];
+
+const states = {
+  full: { glyph: '✓', label: 'Full support', color: 'var(--color-success)' },
+  partial: { glyph: '~', label: 'Partial / advisory', color: 'var(--color-warning)' },
+  none: { glyph: '–', label: 'Not supported', color: 'var(--text-muted)' },
+};
+---
+
+<BaseLayout
+  title="Platform capabilities — gspec"
+  description="How gspec's supported AI coding harnesses compare — spec authoring, autonomous build, enforcement, and the learning loop, harness by harness."
+>
+  <Navbar slot="navbar" />
+
+  <section class="py-16 lg:py-24">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <!-- Framing -->
+      <div class="max-w-2xl">
+        <h1 class="text-3xl sm:text-[2.441rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
+          Platform capabilities
+        </h1>
+        <p class="text-lg text-[var(--text-secondary)] mb-4 leading-relaxed">
+          gspec runs across many AI coding harnesses, but they are not equivalent. Every harness gets the full
+          spec-authoring surface; where they differ is how strongly they can <em>enforce</em> your specs and whether
+          they support the autonomous build and the learning loop.
+        </p>
+        <p class="text-[var(--text-secondary)] mb-4 leading-relaxed">
+          Two paths matter when reading this table. The <strong>interactive path</strong> is hands-on
+          <code class="text-sm font-mono text-[var(--text-accent)]">/gspec-*</code> use in the harness. The
+          <strong>build path</strong> is the autonomous, headless implementation run. A harness can be strong on one
+          and absent on the other.
+        </p>
+        <p class="text-[var(--text-secondary)] leading-relaxed">
+          Today, <strong class="text-[var(--text-primary)]">Claude Code is the only full-fidelity target</strong>.
+          The cells below reflect what ships today, not what is planned — expand any harness for the specifics.
+        </p>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex flex-wrap gap-x-6 gap-y-2 mt-8 mb-6">
+        {Object.entries(states).map(([, s]) => (
+          <div class="flex items-center gap-2">
+            <span
+              class="inline-flex items-center justify-center w-6 h-6 rounded-md text-sm font-semibold shrink-0"
+              style={`color: ${s.color}; background-color: color-mix(in srgb, ${s.color} 14%, transparent);`}
+              aria-hidden="true"
+            >{s.glyph}</span>
+            <span class="text-sm text-[var(--text-secondary)]">{s.label}</span>
+          </div>
+        ))}
+      </div>
+
+      <!-- Matrix -->
+      <div class="overflow-x-auto rounded-xl border border-[var(--border-default)]">
+        <table class="w-full border-collapse text-sm min-w-[720px]">
+          <caption class="sr-only">
+            gspec capability support by AI coding harness. Each cell is one of: full support, partial or advisory support, or not supported.
+          </caption>
+          <thead>
+            <tr class="bg-[var(--bg-surface)]">
+              <th scope="col" class="text-left font-semibold text-[var(--text-primary)] px-4 py-3 border-b border-[var(--border-default)] align-bottom">
+                Harness
+              </th>
+              {capabilities.map((cap) => (
+                <th scope="col" class="text-left font-semibold text-[var(--text-primary)] px-4 py-3 border-b border-l border-[var(--border-default)] align-bottom">
+                  <span class="block">{cap.label}</span>
+                  <span class="block font-normal text-xs text-[var(--text-muted)] mt-1 max-w-[10rem]">{cap.blurb}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {harnesses.map((h) => (
+              <tr class="border-b border-[var(--border-subtle)] last:border-b-0">
+                <th scope="row" class="text-left font-medium text-[var(--text-primary)] px-4 py-3 whitespace-nowrap">
+                  {h.name}
+                </th>
+                {capabilities.map((cap) => {
+                  const s = states[h.states[cap.key]];
+                  return (
+                    <td class="px-4 py-3 border-l border-[var(--border-subtle)]">
+                      <span
+                        class="inline-flex items-center justify-center w-7 h-7 rounded-md text-sm font-semibold"
+                        style={`color: ${s.color}; background-color: color-mix(in srgb, ${s.color} 14%, transparent);`}
+                        title={s.label}
+                      >
+                        <span aria-hidden="true">{s.glyph}</span>
+                        <span class="sr-only">{s.label}</span>
+                      </span>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-xs text-[var(--text-muted)] mt-3">
+        Platform capabilities verified July 2026. These harnesses change monthly — re-verify before relying on a
+        specific cell.
+      </p>
+
+      <!-- Per-harness detail -->
+      <div class="mt-16">
+        <h2 class="text-2xl font-semibold text-[var(--text-primary)] mb-2 tracking-tight">
+          Harness by harness
+        </h2>
+        <p class="text-[var(--text-secondary)] mb-8 max-w-2xl">
+          What each harness can and can’t do, with the reasoning behind every partial. Expand a harness for its
+          platform mechanics and the specifics.
+        </p>
+
+        <div class="flex flex-col gap-4">
+          {harnesses.map((h) => (
+            <details class="group rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden">
+              <summary class="flex items-start justify-between gap-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden px-5 py-4 hover:bg-[var(--bg-surface-raised)] transition-colors duration-200">
+                <div class="min-w-0">
+                  <h3 class="text-lg font-semibold text-[var(--text-primary)]">{h.name}</h3>
+                  <p class="text-sm text-[var(--text-secondary)] mt-0.5 leading-relaxed">{h.tagline}</p>
+                </div>
+                <div class="flex items-center gap-2 shrink-0 pt-1">
+                  {capabilities.map((cap) => {
+                    const s = states[h.states[cap.key]];
+                    return (
+                      <span
+                        class="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-semibold"
+                        style={`color: ${s.color}; background-color: color-mix(in srgb, ${s.color} 14%, transparent);`}
+                        title={`${cap.label}: ${s.label}`}
+                      >
+                        <span aria-hidden="true">{s.glyph}</span>
+                        <span class="sr-only">{cap.label}: {s.label}</span>
+                      </span>
+                    );
+                  })}
+                  <svg class="w-5 h-5 text-[var(--text-muted)] transition-transform duration-200 group-open:rotate-180" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </div>
+              </summary>
+
+              <div class="px-5 pb-5 pt-1 border-t border-[var(--border-subtle)]">
+                <!-- Capability breakdown -->
+                <ul class="flex flex-col gap-2.5 mt-4 mb-6">
+                  {h.notes.map((note) => (
+                    <li class="text-sm text-[var(--text-body)] leading-relaxed pl-4 relative">
+                      <span class="absolute left-0 top-0 text-[var(--text-muted)]" aria-hidden="true">•</span>
+                      {note}
+                    </li>
+                  ))}
+                </ul>
+
+                <!-- Platform mechanics -->
+                <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-3 rounded-lg bg-[var(--bg-page)] border border-[var(--border-subtle)] p-4">
+                  {Object.entries(h.tech).map(([k, v]) => (
+                    <div>
+                      <dt class="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)] mb-0.5">{k}</dt>
+                      <dd class="text-sm text-[var(--text-body)]">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</BaseLayout>

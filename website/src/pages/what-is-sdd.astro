@@ -349,16 +349,31 @@ const headings = sections.map((s) => ({
       This matters because an AI agent implementing a feature doesn't just need to know <em>what</em> to build — it needs to know <em>how</em> your team builds, <em>what</em> your product looks like, and <em>where</em> code should go. gspec provides all of that context in a single, coherent system.
     </p>
 
+    <h3>From specs to an autonomous agent team</h3>
+    <p>
+      Most agentic SDD tools stop at planning — they produce a spec and a task list, then hand it to whatever agent you're running. gspec goes further: it ships its own <strong>agent team</strong> and a deterministic runtime that can execute the whole workflow. Skills carry the expertise, isolated agents do the work, commands are the conversations you have, the runtime drives the autonomous build, and deterministic hooks enforce hard floors.
+    </p>
+    <p>
+      Two properties of that execution model are unusual for an SDD tool:
+    </p>
+    <ul>
+      <li><strong>Producer ≠ checker.</strong> The agent that writes a spec or a slice of code is never the one that approves it. An independent, read-only validator returns a verdict, and the implementation gate is backed by a generated build-and-test script — so quality is enforced, not assumed.</li>
+      <li><strong>A learning loop.</strong> When a validator rejects work or you correct an agent, that lesson is captured and can be distilled back into the skills. The system's expertise compounds across runs, not just its context.</li>
+    </ul>
+    <p>
+      The result is that gspec can take a plain-language idea and drive it to working, verified code autonomously — while still letting you drop into any single stage by hand when you want control.
+    </p>
+
     <h3>How gspec Compares to Other Agentic SDD Tools</h3>
     <ul>
       <li>
-        <strong>vs. Spec Kit</strong> — GitHub's Spec Kit follows a linear specify-plan-tasks pipeline optimized for greenfield projects. gspec takes a modular approach with independent spec types that can be generated in any order and used independently. Spec Kit is more prescriptive about workflow; gspec is more flexible about which specs you need and when.
+        <strong>vs. Spec Kit</strong> — GitHub's Spec Kit follows a linear specify-plan-tasks pipeline optimized for greenfield projects, and hands the resulting tasks to your agent. gspec takes a modular approach with independent spec types that can be generated in any order — and then ships its own agent team to execute them, with a quality gate at every stage. Spec Kit is more prescriptive about the planning workflow; gspec covers a broader surface and can also run the build autonomously.
       </li>
       <li>
-        <strong>vs. OpenSpec</strong> — OpenSpec organizes work around change proposals with spec deltas, tracking how each change modifies the system's requirements. gspec treats specs as living documents that are updated in place as the code evolves. OpenSpec provides better change-level traceability; gspec provides a cleaner current-state view of the full product specification.
+        <strong>vs. OpenSpec</strong> — OpenSpec organizes work around change proposals with spec deltas, tracking how each change modifies the system's requirements. gspec treats specs as living documents updated in place as the code evolves, and adds a producer ≠ checker execution model on top. OpenSpec provides better change-level traceability; gspec provides a cleaner current-state view plus gated, autonomous implementation.
       </li>
       <li>
-        <strong>vs. Kiro</strong> — Kiro bundles spec-driven development into a full IDE, tightly coupled with the AWS ecosystem. gspec is tool-agnostic — it installs as slash commands into whichever AI coding tool you already use (Claude Code, Cursor, Copilot, and others). Kiro gives you a more integrated experience; gspec gives you more flexibility in your tool choices.
+        <strong>vs. Kiro</strong> — Kiro bundles spec-driven development into a full IDE, tightly coupled with the AWS ecosystem. gspec is tool-agnostic — one source tree installs into whichever AI coding tool you already use (Claude Code, Cursor, Codex, and others), building for each harness's native format. Kiro gives you a more integrated single-vendor experience; gspec gives you the same agent-team workflow across the tools you already run.
       </li>
     </ul>
 
@@ -367,7 +382,7 @@ const headings = sections.map((s) => ({
       Agentic SDD tools are not mutually exclusive. The right choice depends on your team, your tools, and what problems you're solving:
     </p>
     <ul>
-      <li><strong>gspec</strong> for full-stack product specifications that give AI agents comprehensive project context</li>
+      <li><strong>gspec</strong> for full-stack product specifications plus an agent team that can build from them autonomously, with quality gates and a learning loop</li>
       <li><strong>Spec Kit</strong> for structured greenfield project scaffolding with GitHub Copilot</li>
       <li><strong>OpenSpec</strong> for change-tracked spec evolution in brownfield codebases</li>
       <li><strong>Kiro</strong> for an all-in-one IDE experience with deep AWS integration</li>

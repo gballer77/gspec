@@ -31,7 +31,7 @@ spec-version: v1
 
 #### E2E Tests
 - **When to use:** For critical user-facing workflows where a unit test can't catch integration failures:
-  - `npx gspec` install flow across supported platforms (Claude Code, Cursor, Codex, Antigravity)
+  - `npx gspec` install flow across supported platforms (Claude Code, Cursor, Codex, Antigravity, Open Code, Pi)
   - Skill file installation and removal
   - Spec-sync trigger behavior
 - **Keep E2E tests minimal and focused** — each test should cover one complete workflow, not a matrix of variations

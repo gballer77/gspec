@@ -1,0 +1,295 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import CopyButton from '../components/CopyButton.astro';
+
+const base = import.meta.env.BASE_URL;
+
+// The 9-stage build pipeline (lib/build.js STAGES), grouped for the page.
+const phases = [
+  {
+    group: 'Foundation',
+    note: 'Skip-if-present — reused as-is on existing projects',
+    stages: [
+      { name: 'profile', desc: 'Product identity & positioning' },
+      { name: 'stack', desc: 'Technology & infrastructure' },
+      { name: 'practices', desc: 'Standards & quality gates' },
+      { name: 'style', desc: 'Design system' },
+    ],
+  },
+  {
+    group: 'Specification',
+    note: 'What to build, and how it fits together',
+    stages: [
+      { name: 'features', desc: 'Prioritized feature PRDs' },
+      { name: 'architecture', desc: 'Data models, APIs, structure' },
+      { name: 'plan', desc: 'Ordered, dependency-aware tasks' },
+    ],
+  },
+  {
+    group: 'Implementation',
+    note: 'Build, verify, and reconcile the specs',
+    stages: [
+      { name: 'implement', desc: 'Write code against the plan' },
+      { name: 'reconcile', desc: 'Sync specs back to reality' },
+    ],
+  },
+];
+
+const reliability = [
+  {
+    title: 'Isolated agent runs',
+    body: 'Every stage runs as a fresh headless agent — clean context each time. Nothing accumulates and drifts; the filesystem (your gspec/ docs and code) is the only shared state.',
+  },
+  {
+    title: 'Self-healing QA gates',
+    body: 'Each producer is followed by a read-only validator (producer ≠ checker). A failing verdict hands the work back for one revision attempt; if it still fails, the run pauses for you rather than shipping something broken.',
+  },
+  {
+    title: 'Deterministic verify.sh',
+    body: 'The implementer generates a committed verify.sh that builds and tests every deployable in the project. The driver runs it and reads the exit code — a real build+test gate, not a vibe check. Polyglot and multi-deployable aware.',
+  },
+  {
+    title: 'Resumable runs',
+    body: 'Progress is tracked in an on-disk run manifest. If a stage crashes or you stop it, the build restarts from where it left off instead of starting over.',
+  },
+  {
+    title: 'Continuation loop',
+    body: 'For large scopes, the driver watches the unchecked-task count and spawns fresh implementer agents while progress keeps dropping — resilient even when a single context can’t hold the whole job.',
+  },
+  {
+    title: 'Learnings report',
+    body: 'Every run ends by recording what it learned — QA corrections and feedback that feed the learning loop, so the next build starts smarter.',
+  },
+];
+---
+
+<BaseLayout
+  title="Autonomous build — gspec"
+  description="gspec's autonomous build pipeline takes an idea and drives it to a working product — a deterministic, resumable run through nine stages with self-healing quality gates."
+>
+  <Navbar slot="navbar" />
+
+  <!-- Hero -->
+  <section class="py-16 sm:py-24 lg:py-28">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8 text-center">
+      <span class="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--badge-accent-text)] bg-[var(--badge-accent-bg)] px-3 py-1 rounded-full mb-6">
+        New in 2.0
+      </span>
+      <h1 class="text-[2.25rem] sm:text-[2.75rem] lg:text-[3.25rem] font-bold leading-[1.1] tracking-tight text-[var(--text-primary)] mb-6">
+        From idea to built product.
+      </h1>
+      <p class="text-lg sm:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-10 leading-relaxed">
+        Describe what you want once. gspec's autonomous build drives the whole chain — specs, plan,
+        and code — as a deterministic run with quality gates that catch their own mistakes.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div class="inline-flex items-center gap-3 bg-[var(--bg-surface-raised)] border border-[var(--border-default)] rounded-lg px-5 py-3 font-mono text-sm sm:text-base text-[var(--text-primary)]">
+          <span class="text-primary-400 select-none">/</span>
+          <span>gspec-build</span>
+          <CopyButton text="/gspec-build" />
+        </div>
+        <a
+          href={`${base}how-it-works/`}
+          class="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-[var(--text-body)] border border-[var(--border-default)] hover:border-neutral-600 hover:bg-[var(--bg-surface-raised)] transition-all duration-200"
+        >
+          See how it works
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Three-beat intro -->
+  <section class="pb-8">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <div class="grid sm:grid-cols-3 gap-4">
+        {[
+          { step: '1', title: 'Hand it your idea', body: 'Pass your idea straight to the command, or let a short intake interview capture it and the essentials. Either way you answer up front — the run doesn’t stop to re-ask.' },
+          { step: '2', title: 'The pipeline runs', body: 'Nine stages execute in order, each an isolated agent gated by a validator. Foundation specs you already have are reused, not regenerated.' },
+          { step: '3', title: 'A working product', body: 'Code that builds and passes its own tests, specs that match the code, and a record of what the run learned.' },
+        ].map((s) => (
+          <div class="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
+            <div class="w-8 h-8 rounded-lg bg-[var(--bg-primary-subtle)] text-[var(--text-accent)] font-semibold flex items-center justify-center mb-3">{s.step}</div>
+            <h3 class="font-semibold text-[var(--text-primary)] mb-1.5">{s.title}</h3>
+            <p class="text-sm text-[var(--text-secondary)] leading-relaxed">{s.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Two ways to run it -->
+  <section class="py-16 lg:py-24">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] text-center mb-4 tracking-tight">
+        Two ways to run it
+      </h2>
+      <p class="text-[var(--text-secondary)] text-center mb-12 max-w-2xl mx-auto">
+        Kick off a build from inside your coding harness, or run it headless as a script. Pass your idea
+        directly as an argument — leave it off and the build opens with a short intake interview instead.
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+        <div class="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
+          <h3 class="font-semibold text-[var(--text-primary)] mb-2">From your coding harness</h3>
+          <p class="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
+            Run the slash command in Claude Code, Codex, or Pi. Add your idea in quotes, or run it bare to be interviewed.
+          </p>
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-3 bg-[var(--bg-surface-raised)] border border-[var(--border-default)] rounded-lg px-4 py-2.5 font-mono text-xs sm:text-sm text-[var(--text-primary)] overflow-x-auto">
+              <span class="text-primary-400 select-none shrink-0">/</span>
+              <span class="whitespace-nowrap">gspec-build "a habit tracker with streaks and reminders"</span>
+            </div>
+            <div class="flex items-center gap-3 bg-[var(--bg-surface-raised)] border border-[var(--border-default)] rounded-lg px-4 py-2.5 font-mono text-xs sm:text-sm text-[var(--text-primary)]">
+              <span class="text-primary-400 select-none shrink-0">/</span>
+              <span>gspec-build</span>
+              <span class="text-[var(--text-muted)]">← intake interview</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
+          <h3 class="font-semibold text-[var(--text-primary)] mb-2">As a script</h3>
+          <p class="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
+            Run the build headless from your terminal or CI. Choose the engine with <code class="font-mono text-[var(--text-accent)]">--engine</code>, and <code class="font-mono text-[var(--text-accent)]">--resume</code> to pick up a paused run.
+          </p>
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-3 bg-[var(--bg-surface-raised)] border border-[var(--border-default)] rounded-lg px-4 py-2.5 font-mono text-xs sm:text-sm text-[var(--text-primary)] overflow-x-auto">
+              <span class="text-primary-400 select-none shrink-0">$</span>
+              <span class="whitespace-nowrap">gspec build "a habit tracker with streaks and reminders"</span>
+            </div>
+            <div class="flex items-center gap-3 bg-[var(--bg-surface-raised)] border border-[var(--border-default)] rounded-lg px-4 py-2.5 font-mono text-xs sm:text-sm text-[var(--text-primary)] overflow-x-auto">
+              <span class="text-primary-400 select-none shrink-0">$</span>
+              <span class="whitespace-nowrap">gspec build --engine codex --resume</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pipeline diagram -->
+  <section class="py-16 lg:py-24">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] text-center mb-4 tracking-tight">
+        Nine stages, one command
+      </h2>
+      <p class="text-[var(--text-secondary)] text-center mb-12 max-w-2xl mx-auto">
+        The build walks the full gspec workflow deterministically. Greenfield or existing project — foundation
+        stages are skipped when the spec already exists, so it meets your project where it is.
+      </p>
+
+      <div class="flex flex-col gap-4 max-w-4xl mx-auto">
+        {phases.map((phase, pi) => (
+          <div class="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-5 sm:p-6">
+            <div class="flex items-baseline justify-between gap-3 mb-4 flex-wrap">
+              <div class="flex items-center gap-2.5">
+                <span class="text-xs font-semibold text-[var(--text-muted)] tabular-nums">0{pi + 1}</span>
+                <h3 class="font-semibold text-[var(--text-primary)]">{phase.group}</h3>
+              </div>
+              <span class="text-xs text-[var(--text-muted)]">{phase.note}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch gap-2.5">
+              {phase.stages.map((stage, si) => (
+                <div class="flex-1 flex items-stretch">
+                  <div class="flex-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface-raised)] px-3 py-3">
+                    <code class="text-sm font-mono font-medium text-[var(--text-accent)]">{stage.name}</code>
+                    <p class="text-xs text-[var(--text-secondary)] mt-1 leading-snug">{stage.desc}</p>
+                  </div>
+                  {si < phase.stages.length - 1 && (
+                    <div class="hidden sm:flex items-center justify-center w-5 text-[var(--text-muted)]">
+                      <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p class="text-center text-sm text-[var(--text-muted)] mt-6">
+        Prefer to drive it yourself? Every stage is also a standalone <code class="font-mono">/gspec-*</code> command.
+        The build just runs them in order, for you.
+      </p>
+    </div>
+  </section>
+
+  <!-- Reliability -->
+  <section class="py-16 lg:py-24 border-t border-[var(--border-subtle)]">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <div class="max-w-2xl mb-12">
+        <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
+          Autonomous, not unattended-and-hoping
+        </h2>
+        <p class="text-[var(--text-secondary)] leading-relaxed">
+          Letting an agent run for a long time is easy. Letting it run and trusting the result is the hard part.
+          gspec's build is built around gates and recovery, so a long run stays honest.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {reliability.map((r) => (
+          <div class="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
+            <h3 class="font-semibold text-[var(--text-primary)] mb-2">{r.title}</h3>
+            <p class="text-sm text-[var(--text-secondary)] leading-relaxed">{r.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Where it runs -->
+  <section class="py-16 lg:py-24 border-t border-[var(--border-subtle)]">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <div class="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-8 lg:p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div class="max-w-xl">
+          <h2 class="text-xl font-semibold text-[var(--text-primary)] mb-3 tracking-tight">
+            Where the build runs today
+          </h2>
+          <p class="text-[var(--text-secondary)] leading-relaxed">
+            The autonomous build needs a wired headless engine. Today that means
+            <strong class="text-[var(--text-primary)]">Claude Code</strong>,
+            <strong class="text-[var(--text-primary)]">Codex</strong>, and
+            <strong class="text-[var(--text-primary)]">Pi</strong>. Every harness gets the full spec-authoring
+            workflow; the build path is where they differ.
+          </p>
+        </div>
+        <a
+          href={`${base}platforms/`}
+          class="shrink-0 inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium text-[var(--text-accent)] border border-[var(--border-primary-subtle)] bg-[var(--bg-primary-subtle)] hover:border-neutral-600 transition-all duration-200"
+        >
+          Compare platform capabilities
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-16 lg:py-24 text-center">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
+        Point it at an idea and go.
+      </h2>
+      <p class="text-[var(--text-secondary)] mb-8 max-w-xl mx-auto">
+        Install gspec, then run <code class="font-mono text-[var(--text-accent)]">/gspec-build</code> in a supported harness.
+      </p>
+      <div class="inline-flex items-center gap-3 bg-[var(--bg-surface-raised)] border border-[var(--border-default)] rounded-lg px-5 py-3 font-mono text-sm sm:text-base text-[var(--text-primary)]">
+        <span class="text-primary-400 select-none">$</span>
+        <span>npx gspec</span>
+        <CopyButton text="npx gspec" />
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</BaseLayout>

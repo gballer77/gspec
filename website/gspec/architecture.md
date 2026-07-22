@@ -6,7 +6,7 @@ spec-version: v1
 
 ## 1. Overview
 
-The gspec website is a static Astro 5.x site deployed to GitHub Pages. It consists of three pages — a marketing home page, a Getting Started walkthrough, and a command reference (Docs) — sharing a common layout with persistent navigation, dark/light theming, and responsive sidebar patterns.
+The gspec website is a static Astro 5.x site deployed to GitHub Pages. It consists of nine pages — a marketing home page, a Build page (autonomous pipeline), a How It Works page (agent-team architecture), a Getting Started walkthrough, a command reference (Docs), a Platform Capabilities matrix, a Save & Restore guide, a Releases changelog, and a long-form "What is SDD?" essay — sharing a common layout with persistent navigation, dark/light theming, and responsive sidebar patterns.
 
 ### Key Architectural Patterns
 
@@ -24,9 +24,15 @@ The gspec website is a static Astro 5.x site deployed to GitHub Pages. It consis
 
 | Feature | Pages/Components |
 |---------|-----------------|
-| Home Page | `src/pages/index.astro`, Hero, ProblemStatement, WorkflowOverview, CommandsOverview, PlatformSupport, BottomCta |
-| Getting Started | `src/pages/getting-started.astro`, SidebarLayout, ProgressSidebar, CodeBlock, CopyButton |
-| Docs | `src/pages/docs.astro`, SidebarLayout, DocsSidebar, TableOfContents, CodeBlock, CopyButton |
+| Home Page | `src/pages/index.astro`, Hero, ProblemStatement, AutonomousBuild, WorkflowOverview, CommandsOverview, DesignTools, StarterHighlight, PlatformSupport, BottomCta |
+| Build Page | `src/pages/build.astro`, CopyButton |
+| How It Works Page | `src/pages/how-it-works.astro` |
+| Getting Started | `src/pages/getting-started.astro`, SidebarLayout, SidebarNav, TableOfContents, CodeBlock, CopyButton |
+| Docs | `src/pages/docs.astro`, SidebarLayout, SidebarNav, TableOfContents, CommandSection, CodeBlock, CopyButton |
+| Platform Capabilities | `src/pages/platforms.astro` |
+| Save & Restore | `src/pages/starters.astro`, SidebarLayout, SidebarNav, CodeBlock |
+| Releases | `src/pages/releases.astro` |
+| What is SDD | `src/pages/what-is-sdd.astro`, SidebarLayout, SidebarNav, TableOfContents |
 | Shared | BaseLayout, Navbar, MobileMenu, Footer, ThemeToggle |
 
 ## 2. Project Structure
@@ -104,16 +110,28 @@ Not Applicable — no API layer. All content is statically rendered.
 | Route | Page File | Feature | Layout |
 |-------|-----------|---------|--------|
 | `/` | `src/pages/index.astro` | Home Page | BaseLayout |
+| `/build/` | `src/pages/build.astro` | Build Page | BaseLayout |
+| `/how-it-works/` | `src/pages/how-it-works.astro` | How It Works Page | BaseLayout |
 | `/getting-started/` | `src/pages/getting-started.astro` | Getting Started | BaseLayout → SidebarLayout |
 | `/docs/` | `src/pages/docs.astro` | Docs | BaseLayout → SidebarLayout |
+| `/platforms/` | `src/pages/platforms.astro` | Platform Capabilities | BaseLayout |
+| `/starters/` | `src/pages/starters.astro` | Save & Restore | BaseLayout → SidebarLayout |
+| `/releases/` | `src/pages/releases.astro` | Releases | BaseLayout |
+| `/what-is-sdd/` | `src/pages/what-is-sdd.astro` | What is SDD | BaseLayout → SidebarLayout |
 
 ```mermaid
 graph TD
     BaseLayout["BaseLayout.astro<br/>(html, head, theme, Navbar, Footer)"]
-    BaseLayout --> HomePage["/  (index.astro)<br/>Hero, Problem, Workflow,<br/>Commands, Platforms, CTA"]
+    BaseLayout --> HomePage["/  (index.astro)<br/>Hero, Problem, AutonomousBuild,<br/>Workflow, Commands, DesignTools,<br/>StarterHighlight, Platforms, CTA"]
+    BaseLayout --> BuildPage["/build/  (build.astro)<br/>Autonomous build pipeline"]
+    BaseLayout --> HowItWorks["/how-it-works/  (how-it-works.astro)<br/>Five-layer agent-team architecture"]
+    BaseLayout --> Platforms["/platforms/  (platforms.astro)<br/>Harness capability matrix"]
+    BaseLayout --> Releases["/releases/  (releases.astro)<br/>Changelog"]
     BaseLayout --> SidebarLayout["SidebarLayout.astro<br/>(left sidebar + optional right ToC)"]
-    SidebarLayout --> GettingStarted["/getting-started/<br/>ProgressSidebar + walkthrough content"]
-    SidebarLayout --> Docs["/docs/<br/>DocsSidebar + command reference + ToC"]
+    SidebarLayout --> GettingStarted["/getting-started/<br/>SidebarNav + walkthrough content"]
+    SidebarLayout --> Docs["/docs/<br/>SidebarNav + command reference + ToC"]
+    SidebarLayout --> Starters["/starters/<br/>Save & Restore walkthrough"]
+    SidebarLayout --> WhatIsSdd["/what-is-sdd/<br/>Long-form SDD essay"]
 ```
 
 ### Shared Components
@@ -166,12 +184,15 @@ Per `gspec/stack.md`, do not add React/Vue/Svelte islands. The four interactive 
 
 Composed of sequential full-width sections, each its own component:
 
-1. `Hero` — Display heading, Body Large subtitle, CopyButton with install command, secondary ghost button linking to Getting Started
+1. `Hero` — Display heading ("Living specs. Autonomous builds."), Body Large subtitle, CopyButton with install command, primary CTA to the Build page, secondary ghost button to Getting Started
 2. `ProblemStatement` — Two-column or stacked layout with the two core problems (AI lacks context, specs drift)
-3. `WorkflowOverview` — Visual flow diagram showing Define → Research → Specify → Architect → Analyze → Build → Iterate with required/optional distinction
-4. `CommandsOverview` — Card grid (3 columns desktop, 1 mobile) grouping commands by workflow stage. Each card: icon, command name, role, one-line description
-5. `PlatformSupport` — Row of platform names/logos: Claude Code, Cursor, Antigravity, Codex
-6. `BottomCta` — Centered section with heading, install command CopyButton, link to Getting Started
+3. `AutonomousBuild` — Highlighted panel introducing the 2.0 autonomous build, with links to the Build and How It Works pages
+4. `WorkflowOverview` — Visual flow diagram showing Define → Research → Specify → Architect → Plan → Analyze → Build with required/optional distinction
+5. `CommandsOverview` — Card grid (3 columns desktop, 1 mobile) grouping the fifteen commands by workflow stage. Each card: command name, role, one-line description; new commands flagged
+6. `DesignTools` — Design-tool-native section (style.html + gspec/design/ mockups)
+7. `StarterHighlight` — Save & Restore highlight with simulated terminal
+8. `PlatformSupport` — Row of platform names: Claude Code, Cursor, Antigravity, Codex, Open Code, Pi; links to Platform Capabilities
+9. `BottomCta` — Centered section with heading, install command CopyButton, link to Getting Started
 
 #### Getting Started (`getting-started.astro`)
 
@@ -189,16 +210,18 @@ Uses SidebarLayout. Left sidebar contains a `SidebarNav` with entries for each w
 
 #### Docs (`docs.astro`)
 
-Uses SidebarLayout. Left sidebar contains a `SidebarNav` grouped by workflow stage. Right ToC auto-generated from headings. Content uses `CommandSection` components for each of the 11 commands, ensuring consistent structure:
+Uses SidebarLayout. Left sidebar contains a `SidebarNav` grouped by workflow stage. Right ToC auto-generated from headings. Content uses `CommandSection` components for each command, ensuring consistent structure:
 
-- Workflow Overview (introductory section with visual diagram)
+- Workflow Overview (introductory section with visual diagram + autonomous-build callout)
+- Save & Restore, Extensions (non-command reference sections)
 - Define: profile, style, stack, practices
 - Research: research
-- Specify: feature, epic
+- Specify: feature
 - Architect: architect
-- Analyze: analyze
-- Build: implement
-- Maintenance: migrate
+- Plan: plan
+- Analyze: analyze, audit
+- Build: build, implement, qa
+- Maintenance: distill, migrate
 
 Each `CommandSection` renders with consistent sub-headings: What it does, When to use it, What it produces, Example invocation (CodeBlock), Key questions, Best practices, Common pitfalls, Related commands.
 

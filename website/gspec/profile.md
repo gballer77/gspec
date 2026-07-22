@@ -7,15 +7,15 @@ spec-version: v1
 ## 1. Product Overview
 
 - **Product Name:** gspec
-- **Tagline:** Living specifications that keep AI coding tools aligned with product intent.
-- **Category:** Open-source developer tooling (CLI + AI skill system)
-- **Current Stage:** Early MVP
+- **Tagline:** Living specs, and an agent team that builds from them.
+- **Category:** Open-source developer tooling (CLI + AI agent framework)
+- **Current Stage:** 2.0 — agent-team framework with an autonomous build
 
 ## 2. Mission & Vision
 
 ### Mission Statement
 
-gspec gives development teams a structured way to define and maintain product specifications — profile, style, stack, practices, features, and architecture — so that AI coding tools have the context they need to produce accurate, consistent output. It solves the twin problems of AI tools making uninformed assumptions and specifications drifting out of sync with code.
+gspec gives development teams a structured way to define and maintain product specifications — profile, style, stack, practices, features, and architecture — so that AI coding tools have the context they need to produce accurate, consistent output. In 2.0 it goes further: an agent team executes that workflow, with an autonomous build that can take an idea to working code, quality gates that catch their own mistakes, and a learning loop that improves future runs. It solves the twin problems of AI tools making uninformed assumptions and specifications drifting out of sync with code.
 
 ### Vision Statement
 
@@ -25,7 +25,7 @@ A world where every AI-assisted codebase carries a living, version-controlled sp
 
 ### Primary Users
 
-- **Small development teams (2–10 people)** using AI coding tools (Claude Code, Cursor, Codex, Antigravity) to build software products.
+- **Small development teams (2–10 people)** using AI coding tools (Claude Code, Cursor, Codex, Antigravity, Open Code, Pi) to build software products.
 - **Pain points:**
   - AI tools lack project context, leading to inconsistent output that doesn't match the team's product vision, design language, or technical decisions.
   - Specifications written at project kickoff quickly become stale, causing AI tools to rely on outdated or missing context.
@@ -56,21 +56,25 @@ gspec turns scattered product knowledge into structured, version-controlled Mark
 1. **Better AI output** — AI tools read gspec documents and make decisions informed by the product's actual audience, stack, design system, and standards.
 2. **Specs that stay current** — The spec-sync system automatically reminds AI tools to update specifications when code changes contradict them.
 3. **Structured product thinking** — Role-based commands (Business Strategist, UI Designer, Architect, etc.) guide teams through comprehensive product definition.
-4. **Platform-agnostic** — Works with Claude Code, Cursor, Codex, and Antigravity from a single installation.
-5. **Zero lock-in** — Specs are plain Markdown files in your repo. No proprietary formats, no hosted service, no account required.
+4. **Autonomous build** — A deterministic runtime can take an idea and drive the whole workflow — specs, plan, and code — as a resumable, self-healing run.
+5. **Quality that's enforced, not assumed** — Producer ≠ checker: independent validators gate every stage, backed by a generated build-and-test script and deterministic enforcement hooks.
+6. **Gets better over time** — A learning loop captures corrections and distills them back into the agents' skills, so future runs start smarter.
+7. **Platform-agnostic** — Works with Claude Code, Cursor, Codex, Antigravity, Open Code, and Pi from a single source tree.
+8. **Zero lock-in** — Specs are plain Markdown files in your repo. No proprietary formats, no hosted service, no account required.
 
 ### Differentiation
 
 - **Living, not static:** Unlike traditional PRD templates or wiki pages, gspec documents are designed to evolve with the codebase through automated sync rules.
 - **AI-native:** Built specifically for the AI-assisted development workflow rather than adapted from traditional documentation tools.
-- **Multi-platform:** A single set of specification commands works across four major AI coding platforms.
+- **An agent team, not just prompts:** gspec ships specialized agents behind each command and a deterministic runtime that can execute the whole workflow — most SDD tools stop at producing a spec and a task list.
+- **Multi-platform:** A single source tree builds for six major AI coding platforms, in each one's native format.
 - **Role-based generation:** Each command adopts a specific professional perspective (Product Manager, Architect, Designer), producing documents with appropriate depth and focus.
 
 ## 5. Product Description
 
 ### What It Is
 
-gspec is a CLI tool and AI skill system that installs into your project and provides slash commands for generating and maintaining product specifications. Running `npx gspec` installs platform-specific skills (slash commands) into your AI coding tool of choice. These commands guide you through defining your product across multiple dimensions:
+gspec is a CLI tool and AI agent framework that installs into your project. Running `npx gspec` installs platform-specific commands, skills, agents, and (where supported) enforcement hooks into your AI coding tool of choice. Each command is a thin conversation backed by specialized agents working behind a quality gate. The commands guide you through defining your product across multiple dimensions:
 
 - **Profile** — What the product is, who it serves, and why it exists
 - **Style** — Visual design system with design tokens, colors, and component patterns
@@ -141,9 +145,9 @@ For small development teams using AI coding tools, gspec is the open-source spec
 
 ### Website Copy Elements
 
-- **Homepage headline:** "Living specs for AI-assisted development."
-- **Subheadline:** "Give your AI coding tools the product context they need — structured specifications that stay in sync with your code."
-- **About us summary:** gspec is an open-source CLI tool that installs structured product specification commands into AI coding tools like Claude Code, Cursor, and Codex. It helps small teams define their product once and keep that definition current as the codebase evolves.
+- **Homepage headline:** "Living specs. Autonomous builds."
+- **Subheadline:** "gspec gives your AI coding tools the structured product context they need — then an agent team that can take an idea all the way to working code."
+- **About us summary:** gspec is an open-source CLI tool and agent-team framework that installs into AI coding tools like Claude Code, Cursor, Codex, Antigravity, Open Code, and Pi. It helps teams define their product once, keep that definition current as the codebase evolves, and — on supported harnesses — autonomously build from it with quality gates and a learning loop.
 
 ### Social Media Presence
 

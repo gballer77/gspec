@@ -1,0 +1,225 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+const base = import.meta.env.BASE_URL;
+
+// The five layers (docs/gspec-v2-design.md).
+const layers = [
+  {
+    n: '1',
+    name: 'Skills',
+    tag: 'the brains',
+    count: '13',
+    body: 'Reusable expertise your AI loads on demand. Eight persona skills (product, architect, designer, engineer, QA, practices, steward, orchestrator) each carry a quality bar; five convention skills cover authoring, templates, memory, agnosticism, and shared conventions.',
+  },
+  {
+    n: '2',
+    name: 'Agents',
+    tag: 'the hands',
+    count: '23',
+    body: 'Isolated workers, each bounded to one job: 7 producers that write a single spec type, 8 read-only validators that return a verdict, 3 investigators, 3 transformers (plan, implement, migrate), and 2 that run the learning loop. Fresh context every time — no drift.',
+  },
+  {
+    n: '3',
+    name: 'Commands',
+    tag: 'the conversations',
+    count: '15',
+    body: 'The slash commands you actually talk to. Each is a thin orchestrator that loads the right persona skill, asks what it needs, and delegates the real work to agents behind a writer → validator quality gate.',
+  },
+  {
+    n: '4',
+    name: 'Runtime',
+    tag: 'the driver',
+    count: '1',
+    body: 'A deterministic Node driver — not a prompt — that runs the autonomous build. It sequences stages, gates each one, tracks progress in a resumable manifest, and re-delegates on failure. Control flow lives in code, judgment lives in agents.',
+    caveat: 'The autonomous build runs only on harnesses with a wired headless engine — today Claude Code, Codex, and Pi.',
+  },
+  {
+    n: '5',
+    name: 'Hooks',
+    tag: 'the hard floors',
+    count: '9+',
+    body: 'Deterministic shell guards on lifecycle events that turn soft conventions into hard blocks: task immutability, spec integrity, profile agnosticism, and practices enforcement.',
+    caveat: 'Hard, deterministic blocking is full-fidelity only on Claude Code. Other harnesses enforce these floors on the build path or as advisory guidance, depending on what the platform allows.',
+  },
+];
+
+const gate = [
+  { title: 'The producer writes', body: 'One agent, one spec or one slice of code. It owns the work but never grades its own homework.' },
+  { title: 'A separate validator checks', body: 'A read-only agent, loaded with the QA persona, returns a structured verdict against the acceptance criteria — it can’t edit, only judge.' },
+  { title: 'Failure loops back', body: 'A failing verdict hands the work back for a bounded revision. Deterministic checks (build + test via verify.sh) back the judgment with hard signal.' },
+];
+---
+
+<BaseLayout
+  title="How gspec works — the architecture"
+  description="gspec v2 is an agent-team framework: skills are the brains, agents are the hands, commands are the conversations, the runtime is the deterministic driver, and hooks are the hard floors."
+>
+  <Navbar slot="navbar" />
+
+  <!-- Hero -->
+  <section class="py-16 sm:py-24 lg:py-28">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <div class="max-w-3xl">
+        <h1 class="text-[2.25rem] sm:text-[2.75rem] lg:text-[3.25rem] font-bold leading-[1.1] tracking-tight text-[var(--text-primary)] mb-6">
+          An agent team, not a pile of prompts.
+        </h1>
+        <p class="text-lg sm:text-xl text-[var(--text-secondary)] leading-relaxed">
+          gspec v2 is built in five layers with a single organizing idea:
+        </p>
+        <p class="text-lg sm:text-xl text-[var(--text-primary)] font-medium leading-relaxed mt-4">
+          Skills are the brains, agents are the hands, commands are the conversations,
+          the runtime is the deterministic driver, and hooks are the hard floors.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- The five layers -->
+  <section class="pb-8">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <div class="flex flex-col gap-3">
+        {layers.map((l) => (
+          <div class="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 lg:p-7 flex flex-col sm:flex-row gap-5 sm:items-start">
+            <div class="flex items-center gap-4 sm:w-56 shrink-0">
+              <span class="w-10 h-10 rounded-xl bg-[var(--bg-primary-subtle)] text-[var(--text-accent)] font-bold flex items-center justify-center shrink-0">{l.n}</span>
+              <div>
+                <h3 class="font-semibold text-[var(--text-primary)] text-lg leading-tight">{l.name}</h3>
+                <span class="text-xs text-[var(--text-muted)] italic">{l.tag}</span>
+              </div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-[var(--text-secondary)] leading-relaxed">{l.body}</p>
+              {l.caveat && (
+                <p class="text-xs text-[var(--text-muted)] leading-relaxed mt-3 pl-3 border-l-2 border-[var(--border-primary-subtle)]">
+                  <span class="font-medium text-[var(--text-secondary)]">Harness support varies.</span> {l.caveat}{' '}
+                  <a href={`${base}platforms/`} class="text-[var(--text-accent)] hover:text-primary-300 underline underline-offset-2">Compare platform capabilities →</a>
+                </p>
+              )}
+            </div>
+            <div class="shrink-0 text-right sm:w-16">
+              <span class="text-2xl font-bold text-[var(--text-primary)] tabular-nums">{l.count}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Producer != checker -->
+  <section class="py-16 lg:py-24 border-t border-[var(--border-subtle)] mt-8">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <div class="max-w-2xl mb-12">
+        <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
+          Producer ≠ checker
+        </h2>
+        <p class="text-[var(--text-secondary)] leading-relaxed">
+          The single biggest reason v2 produces better output: the agent that <em>writes</em> a spec or a slice of
+          code is never the one that <em>approves</em> it. Every producer is followed by an independent, read-only
+          validator. Nothing advances on the author's own say-so.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-3 gap-4">
+        {gate.map((g, i) => (
+          <div class="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
+            <div class="w-8 h-8 rounded-lg bg-[var(--bg-primary-subtle)] text-[var(--text-accent)] font-semibold flex items-center justify-center mb-3">{i + 1}</div>
+            <h3 class="font-semibold text-[var(--text-primary)] mb-1.5">{g.title}</h3>
+            <p class="text-sm text-[var(--text-secondary)] leading-relaxed">{g.body}</p>
+          </div>
+        ))}
+      </div>
+
+      <p class="text-sm text-[var(--text-muted)] leading-relaxed mt-6 max-w-3xl pl-3 border-l-2 border-[var(--border-primary-subtle)]">
+        <span class="font-medium text-[var(--text-secondary)]">Harness support varies.</span> The producer/checker
+        split runs as agents on every supported harness. How firmly the gate is <em>enforced</em> differs:
+        deterministic blocking and the <code class="font-mono text-[var(--text-accent)]">verify.sh</code> build gate
+        are full-strength on Claude Code and on the autonomous build path (Claude Code, Codex, Pi); elsewhere the
+        gate is advisory.{' '}
+        <a href={`${base}platforms/`} class="text-[var(--text-accent)] hover:text-primary-300 underline underline-offset-2">Compare platform capabilities →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- Learning loop -->
+  <section class="py-16 lg:py-24 border-t border-[var(--border-subtle)]">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <div class="max-w-2xl mb-12">
+        <span class="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--badge-accent-text)] bg-[var(--badge-accent-bg)] px-3 py-1 rounded-full mb-4">
+          New in 2.0
+        </span>
+        <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
+          It gets better every run
+        </h2>
+        <p class="text-[var(--text-secondary)] leading-relaxed">
+          When a validator rejects work or you correct an agent, that lesson is captured to the agent's own memory —
+          tagged with exactly which layer it belongs to. A reviewer step then distills recurring lessons into the
+          skills themselves, with your approval. Corrections become durable expertise instead of evaporating.
+        </p>
+      </div>
+
+      <div class="flex flex-col md:flex-row items-stretch gap-3 max-w-4xl">
+        {[
+          { title: 'Capture', body: 'A failing QA verdict or a user correction is written to per-agent memory, address-tagged to its target layer.' },
+          { title: 'Distill', body: 'The distiller reviews tagged lessons and proposes surgical skill edits — one at a time, for your approval.' },
+          { title: 'Improve', body: 'Approved lessons graduate into the skills. The next run starts with the correction already baked in.' },
+        ].map((s, i, arr) => (
+          <div class="flex-1 flex flex-col md:flex-row items-stretch">
+            <div class="flex-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
+              <h3 class="font-semibold text-[var(--text-primary)] mb-1.5">{s.title}</h3>
+              <p class="text-sm text-[var(--text-secondary)] leading-relaxed">{s.body}</p>
+            </div>
+            {i < arr.length - 1 && (
+              <div class="hidden md:flex items-center justify-center w-6 text-[var(--text-muted)]">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                </svg>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <p class="text-sm text-[var(--text-muted)] leading-relaxed mt-8 max-w-3xl pl-3 border-l-2 border-[var(--border-primary-subtle)]">
+        <span class="font-medium text-[var(--text-secondary)]">Harness support varies.</span> The full loop is
+        available today on Claude Code, which has native per-agent memory. Codex and Pi capture build-path learnings
+        but lack native memory (runtime-managed injection and distill are on the roadmap); the remaining harnesses
+        don't yet support it.{' '}
+        <a href={`${base}platforms/`} class="text-[var(--text-accent)] hover:text-primary-300 underline underline-offset-2">Compare platform capabilities →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- Claude-first note + CTA -->
+  <section class="py-16 lg:py-24 border-t border-[var(--border-subtle)]">
+    <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
+      <div class="grid lg:grid-cols-2 gap-6">
+        <div class="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-8">
+          <h2 class="text-xl font-semibold text-[var(--text-primary)] mb-3 tracking-tight">Claude-first, degrade gracefully</h2>
+          <p class="text-[var(--text-secondary)] leading-relaxed mb-4">
+            One source tree builds for every supported harness. Claude Code gets the full split — skills, agents,
+            commands, and hooks. Other targets collapse each agent back into a skill or command and enforce what
+            their platform allows.
+          </p>
+          <a href={`${base}platforms/`} class="text-[var(--text-accent)] font-medium hover:text-primary-300 underline underline-offset-4 decoration-[var(--border-primary-subtle)] hover:decoration-current transition-colors duration-200">
+            See what each harness supports →
+          </a>
+        </div>
+        <div class="rounded-2xl border border-[var(--border-primary-subtle)] bg-[var(--bg-primary-subtle)] p-8">
+          <h2 class="text-xl font-semibold text-[var(--text-primary)] mb-3 tracking-tight">See it end to end</h2>
+          <p class="text-[var(--text-secondary)] leading-relaxed mb-4">
+            The autonomous build wires all five layers together — the runtime driving agents through the pipeline,
+            gated by validators and hooks, recording learnings as it goes.
+          </p>
+          <a href={`${base}build/`} class="text-[var(--text-accent)] font-medium hover:text-primary-300 underline underline-offset-4 decoration-[var(--border-primary-subtle)] hover:decoration-current transition-colors duration-200">
+            Explore the build pipeline →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer slot="footer" />
+</BaseLayout>
