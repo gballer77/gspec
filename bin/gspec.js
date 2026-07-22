@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
-import { readdir, readFile, writeFile, mkdir, stat, unlink } from 'node:fs/promises';
+import { readdir, readFile, writeFile, mkdir, stat, unlink, rm } from 'node:fs/promises';
 import { join, dirname, basename } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -40,8 +40,11 @@ const TARGETS = Object.fromEntries(
   }]),
 );
 
-// Names emitted by core gspec; user extensions cannot collide with these.
-const BUILTIN_SKILL_NAMES = new Set([
+// The v1 command-skill names. v2 no longer emits these as skills, so on upgrade
+// their leftover dirs are cleaned up (cleanupStaleV1Skills). This is NOT the
+// extension-collision surface — that is the CURRENT build's skills, read live
+// from dist/ via reservedSkillNames().
+const LEGACY_V1_SKILL_NAMES = new Set([
   'gspec-profile', 'gspec-feature', 'gspec-plan', 'gspec-style',
   'gspec-stack', 'gspec-practices', 'gspec-architect', 'gspec-analyze',
   'gspec-audit', 'gspec-research', 'gspec-implement', 'gspec-migrate',
@@ -701,6 +704,89 @@ async function installFlat(target, cwd) {
   return files.length;
 }
 
+// Where per-name skill directories (<name>/SKILL.md) live for a target, or null
+// if the target does not use that convention (e.g. the `flat` layout). Mirrors
+// the destinations written by the install* functions above.
+function skillsBaseDir(target, cwd) {
+  switch (target.layout) {
+    case 'directory': // Claude: .claude/skills/<name>
+    case 'codex':     // .agents/skills/<name> (installDir is already .agents/skills)
+      return join(cwd, target.installDir);
+    case 'dual':
+    case 'opencode':
+    case 'pi':
+    case 'cursor':
+    case 'antigravity':
+      return join(cwd, target.installDir, 'skills');
+    default:
+      return null;
+  }
+}
+
+// The skill names the CURRENT build installs for a target, read from dist/ (the
+// source of truth for what v2 emits).
+async function currentSkillNames(target) {
+  const root = target.layout === 'directory'
+    ? target.sourceDir               // top-level dirs are the skills (agents/commands excepted)
+    : join(target.sourceDir, 'skills');
+  const names = new Set();
+  let entries;
+  try {
+    entries = await readdir(root);
+  } catch (e) {
+    if (e.code === 'ENOENT') return names;
+    throw e;
+  }
+  for (const entry of entries) {
+    if (target.layout === 'directory' && (entry === 'agents' || entry === 'commands')) continue;
+    try {
+      if ((await stat(join(root, entry))).isDirectory()) names.add(entry);
+    } catch (e) {
+      if (e.code !== 'ENOENT') throw e;
+    }
+  }
+  return names;
+}
+
+// Skill names the current build emits — an extension may not reuse one, as it
+// would overwrite a core skill. Read live from dist/ so this never drifts from
+// what actually ships. Pass a target for the install path; omit it on the
+// target-agnostic save/list paths to reserve the union across every target.
+async function reservedSkillNames(target) {
+  if (target) return currentSkillNames(target);
+  const all = new Set();
+  for (const t of Object.values(TARGETS)) {
+    for (const name of await currentSkillNames(t)) all.add(name);
+  }
+  return all;
+}
+
+// v1 installed 12 command-skills under the skills dir. v2 replaces that set with
+// personas/conventions; the command-skills that did not survive are left orphaned
+// on disk (the installer only overwrites, never deletes) and can shadow the new
+// commands. Remove any skill dir whose name is a known v1 builtin that the current
+// build no longer installs as a skill. Restricting to LEGACY_V1_SKILL_NAMES keeps
+// this from touching user-authored skills.
+async function cleanupStaleV1Skills(target, cwd) {
+  const base = skillsBaseDir(target, cwd);
+  if (!base) return [];
+  const current = await currentSkillNames(target);
+  const removed = [];
+  for (const name of LEGACY_V1_SKILL_NAMES) {
+    if (current.has(name)) continue; // still emitted by v2, overwritten in place, keep
+    const skillDir = join(base, name);
+    try {
+      await stat(join(skillDir, 'SKILL.md'));
+    } catch (e) {
+      if (e.code === 'ENOENT') continue;
+      throw e;
+    }
+    await rm(skillDir, { recursive: true, force: true });
+    removed.push(name);
+  }
+  return removed;
+}
+
 async function install(targetName, cwd) {
   const target = TARGETS[targetName];
   if (!target) {
@@ -756,6 +842,17 @@ async function install(targetName, cwd) {
                 : await installDirectory(target, cwd);
 
   console.log(chalk.bold(`\n${count} skills installed to ${target.installDir}/\n`));
+
+  // Remove v1 command-skills that v2 no longer emits, so the stale copies don't
+  // shadow the new commands (the install step above only overwrites, never deletes).
+  const removedStale = await cleanupStaleV1Skills(target, cwd);
+  if (removedStale.length > 0) {
+    console.log(chalk.bold(`  Removed ${removedStale.length} stale v1 skill${removedStale.length === 1 ? '' : 's'} superseded by v2:\n`));
+    for (const name of removedStale) {
+      console.log(`  ${chalk.red('-')} ${name}`);
+    }
+    console.log();
+  }
 
   // Create gspec/ directory and install README
   const gspecDir = join(cwd, 'gspec');
@@ -1088,6 +1185,32 @@ async function collectGspecFiles(gspecDir) {
   return files;
 }
 
+// Detect files sitting in the pre-2.0 layout that /gspec-migrate must relocate.
+// These carry a current spec-version, so the version check above never flags them
+// even though the v2 commands expect them under gspec/tasks/:
+//   - plan/task files under gspec/features/  → moved to gspec/tasks/
+//   - anything under gspec/epics/            → epics were removed
+async function collectLegacyLayout(gspecDir) {
+  const legacy = [];
+  try {
+    for (const entry of await readdir(join(gspecDir, 'features'))) {
+      if (entry.endsWith('.plan.md') || entry.endsWith('.tasks.md')) {
+        legacy.push(`gspec/features/${entry}`);
+      }
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+  try {
+    for (const entry of await readdir(join(gspecDir, 'epics'))) {
+      if (entry.endsWith('.md')) legacy.push(`gspec/epics/${entry}`);
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+  return legacy;
+}
+
 async function checkGspecFiles(cwd, targetName) {
   const gspecDir = join(cwd, 'gspec');
 
@@ -1099,7 +1222,6 @@ async function checkGspecFiles(cwd, targetName) {
   }
 
   const files = await collectGspecFiles(gspecDir);
-  if (files.length === 0) return;
 
   const outdated = [];
   for (const file of files) {
@@ -1112,22 +1234,35 @@ async function checkGspecFiles(cwd, targetName) {
     });
   }
 
-  if (outdated.length === 0) return;
+  const legacy = await collectLegacyLayout(gspecDir);
 
-  console.log(chalk.yellow(`  Found existing gspec files that may need updating:\n`));
-  for (const file of outdated) {
-    const status = file.version
-      ? `version ${file.version} (current: ${SPEC_VERSION})`
-      : `no version (pre-${SPEC_VERSION})`;
-    console.log(`    ${chalk.yellow('!')} ${file.label} — ${status}`);
-  }
-  console.log();
-
-  const confirmed = await promptConfirm(chalk.bold('  Update existing gspec files to the current format? [y/N]: '));
-  if (!confirmed) return;
+  if (outdated.length === 0 && legacy.length === 0) return;
 
   const cmd = MIGRATE_COMMANDS[targetName] || '/gspec-migrate';
-  console.log(chalk.bold(`\n  To update your files, run the following command in ${TARGETS[targetName].label}:\n`));
+
+  if (outdated.length > 0) {
+    console.log(chalk.yellow(`  Found existing gspec files that may need updating:\n`));
+    for (const file of outdated) {
+      const status = file.version
+        ? `version ${file.version} (current: ${SPEC_VERSION})`
+        : `no version (pre-${SPEC_VERSION})`;
+      console.log(`    ${chalk.yellow('!')} ${file.label} — ${status}`);
+    }
+    console.log();
+  }
+
+  if (legacy.length > 0) {
+    console.log(chalk.yellow(`  Found plan/task files in the pre-2.0 location. gspec 2.0 keeps`));
+    console.log(chalk.yellow(`  plans under ${chalk.bold('gspec/tasks/')}. ${chalk.bold(cmd)} relocates these for you:\n`));
+    for (const file of legacy) {
+      console.log(`    ${chalk.yellow('!')} ${file}`);
+    }
+    console.log();
+  }
+
+  // Always surface the command (no y/N gate) so the migration step is hard to miss,
+  // and so it still prints on non-interactive installs.
+  console.log(chalk.bold(`  Run this command in ${TARGETS[targetName].label} to migrate:\n`));
   console.log(`    ${chalk.cyan(cmd)}\n`);
 }
 
@@ -1951,14 +2086,14 @@ async function loadExtensions() {
   return loaded;
 }
 
-function validateExtension(ext) {
+function validateExtension(ext, reserved) {
   const errors = [];
   if (!ext.fields.name) errors.push("missing 'name' frontmatter");
   if (!ext.fields.description) errors.push("missing 'description' frontmatter");
   if (ext.fields.name && !EXTENSION_NAME_RE.test(ext.fields.name)) {
     errors.push(`invalid name "${ext.fields.name}" (must match /^[a-z0-9][a-z0-9-]*$/)`);
   }
-  if (ext.fields.name && BUILTIN_SKILL_NAMES.has(ext.fields.name)) {
+  if (ext.fields.name && reserved && reserved.has(ext.fields.name)) {
     errors.push(`name "${ext.fields.name}" collides with a built-in gspec skill`);
   }
   return errors;
@@ -1969,9 +2104,10 @@ async function installExtensions(targetName, cwd) {
   if (extensions.length === 0) return;
 
   const target = TARGETS[targetName];
+  const reserved = await reservedSkillNames(target);
   const valid = [];
   for (const ext of extensions) {
-    const errors = validateExtension(ext);
+    const errors = validateExtension(ext, reserved);
     if (errors.length > 0) {
       console.warn(chalk.yellow(`  ! Skipping extension ${ext.file}: ${errors.join('; ')}`));
       continue;
@@ -1993,10 +2129,16 @@ async function installExtensions(targetName, cwd) {
   if (finalSet.length === 0) return;
 
   console.log(chalk.bold(`\nInstalling ${finalSet.length} user extension${finalSet.length === 1 ? '' : 's'} from ~/.gspec/extensions/...\n`));
-  const installPath = join(cwd, target.installDir);
+  // Extensions are user-authored skills. Every target defines emitSkill (a bare
+  // emit() exists only on the Claude target), so route through emitSkill to stay
+  // format-consistent with the core skills. Its outDir is the skills dir itself
+  // for the 'directory' layout (Claude writes <outDir>/<name>) and the PARENT of
+  // the skills dir for every other layout (their emitSkill re-appends `skills/`).
+  const skillsDir = skillsBaseDir(target, cwd);
+  const emitOut = target.layout === 'directory' ? skillsDir : dirname(skillsDir);
   for (const ext of finalSet) {
     const meta = { name: ext.fields.name, description: ext.fields.description };
-    await target.emit(installPath, ext.body, meta);
+    await target.emitSkill(emitOut, ext.body, meta);
     console.log(`  ${chalk.green('+')} ${ext.fields.name} ${chalk.dim('(extension)')}`);
   }
 }
@@ -2011,8 +2153,9 @@ async function extensionList() {
   }
 
   console.log(chalk.bold(`\n  ${extensions.length} extension${extensions.length === 1 ? '' : 's'} in ~/.gspec/extensions/:\n`));
+  const reserved = await reservedSkillNames();
   for (const ext of extensions) {
-    const errors = validateExtension(ext);
+    const errors = validateExtension(ext, reserved);
     const name = ext.fields.name || chalk.dim('(no name)');
     const desc = ext.fields.description ? chalk.dim(` — ${ext.fields.description}`) : '';
     if (errors.length > 0) {
@@ -2047,7 +2190,7 @@ async function extensionSave(srcPath) {
 
   const { fields } = parseFrontmatter(content);
   const ext = { file: basename(srcPath), fields };
-  const errors = validateExtension(ext);
+  const errors = validateExtension(ext, await reservedSkillNames());
   if (errors.length > 0) {
     console.error(chalk.red(`\n  Cannot save extension: ${errors.join('; ')}\n`));
     process.exit(1);

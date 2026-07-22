@@ -16,10 +16,12 @@ const capabilities = [
   { key: 'learning', label: 'Learning loop', blurb: 'Per-agent memory plus feedback capture that improves future runs.' },
 ];
 
+// Per-capability, one tight line each. Full states confirm in a few words;
+// partial/none states state the gap first, then the path to closing it.
 const harnesses = [
   {
     name: 'Claude Code',
-    tagline: 'The reference target — full-fidelity gspec support on both the interactive and build paths.',
+    tagline: 'The reference target. Full-fidelity support on both the interactive and build paths.',
     states: { spec: 'full', build: 'full', enforceInteractive: 'full', enforceBuild: 'full', learning: 'full' },
     tech: {
       'File-write hook': 'Yes — Pre/PostToolUse on Write/Edit',
@@ -27,15 +29,17 @@ const harnesses = [
       'Native per-agent memory': 'Yes — memory: silos',
       'Headless engine': 'Yes — wired',
     },
-    notes: [
-      'Full support. Every spec floor is a hard, deterministic block enforced by Pre/PostToolUse hooks on file writes.',
-      'Native per-agent memory silos auto-load into each agent, powering the feedback-capture and distill learning loop.',
-      'Wired headless build engine, so the same guarantees hold on the autonomous build path.',
-    ],
+    reasons: {
+      spec: 'Native skills, agents, and commands.',
+      build: 'Wired headless engine.',
+      enforceInteractive: 'Hard, deterministic blocks via Pre/PostToolUse hooks on every file write.',
+      enforceBuild: 'The same floors hold on the autonomous build path.',
+      learning: 'Native per-agent memory silos auto-load, driving feedback capture and distill.',
+    },
   },
   {
     name: 'Codex',
-    tagline: 'OpenAI’s coding agent. A wired build engine with strong autonomous-build parity, but its hooks fire on the Bash tool only.',
+    tagline: 'OpenAI’s coding agent. Strong build-path parity, but hooks fire on the Bash tool only.',
     states: { spec: 'full', build: 'full', enforceInteractive: 'partial', enforceBuild: 'full', learning: 'partial' },
     tech: {
       'File-write hook': 'No — hooks fire on Bash only',
@@ -43,15 +47,17 @@ const harnesses = [
       'Native per-agent memory': 'No — AGENTS.md instructions',
       'Headless engine': 'Yes — wired',
     },
-    notes: [
-      'Full spec authoring and full build-path enforcement: the gspec runtime driver runs the writer/validator QA gates and verify.sh deterministically, independent of any harness hook.',
-      'Partial — interactive enforcement: Codex hooks cannot observe a file write (Bash-only), so the floors can’t be hard-blocked during interactive use. They ship as inlined instructions in the composed agent bodies (advisory). True hard enforcement would require routing spec writes through an MCP write-mediator.',
-      'Partial — learning loop: the build records QA-feedback learnings today, but there is no harness-native per-agent memory (AGENTS.md only); full memory injection and distill are runtime-managed and on the roadmap.',
-    ],
+    reasons: {
+      spec: 'Native skills, agents, and commands.',
+      build: 'Wired engine; the runtime driver runs QA gates and verify.sh.',
+      enforceInteractive: 'Gap: hooks see Bash only, never a file write, so floors ship advisory (inlined). Hard blocks need an MCP write-mediator.',
+      enforceBuild: 'Enforced by the runtime driver, independent of any hook.',
+      learning: 'Gap: QA-feedback learnings are captured, but there is no native memory (AGENTS.md only). Memory injection and distill are runtime-managed. Planned.',
+    },
   },
   {
     name: 'Cursor',
-    tagline: 'Closest to native enforcement parity thanks to file-edit hooks, but not yet a wired build engine.',
+    tagline: 'Closest to native enforcement parity via file-edit hooks. No wired build engine yet.',
     states: { spec: 'full', build: 'none', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
     tech: {
       'File-write hook': 'Yes — onPreEdit / onPostEdit',
@@ -59,16 +65,17 @@ const harnesses = [
       'Native per-agent memory': 'No — rules / AGENTS.md',
       'Headless engine': 'Yes — cursor-agent -p (adapter not yet wired)',
     },
-    notes: [
-      'Full spec authoring via native sub-agents, skills, and commands.',
-      'Partial — interactive enforcement: the floors are inlined instructions today (advisory), but Cursor’s onPreEdit / onPostEdit hooks do observe file edits, so porting the guards there would restore hard-block semantics (planned).',
-      'None — autonomous build and build-path enforcement: no build-engine adapter is wired yet. cursor-agent -p exists, so adding one is straightforward.',
-      'None — learning loop: no native per-agent memory. A runtime-managed silo would come once a build adapter lands.',
-    ],
+    reasons: {
+      spec: 'Native sub-agents, skills, and commands.',
+      build: 'Gap: no build-engine adapter wired. cursor-agent -p exists, so adding one is straightforward.',
+      enforceInteractive: 'Gap: floors are advisory (inlined) today, but onPreEdit / onPostEdit observe edits, so hard-block guards can port. Planned.',
+      enforceBuild: 'Gap: waits on a build adapter.',
+      learning: 'Gap: no native memory; a runtime-managed silo lands with a build adapter.',
+    },
   },
   {
     name: 'OpenCode',
-    tagline: 'Open-source agent with a complete plugin system. Not yet a wired build engine.',
+    tagline: 'Open-source agent with a complete plugin system. No wired build engine yet.',
     states: { spec: 'full', build: 'none', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
     tech: {
       'File-write hook': 'Yes — plugin tool-execution interception',
@@ -76,16 +83,17 @@ const harnesses = [
       'Native per-agent memory': 'No — community "mem" plugins',
       'Headless engine': 'Yes — opencode run (adapter not yet wired)',
     },
-    notes: [
-      'Full spec authoring via native sub-agents, skills, and commands.',
-      'Partial — interactive enforcement: advisory (inlined) today. A gspec OpenCode plugin could intercept tool execution across 25+ lifecycle events to block or validate writes, and persist a real memory silo (planned).',
-      'None — autonomous build and build-path enforcement: no adapter is wired yet. opencode run exists.',
-      'None — learning loop: no native memory (community plugins aside). A runtime-managed silo is planned alongside a build adapter.',
-    ],
+    reasons: {
+      spec: 'Native sub-agents, skills, and commands.',
+      build: 'Gap: no adapter wired. opencode run exists.',
+      enforceInteractive: 'Gap: advisory (inlined) today. A gspec plugin could intercept tool execution across 25+ lifecycle events to hard-block writes. Planned.',
+      enforceBuild: 'Gap: waits on a build adapter.',
+      learning: 'Gap: no native memory; a plugin-backed silo is planned alongside the adapter.',
+    },
   },
   {
     name: 'Pi',
-    tagline: 'Extension-complete agent and a wired build engine — the fullest non-Claude parity available.',
+    tagline: 'Extension-complete agent with a wired build engine. The fullest non-Claude parity today.',
     states: { spec: 'full', build: 'full', enforceInteractive: 'partial', enforceBuild: 'full', learning: 'partial' },
     tech: {
       'File-write hook': 'Yes — tool_call block / modify',
@@ -93,15 +101,17 @@ const harnesses = [
       'Native per-agent memory': 'No — episodic-memory extensions exist',
       'Headless engine': 'Yes — wired, via pi-subagents',
     },
-    notes: [
-      'Full spec authoring and full build-path enforcement: a wired build engine (via the pi-subagents extension), with the runtime driver gating every build run deterministically.',
-      'Partial — interactive enforcement: advisory (inlined) today, but Pi’s extension tool_call hook can block or modify any tool call — a true pre-write block matching Claude — so a gspec Pi extension would deliver hard interactive enforcement (planned).',
-      'Partial — learning loop: build-path learning capture exists today; there is no native per-agent memory yet, though Pi has episodic-memory extensions to adopt or fork (planned).',
-    ],
+    reasons: {
+      spec: 'Native sub-agents, skills, and commands.',
+      build: 'Wired engine via the pi-subagents extension; the runtime driver gates every run.',
+      enforceInteractive: 'Gap: advisory (inlined) today, but the tool_call hook can block or modify any call (Claude-equivalent), so a gspec extension would hard-enforce. Planned.',
+      enforceBuild: 'Enforced by the runtime driver on every build run.',
+      learning: 'Gap: build-path capture exists, but no native per-agent memory yet. Episodic-memory extensions are available to adopt. Planned.',
+    },
   },
   {
     name: 'Antigravity',
-    tagline: 'Workflow-based agent with native JSON lifecycle hooks. Not yet a wired build engine.',
+    tagline: 'Workflow-based agent with native JSON lifecycle hooks. No wired build engine yet.',
     states: { spec: 'full', build: 'none', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
     tech: {
       'File-write hook': 'Yes — JSON hooks incl. after-file-edit',
@@ -109,12 +119,13 @@ const harnesses = [
       'Native per-agent memory': 'No',
       'Headless engine': 'Yes — agy -p (adapter not yet wired)',
     },
-    notes: [
-      'Full spec authoring: ships skills plus one self-contained workflow per capability (sub-agents are spawned at runtime, so there are no agent files).',
-      'Partial — interactive enforcement: advisory (inlined in the workflows) today. Antigravity’s JSON lifecycle hooks include after-file-edit and are honored in headless runs, so the write-guards can port similarly to Cursor (planned).',
-      'None — autonomous build and build-path enforcement: no adapter is wired yet. agy -p exists.',
-      'None — learning loop: no native memory. A runtime-managed silo is planned.',
-    ],
+    reasons: {
+      spec: 'Skills plus one self-contained workflow per capability (sub-agents spawn at runtime, so no agent files).',
+      build: 'Gap: no adapter wired. agy -p exists.',
+      enforceInteractive: 'Gap: advisory (inlined in the workflows) today. JSON lifecycle hooks (after-file-edit) run headless, so guards port like Cursor. Planned.',
+      enforceBuild: 'Gap: waits on a build adapter.',
+      learning: 'Gap: no native memory; a runtime-managed silo is planned.',
+    },
   },
 ];
 
@@ -259,14 +270,27 @@ const states = {
               </summary>
 
               <div class="px-5 pb-5 pt-1 border-t border-[var(--border-subtle)]">
-                <!-- Capability breakdown -->
-                <ul class="flex flex-col gap-2.5 mt-4 mb-6">
-                  {h.notes.map((note) => (
-                    <li class="text-sm text-[var(--text-body)] leading-relaxed pl-4 relative">
-                      <span class="absolute left-0 top-0 text-[var(--text-muted)]" aria-hidden="true">•</span>
-                      {note}
-                    </li>
-                  ))}
+                <!-- Capability breakdown: one row per capability, state glyph + tight reason -->
+                <ul class="flex flex-col gap-3 mt-4 mb-6">
+                  {capabilities.map((cap) => {
+                    const s = states[h.states[cap.key]];
+                    return (
+                      <li class="flex items-start gap-3">
+                        <span
+                          class="inline-flex items-center justify-center w-5 h-5 rounded text-xs font-semibold shrink-0 mt-0.5"
+                          style={`color: ${s.color}; background-color: color-mix(in srgb, ${s.color} 14%, transparent);`}
+                          title={s.label}
+                        >
+                          <span aria-hidden="true">{s.glyph}</span>
+                          <span class="sr-only">{s.label}</span>
+                        </span>
+                        <p class="text-sm text-[var(--text-body)] leading-relaxed">
+                          <span class="font-semibold text-[var(--text-primary)]">{cap.label}.</span>{' '}
+                          {h.reasons[cap.key]}
+                        </p>
+                      </li>
+                    );
+                  })}
                 </ul>
 
                 <!-- Platform mechanics -->
