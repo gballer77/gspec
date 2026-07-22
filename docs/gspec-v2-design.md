@@ -238,7 +238,7 @@ Deterministic shell on lifecycle events, **no model judgment**. They upgrade *so
 
 Because QA gates are **optional** (on-by-default, opt-out), the **QA-gate floor ships opt-in only** — never a default; a team that wants hard enforcement enables it.
 
-**Install mechanism:** the installer gains hook emission — drop hook scripts (a gspec-owned dir) and **merge** entries into `.claude/settings.json` (merge, never clobber; same spirit as the spec-sync `CLAUDE.md` snippet). Claude-only; other targets skip hooks and keep the equivalent rule as a soft instruction in the relevant convention skill.
+**Install mechanism:** the installer gains hook emission — drop hook scripts (a gspec-owned dir) and **merge** entries into `.claude/settings.json` (merge, never clobber; same spirit as the spec-sync `CLAUDE.md` snippet). Claude-only; other targets skip hooks and keep the equivalent rule as a soft instruction in the relevant convention skill. For how each non-Claude harness could close this gap (the cheap way vs. the right way, grounded in each platform's verified hook/memory capabilities), see `docs/harness-parity.md`.
 
 **Principles:** (1) hooks enforce the *write*, never *do* the judgment; (2) the runtime obviates *sequencing* hooks (they matter most on the driver-less command/degraded paths); (3) judgment-requiring rules can't be hooks — that's what validators/`analyze`/`audit` are.
 

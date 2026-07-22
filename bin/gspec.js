@@ -861,7 +861,8 @@ async function installPreamble(targetName, cwd) {
 }
 
 // gspec ships model-free hook guards (Claude Code only). They live in the
-// package's hooks/ dir and install to .claude/hooks/, registered per lifecycle
+// package's hooks/claude/ dir (the claude/ folder marks them Claude-specific and
+// is stripped on install) and install to .claude/hooks/, registered per lifecycle
 // event in .claude/settings.json. PostToolUse guards flag after a write; the
 // PreToolUse memory guard blocks an untagged agent-memory write before it lands
 // (the learning loop's feedback address-tag hook).
@@ -890,7 +891,7 @@ const HOOK_SUPPORT_FILES = ['gspec-enforce-core.mjs'];
 async function installHooks(targetName, cwd) {
   if (targetName !== 'claude') return; // hooks are Claude Code-specific (settings.json)
 
-  const hooksSrc = join(__dirname, '..', 'plugin', 'hooks');
+  const hooksSrc = join(__dirname, '..', 'plugin', 'hooks', 'claude');
   const hooksDest = join(cwd, '.claude', 'hooks');
   await mkdir(hooksDest, { recursive: true });
   for (const spec of HOOK_SPECS) {
