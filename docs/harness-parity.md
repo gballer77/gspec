@@ -1,6 +1,6 @@
 # gspec harness parity: filling the Claude-only gap
 
-**Status (2026-07-21):** Claude Code is the only full-fidelity target. This doc records, per remaining harness, what it would take to close the gap, at two investment levels: the **cheap way** (reuse the engine-agnostic runtime plus inlined instructions) and the **right way** (harness-native hard enforcement and memory). Platform facts were verified against vendor and community docs in July 2026; all of these tools move fast, so re-verify the load-bearing cells before building.
+**Status (2026-07-22):** Claude Code is the fullest target. **Codex now also enforces the core spec floors** via a turn-boundary Stop-hook gate (see the Codex section — built). This doc records, per remaining harness, what it would take to close the rest of the gap, at two investment levels: the **cheap way** (reuse the engine-agnostic runtime plus inlined instructions) and the **right way** (harness-native hard enforcement and memory). Platform facts were verified against vendor and community docs in July 2026; all of these tools move fast, so re-verify the load-bearing cells before building.
 
 ## What the gap is
 
@@ -43,11 +43,17 @@ The decisive cell is **file-write hook**. Where it is "Yes", the existing `.mjs`
 
 ## Per-harness plan
 
-### Codex: the hard case
-- **Current:** native TOML sub-agents; build engine; hooks exist but fire on the Bash tool ONLY (both Pre and Post), so no gspec floor (all file-write) can run as a Codex hook.
-- **Cheap way:** Path A. Runtime injection for memory + capture; the driver's QA gates cover build-path enforcement; the floors stay inlined in the composed agent bodies for the interactive path. No Codex-feature dependency, and largely already true.
-- **Right way:** an **MCP write-mediator** server. Codex governs MCP tools at the server boundary, so routing spec writes through a gspec MCP tool is the only route to true deterministic file-write enforcement on Codex. Largest lift; benefits any MCP-capable harness.
-- Note: the one floor that could port is `subagent-capture` (Codex has a `SubagentStop` event), but the runtime already captures verdicts, so it adds little.
+### Codex: the hard case — enforcement now BUILT via a Stop-hook gate
+- **Current:** native TOML sub-agents; build engine. Codex's *tool* hooks (Pre/PostToolUse) fire on the Bash tool ONLY, so no file-write floor can run per write. But its `SessionStart` and `Stop` hooks are **session-level** (not Bash-scoped) and a `Stop` hook can `{"decision":"block","reason":...}` to force the agent to keep working. That is the opening.
+- **Built (M1):** a turn-boundary enforcement gate ships in `plugin/hooks/codex/`:
+  - `gspec-session-start.mjs` snapshots the checked state of `gspec/tasks/*.md` to a session-scoped temp file (the baseline task-immutability needs, since Codex has no per-edit moment).
+  - `gspec-stop-gate.mjs` scans the whole `gspec/` tree at turn end and runs the file-content floors — **spec-integrity, profile-agnosticism, task-immutability** — via the shared `floors/` modules (`floors/scan.mjs`). On any violation it blocks and injects the fix list as the next user message; a `MAX_BLOCKS` guard prevents an unfixable loop; it no-ops outside a gspec project and fails open.
+  - The installer writes `.codex/hooks.json`, copies `floors/` alongside, and enables `[features] codex_hooks = true` in `.codex/config.toml`.
+  - This is turn-boundary (detect-and-force-fix), not per-write, which matches how most Claude floors already behave.
+- **Not ported:** `practices-enforce` (a full-tree lint every turn is too heavy — belongs on the git/build path), `skill-write-guard` (the sandbox already keeps `.codex`/`.agents` read-only), `memory-address-tag` (no memory on Codex), and `reconcile` (a git-based variant could be added later).
+- **Cheap way (build path):** Path A — the build runtime's QA gates already enforce on the autonomous path; the floors also stay inlined in the composed agent bodies.
+- **Right way (per-write hard block):** an **MCP write-mediator** server. Codex governs MCP tools at the server boundary, so routing spec writes through a gspec MCP tool is the only route to blocking a bad write *before* it lands. Largest lift; benefits any MCP-capable harness.
+- **Verify on a real Codex install:** two assumptions could not be exercised here — that Codex honors a *project-local* `.codex/hooks.json` (gspec already installs project-local `.codex/agents/`, so this is consistent) and that the feature flag key is `codex_hooks` (one source) rather than `hooks` (another). Confirm both against the installed Codex version.
 
 ### Cursor: closest to native parity
 - **Current:** native sub-agents, skills, commands, and hooks (Feb 2026); not yet a build engine.

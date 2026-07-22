@@ -9,7 +9,7 @@ import {
   checkMaxFunctionLength,
   checkFileNaming,
   evaluateFile,
-} from './gspec-enforce-core.mjs';
+} from './practices.mjs';
 
 const PRACTICES = `---
 spec-version: v1

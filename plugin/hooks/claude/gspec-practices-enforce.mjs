@@ -11,7 +11,9 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve, relative, join } from 'node:path';
-import { parseEnforcement, evaluateFile } from './gspec-enforce-core.mjs';
+// NOTE: the ./floors/ import resolves at the INSTALLED location
+// (.claude/hooks/floors/); this file is never executed from the source tree.
+import { parseEnforcement, evaluateFile } from './floors/practices.mjs';
 
 try {
   let evt = {};

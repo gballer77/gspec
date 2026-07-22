@@ -884,9 +884,17 @@ const HOOK_SPECS = [
   { file: 'gspec-practices-enforce.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
 ];
 
-// Non-hook files the hooks import at runtime. Copied alongside HOOK_SPECS but
-// never wired into settings.json (they are libraries, not lifecycle hooks).
-const HOOK_SUPPORT_FILES = ['gspec-enforce-core.mjs'];
+// Engine-neutral floor modules (plugin/hooks/floors/) that the entry-point hooks
+// import at runtime. Copied into <hooks-dir>/floors/ on every target that installs
+// hooks; never wired into a hook config (they are libraries, not lifecycle hooks).
+async function copyFloors(destHooksDir) {
+  const floorsSrc = join(__dirname, '..', 'plugin', 'hooks', 'floors');
+  const floorsDest = join(destHooksDir, 'floors');
+  await mkdir(floorsDest, { recursive: true });
+  const files = (await readdir(floorsSrc)).filter((f) => f.endsWith('.mjs') && !f.endsWith('.test.mjs'));
+  for (const f of files) await writeFile(join(floorsDest, f), await readFile(join(floorsSrc, f), 'utf-8'), 'utf-8');
+  return files.length;
+}
 
 async function installHooks(targetName, cwd) {
   if (targetName !== 'claude') return; // hooks are Claude Code-specific (settings.json)
@@ -897,9 +905,7 @@ async function installHooks(targetName, cwd) {
   for (const spec of HOOK_SPECS) {
     await writeFile(join(hooksDest, spec.file), await readFile(join(hooksSrc, spec.file), 'utf-8'), 'utf-8');
   }
-  for (const file of HOOK_SUPPORT_FILES) {
-    await writeFile(join(hooksDest, file), await readFile(join(hooksSrc, file), 'utf-8'), 'utf-8');
-  }
+  await copyFloors(hooksDest);
 
   // Merge into .claude/settings.json — create or merge, never clobber other
   // settings, and idempotent on re-install (drop any prior gspec hook entry).
@@ -931,6 +937,67 @@ async function installHooks(targetName, cwd) {
   }
   await writeFile(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
   console.log(`  ${chalk.green('+')} Installed ${HOOK_SPECS.length} gspec hooks → .claude/hooks/ + settings.json`);
+}
+
+// Codex enforcement floors (Codex CLI only). Codex hooks fire on the Bash tool
+// only, so the file-write floors run at the turn boundary instead: a SessionStart
+// hook snapshots the task baseline and a Stop hook scans gspec/ and blocks on any
+// violation (see plugin/hooks/codex/). We install those scripts to .codex/hooks/,
+// copy the shared floor modules alongside, wire .codex/hooks.json (merge-safe),
+// and enable the hook engine via the config.toml feature flag.
+const CODEX_HOOK_SPECS = [
+  { file: 'gspec-session-start.mjs', event: 'SessionStart' },
+  { file: 'gspec-stop-gate.mjs', event: 'Stop' },
+];
+
+// Ensure `[features] codex_hooks = true` in config.toml without clobbering it.
+// Heuristic TOML edit (not a full parser) — matches the block shape gspec writes.
+function ensureCodexHooksFlag(toml) {
+  if (/^\s*codex_hooks\s*=\s*true\s*$/m.test(toml)) return toml;
+  let out = toml.replace(/^\s*codex_hooks\s*=.*$\n?/m, ''); // drop a prior `= false`
+  if (/^\s*\[features\]\s*$/m.test(out)) {
+    out = out.replace(/^(\s*\[features\]\s*)$/m, '$1\ncodex_hooks = true');
+  } else {
+    out = out.replace(/\s*$/, '');
+    out += `${out ? '\n\n' : ''}[features]\ncodex_hooks = true\n`;
+  }
+  return out.endsWith('\n') ? out : out + '\n';
+}
+
+async function installCodexHooks(targetName, cwd) {
+  if (targetName !== 'codex') return;
+
+  const src = join(__dirname, '..', 'plugin', 'hooks', 'codex');
+  const dest = join(cwd, '.codex', 'hooks');
+  await mkdir(dest, { recursive: true });
+  for (const f of (await readdir(src)).filter((f) => f.endsWith('.mjs'))) {
+    await writeFile(join(dest, f), await readFile(join(src, f), 'utf-8'), 'utf-8');
+  }
+  await copyFloors(dest);
+
+  // .codex/hooks.json — merge, drop prior gspec entries, keep the user's own.
+  const hooksJsonPath = join(cwd, '.codex', 'hooks.json');
+  let cfg = {};
+  try { cfg = JSON.parse(await readFile(hooksJsonPath, 'utf-8')); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+  cfg.hooks = cfg.hooks || {};
+  // Absolute path: Codex hook commands take a literal command, and there is no
+  // documented project-dir variable, so we bake the installed absolute path.
+  const cmd = (f) => ({ command: `node "${join(cwd, '.codex', 'hooks', f)}"` });
+  const isGspecEntry = (e) => typeof e?.command === 'string' && e.command.includes('/.codex/hooks/gspec-');
+  for (const spec of CODEX_HOOK_SPECS) {
+    const existing = Array.isArray(cfg.hooks[spec.event]) ? cfg.hooks[spec.event] : [];
+    const kept = existing.filter((e) => !isGspecEntry(e));
+    kept.push(cmd(spec.file));
+    cfg.hooks[spec.event] = kept;
+  }
+  await writeFile(hooksJsonPath, JSON.stringify(cfg, null, 2) + '\n', 'utf-8');
+
+  const cfgTomlPath = join(cwd, '.codex', 'config.toml');
+  let toml = '';
+  try { toml = await readFile(cfgTomlPath, 'utf-8'); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+  await writeFile(cfgTomlPath, ensureCodexHooksFlag(toml), 'utf-8');
+
+  console.log(`  ${chalk.green('+')} Installed ${CODEX_HOOK_SPECS.length} gspec Codex hooks → .codex/hooks/ + hooks.json (enabled codex_hooks in config.toml)`);
 }
 
 // Per-agent memory scope (the learning loop) — where the Claude native agents'
@@ -1812,6 +1879,8 @@ program
     await installPreamble(targetName, process.cwd());
 
     await installHooks(targetName, process.cwd());
+
+    await installCodexHooks(targetName, process.cwd());
 
     await applyMemoryScope(targetName, process.cwd());
 

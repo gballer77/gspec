@@ -1,7 +1,7 @@
 // Unit tests for the task-immutability guard. Run: node --test plugin/hooks/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkedBlocks, projectedContent, violations } from './gspec-task-immutability.mjs';
+import { checkedBlocks, projectedContent, violations } from './task-immutability.mjs';
 
 const PLAN = `---
 feature: checkout
