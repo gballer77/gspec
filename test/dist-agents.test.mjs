@@ -8,6 +8,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { STAGES } from '../lib/build.js';
 import { ENGINES } from '../lib/engines.js';
@@ -16,7 +17,7 @@ import { REPO_ROOT, exists } from './helpers.mjs';
 const AGENT_EXT = { claude: '.md', codex: '.toml', pi: '.md' };
 
 const stageAgents = [...new Set(
-  STAGES.flatMap((s) => [s.writer, s.validator, s.agent, s.orchestrator]).filter(Boolean)
+  STAGES.flatMap((s) => [s.writer, s.validator, s.agent, s.orchestrator, s.planner, s.researcher]).filter(Boolean)
 )];
 
 test('the stage graph references at least the known core agents', () => {
@@ -43,3 +44,27 @@ for (const engine of Object.keys(ENGINES)) {
     assert.equal(path, join(installedDir, 'agents', `profile-writer${AGENT_EXT[engine]}`));
   });
 }
+
+// The pi-subagents extension (npm:pi-subagents) SILENTLY skips any agent file
+// whose frontmatter lacks `name:` or `description:`, and its `tools:` allowlist
+// only matches Pi builtin ids (read, bash, edit, write, grep, find, ls — no
+// glob). A drift here doesn't error anywhere; the agents just never appear in
+// Pi, so pin the contract on every emitted pi agent.
+test('every dist/pi agent satisfies the pi-subagents frontmatter contract', async () => {
+  const dir = join(REPO_ROOT, 'dist', 'pi', 'agents');
+  const files = (await readdir(dir)).filter((f) => f.endsWith('.md'));
+  assert.ok(files.length > 0, 'no pi agents emitted');
+  const PI_BUILTINS = new Set(['read', 'bash', 'edit', 'write', 'grep', 'find', 'ls']);
+  for (const file of files) {
+    const content = await readFile(join(dir, file), 'utf-8');
+    const fm = content.split('\n---')[0];
+    assert.match(fm, /^name: /m, `${file}: missing name (pi-subagents skips the file)`);
+    assert.match(fm, /^description: /m, `${file}: missing description (pi-subagents skips the file)`);
+    const tools = fm.match(/^tools: "([^"]*)"$/m);
+    if (tools) {
+      for (const t of tools[1].split(',').map((s) => s.trim())) {
+        assert.ok(PI_BUILTINS.has(t), `${file}: tool '${t}' is not a Pi builtin — the allowlist entry would never match`);
+      }
+    }
+  }
+});
