@@ -5,6 +5,35 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '2.0.1',
+    date: 'July 22, 2026',
+    title: 'The build now knows which platform you installed for',
+    summary: 'A patch release closing a trap in the autonomous build: running <code>gspec build</code> in a project installed for Codex or Pi silently assumed Claude Code, failed with a missing-agent error, and pinned the wrong engine into the run manifest. The install now records its target, the build defaults its engine from that record, and a preflight check fails fast — before anything is pinned — when the engine\'s agent files aren\'t installed.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>The install records its target.</strong> <code>npx gspec -t &lt;target&gt;</code> now writes the chosen platform to <code>.gspec/config.json</code>, so later commands can tell which platform the project runs on.',
+      },
+      {
+        type: 'changed',
+        description: '<strong><code>gspec build</code> defaults its engine to the installed target.</strong> The <code>--engine</code> flag no longer hardcodes <code>claude</code>; resolution order is explicit <code>--engine</code>, then the recorded install target, then <code>claude</code>. A project installed for a platform without a wired engine (Cursor, Antigravity, Open Code) gets a clear error asking for an explicit <code>--engine</code> instead of a silent Claude fallback.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>A wrong engine can no longer get pinned into a run.</strong> Before the run manifest is written, the build verifies the engine\'s agent files are actually installed. Codex and Pi fail fast with the exact install command; an implicit fallback to Claude with no <code>.claude/agents/</code> also fails fast, while an explicitly chosen Claude engine only warns (its agents may come from the gspec plugin).',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The intake handoff no longer strands the run.</strong> When the CLI opens the interactive intake session, both you and the agent are now told the deal: once the brief is written, exit the session and the runtime takes over — the agent is explicitly barred from trying to run the build itself. Intake completion is judged by the brief file on disk instead of the session\'s exit code, so quitting with Ctrl+C after a good interview no longer aborts the run.',
+      },
+      {
+        type: 'changed',
+        description: '<strong><code>/gspec-build</code> works fully in-session on every harness.</strong> The command\'s launch step now degrades gracefully: harnesses with background tasks use one, others launch the runtime detached with a log file to poll (<code>.gspec/build/build.log</code>). The installed <code>AGENTS.md</code> preamble also clarifies that <code>gspec-*</code> names are slash commands, never shell binaries, and that generic "go" / "continue" prompts resume an in-flight autonomous build (<code>gspec build --resume</code>) instead of routing to <code>gspec-implement</code>.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> once in each project to record its target in <code>.gspec/config.json</code> — installs from earlier versions predate the record, and <code>gspec build</code> falls back to Claude without it (or pass <code>--engine</code> explicitly). If a previous wrong-engine run left a stale <code>.gspec/build/run.json</code>, delete it and start the build again.',
+  },
+  {
     version: '2.0.0',
     date: 'July 22, 2026',
     title: 'gspec 2.0 — an agent-team framework with an autonomous build',

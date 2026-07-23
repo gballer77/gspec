@@ -35,7 +35,8 @@ New in 2.0: `/gspec-build` turns a plain-language idea into a working, spec-back
 It also runs headless from the CLI, for CI or scripted project setup:
 
 ```bash
-gspec build "a URL shortener" --engine claude   # engines: claude · codex · pi
+gspec build "a URL shortener"                   # engine defaults to the installed target
+gspec build "a URL shortener" --engine codex    # or pick one: claude · codex · pi
 gspec build --dry-run "an idea"                 # preview the stage plan
 gspec build --resume                            # continue a paused run
 ```

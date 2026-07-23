@@ -1,6 +1,6 @@
 Run the autonomous "idea → built" gspec build: hold the one-time intake interview here, then hand off to the headless `gspec build` runtime, which drives every stage (profile → stack → practices → style → features → architecture → plans → implement → reconcile) unattended, self-healing each writer/validator and build/test gate.
 
-You are the **front door** to the build. The build itself is a deterministic runtime (`lib/build.js`) that spawns its own isolated headless agent runs per stage, on the engine the user selects (`--engine claude|codex|pi`, default `claude`); the filesystem (the `gspec/` docs) is the shared state, and a run manifest (`.gspec/build/run.json`) makes it resumable. Your job is the **one interactive step it can't do headlessly** — the intake — and then to launch and monitor it.
+You are the **front door** to the build. The build itself is a deterministic runtime (`lib/build.js`) that spawns its own isolated headless agent runs per stage, on the engine the user selects (`--engine claude|codex|pi`; when omitted it defaults to the target this project was installed for, recorded in `.gspec/config.json`, else `claude`); the filesystem (the `gspec/` docs) is the shared state, and a run manifest (`.gspec/build/run.json`) makes it resumable. Your job is the **one interactive step it can't do headlessly** — the intake — and then to launch and monitor it.
 
 > **When to use this vs. the individual commands.** This is the full autonomous build for a fresh idea. If the user wants to work one spec at a time with a conversation at each step, point them at `/gspec-profile`, `/gspec-stack`, `/gspec-implement`, etc. — those keep the human in the loop; this does not, after intake.
 
@@ -21,13 +21,16 @@ You are the **front door** to the build. The build itself is a deterministic run
 
 3. **Write the brief.** Assemble a concise brief — the idea plus every decision you just resolved and any clearly-labeled assumptions — and write it to `.gspec/build/brief.md`. This is the exact file the runtime looks for; because it now exists, the build **skips its own intake** and runs fully unattended. Show the user the brief and get a final go-ahead before launching.
 
-4. **Launch the build.** Run the CLI as a **background** task (it is long — nine stages, each spawning agent runs — and it survives across turns):
-   - Fresh run: `gspec build "<idea>" [--engine claude|codex|pi]`
+4. **Launch the build.** The run is long (nine stages, each spawning agent runs), so it must outlive a single tool call:
+   - If your harness supports **background tasks**, launch it as one.
+   - Otherwise launch it **detached** with your shell tool so it survives the turn, and use the log file as the progress feed:
+     `nohup gspec build "<idea>" > .gspec/build/build.log 2>&1 &` (note the printed PID).
+   - Fresh run: `gspec build "<idea>" [--engine claude|codex|pi]` — `--engine` is optional; it defaults to the target this project was installed for (`.gspec/config.json`).
    - Resume: `gspec build --resume` (the run stays on the engine it started on, recorded in the manifest — a conflicting `--engine` is ignored)
    - Honor flags from the arguments: pass through `--engine`, `--no-qa` to skip the validator gates, `--pi-permission-level <level>` for Pi, and offer `--dry-run` first if the user just wants to preview the stage plan (it prints every engine command it *would* run and spawns nothing).
-   Note that each stage runs as its own headless process on the chosen engine (`claude` / `codex` / `pi`), under the user's session/auth.
+   Because `.gspec/build/brief.md` exists, the runtime skips its own intake and runs fully unattended — never re-interview, and never try to perform the stages yourself; the runtime spawns its own agent for each stage on the chosen engine (`claude` / `codex` / `pi`), under the user's session/auth.
 
-5. **Monitor and report.** Stream/checkpoint progress from the background task and the manifest (`.gspec/build/run.json`) — which stage is running, gate verdicts, and skips. If the build **pauses on a failure**, surface the failing stage and its reason, and tell the user they can fix the issue and re-run this command to **resume** from exactly there. On success, report that specs + code are in place and point at the run record. Either way, the runtime finishes by printing a **"Learnings recorded this run"** report — the lessons agents captured to memory during the build (promotable via `/gspec-distill`) and the QA feedback events that drove a self-heal; relay it, and surface any captured lessons to the user.
+5. **Monitor and report.** Follow progress from the background task's output (or `tail .gspec/build/build.log` when detached, e.g. after each user check-in) and the manifest (`.gspec/build/run.json`) — which stage is running, gate verdicts, and skips. If the build **pauses on a failure**, surface the failing stage and its reason, and tell the user they can fix the issue and re-run this command to **resume** from exactly there. On success, report that specs + code are in place and point at the run record. Either way, the runtime finishes by printing a **"Learnings recorded this run"** report — the lessons agents captured to memory during the build (promotable via `/gspec-distill`) and the QA feedback events that drove a self-heal; relay it, and surface any captured lessons to the user.
 
 ## Input Idea (and any flags: --engine, --no-qa, --dry-run, --resume, --pi-permission-level)
 <<<BUILD_IDEA>>>

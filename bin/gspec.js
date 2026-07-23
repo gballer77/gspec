@@ -9,6 +9,7 @@ import { createInterface } from 'node:readline';
 import chalk from 'chalk';
 import { TARGETS as EMITTER_TARGETS } from '../lib/emitters.js';
 import { runBuild } from '../lib/build.js';
+import { writeProjectConfig, PROJECT_CONFIG_PATH } from '../lib/config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = join(__dirname, '..', 'dist');
@@ -2007,6 +2008,11 @@ program
 
     await install(targetName, process.cwd());
 
+    // Record the target so later commands can infer the platform this project
+    // runs on (gspec build defaults its engine from this).
+    await writeProjectConfig(process.cwd(), { target: targetName });
+    console.log(chalk.dim(`  Recorded install target in ${PROJECT_CONFIG_PATH}\n`));
+
     await installExtensions(targetName, process.cwd());
 
     await seedFromSavedSpecs(process.cwd());
@@ -2289,7 +2295,7 @@ extensionCmd
 program
   .command('build [idea]')
   .description('Run the autonomous "idea → built" build on Claude Code, Codex, or Pi')
-  .option('--engine <name>', 'execution engine: claude | codex | pi', 'claude')
+  .option('--engine <name>', 'execution engine: claude | codex | pi (default: the target this project was installed for, else claude)')
   .option('--pi-permission-level <level>', 'Pi only: value for PI_PERMISSION_LEVEL if a stage stalls on tool approval')
   .option('--no-qa', 'skip the QA validator gates (on by default)')
   .option('--resume', 'resume an existing run from where it paused')

@@ -134,7 +134,7 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
       </p>
       <CodeBlock code={'/gspec-build "a habit tracker with streaks and reminders"'} lang="command" />
       <p>
-        Or run it headless as a script from your terminal or CI, choosing the engine and resuming a paused run as needed:
+        Or run it headless as a script from your terminal or CI. The engine defaults to the platform you installed gspec for; override it with <code>--engine</code>, and resume a paused run with <code>--resume</code>:
       </p>
       <CodeBlock code={`gspec build "a habit tracker with streaks and reminders"
 gspec build --engine codex --resume`} lang="shell" />
