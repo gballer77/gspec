@@ -25,7 +25,7 @@ The autonomous build is the single biggest thing that changed between v1 and v2,
 - A dedicated, linkable page for the autonomous build
 - A hero framing the "idea to built product" value proposition and the `/gspec-build` entry point
 - A section showing the two ways to run the build — from the coding harness (`/gspec-build`) and as a headless script (`gspec build`) — and that the idea can be passed directly as an argument or captured via the intake interview
-- A visual pipeline diagram showing the nine stages, grouped into phases, noting skip-if-present foundation
+- A visual pipeline diagram showing the nine build stages plus the human spec-review gate, grouped into phases, noting skip-if-present foundation
 - A reliability section explaining the mechanisms that make a long autonomous run trustworthy
 - A "where it runs today" section naming the harnesses with a wired engine and linking to platform capabilities
 - Navigation entries (primary nav + footer) and a home-page section linking to this page
@@ -61,6 +61,7 @@ The autonomous build is the single biggest thing that changed between v1 and v2,
 
 - [x] **P0**: Page presents the nine-stage pipeline visually
   - All nine stages appear in order, grouped into meaningful phases
+  - The human spec-review gate between plan and implement is shown, including that it is skippable (`--no-review`)
   - Skip-if-present foundation behavior is communicated
   - The diagram is legible at a glance and adapts to narrow viewports
 
@@ -68,6 +69,7 @@ The autonomous build is the single biggest thing that changed between v1 and v2,
 
 - [x] **P0**: Page explains why an autonomous run can be trusted
   - Covers isolated agent runs, producer ≠ checker quality gates, the verify.sh build-and-test gate, resumable runs, the continuation loop, and the learnings report
+  - Notes that the self-heal budget per gate is configurable (`--qa-retries`) and that a pausing failure keeps its full verdict on disk (`.gspec/build/last-failure.md`)
   - Framed in plain language, not internal jargon
 
 ### Platform Availability
@@ -99,7 +101,7 @@ The autonomous build is the single biggest thing that changed between v1 and v2,
 
 ### Assumptions
 
-- The nine-stage pipeline and its grouping are stable enough to present publicly.
+- The nine-stage pipeline (plus the spec-review gate) and its grouping are stable enough to present publicly.
 - Naming the three harnesses with wired engines is accurate at publish time and maintained alongside the parity reference.
 
 ### Risks

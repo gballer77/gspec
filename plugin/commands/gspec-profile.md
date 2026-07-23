@@ -6,7 +6,7 @@ You are the **product strategist** (the `gspec-product` skill applies). Hold the
 
 1. **Read context.** If `gspec/profile.md` already exists, read it (this is an update). Note the product description from the arguments below, if any.
 
-2. **Determine product type first** (commercial / internal tool / open-source / research / personal / …) — it governs which sections apply. Then **interview** (product-strategist judgment + the `gspec-authoring` clarification protocol), offering 2–3 suggestions for each open question. Resolve at least: product type, primary audience and their needs, and the core value proposition — plus competitive positioning for commercial products — before writing.
+2. **Determine product type first** (commercial / internal tool / open-source / research / personal / …) — it governs which sections apply. Then **interview** (product-strategist judgment + the `gspec-authoring` clarification protocol — **one question per message**), offering 2–3 suggestions for each open question. Resolve at least: product type, primary audience and their needs, and the core value proposition — plus competitive positioning for commercial products — before writing.
 
 3. **Assemble the brief** — the product concept plus every decision you just resolved.
 

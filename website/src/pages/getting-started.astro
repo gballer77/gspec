@@ -158,8 +158,14 @@ gspec build --engine codex --resume`} lang="shell" />
       <p>
         Every stage runs as an isolated agent checked by an independent validator (the writer never grades its own
         work), and the implementation stage is backed by a generated <code>verify.sh</code> that builds and tests the
-        project. If a gate fails, the run gets one revision attempt, then pauses for you rather than shipping
-        something broken.
+        project. If a gate fails, the run gets a revision attempt — one by default, more with
+        <code>--qa-retries</code> — then pauses for you rather than shipping something broken, keeping the full
+        failing verdict in <code>.gspec/build/last-failure.md</code>.
+      </p>
+      <p>
+        Between <strong>plan</strong> and <strong>implement</strong> the run pauses once on purpose: every spec is
+        written and no code exists yet, so you can review and edit <code>gspec/</code> before anything is built.
+        Continue with <code>gspec build --resume</code> — or pass <code>--no-review</code> for a fully unattended run.
       </p>
     </section>
 

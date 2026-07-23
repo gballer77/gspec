@@ -196,13 +196,13 @@ The piece that makes gspec a framework rather than a prompt bundle.
 
 **`gspec build "<idea>"`** — a deterministic node driver (in `bin/`) that takes an idea and drives the whole chain to a built product.
 
-- **Run mode:** front-load, then autonomous. One upfront interview captures the decisions the run pivots on (product identity, stack/style lean, scope); then it runs unattended.
-- **Span:** idea → built, adaptive. Generates only the *missing* foundations (skip-if-present), then features → architecture → plan → implement → final audit. Works greenfield and on existing projects.
+- **Run mode:** front-load, then autonomous. One upfront interview captures the decisions the run pivots on (product identity, stack/style lean, scope); then it runs unattended — with one deliberate exception: a **spec-review gate** after the plans and before implementation. Every spec exists but no code does, so the run pauses (clean exit 0, manifest records `review: paused`) for the user to review/edit `gspec/`; `--resume` is the approval, `--no-review` (at launch or at resume) skips the gate.
+- **Span:** idea → built, adaptive. Generates only the *missing* foundations (skip-if-present), then features → architecture → plan → **review (human gate)** → implement → final audit. Works greenfield and on existing projects.
 - **Execution model — why a script, not a command:** a markdown command runs in one accumulating main-session context, which overflows on large builds and can't resume. The driver instead holds the loop in **code** and spawns **each stage/agent as an isolated headless run** — a fresh context every time, nothing accumulates.
 - **Engine-agnostic (`lib/engines.js`).** Which CLI performs each headless run is abstracted behind an engine adapter — `claude`, `codex`, or `pi` (`--engine`; defaults to the target recorded at install time in `.gspec/config.json`, else `claude`; recorded in the run manifest so a resume stays on the same engine, and preflighted against the installed agent files before the manifest is written so a wrong engine never gets pinned). "Run a session AS a named agent" is only native to Claude (`--agent`); Codex (`codex exec`) and Pi (`pi -p`) have no such flag and can't reach their in-session sub-agents from the CLI, so those adapters read the installed agent's inlined instruction body (`.codex/agents/<name>.toml`, `.pi/agents/<name>.md`) and inject it ahead of the stage prompt. Permissions map per engine (Claude `--permission-mode`/`--allowedTools`; Codex `--sandbox workspace-write`→`danger-full-access` for build/audit; Pi `-p -a`, with `PI_PERMISSION_LEVEL` as the escape hatch since base Pi doesn't document a print-mode tool auto-approve — the one unverified spot, flagged for a live probe).
 - **Files are the shared state.** gspec's intermediate artifacts are files; each stage reads inputs from `gspec/` and writes outputs to `gspec/`, returning a compact status. The driver holds only control state (stage pointer + verdicts).
 - **Resumable** via an on-disk run manifest — crash on phase 40 of 60, restart from 40.
-- **QA gates default on in the build too** (skippable via `--no-qa`). **Self-healing gate:** on a validator failure, the writer gets one revision attempt from the verdict; still failing → pause/flag (never ships a bad spec).
+- **QA gates default on in the build too** (skippable via `--no-qa`). **Self-healing gate:** on a validator failure, the writer gets a revision attempt from the verdict — one by default, `--qa-retries <n>` sets the budget (0 = fail on first verdict; honored at resume time so a paused gate can retry with more attempts); still failing → pause/flag (never ships a bad spec), with the failing verdict printed in full and kept in `.gspec/build/last-failure.md` + the stage's `detail` in the manifest.
 
 **Sequence & gates:**
 ```
@@ -211,7 +211,8 @@ intake(interview)
   → features      [ feature-writer → feature-validator  ×N ]
   → architecture  [ architecture-writer → architecture-validator ]
   → plan          [ plan-decomposer → plan-validator ]
-  → implement     [ build-orchestrator → wave build-plan → implementer ×scope ([P] fan-out within a wave, continuation loop per scope) → verify.sh build+test (driver-run) → implementation-validator (criteria/DoD); one self-heal on failure ]
+  → review        [ HUMAN GATE — pause (exit 0) for spec review; --resume approves; --no-review skips ]
+  → implement     [ build-orchestrator → wave build-plan → implementer ×scope ([P] fan-out within a wave, continuation loop per scope) → verify.sh build+test (driver-run) → implementation-validator (criteria/DoD); self-heals on failure (--qa-retries, default 1) ]
   → reconcile     [ codebase-inspector audit → drift report ]
 ```
 

@@ -6,7 +6,8 @@ import CopyButton from '../components/CopyButton.astro';
 
 const base = import.meta.env.BASE_URL;
 
-// The 9-stage build pipeline (lib/build.js STAGES), grouped for the page.
+// The build pipeline (lib/build.js STAGES) — nine agent stages plus the
+// human spec-review gate — grouped for the page.
 const phases = [
   {
     group: 'Foundation',
@@ -29,8 +30,9 @@ const phases = [
   },
   {
     group: 'Implementation',
-    note: 'Build, verify, and reconcile the specs',
+    note: 'You approve the specs, then it builds, verifies, and reconciles',
     stages: [
+      { name: 'review', desc: 'Human gate — you review the specs before any code' },
       { name: 'implement', desc: 'Write code against the plan' },
       { name: 'reconcile', desc: 'Sync specs back to reality' },
     ],
@@ -44,7 +46,7 @@ const reliability = [
   },
   {
     title: 'Self-healing QA gates',
-    body: 'Each producer is followed by a read-only validator (producer ≠ checker). A failing verdict hands the work back for one revision attempt; if it still fails, the run pauses for you rather than shipping something broken.',
+    body: 'Each producer is followed by a read-only validator (producer ≠ checker). A failing verdict hands the work back for a revision attempt — one by default, more with --qa-retries. If the gate still fails, the run pauses for you rather than shipping something broken, keeping the full failing verdict in .gspec/build/last-failure.md so you can see exactly why.',
   },
   {
     title: 'Deterministic verify.sh',
@@ -52,7 +54,7 @@ const reliability = [
   },
   {
     title: 'Resumable runs',
-    body: 'Progress is tracked in an on-disk run manifest. If a stage crashes or you stop it, the build restarts from where it left off instead of starting over.',
+    body: 'Progress is tracked in an on-disk run manifest. If a stage crashes, you stop it, or it pauses at the spec-review gate, the build resumes from where it left off instead of starting over.',
   },
   {
     title: 'Continuation loop',
@@ -67,7 +69,7 @@ const reliability = [
 
 <BaseLayout
   title="Autonomous build — gspec"
-  description="gspec's autonomous build pipeline takes an idea and drives it to a working product — a deterministic, resumable run through nine stages with self-healing quality gates."
+  description="gspec's autonomous build pipeline takes an idea and drives it to a working product — a deterministic, resumable run through nine stages with self-healing quality gates and a human spec-review gate before implementation."
 >
   <Navbar slot="navbar" />
 
@@ -109,7 +111,7 @@ const reliability = [
       <div class="grid sm:grid-cols-3 gap-4">
         {[
           { step: '1', title: 'Hand it your idea', body: 'Pass your idea straight to the command, or let a short intake interview capture it and the essentials. Either way you answer up front — the run doesn’t stop to re-ask.' },
-          { step: '2', title: 'The pipeline runs', body: 'Nine stages execute in order, each an isolated agent gated by a validator. Foundation specs you already have are reused, not regenerated.' },
+          { step: '2', title: 'The pipeline runs', body: 'Nine stages execute in order, each an isolated agent gated by a validator. Foundation specs you already have are reused, not regenerated. Before any code is written, the run pauses once for you to review the specs — or skip it with --no-review.' },
           { step: '3', title: 'A working product', body: 'Code that builds and passes its own tests, specs that match the code, and a record of what the run learned.' },
         ].map((s) => (
           <div class="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
@@ -155,7 +157,7 @@ const reliability = [
         <div class="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
           <h3 class="font-semibold text-[var(--text-primary)] mb-2">As a script</h3>
           <p class="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
-            Run the build headless from your terminal or CI. The engine defaults to the platform you installed gspec for — override it with <code class="font-mono text-[var(--text-accent)]">--engine</code>, and use <code class="font-mono text-[var(--text-accent)]">--resume</code> to pick up a paused run.
+            Run the build headless from your terminal or CI. The engine defaults to the platform you installed gspec for — override it with <code class="font-mono text-[var(--text-accent)]">--engine</code>, and use <code class="font-mono text-[var(--text-accent)]">--resume</code> to pick up a paused run or approve the spec review.
           </p>
           <div class="flex flex-col gap-2">
             <div class="flex items-center gap-3 bg-[var(--bg-surface-raised)] border border-[var(--border-default)] rounded-lg px-4 py-2.5 font-mono text-xs sm:text-sm text-[var(--text-primary)] overflow-x-auto">

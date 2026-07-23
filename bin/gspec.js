@@ -2298,6 +2298,8 @@ program
   .option('--engine <name>', 'execution engine: claude | codex | pi (default: the target this project was installed for, else claude)')
   .option('--pi-permission-level <level>', 'Pi only: value for PI_PERMISSION_LEVEL if a stage stalls on tool approval')
   .option('--no-qa', 'skip the QA validator gates (on by default)')
+  .option('--qa-retries <n>', 'self-heal revisions each QA gate may attempt before pausing (default: 1)')
+  .option('--no-review', 'skip the spec-review pause before implementation (on by default)')
   .option('--resume', 'resume an existing run from where it paused')
   .option('--dry-run', 'print the stage plan without invoking the engine')
   .action(async (idea, opts) => {
@@ -2307,6 +2309,8 @@ program
       engine: opts.engine,
       piPermissionLevel: opts.piPermissionLevel,
       noQa: !opts.qa,
+      noReview: !opts.review,
+      qaRetries: opts.qaRetries,
       resume: !!opts.resume,
       dryRun: !!opts.dryRun,
     });

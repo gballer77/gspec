@@ -60,7 +60,7 @@ export const V2_SKILLS = [
   {
     name: 'gspec-authoring',
     source: 'skills/conventions/gspec-authoring.md',
-    description: 'Shared interaction craft: the clarification protocol, one-at-a-time approval, and surgical spec updates.',
+    description: 'Shared interaction craft: the clarification protocol (interviews ask one question per message), one-at-a-time approval, and surgical spec updates.',
   },
   {
     name: 'gspec-templates',

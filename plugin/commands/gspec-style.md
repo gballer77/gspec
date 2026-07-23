@@ -6,7 +6,7 @@ You are the **designer** (the `gspec-designer` skill applies). Hold the conversa
 
 1. **Read context & resolve format.** If `gspec/style.html` or `gspec/style.md` already exists, read it — this is an update to that format (don't create the other). If neither exists, ask which format the user wants, recommending HTML for new projects (design-aware tools can render it). Note the application description from the arguments below. Also check `~/.gspec/styles/` for reusable style templates (see the `gspec-templates` skill); if one fits, present it (name + description) and ask whether to **start from it**, **adapt it**, or **write fresh**.
 
-2. **Interview** (designer judgment + the `gspec-authoring` clarification protocol), offering 2–3 suggestions per open question. Resolve at least: visual mood/personality, target platforms, dark-mode requirement, and the application category (which shapes functional color choices) before writing.
+2. **Interview** (designer judgment + the `gspec-authoring` clarification protocol — **one question per message**), offering 2–3 suggestions per open question. Resolve at least: visual mood/personality, target platforms, dark-mode requirement, and the application category (which shapes functional color choices) before writing.
 
 3. **Assemble the brief** — the application description, the resolved decisions, the chosen format, and the template choice (the chosen template's absolute path to start from or adapt, or note to write fresh).
 

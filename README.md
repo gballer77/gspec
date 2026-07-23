@@ -25,7 +25,7 @@ There are two ways to work with gspec: let it **build autonomously** from an ide
 
 ### Autonomous build
 
-New in 2.0: `/gspec-build` turns a plain-language idea into a working, spec-backed codebase in a single run. Answer a short intake interview (or pass the idea directly) and gspec drives the whole pipeline unattended — profile, stack, practices, style, feature PRDs, architecture, an ordered plan, and the implementation — with an independent validator gating every stage and a deterministic `verify.sh` check on the build.
+New in 2.0: `/gspec-build` turns a plain-language idea into a working, spec-backed codebase in a single run. Answer a short intake interview (or pass the idea directly) and gspec drives the whole pipeline unattended — profile, stack, practices, style, feature PRDs, architecture, an ordered plan, and the implementation — with an independent validator gating every stage and a deterministic `verify.sh` check on the build. Before any code is written, the run pauses once so you can review the finished specs; continue with `--resume`, or pass `--no-review` for a fully unattended run.
 
 ```bash
 /gspec-build                    # in your harness — brief interview, then unattended
@@ -38,7 +38,9 @@ It also runs headless from the CLI, for CI or scripted project setup:
 gspec build "a URL shortener"                   # engine defaults to the installed target
 gspec build "a URL shortener" --engine codex    # or pick one: claude · codex · pi
 gspec build --dry-run "an idea"                 # preview the stage plan
-gspec build --resume                            # continue a paused run
+gspec build --resume                            # continue a paused run (or approve the spec review)
+gspec build --no-review "an idea"               # skip the spec-review pause entirely
+gspec build --qa-retries 3 "an idea"            # give each QA gate 3 self-heal revisions (default 1)
 ```
 
 The autonomous build has a wired engine for **Claude Code**, **Codex**, and **Pi**. On other harnesses, use the spec-by-spec workflow below.

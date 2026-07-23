@@ -492,8 +492,8 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     id="build"
     name="build"
     role="Build Orchestrator"
-    description="Runs the entire gspec workflow autonomously — from a plain-language idea to working, verified code. Holds a single up-front intake interview, then launches a deterministic runtime that drives nine stages in order (profile → stack → practices → style → features → architecture → plan → implement → reconcile). Each stage runs as an isolated agent gated by an independent validator (producer ≠ checker). Foundation specs that already exist are reused, not regenerated, so build works on greenfield and existing projects alike. Runs on harnesses with a wired headless engine — today Claude Code, Codex, and Pi."
-    produces="A working product: specs in gspec/, an ordered plan, and implemented code that passes a generated verify.sh build-and-test gate. The run is tracked in a resumable on-disk manifest, self-heals on validator failure (one revision attempt, then pauses), and ends by recording the learnings captured during the run."
+    description="Runs the entire gspec workflow autonomously — from a plain-language idea to working, verified code. Holds a single up-front intake interview, then launches a deterministic runtime that drives nine stages in order (profile → stack → practices → style → features → architecture → plan → implement → reconcile). Each stage runs as an isolated agent gated by an independent validator (producer ≠ checker). Between plan and implement the run pauses once — every spec written, no code yet — for a human spec review; resume approves it, or skip it with --no-review. Foundation specs that already exist are reused, not regenerated, so build works on greenfield and existing projects alike. Runs on harnesses with a wired headless engine — today Claude Code, Codex, and Pi."
+    produces="A working product: specs in gspec/, an ordered plan, and implemented code that passes a generated verify.sh build-and-test gate. The run is tracked in a resumable on-disk manifest, self-heals on validator failure (one revision attempt by default; set the budget with --qa-retries), and pauses with the full failing verdict in .gspec/build/last-failure.md when a gate still fails. It ends by recording the learnings captured during the run."
     invocation="/build"
     questions={[
       'A plain-language description of what you want to build',
@@ -503,6 +503,8 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
       'Use build to go from zero to a working baseline, then switch to individual commands for hands-on refinement',
       'Run it in a supported harness (Claude Code, Codex, or Pi) — other harnesses get the full interactive workflow but not the autonomous build',
       'Let existing specs stand — build skips foundation stages whose spec already exists',
+      'Use the spec-review pause to read and edit gspec/ before any code is written; resume when it looks right (or pass --no-review to run straight through)',
+      'If a QA gate keeps failing on a hard stage, resume with --qa-retries <n> to give it a bigger self-heal budget instead of fixing everything by hand',
       'Review the learnings report at the end; it feeds the distill step',
     ]}
     pitfalls={[

@@ -46,13 +46,43 @@ test('non-engine install target (cursor) demands an explicit --engine', async (t
   assert.ok(!(await exists(join(dir, RUN_JSON))));
 });
 
-test('implicit claude fallback with no installed agents fails fast with guidance', async (t) => {
+test('no config, no agents anywhere: engine-neutral fail-fast guidance', async (t) => {
   const dir = await makeProject();
   t.after(() => cleanup(dir));
 
   const r = await runCli(['build', 'an idea'], dir);
   assert.equal(r.code, 1);
-  assert.match(r.output, /not installed for Claude Code/);
+  assert.match(r.output, /not installed for any build engine/);
+  assert.match(r.output, /npx gspec -t <claude\|codex\|pi>/);
+  assert.ok(!(await exists(join(dir, RUN_JSON))));
+});
+
+test('no config but one engine installed (pre-2.0.1 install): that engine is detected', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  // Agent files only — no .gspec/config.json, like an install from before 2.0.1.
+  await seedInstall(dir, 'pi', { agentFiles: ['.pi/agents/profile-writer.md'] });
+  const { rm } = await import('node:fs/promises');
+  await rm(join(dir, '.gspec'), { recursive: true });
+
+  const r = await runCli(['build', '--dry-run', 'an idea'], dir);
+  assert.equal(r.code, 0, r.output);
+  assert.match(r.output, /Using engine "pi" \(its gspec agents are installed here\)/);
+  assert.match(r.output, /engine: pi/);
+});
+
+test('no config and several engines installed: demands an explicit --engine', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  await seedInstall(dir, 'pi', {
+    agentFiles: ['.pi/agents/profile-writer.md', '.codex/agents/profile-writer.toml'],
+  });
+  const { rm } = await import('node:fs/promises');
+  await rm(join(dir, '.gspec'), { recursive: true });
+
+  const r = await runCli(['build', 'an idea'], dir);
+  assert.equal(r.code, 1);
+  assert.match(r.output, /more than one engine here \(codex, pi\)/);
   assert.match(r.output, /--engine/);
   assert.ok(!(await exists(join(dir, RUN_JSON))));
 });

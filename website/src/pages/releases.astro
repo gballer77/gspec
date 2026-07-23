@@ -5,6 +5,39 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '2.1.0',
+    date: 'July 23, 2026',
+    title: 'Review the specs before any code is written',
+    summary: 'The autonomous build gains a second human touchpoint and a tunable self-heal budget. A new <strong>spec-review gate</strong> pauses the run after every spec is written and before any code is generated, so you can read and edit <code>gspec/</code> before implementation — resuming is the approval. A new <strong><code>--qa-retries</code></strong> flag sets how many self-heal revisions each QA gate may attempt, and a failing run now tells you exactly <em>why</em> it paused, in the terminal and on disk.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>Spec-review human gate.</strong> Between <strong>plan</strong> and <strong>implement</strong> the run pauses cleanly (exit 0): every spec exists, no code does. Review and edit <code>gspec/</code> freely, then <code>gspec build --resume</code> to approve and continue into implementation. Skip it with <code>--no-review</code> — at launch, or at resume time. Runs started on an older gspec survive the upgrade: a manifest without the new stage simply pauses there on its next resume.',
+      },
+      {
+        type: 'added',
+        description: '<strong><code>--qa-retries &lt;n&gt;</code>.</strong> Every QA gate — spec validators, per-PRD feature checks, the driver-run <code>verify.sh</code>, and the implementation validator — may now attempt <code>n</code> self-heal revisions before pausing the run (default 1, the previous behavior; 0 fails on the first verdict). Also honored on <code>--resume</code>, so a run that paused at a stubborn gate can retry with a bigger budget.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Failures now say why.</strong> When a stage fails, the runtime prints the failing verdict/output in full and keeps it in <code>.gspec/build/last-failure.md</code> and in the failed stage\'s <code>detail</code> field in the run manifest — so a detached or CI run is diagnosable after the fact. The file is replaced by the next failure and removed when a build completes; a clean retry clears the stale reason from the manifest.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The build finds its engine on pre-2.0.1 installs.</strong> When neither <code>--engine</code> nor a recorded install target is present, the build now detects the one engine whose gspec agent files are installed in the project and uses it. More than one installed engine asks you to pick explicitly; none produces a clear "not installed for any engine" error with the exact install command, instead of a misleading Claude-specific message.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Interviews ask one question per message.</strong> The shared clarification protocol (<code>gspec-authoring</code>) now requires every gspec interview — the build intake, <code>/gspec-profile</code>, <code>/gspec-feature</code>, and the rest — to ask exactly one question, wait for the answer, then ask the next, instead of sending a questionnaire in one message.',
+      },
+      {
+        type: 'changed',
+        description: '<strong><code>/gspec-build</code> is a better front door.</strong> It now preflights that gspec is installed in the project for an engine (offering to install for the harness you\'re in), and its monitoring step distinguishes the three ways a run ends — paused for spec review (expected; summarize the specs and resume on approval), paused on a failure (relay the kept verdict verbatim, optionally resume with <code>--qa-retries</code>), or complete.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the updated commands and runtime. Existing runs resume normally — a run that predates the spec-review gate pauses at it on the next <code>--resume</code>; resume once more (or pass <code>--no-review</code>) to continue. Scripts that expect <code>gspec build</code> to run straight through to code should add <code>--no-review</code>.',
+  },
+  {
     version: '2.0.1',
     date: 'July 22, 2026',
     title: 'The build now knows which platform you installed for',
