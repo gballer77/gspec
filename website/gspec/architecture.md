@@ -24,7 +24,7 @@ The gspec website is a static Astro 5.x site deployed to GitHub Pages. It consis
 
 | Feature | Pages/Components |
 |---------|-----------------|
-| Home Page | `src/pages/index.astro`, Hero, ProblemStatement, AutonomousBuild, WorkflowOverview, CommandsOverview, DesignTools, StarterHighlight, PlatformSupport, BottomCta |
+| Home Page | `src/pages/index.astro`, Hero, ProblemStatement, AutonomousBuild, BuildTerminal, WorkflowOverview, CommandsOverview, DesignTools, StarterHighlight, PlatformSupport, BottomCta |
 | Build Page | `src/pages/build.astro`, CopyButton |
 | How It Works Page | `src/pages/how-it-works.astro` |
 | Getting Started | `src/pages/getting-started.astro`, SidebarLayout, SidebarNav, TableOfContents, CodeBlock, CopyButton |
@@ -56,6 +56,7 @@ website/
 │   │   ├── ThemeToggle.astro       # Dark/light mode toggle button
 │   │   ├── Hero.astro              # Home page hero section
 │   │   ├── ProblemStatement.astro  # Home page problem section
+│   │   ├── BuildTerminal.astro     # Animated terminal replay of a /gspec-build run (home page)
 │   │   ├── WorkflowOverview.astro  # Home page workflow diagram section
 │   │   ├── CommandsOverview.astro  # Home page commands grid
 │   │   ├── PlatformSupport.astro   # Home page platform badges

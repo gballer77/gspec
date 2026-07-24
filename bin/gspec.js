@@ -5,8 +5,8 @@ import { readdir, readFile, writeFile, mkdir, stat, unlink, rm } from 'node:fs/p
 import { join, dirname, basename } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { createInterface } from 'node:readline';
 import chalk from 'chalk';
+import { promptSelect, promptMultiSelect, promptConfirm, promptInput } from '../lib/prompts.js';
 import { TARGETS as EMITTER_TARGETS } from '../lib/emitters.js';
 import { runBuild } from '../lib/build.js';
 import { writeProjectConfig, PROJECT_CONFIG_PATH } from '../lib/config.js';
@@ -52,72 +52,19 @@ const LEGACY_V1_SKILL_NAMES = new Set([
 ]);
 
 const TARGET_CHOICES = [
-  { key: '1', name: 'claude', label: 'Claude Code' },
-  { key: '2', name: 'cursor', label: 'Cursor' },
-  { key: '3', name: 'antigravity', label: 'Antigravity' },
-  { key: '4', name: 'codex', label: 'Codex' },
-  { key: '5', name: 'opencode', label: 'Open Code' },
-  { key: '6', name: 'pi', label: 'Pi' },
+  { name: 'claude', label: 'Claude Code' },
+  { name: 'cursor', label: 'Cursor' },
+  { name: 'antigravity', label: 'Antigravity' },
+  { name: 'codex', label: 'Codex' },
+  { name: 'opencode', label: 'Open Code' },
+  { name: 'pi', label: 'Pi' },
 ];
 
 function promptTarget() {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-
-  console.log(chalk.bold('\nWhich application are you installing gspec for?\n'));
-  for (const choice of TARGET_CHOICES) {
-    console.log(`  ${chalk.cyan(choice.key)}) ${choice.label}`);
-  }
-  console.log();
-
-  return new Promise((resolve) => {
-    rl.question(chalk.bold('  Select [1-6]: '), (answer) => {
-      rl.close();
-      const trimmed = answer.trim().toLowerCase();
-
-      // Accept by number
-      const byNumber = TARGET_CHOICES.find(c => c.key === trimmed);
-      if (byNumber) return resolve(byNumber.name);
-
-      // Accept by name
-      const byName = TARGET_CHOICES.find(c => c.name === trimmed || c.label.toLowerCase() === trimmed);
-      if (byName) return resolve(byName.name);
-
-      console.error(chalk.red(`\nInvalid selection: "${answer.trim()}"`));
-      console.error(`Valid options: 1, 2, 3, 4, 5, 6, claude, cursor, antigravity, codex, opencode, pi`);
-      process.exit(1);
-    });
-  });
-}
-
-function promptConfirm(message) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question(message, (answer) => {
-      rl.close();
-      resolve(answer.trim().toLowerCase().startsWith('y'));
-    });
-  });
-}
-
-function promptConfirmNo(message) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question(message, (answer) => {
-      rl.close();
-      resolve(answer.trim().toLowerCase().startsWith('n'));
-    });
-  });
-}
-
-function promptConfirmYes(message) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question(message, (answer) => {
-      rl.close();
-      const trimmed = answer.trim().toLowerCase();
-      resolve(trimmed === '' || trimmed.startsWith('y'));
-    });
-  });
+  return promptSelect(
+    'Which application are you installing gspec for?',
+    TARGET_CHOICES.map((c) => ({ value: c.name, label: c.label })),
+  );
 }
 
 function formatStarterName(slug) {
@@ -128,53 +75,21 @@ function formatStarterName(slug) {
     .join(' ');
 }
 
-function promptSelect(message, choices) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  console.log(chalk.bold(`\n${message}\n`));
-  for (let i = 0; i < choices.length; i++) {
-    const label = formatStarterName(choices[i].slug);
-    const desc = choices[i].description ? ` — ${choices[i].description}` : '';
-    console.log(`  ${chalk.cyan(String(i + 1))}) ${label}${desc}`);
-  }
-  console.log();
-
-  return new Promise((resolve) => {
-    rl.question(chalk.bold(`  Select [1-${choices.length}]: `), (answer) => {
-      rl.close();
-      const num = parseInt(answer.trim(), 10);
-      if (num >= 1 && num <= choices.length) return resolve(choices[num - 1].slug);
-      console.error(chalk.red(`\nInvalid selection: "${answer.trim()}"`));
-      process.exit(1);
-    });
-  });
+// Saved-spec choices come as { slug, description }; render them for the prompt layer.
+function specOptions(choices) {
+  return choices.map((c) => ({
+    value: c.slug,
+    label: formatStarterName(c.slug),
+    hint: c.description || undefined,
+  }));
 }
 
-function promptMultiSelect(message, choices) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  console.log(chalk.bold(`\n${message}\n`));
-  for (let i = 0; i < choices.length; i++) {
-    const label = formatStarterName(choices[i].slug);
-    const desc = choices[i].description ? ` — ${choices[i].description}` : '';
-    console.log(`  ${chalk.cyan(String(i + 1))}) ${label}${desc}`);
-  }
-  console.log();
+function promptSpecSelect(message, choices) {
+  return promptSelect(message, specOptions(choices));
+}
 
-  return new Promise((resolve) => {
-    rl.question(chalk.bold('  Enter numbers (comma-separated), "all", or press Enter to skip: '), (answer) => {
-      rl.close();
-      const trimmed = answer.trim().toLowerCase();
-      if (trimmed === '') return resolve([]);
-      if (trimmed === 'all') return resolve(choices.map((c) => c.slug));
-
-      const nums = trimmed.split(',').map((s) => parseInt(s.trim(), 10));
-      const invalid = nums.find((n) => isNaN(n) || n < 1 || n > choices.length);
-      if (invalid !== undefined) {
-        console.error(chalk.red(`\nInvalid selection: "${answer.trim()}"`));
-        process.exit(1);
-      }
-      resolve(nums.map((n) => choices[n - 1].slug));
-    });
-  });
+function promptSpecMultiSelect(message, choices) {
+  return promptMultiSelect(message, specOptions(choices));
 }
 
 async function seedFromSavedSpecs(cwd) {
@@ -216,7 +131,7 @@ async function seedFromSavedSpecs(cwd) {
   // Nothing saved — skip silently
   if (!hasPlaybooks && savedTypes.length === 0) return;
 
-  const wantSaved = await promptConfirm(chalk.bold('  Would you like to start from saved specs in ~/.gspec/? [y/N]: '));
+  const wantSaved = await promptConfirm('Would you like to start from saved specs in ~/.gspec/?');
   if (!wantSaved) {
     console.log(chalk.dim('\n  Skipped saved specs.\n'));
     return;
@@ -233,7 +148,7 @@ async function seedFromSavedSpecs(cwd) {
     }
 
     const INDIVIDUAL_OPTION = { slug: '_individual', description: 'Pick individual specs instead' };
-    const selected = await promptSelect('Select a playbook', [...playbookChoices, INDIVIDUAL_OPTION]);
+    const selected = await promptSpecSelect('Select a playbook', [...playbookChoices, INDIVIDUAL_OPTION]);
 
     if (selected !== '_individual') {
       await restorePlaybook(selected, cwd);
@@ -265,7 +180,7 @@ async function seedFromSavedSpecs(cwd) {
     if (cat.mode === 'single') {
       const selected = specs.length === 1
         ? (console.log(chalk.dim(`\n  Using ${cat.type}: ${formatStarterName(specs[0].slug)}`)), specs[0].slug)
-        : await promptSelect(cat.label, [...specs, NONE_OPTION]);
+        : await promptSpecSelect(cat.label, [...specs, NONE_OPTION]);
 
       if (selected !== '_none') {
         const savedFilename = await resolveSavedSpecFilename(cat.type, selected);
@@ -278,7 +193,7 @@ async function seedFromSavedSpecs(cwd) {
         });
       }
     } else {
-      let selectedSlugs = await promptMultiSelect(cat.label, specs);
+      let selectedSlugs = await promptSpecMultiSelect(cat.label, specs);
       for (const slug of selectedSlugs) {
         const savedFilename = await resolveSavedSpecFilename(cat.type, slug);
         if (!savedFilename) continue;
@@ -313,7 +228,7 @@ async function seedFromSavedSpecs(cwd) {
       console.log(`    ${chalk.yellow('!')} ${label}`);
     }
     console.log();
-    const confirmed = await promptConfirm(chalk.bold('  Continue and overwrite? [y/N]: '));
+    const confirmed = await promptConfirm('Continue and overwrite?');
     if (!confirmed) {
       console.log(chalk.dim('\n  Skipped saved specs.\n'));
       return;
@@ -817,7 +732,7 @@ async function install(targetName, cwd) {
       console.log(`  ${chalk.yellow('!')} ${target.installDir}/${file}`);
     }
     console.log();
-    const confirmed = await promptConfirm(chalk.bold('  Continue and overwrite? [y/N]: '));
+    const confirmed = await promptConfirm('Continue and overwrite?');
     if (!confirmed) {
       console.log(chalk.dim('\nInstallation cancelled.\n'));
       process.exit(0);
@@ -1115,8 +1030,8 @@ async function applyMemoryScope(targetName, cwd) {
     scope = await promptSelect(
       'Where should agent memory (the learning loop) live?',
       [
-        { slug: 'project', description: 'committed to .claude/agent-memory/ — shared with your team via version control' },
-        { slug: 'local', description: 'private to .claude/agent-memory-local/ — this clone only (gitignored)' },
+        { value: 'project', label: 'Project', hint: 'committed to .claude/agent-memory/ — shared with your team via version control' },
+        { value: 'local', label: 'Local', hint: 'private to .claude/agent-memory-local/ — this clone only (gitignored)' },
       ],
     );
   }
@@ -1408,16 +1323,6 @@ function setFrontmatterField(content, key, value) {
   return `${match[1]}${lines.join('\n')}${match[3]}${content.slice(match[0].length)}`;
 }
 
-function promptInput(message) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question(message, (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
-}
-
 async function collectSavableFiles(cwd) {
   const gspecDir = join(cwd, 'gspec');
   const files = [];
@@ -1471,23 +1376,15 @@ async function saveSpec(cwd) {
   }
 
   // Let user select which file to save
-  console.log(chalk.bold('\n  Which spec would you like to save?\n'));
+  const fileOptions = [];
   for (let i = 0; i < files.length; i++) {
     const content = await readFile(files[i].path, 'utf-8');
     const { fields } = parseFrontmatter(content);
-    const desc = fields.description ? ` — ${fields.description}` : '';
-    console.log(`  ${chalk.cyan(String(i + 1))}) ${files[i].label}${chalk.dim(desc)}`);
+    fileOptions.push({ value: i, label: files[i].label, hint: fields.description || undefined });
   }
-  console.log();
+  const selectedIndex = await promptSelect('Which spec would you like to save?', fileOptions);
 
-  const answer = await promptInput(chalk.bold(`  Select [1-${files.length}]: `));
-  const num = parseInt(answer, 10);
-  if (isNaN(num) || num < 1 || num > files.length) {
-    console.error(chalk.red(`\n  Invalid selection: "${answer}"`));
-    process.exit(1);
-  }
-
-  const selected = files[num - 1];
+  const selected = files[selectedIndex];
   // Preserve the source file's extension when saving (.md for most specs, .html for style.html).
   const ext = selected.path.endsWith('.html') ? '.html' : '.md';
 
@@ -1510,8 +1407,9 @@ async function saveSpec(cwd) {
     }
 
     if (savedExists) {
-      const overwrite = await promptConfirmYes(
-        chalk.bold(`\n  Overwrite existing ~/.gspec/${selected.type}/${existingName}${ext}? [Y/n]: `)
+      const overwrite = await promptConfirm(
+        `Overwrite existing ~/.gspec/${selected.type}/${existingName}${ext}?`,
+        true,
       );
       if (overwrite) {
         name = existingName;
@@ -1523,7 +1421,7 @@ async function saveSpec(cwd) {
   }
 
   if (!name) {
-    const answered = await promptInput(chalk.bold('\n  Save name (no spaces, e.g. my-saas-stack): '));
+    const answered = await promptInput('Save name (no spaces):', { placeholder: 'my-saas-stack' });
     if (!answered) {
       console.error(chalk.red('\n  Name is required.'));
       process.exit(1);
@@ -1540,7 +1438,7 @@ async function saveSpec(cwd) {
   // Ensure description exists
   const { fields } = parseFrontmatter(content);
   if (!fields.description) {
-    const desc = await promptInput(chalk.bold('  Description (short summary): '));
+    const desc = await promptInput('Description (short summary):');
     if (desc) {
       content = setFrontmatterField(content, 'description', desc);
     }
@@ -1555,7 +1453,7 @@ async function saveSpec(cwd) {
   if (!overwriteConfirmed) {
     try {
       await stat(destPath);
-      const overwrite = await promptConfirm(chalk.yellow(`\n  ${selected.type}/${name}${ext} already exists. Overwrite? [y/N]: `));
+      const overwrite = await promptConfirm(`${selected.type}/${name}${ext} already exists. Overwrite?`);
       if (!overwrite) {
         console.log(chalk.dim('\n  Save cancelled.\n'));
         return;
@@ -1641,20 +1539,10 @@ async function restoreSpec(specPath, cwd) {
     process.exit(1);
   }
 
-  console.log(chalk.bold('\n  Select a spec type:\n'));
-  for (let i = 0; i < types.length; i++) {
-    console.log(`  ${chalk.cyan(String(i + 1))}) ${types[i]}`);
-  }
-  console.log();
-
-  const typeAnswer = await promptInput(chalk.bold(`  Select [1-${types.length}]: `));
-  const typeNum = parseInt(typeAnswer, 10);
-  if (isNaN(typeNum) || typeNum < 1 || typeNum > types.length) {
-    console.error(chalk.red(`\n  Invalid selection: "${typeAnswer}"`));
-    process.exit(1);
-  }
-
-  const selectedType = types[typeNum - 1];
+  const selectedType = await promptSelect(
+    'Select a spec type:',
+    types.map((t) => ({ value: t, label: t })),
+  );
   const specs = await listSavedSpecs(selectedType);
 
   if (specs.length === 0) {
@@ -1662,21 +1550,12 @@ async function restoreSpec(specPath, cwd) {
     process.exit(1);
   }
 
-  console.log(chalk.bold(`\n  Select a spec from ${selectedType}:\n`));
-  for (let i = 0; i < specs.length; i++) {
-    const desc = specs[i].description ? ` — ${specs[i].description}` : '';
-    console.log(`  ${chalk.cyan(String(i + 1))}) ${specs[i].slug}${chalk.dim(desc)}`);
-  }
-  console.log();
+  const selectedSlug = await promptSelect(
+    `Select a spec from ${selectedType}:`,
+    specs.map((s) => ({ value: s.slug, label: s.slug, hint: s.description || undefined })),
+  );
 
-  const specAnswer = await promptInput(chalk.bold(`  Select [1-${specs.length}]: `));
-  const specNum = parseInt(specAnswer, 10);
-  if (isNaN(specNum) || specNum < 1 || specNum > specs.length) {
-    console.error(chalk.red(`\n  Invalid selection: "${specAnswer}"`));
-    process.exit(1);
-  }
-
-  await restoreFile(selectedType, specs[specNum - 1].slug, cwd);
+  await restoreFile(selectedType, selectedSlug, cwd);
 }
 
 async function restoreFile(type, name, cwd) {
@@ -1705,7 +1584,7 @@ async function restoreFile(type, name, cwd) {
   try {
     await stat(destPath);
     const relPath = destPath.slice(cwd.length + 1);
-    const overwrite = await promptConfirm(chalk.yellow(`\n  ${relPath} already exists. Overwrite? [y/N]: `));
+    const overwrite = await promptConfirm(`${relPath} already exists. Overwrite?`);
     if (!overwrite) {
       console.log(chalk.dim('\n  Restore cancelled.\n'));
       return;
@@ -1750,7 +1629,7 @@ async function createPlaybook() {
   const profiles = await listSavedSpecsSafe('profiles');
   let profile = null;
   if (profiles.length > 0) {
-    profile = await promptSelect('Select a profile (or skip)', [...profiles, NONE_OPTION]);
+    profile = await promptSpecSelect('Select a profile (or skip)', [...profiles, NONE_OPTION]);
     if (profile === '_none') profile = null;
   } else {
     console.log(chalk.dim('  No saved profiles found — skipping.\n'));
@@ -1760,7 +1639,7 @@ async function createPlaybook() {
   const stacks = await listSavedSpecsSafe('stacks');
   let stack = null;
   if (stacks.length > 0) {
-    stack = await promptSelect('Select a stack (or skip)', [...stacks, NONE_OPTION]);
+    stack = await promptSpecSelect('Select a stack (or skip)', [...stacks, NONE_OPTION]);
     if (stack === '_none') stack = null;
   } else {
     console.log(chalk.dim('  No saved stacks found — skipping.\n'));
@@ -1770,7 +1649,7 @@ async function createPlaybook() {
   const practices = await listSavedSpecsSafe('practices');
   let practice = null;
   if (practices.length > 0) {
-    practice = await promptSelect('Select practices (or skip)', [...practices, NONE_OPTION]);
+    practice = await promptSpecSelect('Select practices (or skip)', [...practices, NONE_OPTION]);
     if (practice === '_none') practice = null;
   } else {
     console.log(chalk.dim('  No saved practices found — skipping.\n'));
@@ -1780,7 +1659,7 @@ async function createPlaybook() {
   const styles = await listSavedSpecsSafe('styles');
   let style = null;
   if (styles.length > 0) {
-    style = await promptSelect('Select a style (or skip)', [...styles, NONE_OPTION]);
+    style = await promptSpecSelect('Select a style (or skip)', [...styles, NONE_OPTION]);
     if (style === '_none') style = null;
   } else {
     console.log(chalk.dim('  No saved styles found — skipping.\n'));
@@ -1790,7 +1669,7 @@ async function createPlaybook() {
   const features = await listSavedSpecsSafe('features');
   let selectedFeatures = [];
   if (features.length > 0) {
-    selectedFeatures = await promptMultiSelect('Select features (optional)', features);
+    selectedFeatures = await promptSpecMultiSelect('Select features (optional)', features);
   } else {
     console.log(chalk.dim('  No saved features found — skipping.\n'));
   }
@@ -1802,7 +1681,7 @@ async function createPlaybook() {
   }
 
   // Prompt for playbook name
-  const name = await promptInput(chalk.bold('\n  Playbook name (no spaces, e.g. my-saas-starter): '));
+  const name = await promptInput('Playbook name (no spaces):', { placeholder: 'my-saas-starter' });
   if (!name) {
     console.error(chalk.red('\n  Name is required.'));
     process.exit(1);
@@ -1813,7 +1692,7 @@ async function createPlaybook() {
   }
 
   // Prompt for description
-  const description = await promptInput(chalk.bold('  Description (short summary): '));
+  const description = await promptInput('Description (short summary):');
 
   // Build playbook content
   const lines = ['---'];
@@ -1839,7 +1718,7 @@ async function createPlaybook() {
 
   try {
     await stat(destPath);
-    const overwrite = await promptConfirm(chalk.yellow(`\n  Playbook "${name}" already exists. Overwrite? [y/N]: `));
+    const overwrite = await promptConfirm(`Playbook "${name}" already exists. Overwrite?`);
     if (!overwrite) {
       console.log(chalk.dim('\n  Cancelled.\n'));
       return;
@@ -1949,7 +1828,7 @@ async function restorePlaybook(name, cwd) {
       console.log(`    ${chalk.yellow('!')} ${label}`);
     }
     console.log();
-    const confirmed = await promptConfirm(chalk.bold('  Continue and overwrite? [y/N]: '));
+    const confirmed = await promptConfirm('Continue and overwrite?');
     if (!confirmed) {
       console.log(chalk.dim('\n  Restore cancelled.\n'));
       return;
@@ -2207,7 +2086,7 @@ async function extensionSave(srcPath) {
 
   try {
     await stat(destPath);
-    const overwrite = await promptConfirm(chalk.yellow(`\n  Extension "${fields.name}" already exists. Overwrite? [y/N]: `));
+    const overwrite = await promptConfirm(`Extension "${fields.name}" already exists. Overwrite?`);
     if (!overwrite) {
       console.log(chalk.dim('\n  Cancelled.\n'));
       return;
@@ -2300,6 +2179,7 @@ program
   .option('--no-qa', 'skip the QA validator gates (on by default)')
   .option('--qa-retries <n>', 'self-heal revisions each QA gate may attempt before pausing (default: 1)')
   .option('--no-review', 'skip the spec-review pause before implementation (on by default)')
+  .option('--research', 'run competitive research after the profile stage, for richer feature requirements (needs web access)')
   .option('--resume', 'resume an existing run from where it paused')
   .option('--dry-run', 'print the stage plan without invoking the engine')
   .action(async (idea, opts) => {
@@ -2310,6 +2190,7 @@ program
       piPermissionLevel: opts.piPermissionLevel,
       noQa: !opts.qa,
       noReview: !opts.review,
+      research: !!opts.research,
       qaRetries: opts.qaRetries,
       resume: !!opts.resume,
       dryRun: !!opts.dryRun,

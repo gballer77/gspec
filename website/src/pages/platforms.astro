@@ -11,6 +11,7 @@ import Footer from '../components/Footer.astro';
 const capabilities = [
   { key: 'spec', label: 'Spec authoring', blurb: 'Skills, agents, and commands for writing and maintaining specs.' },
   { key: 'build', label: 'Autonomous build', blurb: 'Headless, spec-driven implementation runs where an engine adapter exists.' },
+  { key: 'research', label: 'Competitive research', blurb: 'Web-backed competitor research — /gspec-research interactively, --research on the build path.' },
   { key: 'enforceInteractive', label: 'Enforcement — interactive', blurb: 'Deterministic spec-integrity floors during hands-on /gspec-* use.' },
   { key: 'enforceBuild', label: 'Enforcement — build', blurb: 'The same floors enforced during autonomous build runs.' },
   { key: 'learning', label: 'Learning loop', blurb: 'Per-agent memory plus feedback capture that improves future runs.' },
@@ -22,7 +23,7 @@ const harnesses = [
   {
     name: 'Claude Code',
     tagline: 'The reference target. Full-fidelity support on both the interactive and build paths.',
-    states: { spec: 'full', build: 'full', enforceInteractive: 'full', enforceBuild: 'full', learning: 'full' },
+    states: { spec: 'full', build: 'full', research: 'full', enforceInteractive: 'full', enforceBuild: 'full', learning: 'full' },
     tech: {
       'File-write hook': 'Yes — Pre/PostToolUse on Write/Edit',
       'Tool interception': 'Any tool',
@@ -32,6 +33,7 @@ const harnesses = [
     reasons: {
       spec: 'Native skills, agents, and commands.',
       build: 'Wired headless engine.',
+      research: 'Interactive /gspec-research plus the build’s --research stage, with native WebSearch/WebFetch for the research agents.',
       enforceInteractive: 'Hard, deterministic blocks via Pre/PostToolUse hooks on every file write.',
       enforceBuild: 'The same floors hold on the autonomous build path.',
       learning: 'Native per-agent memory silos auto-load, driving feedback capture and distill.',
@@ -40,7 +42,7 @@ const harnesses = [
   {
     name: 'Codex',
     tagline: 'OpenAI’s coding agent. Strong build-path parity, but hooks fire on the Bash tool only.',
-    states: { spec: 'full', build: 'full', enforceInteractive: 'partial', enforceBuild: 'full', learning: 'partial' },
+    states: { spec: 'full', build: 'full', research: 'full', enforceInteractive: 'partial', enforceBuild: 'full', learning: 'partial' },
     tech: {
       'File-write hook': 'No — hooks fire on Bash only',
       'Tool interception': 'Bash only (PreToolUse deny, PostToolUse audit + additionalContext)',
@@ -50,6 +52,7 @@ const harnesses = [
     reasons: {
       spec: 'Native skills, agents, and commands.',
       build: 'Wired engine; the runtime driver runs QA gates and verify.sh.',
+      research: 'Interactive command plus the build’s --research stage; the engine opens sandbox network access for the research agents.',
       enforceInteractive: 'Gap: hooks see Bash only, never a file write, so floors ship advisory (inlined). Hard blocks need an MCP write-mediator.',
       enforceBuild: 'Enforced by the runtime driver, independent of any hook.',
       learning: 'Gap: QA-feedback learnings are captured, but there is no native memory (AGENTS.md only). Memory injection and distill are runtime-managed. Planned.',
@@ -58,7 +61,7 @@ const harnesses = [
   {
     name: 'Cursor',
     tagline: 'Closest to native enforcement parity via file-edit hooks. No wired build engine yet.',
-    states: { spec: 'full', build: 'none', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
+    states: { spec: 'full', build: 'none', research: 'partial', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
     tech: {
       'File-write hook': 'Yes — onPreEdit / onPostEdit',
       'Tool interception': 'Editor-event hooks',
@@ -68,6 +71,7 @@ const harnesses = [
     reasons: {
       spec: 'Native sub-agents, skills, and commands.',
       build: 'Gap: no build-engine adapter wired. cursor-agent -p exists, so adding one is straightforward.',
+      research: 'Gap: /gspec-research works interactively; build-path research (--research) waits on a build adapter.',
       enforceInteractive: 'Gap: floors are advisory (inlined) today, but onPreEdit / onPostEdit observe edits, so hard-block guards can port. Planned.',
       enforceBuild: 'Gap: waits on a build adapter.',
       learning: 'Gap: no native memory; a runtime-managed silo lands with a build adapter.',
@@ -76,7 +80,7 @@ const harnesses = [
   {
     name: 'OpenCode',
     tagline: 'Open-source agent with a complete plugin system. No wired build engine yet.',
-    states: { spec: 'full', build: 'none', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
+    states: { spec: 'full', build: 'none', research: 'partial', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
     tech: {
       'File-write hook': 'Yes — plugin tool-execution interception',
       'Tool interception': 'Any tool, via 25+ lifecycle events',
@@ -86,6 +90,7 @@ const harnesses = [
     reasons: {
       spec: 'Native sub-agents, skills, and commands.',
       build: 'Gap: no adapter wired. opencode run exists.',
+      research: 'Gap: /gspec-research works interactively; build-path research (--research) waits on a build adapter.',
       enforceInteractive: 'Gap: advisory (inlined) today. A gspec plugin could intercept tool execution across 25+ lifecycle events to hard-block writes. Planned.',
       enforceBuild: 'Gap: waits on a build adapter.',
       learning: 'Gap: no native memory; a plugin-backed silo is planned alongside the adapter.',
@@ -94,7 +99,7 @@ const harnesses = [
   {
     name: 'Pi',
     tagline: 'Extension-complete agent with a wired build engine. The fullest non-Claude parity today.',
-    states: { spec: 'full', build: 'full', enforceInteractive: 'partial', enforceBuild: 'full', learning: 'partial' },
+    states: { spec: 'full', build: 'full', research: 'full', enforceInteractive: 'partial', enforceBuild: 'full', learning: 'partial' },
     tech: {
       'File-write hook': 'Yes — tool_call block / modify',
       'Tool interception': 'Any tool, via the extension API',
@@ -104,6 +109,7 @@ const harnesses = [
     reasons: {
       spec: 'Native sub-agents, skills, and commands.',
       build: 'Wired engine via the pi-subagents extension; the runtime driver gates every run.',
+      research: 'Interactive command plus the build’s --research stage; if the research agents’ web tools stall on print-mode approval, pass --pi-permission-level.',
       enforceInteractive: 'Gap: advisory (inlined) today, but the tool_call hook can block or modify any call (Claude-equivalent), so a gspec extension would hard-enforce. Planned.',
       enforceBuild: 'Enforced by the runtime driver on every build run.',
       learning: 'Gap: build-path capture exists, but no native per-agent memory yet. Episodic-memory extensions are available to adopt. Planned.',
@@ -112,7 +118,7 @@ const harnesses = [
   {
     name: 'Antigravity',
     tagline: 'Workflow-based agent with native JSON lifecycle hooks. No wired build engine yet.',
-    states: { spec: 'full', build: 'none', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
+    states: { spec: 'full', build: 'none', research: 'partial', enforceInteractive: 'partial', enforceBuild: 'none', learning: 'none' },
     tech: {
       'File-write hook': 'Yes — JSON hooks incl. after-file-edit',
       'Tool interception': 'Before-tool / after-edit / session-start',
@@ -122,6 +128,7 @@ const harnesses = [
     reasons: {
       spec: 'Skills plus one self-contained workflow per capability (sub-agents spawn at runtime, so no agent files).',
       build: 'Gap: no adapter wired. agy -p exists.',
+      research: 'Gap: research runs interactively in single-file mode; build-path research (--research) waits on a build adapter.',
       enforceInteractive: 'Gap: advisory (inlined in the workflows) today. JSON lifecycle hooks (after-file-edit) run headless, so guards port like Cursor. Planned.',
       enforceBuild: 'Gap: waits on a build adapter.',
       learning: 'Gap: no native memory; a runtime-managed silo is planned.',
@@ -138,7 +145,7 @@ const states = {
 
 <BaseLayout
   title="Platform capabilities — gspec"
-  description="How gspec's supported AI coding harnesses compare — spec authoring, autonomous build, enforcement, and the learning loop, harness by harness."
+  description="How gspec's supported AI coding harnesses compare — spec authoring, autonomous build, competitive research, enforcement, and the learning loop, harness by harness."
 >
   <Navbar slot="navbar" />
 

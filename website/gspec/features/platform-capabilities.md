@@ -52,7 +52,7 @@ Prospective and current users need to make an informed choice of harness (or set
 
 - [x] **P0**: Page presents a comparison matrix of supported harnesses against gspec capabilities
   - All currently supported harnesses appear as columns (or rows) with a clear, identifiable label
-  - Product-level capabilities are the primary axis: at minimum spec authoring, autonomous build, hard enforcement on the interactive path, hard enforcement on the build path, and the learning loop / memory
+  - Product-level capabilities are the primary axis: at minimum spec authoring, autonomous build, competitive research (interactive and build-path), hard enforcement on the interactive path, hard enforcement on the build path, and the learning loop / memory
   - Every intersection shows an unambiguous support state, not a blank
   - The matrix is legible at a glance without reading prose
 

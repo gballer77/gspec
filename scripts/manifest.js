@@ -265,6 +265,16 @@ export const V2_AGENTS = [
     memory: 'project',
   },
   {
+    name: 'research-planner',
+    source: 'agents/research-planner.md',
+    description: 'Turn the product profile + build brief into a research plan (competitor list + focus) as fenced JSON, acting as the product strategist. Read-only — plans, never researches. Delegated by the build research stage (--research).',
+    // Read-only planner, the research counterpart of build-orchestrator.
+    skills: ['gspec-product'],
+    tools: 'Read, Grep, Glob',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
     name: 'competitor-researcher',
     source: 'agents/competitor-researcher.md',
     description: 'Research one competitor via public web sources and return a structured teardown (features, UX, strengths, weaknesses), acting as the product strategist. Read-only; fanned out by /gspec-research.',

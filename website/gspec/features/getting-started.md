@@ -88,7 +88,7 @@ Developers who install gspec face a cold-start problem: they have a set of comma
   - States the harnesses with a wired engine (Claude Code, Codex, Pi) and points other harnesses to the spec-by-spec path
   - Shows both ways to run it — the `/gspec-build` slash command in the harness and the headless `gspec build` script — and that the idea can be passed directly as an argument or captured via the intake interview
   - Shows the nine pipeline stages in order
-  - Explains the quality gates (independent validator per stage, verify.sh, a configurable self-heal budget via `--qa-retries`), the spec-review pause before implementation (resume to approve, `--no-review` to skip), and what the finished run produces
+  - Explains the quality gates (independent validator per stage, verify.sh, a configurable self-heal budget via `--qa-retries`), the optional competitive-research stage (`--research`, feeding auto-accepted findings into the feature PRDs), the spec-review pause before implementation (resume to approve, `--no-review` to skip), and what the finished run produces
   - Links to the dedicated build page for full mechanics
 
 ### Profile Walkthrough

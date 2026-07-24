@@ -26,6 +26,7 @@ Developers adopting AI coding tools face a recurring problem: their AI lacks pro
 - Single landing page within a multi-page site structure
 - Hero section with value proposition and install CTA
 - Problem statement section explaining why AI tools need structured context
+- Autonomous build section highlighting the 2.0 build pipeline, with an animated terminal demo of an expedited `/gspec-build` run
 - Workflow overview section showing the define → specify → build → iterate flow
 - Commands overview section briefly showcasing what each command does
 - Platform support section showing supported AI coding tools
@@ -68,6 +69,13 @@ Developers adopting AI coding tools face a recurring problem: their AI lacks pro
   - Section clearly articulates the two core problems (AI lacks context, specs drift from reality)
   - Content is scannable — short paragraphs or bullet points, not walls of text
   - Section logically leads into the "how it works" section below it
+
+### Autonomous Build Spotlight
+
+- [x] **P1**: Page includes an animated terminal demo showing an expedited example of a `/gspec-build` run
+  - Replays a condensed but faithful build transcript — the command, the gated stages, the spec-review pause, a QA self-heal, and the completed build
+  - Animation is decorative-safe: it starts when scrolled into view, loops, respects `prefers-reduced-motion`, and degrades to the static final transcript without JavaScript
+  - Terminal content mirrors the real driver output (stage titles and glyphs), so it does not overpromise what the command prints
 
 ### Workflow Overview
 

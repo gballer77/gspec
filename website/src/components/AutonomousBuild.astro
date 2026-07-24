@@ -1,4 +1,6 @@
 ---
+import BuildTerminal from './BuildTerminal.astro';
+
 const base = import.meta.env.BASE_URL;
 
 const highlights = [
@@ -11,17 +13,20 @@ const highlights = [
 <section class="py-16 lg:py-24">
   <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
     <div class="rounded-3xl border border-[var(--border-primary-subtle)] bg-[var(--bg-primary-subtle)] p-8 sm:p-10 lg:p-12">
-      <div class="max-w-2xl">
-        <span class="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--badge-accent-text)] bg-[var(--badge-accent-bg)] px-3 py-1 rounded-full mb-4">
-          New in 2.0
-        </span>
-        <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
-          From idea to built product — autonomously
-        </h2>
-        <p class="text-[var(--text-secondary)] leading-relaxed mb-8">
-          gspec is no longer just a spec generator. Its autonomous build takes your idea and drives the whole
-          workflow deterministically — with quality gates that catch their own mistakes and a run you can resume.
-        </p>
+      <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-10">
+        <div>
+          <span class="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--badge-accent-text)] bg-[var(--badge-accent-bg)] px-3 py-1 rounded-full mb-4">
+            New in 2.0
+          </span>
+          <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
+            From idea to built product — autonomously
+          </h2>
+          <p class="text-[var(--text-secondary)] leading-relaxed">
+            gspec is no longer just a spec generator. Its autonomous build takes your idea and drives the whole
+            workflow deterministically — with quality gates that catch their own mistakes and a run you can resume.
+          </p>
+        </div>
+        <BuildTerminal />
       </div>
 
       <div class="grid sm:grid-cols-3 gap-4 mb-8">

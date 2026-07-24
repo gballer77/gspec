@@ -1,0 +1,155 @@
+---
+// An expedited replay of a real `gspec build` run. Line content mirrors the
+// driver's actual output (lib/build.js) — stage titles, glyphs, the QA
+// self-heal, and the spec-review pause — compressed to demo pace.
+// Renders the finished transcript statically; JS animates it when motion
+// is allowed. The terminal is always dark in both themes, like a terminal.
+---
+
+<div
+  class="build-terminal rounded-xl border border-neutral-700 bg-neutral-950 overflow-hidden shadow-lg"
+  data-build-terminal
+  role="img"
+  aria-label="Terminal recording of an autonomous gspec build: one command runs nine gated stages — foundation specs, features, architecture, plans, a spec review pause, implementation with a QA self-heal, and a reconcile audit — ending in a completed build."
+>
+  <div class="flex items-center gap-1.5 px-4 py-2.5 border-b border-neutral-800 bg-neutral-900">
+    <span class="w-2.5 h-2.5 rounded-full bg-neutral-700"></span>
+    <span class="w-2.5 h-2.5 rounded-full bg-neutral-700"></span>
+    <span class="w-2.5 h-2.5 rounded-full bg-neutral-700"></span>
+    <span class="ml-2 font-mono text-[11px] text-neutral-500">gspec build</span>
+  </div>
+
+  <div class="px-4 py-4 sm:px-5 font-mono text-[11px] sm:text-xs leading-[1.9] text-neutral-200 whitespace-nowrap overflow-x-auto">
+    <div class="tl" data-cmd>
+      <span class="text-primary-400">$ </span><span data-t>gspec build </span><span data-t class="text-secondary-400">"a habit tracker with streaks"</span>
+    </div>
+    <div class="tl text-neutral-500" data-delay="500">&nbsp;&nbsp;engine: claude &middot; QA gates: producer &ne; checker &middot; resumable</div>
+    <div class="tl" data-delay="150">&nbsp;</div>
+    <div class="tl" data-run="Product profile" data-runfor="700">&nbsp;&nbsp;<span class="text-success">✓</span> Product profile — QA PASS</div>
+    <div class="tl" data-run="Technology stack" data-runfor="550">&nbsp;&nbsp;<span class="text-success">✓</span> Technology stack — QA PASS</div>
+    <div class="tl" data-run="Practices" data-runfor="500">&nbsp;&nbsp;<span class="text-success">✓</span> Practices — QA PASS</div>
+    <div class="tl" data-run="Style guide" data-runfor="550">&nbsp;&nbsp;<span class="text-success">✓</span> Style guide — QA PASS</div>
+    <div class="tl" data-run="Feature PRDs" data-runfor="750">&nbsp;&nbsp;<span class="text-success">✓</span> Feature PRDs — QA PASS</div>
+    <div class="tl" data-run="Architecture" data-runfor="600">&nbsp;&nbsp;<span class="text-success">✓</span> Architecture — QA PASS</div>
+    <div class="tl" data-run="Plans" data-runfor="600">&nbsp;&nbsp;<span class="text-success">✓</span> Plans — QA PASS</div>
+    <div class="tl" data-run="⏸ Paused for spec review — over to you" data-runclass="text-warning" data-runfor="1600">
+      &nbsp;&nbsp;<span class="text-success">✓</span> Spec review — approved <span class="text-neutral-500">(--resume)</span>
+    </div>
+    <div class="tl" data-delay="400">&nbsp;&nbsp;<span class="text-primary-400">▸</span> <span class="text-neutral-100 font-medium">Implementation</span></div>
+    <div class="tl text-warning" data-delay="1100">&nbsp;&nbsp;&nbsp;&nbsp;QA flagged issues — revision 1/1…</div>
+    <div class="tl" data-delay="1200">&nbsp;&nbsp;<span class="text-success">✓</span> Implementation — QA PASS <span class="text-neutral-500">&middot; verify.sh passing</span></div>
+    <div class="tl" data-run="Reconcile audit" data-runfor="700">&nbsp;&nbsp;<span class="text-success">✓</span> Reconcile audit — specs match code</div>
+    <div class="tl" data-delay="350">&nbsp;</div>
+    <div class="tl" data-delay="150">&nbsp;&nbsp;<span class="text-success font-semibold">✓ Build complete.</span> <span class="text-neutral-500">idea → specs → plan → working code</span></div>
+  </div>
+</div>
+
+<style is:global>
+  [data-build-terminal] .tl.term-hidden {
+    visibility: hidden;
+  }
+  [data-build-terminal] .term-dots {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    white-space: nowrap;
+    width: 0;
+    animation: term-dots 1.2s steps(4, jump-none) infinite;
+  }
+  [data-build-terminal] .term-dots::after {
+    content: '...';
+  }
+  @keyframes term-dots {
+    to { width: 3ch; }
+  }
+  [data-build-terminal] .term-caret {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.1em;
+    margin-left: 1px;
+    vertical-align: text-bottom;
+    background: #9494A8;
+    animation: term-caret 1s steps(2, jump-none) infinite;
+  }
+  @keyframes term-caret {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+</style>
+
+<script>
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  async function playTerminal(term: HTMLElement) {
+    const lines = Array.from(term.querySelectorAll<HTMLElement>('.tl'));
+    const finals = lines.map((l) => l.innerHTML);
+
+    for (;;) {
+      lines.forEach((l, i) => {
+        l.innerHTML = finals[i];
+        l.classList.add('term-hidden');
+      });
+
+      for (const [i, line] of lines.entries()) {
+        await sleep(Number(line.dataset.delay ?? 300));
+
+        if (line.dataset.cmd !== undefined) {
+          // Type the command character by character, span by span.
+          const spans = Array.from(line.querySelectorAll<HTMLElement>('[data-t]'));
+          const texts = spans.map((s) => s.textContent ?? '');
+          spans.forEach((s) => (s.textContent = ''));
+          const caret = document.createElement('span');
+          caret.className = 'term-caret';
+          line.appendChild(caret);
+          line.classList.remove('term-hidden');
+          for (const [j, span] of spans.entries()) {
+            for (const ch of texts[j]) {
+              span.textContent += ch;
+              await sleep(28);
+            }
+          }
+          await sleep(400);
+          caret.remove();
+          continue;
+        }
+
+        if (line.dataset.run) {
+          // Show the stage in its running state first, then flip to the result.
+          line.innerHTML = `&nbsp;&nbsp;<span class="${line.dataset.runclass ?? 'text-primary-400'}">▸ ${line.dataset.run}</span><span class="term-dots"></span>`;
+          line.classList.remove('term-hidden');
+          await sleep(Number(line.dataset.runfor ?? 600));
+          line.innerHTML = finals[i];
+          continue;
+        }
+
+        line.classList.remove('term-hidden');
+      }
+
+      await sleep(5000);
+    }
+  }
+
+  function initBuildTerminals() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.querySelectorAll<HTMLElement>('[data-build-terminal]').forEach((term) => {
+      if (term.dataset.termStarted) return;
+      // Hide the pre-rendered transcript up front so the reveal starts clean
+      // once the terminal scrolls into view.
+      term.querySelectorAll<HTMLElement>('.tl').forEach((l) => l.classList.add('term-hidden'));
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting) && !term.dataset.termStarted) {
+            term.dataset.termStarted = 'true';
+            observer.disconnect();
+            playTerminal(term);
+          }
+        },
+        { threshold: 0.35 }
+      );
+      observer.observe(term);
+    });
+  }
+
+  initBuildTerminals();
+  document.addEventListener('astro:after-swap', initBuildTerminals);
+</script>

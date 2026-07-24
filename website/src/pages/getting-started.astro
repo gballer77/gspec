@@ -156,6 +156,12 @@ gspec build --engine codex --resume`} lang="shell" />
         <li><strong>reconcile</strong> — sync the specs back to reality</li>
       </ol>
       <p>
+        Want a richer feature set out of the gate? Pass <code>--research</code> and the build adds an optional
+        competitive-research stage right after <strong>profile</strong>: it researches your competitors on the
+        web, writes <code>gspec/research.md</code>, and feeds the auto-accepted findings into the feature PRDs.
+        The spec-review pause below is where you prune any findings you disagree with.
+      </p>
+      <p>
         Every stage runs as an isolated agent checked by an independent validator (the writer never grades its own
         work), and the implementation stage is backed by a generated <code>verify.sh</code> that builds and tests the
         project. If a gate fails, the run gets a revision attempt — one by default, more with

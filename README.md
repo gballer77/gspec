@@ -25,7 +25,7 @@ There are two ways to work with gspec: let it **build autonomously** from an ide
 
 ### Autonomous build
 
-New in 2.0: `/gspec-build` turns a plain-language idea into a working, spec-backed codebase in a single run. Answer a short intake interview (or pass the idea directly) and gspec drives the whole pipeline unattended — profile, stack, practices, style, feature PRDs, architecture, an ordered plan, and the implementation — with an independent validator gating every stage and a deterministic `verify.sh` check on the build. Before any code is written, the run pauses once so you can review the finished specs; continue with `--resume`, or pass `--no-review` for a fully unattended run.
+New in 2.0: `/gspec-build` turns a plain-language idea into a working, spec-backed codebase in a single run. Answer a short intake interview (or pass the idea directly) and gspec drives the whole pipeline unattended — profile, stack, practices, style, feature PRDs, architecture, an ordered plan, and the implementation — with an independent validator gating every stage and a deterministic `verify.sh` check on the build. Before any code is written, the run pauses once so you can review the finished specs; continue with `--resume`, or pass `--no-review` for a fully unattended run. Want richer requirements out of the gate? Pass `--research` to add a competitive-research stage right after the profile — the build researches your competitors on the web, writes `gspec/research.md`, and feeds the auto-accepted findings into the feature PRDs.
 
 ```bash
 /gspec-build                    # in your harness — brief interview, then unattended
@@ -41,6 +41,7 @@ gspec build --dry-run "an idea"                 # preview the stage plan
 gspec build --resume                            # continue a paused run (or approve the spec review)
 gspec build --no-review "an idea"               # skip the spec-review pause entirely
 gspec build --qa-retries 3 "an idea"            # give each QA gate 3 self-heal revisions (default 1)
+gspec build --research "an idea"                # competitive research up front, for richer feature PRDs
 ```
 
 The autonomous build has a wired engine for **Claude Code**, **Codex**, and **Pi**. On other harnesses, use the spec-by-spec workflow below.
