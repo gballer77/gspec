@@ -5,6 +5,23 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '2.2.2',
+    date: 'July 24, 2026',
+    title: 'Bigger builds: the features cap rises to 24, with bounded fan-out',
+    summary: 'A follow-up to 2.2.1 for the most ambitious builds. The autonomous build\'s per-run ceiling on feature PRDs rises from <strong>12 to 24</strong>, and the ceiling is now decoupled from concurrency — the writers fan out at most <strong>five at a time</strong> rather than all at once, so a large breakdown gets all its PRDs without spawning a swarm of simultaneous headless agents.',
+    changes: [
+      {
+        type: 'changed',
+        description: '<strong>Feature ceiling 12 → 24.</strong> The <code>feature-planner</code> still leans toward fewer features, so the cap is only a backstop against a runaway plan — but at 12 it was too low for genuinely large products. Beyond 24 the extras are dropped with a logged warning (never silently), same as before.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Writer fan-out is now concurrency-bounded.</strong> Feature PRDs are written by at most five <code>feature-writer</code> runs in flight (a worker pool, not fixed batches, so a slow writer doesn\'t stall the queue). This decouples "how many features are allowed" from "how many headless agents run at once", so raising the ceiling doesn\'t multiply peak API/subprocess load.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the updated runtime. No workflow changes — a fresh <code>gspec build</code> can now produce up to 24 feature PRDs; existing runs resume normally.',
+  },
+  {
     version: '2.2.1',
     date: 'July 24, 2026',
     title: 'The autonomous build breaks a big idea into multiple features',

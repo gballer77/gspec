@@ -51,6 +51,12 @@ const FAKE_PI_SINGLE = FAKE_PI.replace(
 // feature-writer call rather than emitting zero PRDs.
 const FAKE_PI_NOPLAN = FAKE_PI.replace('*feature-plan*)', '*feature-plan*) printf \'no plan here\\n\' ;;\n  *__never__*)');
 
+// A planner that proposes more features than the cap — MAX_FEATURES (24) is the
+// backstop, and the extras are dropped with a logged warning, not silently.
+const manyFeatures = Array.from({ length: 26 }, (_, i) =>
+  `{"slug":"feat-${i + 1}","title":"F${i + 1}","brief":"b","priority":"P1"}`).join(',');
+const FAKE_PI_MANY = FAKE_PI.replace(/\{"features".*?\}\]\}/, `{"features":[${manyFeatures}]}`);
+
 async function seedBuildProject(dir, fakePi = FAKE_PI) {
   await seedInstall(dir, 'pi', { agentFiles: AGENTS.map((a) => join('.pi', 'agents', `${a}.md`)) });
   await mkdir(join(dir, '.gspec', 'build'), { recursive: true });
@@ -114,6 +120,18 @@ test('an unusable plan falls back to a single monolithic writer call (never zero
   assert.equal(calls.length, 1, 'the fallback single writer ran');
   assert.equal(calls[0], 'fallback');
   assert.equal((await manifestOf(dir)).stages.features.status, 'done');
+});
+
+test('a plan exceeding the cap is trimmed to MAX_FEATURES writers, drop logged', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  const env = await seedBuildProject(dir, FAKE_PI_MANY);
+
+  const r = await runCli(['build', 'an idea'], dir, env);
+  assert.equal(r.code, 0, r.output);
+  assert.match(r.output, /26 features planned.*writing the first 24/);
+  assert.match(r.output, /dropping: feat-25, feat-26/);
+  assert.equal((await writerCalls(dir)).length, 24, 'exactly MAX_FEATURES writers ran');
 });
 
 test('--dry-run shows the decompose-and-fan-out plan without spawning writers', async (t) => {
