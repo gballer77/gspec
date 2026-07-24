@@ -163,6 +163,16 @@ export const V2_AGENTS = [
     memory: 'project',
   },
   {
+    name: 'feature-planner',
+    source: 'agents/feature-planner.md',
+    description: 'Turn the resolved build brief (+ research.md) into a right-sized feature breakdown (slugs, briefs, priorities, dependencies) as fenced JSON, acting as the product strategist. Read-only — plans, never writes PRDs. Delegated by the build features stage.',
+    // Read-only planner, the features counterpart of research-planner/build-orchestrator.
+    skills: ['gspec-product'],
+    tools: 'Read, Grep, Glob',
+    model: 'opus',
+    memory: 'project',
+  },
+  {
     name: 'feature-writer',
     source: 'agents/feature-writer.md',
     description: 'Write one gspec/features/<slug>.md PRD from a resolved brief, acting as the product manager (technology- and profile-agnostic). Delegated by /gspec-feature (also research, audit); returns a summary.',

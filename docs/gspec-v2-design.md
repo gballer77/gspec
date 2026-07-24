@@ -210,7 +210,7 @@ intake(interview)
   → profile       [ profile-writer → profile-validator, skip-if-present ]
   → research      [ OPT-IN (--research) — research-planner → competitor-researcher ×N (web fan-out) → research-writer; findings auto-accepted, pruned at the review gate ]
   → foundations   [ *-writer → *-validator, skip-if-present ]
-  → features      [ feature-writer → feature-validator  ×N; reads gspec/research.md when --research ran ]
+  → features      [ feature-planner → feature-writer ×N → feature-validator ×N; reads gspec/research.md when --research ran ]
   → architecture  [ architecture-writer → architecture-validator ]
   → plan          [ plan-decomposer → plan-validator ]
   → review        [ HUMAN GATE — pause (exit 0) for spec review; --resume approves; --no-review skips ]

@@ -18,7 +18,7 @@ const LAST_FAILURE = join('.gspec', 'build', 'last-failure.md');
 // writers never run, but the files are cheap to create).
 const AGENTS = [
   'profile-writer', 'stack-writer', 'practices-writer', 'style-writer',
-  'feature-writer', 'feature-validator',
+  'feature-planner', 'feature-writer', 'feature-validator',
   'architecture-writer', 'architecture-validator',
   'plan-decomposer', 'plan-validator',
   'build-orchestrator', 'implementer', 'implementation-validator',

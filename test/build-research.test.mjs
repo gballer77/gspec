@@ -17,7 +17,7 @@ const AGENTS = [
   'profile-writer',
   'research-planner', 'competitor-researcher', 'research-writer',
   'stack-writer', 'practices-writer', 'style-writer',
-  'feature-writer', 'feature-validator',
+  'feature-planner', 'feature-writer', 'feature-validator',
   'architecture-writer', 'architecture-validator',
   'plan-decomposer', 'plan-validator',
   'build-orchestrator', 'implementer', 'implementation-validator',
