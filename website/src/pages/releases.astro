@@ -5,6 +5,69 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '2.2.1',
+    date: 'July 24, 2026',
+    title: 'The autonomous build breaks a big idea into multiple features',
+    summary: 'The autonomous build\'s features stage wrote a single PRD no matter how large the idea — the multi-feature decomposition that <code>/gspec-feature</code> has always done interactively was never wired into the headless runtime. A new <strong><code>feature-planner</code></strong> agent now decomposes the brief into a right-sized set of features, and the build writes and validates one PRD per feature, so <code>gspec build</code> produces the same feature breakdown you\'d get by hand.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong><code>feature-planner</code> agent.</strong> Right after the foundations, the planner reads the brief (and <code>gspec/research.md</code> when <code>--research</code> ran) and returns a right-sized feature breakdown — slug, scope, priority, and dependencies per feature. The features stage then fans out one <code>feature-writer</code> per feature and gates each PRD through <code>feature-validator</code>. It is the features-stage counterpart of the research stage\'s planner.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>One decomposition heuristic, two callers.</strong> The "when to split a big request into multiple features" judgment now lives once in the <code>gspec-product</code> skill, shared by the interactive <code>/gspec-feature</code> (which proposes the breakdown and confirms it with you) and the headless <code>feature-planner</code> (which decides it unattended). The runtime reuses the same agents as before — only the orchestration it was missing was added.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The build never yields the wrong number of PRDs.</strong> A genuinely single-feature idea still writes exactly one PRD, and an empty or unusable plan falls back to a single writer rather than producing zero. A <code>MAX_FEATURES</code> ceiling caps a runaway breakdown, and planner-proposed slugs are sanitized so model output can\'t escape <code>gspec/features/</code>.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the updated runtime and agents. The change only affects the features stage of a fresh <code>gspec build</code>; in-flight runs resume normally, and nothing about the interactive <code>/gspec-feature</code> workflow changes.',
+  },
+  {
+    version: '2.2.0',
+    date: 'July 24, 2026',
+    title: 'Opt-in competitive research in the build, and arrow-key CLI prompts',
+    summary: 'Two additions. A new opt-in <strong>research stage</strong> (<code>--research</code>) runs competitive analysis right after the profile and feeds the findings into your feature PRDs, so the build starts from a richer requirements set. And the CLI\'s interactive prompts are now <strong>arrow-key selectable</strong> on a terminal, with a numbered fallback when input is piped.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>Competitive research stage (<code>--research</code>).</strong> Right after the profile, a <code>research-planner</code> turns the profile + brief into a competitor list, one <code>competitor-researcher</code> fans out per competitor (capped at six), and a <code>research-writer</code> synthesizes <code>gspec/research.md</code>. Findings are auto-accepted and become inputs to the feature PRDs; the run pauses at the spec-review gate, which is where you prune any you disagree with. The flag is pinned at run start, so it can\'t be added on a <code>--resume</code>.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Arrow-key CLI prompts.</strong> A new interactive prompt layer gives <code>select</code> / <code>multiselect</code> / <code>confirm</code> / <code>text</code> prompts you navigate with the arrow keys on a TTY. Off-TTY — piped or scripted usage — it degrades to numbered <code>readline</code> input, so non-interactive invocations keep working unchanged.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Per-engine web access for research.</strong> The research fan-out enables each engine\'s web tools only for that stage — Claude, Codex, and Pi each map to their own network-permission surface — so competitor research can reach the web without widening permissions for the rest of the build.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install. <code>--research</code> is opt-in — nothing changes for existing builds unless you pass it. Because it is pinned at run start, add it to the initial <code>gspec build</code> command, not to a <code>--resume</code>.',
+  },
+  {
+    version: '2.1.1',
+    date: 'July 23, 2026',
+    title: 'Fix: gspec agents never appeared in Pi',
+    summary: 'A patch release fixing Pi installs. The Pi emitter was written against a different <code>pi-subagents</code> extension than the documented prerequisite (<code>npm:pi-subagents</code>), whose loader <em>silently</em> skips any agent file missing <code>name:</code> or <code>description:</code> frontmatter — so gspec\'s installed agents never showed up in Pi at all.',
+    changes: [
+      {
+        type: 'fixed',
+        description: '<strong>Pi agents now load.</strong> Every emitted Pi agent carries a <code>name:</code> field alongside <code>description:</code>, so <code>npm:pi-subagents</code> stops silently discarding them and gspec\'s agents actually appear in Pi.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>Tool allowlist maps to Pi builtins.</strong> <code>Glob</code> now maps to Pi\'s <code>find</code> builtin — <code>glob</code> is not a Pi builtin, so under Pi\'s strict <code>tools:</code> allowlist the entry matched nothing.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Regression guard.</strong> A test pins the frontmatter + builtin-tools contract on every emitted <code>dist/pi</code> agent, so a drift that makes agents invisible in Pi fails the build instead of shipping silently.',
+      },
+    ],
+    migration: 'Run <code>npx gspec --target pi</code> to reinstall, then restart your Pi session so it reloads <code>.pi/agents/</code>. Only Pi installs were affected — every other target is unchanged.',
+  },
+  {
     version: '2.1.0',
     date: 'July 23, 2026',
     title: 'Review the specs before any code is written',
