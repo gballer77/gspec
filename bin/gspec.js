@@ -887,6 +887,7 @@ async function installPreamble(targetName, cwd) {
 const TOOL_MATCHER = 'Write|Edit|MultiEdit';
 const HOOK_SPECS = [
   { file: 'gspec-agnosticism-guard.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
+  { file: 'gspec-token-literals.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-spec-integrity.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-reconcile-marker.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-memory-address-tag.mjs', event: 'PreToolUse', matcher: TOOL_MATCHER },

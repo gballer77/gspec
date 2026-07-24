@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
 import { runCli, makeProject, cleanup, exists, seedInstall } from './helpers.mjs';
+import { revisePrompt } from '../lib/build.js';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 const LAST_FAILURE = join('.gspec', 'build', 'last-failure.md');
@@ -128,6 +129,29 @@ test('an invalid --qa-retries is rejected before any run state is written', asyn
   assert.equal(r.code, 1);
   assert.match(r.output, /--qa-retries must be a whole number >= 0/);
   assert.ok(!(await exists(join(dir, RUN_JSON))));
+});
+
+// The revision prompt is the regression surface for "revisions regenerate
+// instead of repairing": it must NOT carry the original authoring prompt, must
+// name the deliverable and demand surgical edits, and must accumulate every
+// verdict so attempt N sees what N-1 was told (with repeats called out).
+test('revisePrompt repairs surgically and accumulates verdicts across attempts', () => {
+  const stage = { title: 'Style guide', outputs: ['gspec/style.md', 'gspec/style.html'] };
+
+  const first = revisePrompt(stage, 'gspec/style.html', ['VERDICT: FAIL\n- contrast claim unverified for dark']);
+  assert.match(first, /gspec\/style\.html/);
+  assert.match(first, /ONLY the edits the findings below name/);
+  assert.match(first, /byte-for-byte/);
+  assert.match(first, /gspec-memory/); // capture-on-failure is a stated step of the run
+  assert.doesNotMatch(first, /comprehensive|Produce your deliverable/); // no authoring prompt re-sent
+  assert.doesNotMatch(first, /reappears/); // one verdict — no history framing yet
+
+  const second = revisePrompt(stage, 'gspec/style.html', ['first verdict text', 'second verdict text']);
+  assert.match(second, /first verdict text/);
+  assert.match(second, /second verdict text/);
+  assert.match(second, /Verdict 1 of 2.*earlier attempt/);
+  assert.match(second, /Verdict 2 of 2.*current — fix this one/);
+  assert.match(second, /reappears in a later verdict means the earlier fix did not land/);
 });
 
 test('after a QA pause, --resume continues from the failed stage and clears the failure report', async (t) => {

@@ -46,7 +46,7 @@ const reliability = [
   },
   {
     title: 'Self-healing QA gates',
-    body: 'Each producer is followed by a read-only validator (producer ≠ checker). A failing verdict hands the work back for a revision attempt — one by default, more with --qa-retries. If the gate still fails, the run pauses for you rather than shipping something broken, keeping the full failing verdict in .gspec/build/last-failure.md so you can see exactly why.',
+    body: 'Each producer is followed by a read-only validator (producer ≠ checker). A failing verdict hands the work back for a revision — one attempt by default, more with --qa-retries. Revisions are surgical repairs, not rewrites: the writer is restricted to the edits the findings name and sees every verdict so far, so a repeat finding gets fixed differently instead of repeated. If the gate still fails, the run pauses for you rather than shipping something broken, keeping the full failing verdict in .gspec/build/last-failure.md so you can see exactly why.',
   },
   {
     title: 'Deterministic verify.sh',

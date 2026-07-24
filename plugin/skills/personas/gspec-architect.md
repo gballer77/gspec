@@ -41,8 +41,28 @@ The architect also authors the **technical architecture** (`gspec/architecture.m
 5. **Resolves ambiguity** — a Technical Gap Analysis captures the gaps found in the specs and their resolutions, so the implementer makes no architectural decisions; no unresolved open questions remain.
 6. **Profile-agnostic** — technology-aware, but free of product/business identity.
 7. **Verifiable — declares its deployables.** For any buildable system, a **Deployables** table lists every independently build/test-able unit as **name · dir · build · test** — the command that builds it and the command that runs its tests, each run from `dir`. A single-toolchain project has a one-row table; a polyglot system (e.g. a TypeScript frontend + a Java backend) has one row per toolchain. This table — **not `stack.md`** — is the concrete authority the implementer turns into a committed `verify.sh` and the audit checks against reality (`stack.md` is the tooling *palette*; this is what *does* build/test). Mark **Not Applicable** only when there is genuinely nothing to build or test.
+8. **Present-tense state, not history** — the spec describes what the system *is*. When an update supersedes a decision or resolves a gap, fold the outcome into the owning section and remove the superseded text; never accumulate a changelog.
 
 Use Mermaid for the data model (`erDiagram`), page hierarchy (`graph`), and the primary auth flow (`sequenceDiagram`).
 
+## Layout — one file, or two tiers (gated on the Deployables table)
+The Deployables table decides the file layout:
+
+- **One deployable (one row, or N/A):** everything lives in a single `gspec/architecture.md`. No sub-files — a second layer is pure ceremony here.
+- **Multiple deployables (more than one row):** two tiers, C4-style — container level up top, component level per unit:
+  - **System tier — `gspec/architecture.md`** (always present, always the entry point): overview and system context, the **shared data model** (every entity more than one deployable touches), the **contracts between deployables** (an API surface between two units belongs to neither alone), the cross-cutting auth flow, shared environment/configuration, the **Deployables & Verification table**, and the Technical Gap Analysis.
+  - **Component tier — `gspec/architecture/<name>.md`**, one per table row, where `<name>` is the row's deployable name (the same key `verify.sh` uses in `FAIL: <deployable>:<phase>`): that unit's internal project structure, internal components, deployable-local entities, the internals of the API surface it owns, and unit-local configuration.
+
+The root file doubles as the **index**: in two-tier mode each Deployables row links to its sub-file, and each sub-file carries routing frontmatter (after `spec-version`) so a consumer can pick the units its task touches without reading the bodies:
+
+```
+deployable: <name>          # must match its Deployables-table row
+covers: [<feature-slugs>]   # the features this unit serves
+```
+
+State every concern **exactly once**, at the tier that owns it, and reference it from the other tier — duplication across tiers is drift waiting to happen. The Deployables table never moves out of the root file; it stays the single authority for `verify.sh`.
+
 ## Required sections (a complete architecture spec)
 Overview · Project Structure (directory layout + naming) · Data Model (`erDiagram` + entity details) · API Design *(or N/A)* · Page & Component Architecture *(or N/A)* · Service & Integration Architecture *(or N/A)* · Authentication & Authorization *(or N/A)* · Environment & Configuration · Deployables & Verification (the **name · dir · build · test** table *or N/A*) · Technical Gap Analysis · Open Decisions (only if deferred).
+
+In two-tier mode the root file keeps Overview, the shared Data Model, inter-deployable API contracts, Authentication & Authorization, shared Environment & Configuration, Deployables & Verification, Technical Gap Analysis, and Open Decisions; Project Structure and the component-level slices of Data Model / API Design / Page & Component / Service & Integration / Environment move into each `architecture/<name>.md` (each *or N/A* per unit).

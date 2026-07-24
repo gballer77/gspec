@@ -14,7 +14,7 @@ Write the style guide in the chosen format so it meets the designer's **quality 
   ---
   ```
 
-- **`gspec/style.html`** — a single self-contained HTML document (no external CSS/JS, no build step); the first line, before `<!DOCTYPE html>`, is `<!-- spec-version: <<<SPEC_VERSION>>> -->`; define design tokens as CSS custom properties; render live swatches, type specimens, and styled components; include light + dark. It must render when opened in a browser.
+- **`gspec/style.html`** — a single self-contained HTML document (no external CSS/JS, no build step); the first line, before `<!DOCTYPE html>`, is `<!-- spec-version: <<<SPEC_VERSION>>> -->`; define design tokens as CSS custom properties; render live swatches, type specimens, and styled components; include light + dark. It must render when opened in a browser. The token block is the only place a literal color value appears — everything else uses `var(--…)` — and the contrast table is computed from the tokens by a small inline script (per theme key), not hand-typed.
 
 ## Templates (seed from a saved style)
 The user may keep reusable style templates in `~/.gspec/styles/` (see the `gspec-templates` skill). If the brief names one, read it and adapt it to this project. If the brief is silent (e.g. an autonomous run) and a template clearly fits, you may adopt the best-fitting one; if none fits, design fresh. Always tailor the template to the brief and note in your summary which one seeded the guide.

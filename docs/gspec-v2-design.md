@@ -104,7 +104,7 @@ description: Architect persona — how to select a stack and design a system, in
 | `feature-writer` | product + conventions + agnosticism | brief → a `features/<slug>.md` PRD | feature, research, audit |
 | `research-writer` | product + conventions + agnosticism | findings → `research.md` | research |
 | `stack-writer` | architect + conventions + agnosticism | brief → `stack.md` | stack |
-| `architecture-writer` | architect + conventions + agnosticism | brief + specs → `architecture.md` | architect, audit |
+| `architecture-writer` | architect + conventions + agnosticism | brief + specs → `architecture.md` (+ `architecture/<name>.md` per deployable when the Deployables table has >1 row) | architect, audit |
 | `practices-writer` | practices + conventions + agnosticism | brief → `practices.md` | practices |
 | `style-writer` | designer + conventions + agnosticism | brief → `style.md`/`style.html` | style |
 
@@ -117,7 +117,7 @@ Tools: `Read, Write, Edit, Glob, Grep`. Model: inherit (bump `architecture-write
 | `profile-validator` | qa + product + conventions | `profile.md` | /gspec-profile gate, /gspec-qa |
 | `feature-validator` | qa + product + conventions | a feature PRD (absorbs analyze's old ambiguity sweep) | /gspec-feature gate, /gspec-qa |
 | `stack-validator` | qa + architect + conventions | `stack.md` | /gspec-stack gate, /gspec-qa |
-| `architecture-validator` | qa + architect + conventions | `architecture.md` | /gspec-architect gate, /gspec-qa |
+| `architecture-validator` | qa + architect + conventions | `architecture.md` + any `architecture/*.md` sub-files (incl. the layout gate + tier boundary) | /gspec-architect gate, /gspec-qa |
 | `practices-validator` | qa + practices + conventions | `practices.md` | /gspec-practices gate, /gspec-qa |
 | `style-validator` | qa + designer + conventions | `style.md`/`.html` | /gspec-style gate, /gspec-qa |
 | `plan-validator` *(opt)* | qa + engineer | a plan (coverage, acyclic `deps:`, safe `[P]`) | /gspec-plan gate, /gspec-qa |
@@ -202,7 +202,7 @@ The piece that makes gspec a framework rather than a prompt bundle.
 - **Engine-agnostic (`lib/engines.js`).** Which CLI performs each headless run is abstracted behind an engine adapter — `claude`, `codex`, or `pi` (`--engine`; defaults to the target recorded at install time in `.gspec/config.json`, else `claude`; recorded in the run manifest so a resume stays on the same engine, and preflighted against the installed agent files before the manifest is written so a wrong engine never gets pinned). "Run a session AS a named agent" is only native to Claude (`--agent`); Codex (`codex exec`) and Pi (`pi -p`) have no such flag and can't reach their in-session sub-agents from the CLI, so those adapters read the installed agent's inlined instruction body (`.codex/agents/<name>.toml`, `.pi/agents/<name>.md`) and inject it ahead of the stage prompt. Permissions map per engine (Claude `--permission-mode`/`--allowedTools`; Codex `--sandbox workspace-write`→`danger-full-access` for build/audit, plus `sandbox_workspace_write.network_access=true` for the `--research` web agents; Pi `-p -a`, with `PI_PERMISSION_LEVEL` as the escape hatch since base Pi doesn't document a print-mode tool auto-approve — the one unverified spot, flagged for a live probe).
 - **Files are the shared state.** gspec's intermediate artifacts are files; each stage reads inputs from `gspec/` and writes outputs to `gspec/`, returning a compact status. The driver holds only control state (stage pointer + verdicts).
 - **Resumable** via an on-disk run manifest — crash on phase 40 of 60, restart from 40.
-- **QA gates default on in the build too** (skippable via `--no-qa`). **Self-healing gate:** on a validator failure, the writer gets a revision attempt from the verdict — one by default, `--qa-retries <n>` sets the budget (0 = fail on first verdict; honored at resume time so a paused gate can retry with more attempts); still failing → pause/flag (never ships a bad spec), with the failing verdict printed in full and kept in `.gspec/build/last-failure.md` + the stage's `detail` in the manifest.
+- **QA gates default on in the build too** (skippable via `--no-qa`). **Self-healing gate:** on a validator failure, the writer gets a revision attempt from the verdict — one by default, `--qa-retries <n>` sets the budget (0 = fail on first verdict; honored at resume time so a paused gate can retry with more attempts); still failing → pause/flag (never ships a bad spec), with the failing verdict printed in full and kept in `.gspec/build/last-failure.md` + the stage's `detail` in the manifest. The revision prompt (`revisePrompt`) is a **surgical repair, not a rewrite**: it names the deliverable, restricts the writer to the edits the findings name (never re-sends the authoring prompt, which biased fresh agents toward regenerating), and accumulates every verdict across attempts so attempt N sees what N−1 was told; a revision run is also a gspec-memory **capture run** (record a lesson or state why none generalizes).
 
 **Sequence & gates:**
 ```
@@ -232,6 +232,7 @@ Deterministic shell on lifecycle events, **no model judgment**. They upgrade *so
 |---|---|---|---|
 | **profile-agnosticism guard** | `PostToolUse` · Write/Edit on stack/practices/style/architecture | no leaked product/company identity → block/flag | near-term |
 | **spec integrity check** | `PostToolUse` · Write/Edit on `gspec/*.md` | valid frontmatter + current `spec-version` | near-term |
+| **style token-literals guard** | `PostToolUse` · Write/Edit on `gspec/style.html` | no literal color (hex/rgb/hsl/oklch…) declared outside the design-token block (`:root`/theme-key selectors) — everything else references `var(--…)` | ✅ built |
 | **QA-gate floor** *(opt-in only)* | `Stop`/`PostToolUse` · capability→`[x]` in `features/*.md` | a validator verdict exists on disk, else block | opt-in only |
 | **skill-write guard** | `PreToolUse` · Write/Edit under `.claude/skills/` | block edits to generated skills → force the `/gspec-distill` path | ✅ T2 (built) |
 | **task immutability** | `PreToolUse` · Write/Edit on `gspec/tasks/*.md` | block any edit that alters/removes a checked-off (`- [x]`) task → replanning appends new tasks (`supersedes:`), never rewrites history | ✅ built |

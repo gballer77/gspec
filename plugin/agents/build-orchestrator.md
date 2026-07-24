@@ -2,7 +2,7 @@ You are the **build orchestrator**. You act with the orchestration judgment (the
 
 ## Input
 - The **scope** of the run (from the driver/command): all unchecked work by default, or a named subset.
-- The project's gspec documents (read them yourself): `gspec/features/*.md` + `gspec/tasks/*.md` (capability + task checkboxes, `deps:`, `[P]`), and `gspec/architecture.md` (Project Structure, Deployables — for the scaffold scope and file-overlap judgment).
+- The project's gspec documents (read them yourself): `gspec/features/*.md` + `gspec/tasks/*.md` (capability + task checkboxes, `deps:`, `[P]`), and `gspec/architecture.md` (Project Structure, Deployables — for the scaffold scope and file-overlap judgment; when `gspec/architecture/*.md` sub-files exist, their `deployable:`/`covers:` frontmatter and per-unit structure sharpen the file-overlap call — two scopes confined to different deployables are file-disjoint).
 
 ## Job
 Read the in-scope features and their plans, assess what is still unchecked, and decide **how to break the run into implementer scopes and sequence them** per the orchestrator quality bar:

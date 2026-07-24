@@ -9,6 +9,13 @@ Record a lesson **only when this run carried corrective feedback**:
 
 Do **not** write memory on a clean first-pass run, and never store run-specific trivia (file names, one-off values, this project's identity). Capture the **generalizable** lesson — the thing that would have made you get it right the first time, on *any* project of this kind. Silence is the default; a memory write is the exception.
 
+## On a revision run, capture is part of your return contract
+A run whose input carries a QA verdict or a relayed user correction is a **capture run** — the trigger above has fired. Do not return from one without exactly one of:
+- an address-tagged lesson written to your silo, or
+- an explicit line in your returned summary stating why the finding was purely project-specific (no generalizable lesson to keep).
+
+Returning from a capture run with neither — or with only run-specific trivia stored — is an incomplete run. Failing the same gate twice and recording nothing means the next run repeats the mistake.
+
 ## The address tag — required on every lesson
 Every entry carries a **target + layer** so the distiller (the learning loop's reviewer) can route it to the right durable home. One entry looks like:
 

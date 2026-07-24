@@ -10,6 +10,7 @@ This is a shared persona skill preloaded by every validator agent (`stack-valida
 - **Scope creep or gaps** — content beyond the spec's remit, or a required area absent.
 - **Boundary violations** — content that belongs in a different spec (see each domain skill's boundaries).
 - **Internal contradiction** — two statements that can't both hold.
+- **Redundancy / restatement** — the same fact stated in more than one place (a value repeated instead of referenced), more than one example per pattern, or a section whose removal loses no normative content. Each restatement is a future contradiction; flag it now (see `gspec-conventions` "Single source of truth").
 - **Missing rationale** — major decisions with no stated "why".
 - **Unactionable prose** — a reader couldn't proceed without asking more questions.
 

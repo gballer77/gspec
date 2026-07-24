@@ -192,7 +192,7 @@ export const V2_AGENTS = [
   {
     name: 'architecture-writer',
     source: 'agents/architecture-writer.md',
-    description: 'Read the foundation + feature specs and write gspec/architecture.md (technology-aware, Mermaid diagrams, gap analysis) from resolved gap decisions. Delegated by /gspec-architect; returns a summary.',
+    description: 'Read the foundation + feature specs and write gspec/architecture.md (technology-aware, Mermaid diagrams, gap analysis) — plus per-deployable gspec/architecture/<name>.md sub-files for a multi-deployable system — from resolved gap decisions. Delegated by /gspec-architect; returns a summary.',
     skills: ['gspec-architect', 'gspec-conventions', 'gspec-agnosticism'],
     tools: 'Read, Write, Edit, Glob, Grep',
     model: 'opus',
@@ -201,7 +201,7 @@ export const V2_AGENTS = [
   {
     name: 'architecture-validator',
     source: 'agents/architecture-validator.md',
-    description: 'Validate gspec/architecture.md against the architecture quality bar and return a structured verdict. Read-only.',
+    description: 'Validate the architecture spec set (gspec/architecture.md + any architecture/*.md sub-files) against the architecture quality bar, including the layout gate and tier boundary. Read-only; returns a structured verdict.',
     skills: ['gspec-qa', 'gspec-architect', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',

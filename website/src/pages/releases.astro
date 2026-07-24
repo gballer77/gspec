@@ -5,6 +5,39 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '2.3.0',
+    date: 'July 24, 2026',
+    title: 'Per-deployable architecture, surgical QA revisions, and a token-literals floor',
+    summary: 'Three additions. Multi-deployable systems now get a <strong>two-tier architecture spec</strong> — a system-level <code>gspec/architecture.md</code> plus one <code>gspec/architecture/&lt;name&gt;.md</code> per deployable, so consumers load only the units their work touches. The autonomous build\'s QA self-heal now sends a <strong>surgical revision prompt</strong> that carries every verdict so far instead of re-sending the authoring prompt, so revisions repair drafts rather than regrow them. And a new <strong>token-literals hook</strong> makes the style guide\'s design-token discipline a hard floor: a literal color declared outside the token block in <code>gspec/style.html</code> is flagged the moment it is written.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>Two-tier per-deployable architecture.</strong> The Deployables table now gates the file layout: one deployable keeps a single <code>gspec/architecture.md</code>; more than one splits C4-style into a system tier (shared data model, inter-deployable contracts, cross-cutting auth, the Deployables table, gap analysis) plus one <code>gspec/architecture/&lt;name&gt;.md</code> per deployable for that unit\'s internals. Each sub-file carries <code>deployable:</code> / <code>covers:</code> routing frontmatter and is linked from its Deployables row, and every concern is stated exactly once at the tier that owns it. On an update run, crossing the gate in either direction restructures the layout.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Every architecture consumer routes on the new layout.</strong> The implementer always reads the root file but loads only the sub-files for deployables its scope touches; the plan decomposer loads only sub-files whose <code>covers:</code> lists its feature; the build orchestrator uses per-unit structure to judge file-disjoint parallel scopes; <code>/gspec-analyze</code> gains an <em>architecture tier</em> conflict category (tier disagreement, cross-tier duplication, orphaned or missing sub-files); and <code>/gspec-audit</code> and <code>/gspec-migrate</code> sweep <code>architecture/*.md</code> alongside the root. The architecture validator polices the layout gate and the tier boundary.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>QA self-heal revisions are surgical.</strong> A failed gate used to re-send the full authoring prompt with the verdict stapled on, which biased fresh agents toward regenerating — drafts were observed growing while "fixing" contradictions. The revision prompt now names the deliverable, restricts the writer to the edits the findings name (everything else preserved byte-for-byte), and accumulates <em>every</em> verdict across attempts, so attempt N sees what attempt N−1 was told and a reappearing finding is fixed differently instead of repeated. Applies to every spec gate and the per-PRD feature loop.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Failed verdicts must produce a lesson.</strong> A revision run is now a <em>capture run</em> under the <code>gspec-memory</code> convention: the agent must either record an address-tagged generalizable lesson to its memory silo or state explicitly why the finding was purely project-specific. Failing the same gate twice and recording nothing is treated as an incomplete run.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Token-literals hard floor.</strong> A new <code>gspec-token-literals</code> hook (PostToolUse on Write/Edit, Claude Code) flags any literal color — hex, <code>rgb()</code>, <code>hsl()</code>, <code>oklch()</code>, and friends — declared outside the design-token block in <code>gspec/style.html</code>, in <code>&lt;style&gt;</code> CSS or inline <code>style=</code> attributes. The token block (<code>:root</code> / theme-key selectors) is the only home for literal values; everything else must use <code>var(--…)</code>. Swatch labels that merely <em>display</em> a hex code are untouched. The designer\'s quality bar now also requires the accessibility contrast table to be <em>computed</em> from the tokens by a small inline script, per theme key, rather than hand-typed.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Single source of truth is now a stated convention and a QA failure mode.</strong> <code>gspec-conventions</code> requires each class of fact to have one canonical home with references everywhere else, and one example per pattern; validators (<code>gspec-qa</code>) now flag redundancy and restatement as findings. The architect\'s bar adds "present-tense state, not history" — superseded decisions are folded in, never accumulated as a changelog. The agnosticism convention also names the sneaky identity-leak sites: document metadata, chrome copy in example components, and product-derived token/class/constant names.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the updated agents, skills, and the new hook. Existing single-file <code>architecture.md</code> specs keep working — the two-tier layout applies when the Deployables table has more than one row, and the next architecture update run restructures automatically. Existing <code>style.html</code> guides with literal colors outside the token block will be flagged on their next edit; re-point them at <code>var(--…)</code> tokens as you touch them.',
+  },
+  {
     version: '2.2.2',
     date: 'July 24, 2026',
     title: 'Bigger builds: the features cap rises to 24, with bounded fan-out',
