@@ -50,7 +50,7 @@ const reliability = [
   },
   {
     title: 'Deterministic verify.sh',
-    body: 'The implementer generates a committed verify.sh that builds and tests every deployable in the project. The driver runs it and reads the exit code — a real build+test gate, not a vibe check. Polyglot and multi-deployable aware.',
+    body: 'The implementer generates a committed verify.sh that builds and tests every deployable in the project — each independently built and shipped unit, like an API, a web app, or a CLI. The driver runs it and reads the exit code — a real build+test gate, not a vibe check. Polyglot and multi-deployable aware.',
   },
   {
     title: 'Resumable runs',
@@ -131,7 +131,8 @@ const reliability = [
         Two ways to run it
       </h2>
       <p class="text-[var(--text-secondary)] text-center mb-12 max-w-2xl mx-auto">
-        Kick off a build from inside your coding harness, or run it headless as a script. Pass your idea
+        Kick off a build from inside your coding harness — the AI coding tool gspec is installed into — or
+        run it headless as a script. Pass your idea
         directly as an argument — leave it off and the build opens with a short intake interview instead.
       </p>
 
@@ -181,8 +182,10 @@ const reliability = [
         Nine stages, one command
       </h2>
       <p class="text-[var(--text-secondary)] text-center mb-12 max-w-2xl mx-auto">
-        The build walks the full gspec workflow deterministically. Greenfield or existing project — foundation
-        stages are skipped when the spec already exists, so it meets your project where it is.
+        The build walks the full gspec workflow deterministically — nine agent stages, plus a human review
+        gate between <code class="font-mono">plan</code> and <code class="font-mono">implement</code> (the
+        <code class="font-mono">review</code> card below). Greenfield or existing project — foundation stages
+        are skipped when the spec already exists, so it meets your project where it is.
       </p>
 
       <div class="flex flex-col gap-4 max-w-4xl mx-auto">
@@ -256,7 +259,8 @@ const reliability = [
             Where the build runs today
           </h2>
           <p class="text-[var(--text-secondary)] leading-relaxed">
-            The autonomous build needs a wired headless engine. Today that means
+            The autonomous build needs a harness whose engine can run headless — scripted from the
+            terminal, no UI. Today that means
             <strong class="text-[var(--text-primary)]">Claude Code</strong>,
             <strong class="text-[var(--text-primary)]">Codex</strong>, and
             <strong class="text-[var(--text-primary)]">Pi</strong>. Every harness gets the full spec-authoring

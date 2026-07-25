@@ -166,7 +166,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Product Strategist"
     description="Defines what your product is, who it serves, and why it exists. This is the foundational spec that all other commands reference — it establishes product identity, target audience, value proposition, and market positioning."
     produces="A comprehensive product profile saved to gspec/profile.md. Includes product overview, target audience with pain points, value proposition, use cases, competitive landscape, and key messaging."
-    invocation="/profile"
+    invocation="/gspec-profile"
     questions={[
       'Product name, tagline, and category',
       'Target audience and their pain points',
@@ -198,7 +198,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="UI Designer"
     description="Generates a visual design system with colors, typography, spacing, component patterns, and design tokens. Adopts the perspective of a UI Designer to create a cohesive visual language for your product. Supports two output formats: a renderable HTML design system (style.html) — a single self-contained file with live swatches, type specimens, and styled component previews, readable by design-aware AI tools — or a Markdown style guide (style.md). Either format is valid; gspec consumers read whichever is present. A complementary gspec/design/ folder can hold mockups (HTML, SVG, PNG, JPG) from external design tools like Figma, v0, or Framer AI, which the implement command reads as authoritative visual guidance."
     produces="A single style guide saved as gspec/style.html (recommended — a renderable HTML design system with design tokens as CSS variables, color swatches, typography specimens, and live styled component examples for light and dark mode) or gspec/style.md (a Markdown style guide with the same structured content as prose). In both formats: color palette with hex/RGB/HSL values, typography scale, spacing system, component specifications (buttons, cards, forms), theme tokens for dark/light mode, and accessibility guidelines. In style.html the token block is the single source of truth: it is the only place a literal color value appears (everything else uses var(--…) — enforced by a hard-floor hook on Claude Code), and the accessibility contrast table is computed from the tokens by an inline script per theme, so it can never drift from the values it describes."
-    invocation="/style"
+    invocation="/gspec-style"
     questions={[
       'Preferred output format (HTML renderable design system or Markdown style guide)',
       'Design vision and visual personality (minimal, bold, playful, etc.)',
@@ -233,7 +233,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Solutions Architect"
     description="Defines your technology choices — frameworks, languages, runtime, database, hosting, and key libraries. Documents every decision with rationale so your AI tools make consistent technology choices."
     produces="A technology stack definition saved to gspec/stack.md. Includes core languages, runtime environment, frontend and backend frameworks, database, hosting, CI/CD, package management, and technology-specific practices."
-    invocation="/stack"
+    invocation="/gspec-stack"
     questions={[
       'Programming languages and runtime environment',
       'Frontend framework and styling approach',
@@ -266,7 +266,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Engineering Lead"
     description="Establishes development standards — testing conventions, code quality rules, git workflow, error handling, documentation requirements, and your definition of done. Ensures your AI produces code that meets your team's standards."
     produces="A development practices guide saved to gspec/practices.md. Includes testing standards (unit, E2E, when to write tests), code quality rules, naming conventions, git practices, error handling patterns, security practices, and definition of done."
-    invocation="/practices"
+    invocation="/gspec-practices"
     questions={[
       'Team size and collaboration model',
       'Testing philosophy and frameworks',
@@ -299,7 +299,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Market Analyst"
     description="Analyzes competitors based on your product profile and produces a competitive analysis with feature matrix, strengths/weaknesses, and gap identification. Helps you understand the landscape before committing to features."
     produces="A competitive analysis saved to gspec/research.md. Includes competitor profiles, feature comparison matrix, strengths/weaknesses analysis, market gaps, and strategic recommendations."
-    invocation="/research"
+    invocation="/gspec-research"
     questions={[
       'Known competitors or similar products',
       'Specific areas to investigate (features, pricing, market positioning)',
@@ -329,7 +329,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Product Manager"
     description="Writes one or more product requirements documents (PRDs) for features. Handles both single features and larger bodies of work — if the scope is large enough, it proposes a multi-feature breakdown for your approval before generating individual PRDs."
     produces="One or more feature PRDs saved to gspec/features/<feature-name>.md. Each includes overview, user stories, scope (in/out/deferred), prioritized capabilities with acceptance criteria, dependencies, assumptions and risks, and success metrics."
-    invocation={'/feature "Task board with drag-and-drop columns"'}
+    invocation={'/gspec-feature "Task board with drag-and-drop columns"'}
     questions={[
       'Feature description and user need it addresses',
       'Target users and their workflows',
@@ -362,7 +362,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Technical Architect"
     description="Designs the technical architecture — project structure, data model, API design, component architecture, and environment configuration. Reads your stack, practices, and feature PRDs to produce a comprehensive blueprint. The file layout follows the Deployables table: a single-deployable system keeps everything in one gspec/architecture.md, while a multi-deployable system gets a two-tier layout — a system-level architecture.md (shared data model, inter-deployable contracts, cross-cutting auth, the Deployables table) plus one gspec/architecture/<name>.md per deployable for that unit's internals, each carrying routing frontmatter so downstream commands load only the units their work touches."
     produces="A technical architecture document saved to gspec/architecture.md — plus, for multi-deployable systems, one gspec/architecture/<name>.md per deployable, linked from its Deployables-table row. Includes project structure with directory layout, data model, API design, component architecture, environment configuration, CI/CD setup, and a technical gap analysis. Every concern is stated exactly once, at the tier that owns it."
-    invocation="/architect"
+    invocation="/gspec-architect"
     questions={[
       'Architectural patterns and preferences',
       'Data model requirements',
@@ -396,7 +396,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Engineering Lead"
     description="Decomposes a feature PRD into an ordered, dependency-aware plan with explicit parallel-execution markers. Sits between feature (the 'what') and implement (the 'how'). Reads the PRD plus the architecture and stack for ordering signals, then proposes 1–N concrete tasks per capability with stable IDs, deps lines, and [P] markers for tasks that are safe to run in parallel. When a plan file exists, implement skips its own plan-mode step and executes the plan directly."
     produces="A sibling file at gspec/features/<feature>.plan.md with YAML frontmatter linking it back to the PRD, plus a single ## Plan section containing ordered, checkboxed tasks. Each task carries a priority (P0/P1/P2), an optional [P] marker, a deps: line listing prerequisite task IDs, and a covers: line quoting the PRD capability text the task contributes to."
-    invocation={'/plan "home-page"'}
+    invocation={'/gspec-plan "home-page"'}
     questions={[
       'Which feature PRD to decompose (if multiple PRDs exist)',
       'Whether to regenerate from scratch or extend an existing plan file',
@@ -410,7 +410,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     pitfalls={[
       'Marking [P] on tasks that write to the same file as a sibling — one will overwrite the other',
       'Renumbering existing task IDs on regenerate — IDs are stable, append new ones at the next free number',
-      'Inventing acceptance criteria for an underspecified PRD — fix the PRD with /feature first instead',
+      'Inventing acceptance criteria for an underspecified PRD — fix the PRD with /gspec-feature first instead',
       'Treating the plan file as a rewrite of the PRD — capabilities stay in the PRD, execution stays in the plan',
     ]}
     related={[
@@ -428,14 +428,14 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Quality Analyst"
     description="Cross-references gspec documents and identifies discrepancies. Has two modes. (1) All-specs (no argument): scans every spec for contradictions across the full set — stack vs architecture, PRD vs architecture, plan vs PRD, and (on a two-tier architecture) the system-level architecture.md vs its per-deployable architecture/<name>.md sub-files: tier disagreements, concerns duplicated across tiers, and sub-files orphaned from or missing for a Deployables-table row. (2) Scoped (pass a feature slug): narrows to one feature's PRD and plan plus the foundation specs, then adds an Ambiguity & Underspecification sweep against the PRD itself, catching missing acceptance criteria, vague verbs, undefined nouns, implicit assumptions, missing edge cases, and unmeasurable success metrics. Findings are presented one at a time with resolution options; the user decides each individually."
     produces="A list of findings — contradictions, or in scoped mode also ambiguity questions — each presented with the conflicting evidence (or, for ambiguity, the unclear text and a specific question). With your per-finding approval, affected spec files are updated in place. At the end, a summary of resolved, deferred, and skipped findings."
-    invocation={'/analyze\n# or, scoped to one feature:\n/analyze user-authentication'}
+    invocation={'/gspec-analyze\n# or, scoped to one feature:\n/gspec-analyze user-authentication'}
     questions={[
       'Optional feature slug — when present, scope to that feature and run the ambiguity sweep; when absent, scan all specs for cross-spec conflicts',
       'For each finding, whether to update the spec, mark it as a Deferred Decision, or skip',
     ]}
     bestPractices={[
       'Run all-specs analyze after architect and before implement for the most comprehensive sweep',
-      'Run scoped analyze on each feature PRD before /plan (or before /implement when skipping plan) to catch ambiguity early',
+      'Run scoped analyze on each feature PRD before /gspec-plan (or before /gspec-implement when skipping plan) to catch ambiguity early',
       'Use scoped mode on aged or imported PRDs that may have accumulated implicit assumptions',
       'Review findings and accept or reject each recommendation — do not blindly apply all',
       'Re-run after significant edits to the targeted feature or to any foundation spec',
@@ -447,10 +447,10 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
       'Treating ambiguity questions as errors — they are deliberate prompts; the answer can be "mark this as a Deferred Decision" rather than resolving inline',
     ]}
     related={[
-      { name: 'feature', relation: 'Generation-time clarification in /feature catches ambiguity before the PRD is saved; scoped /analyze catches what slipped through or accumulated later' },
-      { name: 'plan', relation: 'Run scoped /analyze on a PRD before /plan so the plan is built from a clean spec' },
-      { name: 'architect', relation: 'All-specs /analyze catches contradictions between architecture and other specs' },
-      { name: 'implement', relation: 'Run /analyze before /implement to ensure specs are consistent and unambiguous' },
+      { name: 'feature', relation: 'Generation-time clarification in /gspec-feature catches ambiguity before the PRD is saved; scoped /gspec-analyze catches what slipped through or accumulated later' },
+      { name: 'plan', relation: 'Run scoped /gspec-analyze on a PRD before /gspec-plan so the plan is built from a clean spec' },
+      { name: 'architect', relation: 'All-specs /gspec-analyze catches contradictions between architecture and other specs' },
+      { name: 'implement', relation: 'Run /gspec-analyze before /gspec-implement to ensure specs are consistent and unambiguous' },
       { name: 'audit', relation: 'Analyze compares specs to other specs; audit compares specs to the codebase' },
     ]}
   />
@@ -462,7 +462,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Specification Auditor"
     description="Reads the specs and inspects the actual codebase, then surfaces drift between what the specs say and what the code does — mismatched dependencies, undocumented routes, stale data models, design tokens that don't match the stylesheet, capability checkboxes that don't reflect reality. Walks you through each discrepancy and — with your approval — updates the specs to match reality. Distinct from analyze, which compares specs against each other rather than against the codebase. Complements always-on spec-sync (which catches drift as code changes happen) by sweeping for accumulated drift that slipped through."
     produces="A list of findings where each drift is cited with the exact spec statement and the matching evidence in code. With your per-finding approval, affected spec files are updated in place. At the end, a summary of updates made, items deferred, and a code-follow-up list for any drift the user chose to fix in the code rather than the spec."
-    invocation="/audit"
+    invocation="/gspec-audit"
     questions={[
       'Optional scope hint (e.g., \"just audit the stack\", \"audit the features/ folder\") — without a hint, audit sweeps all specs',
       'Whether to update specs to match code, leave specs alone (and flag code for fix), or defer on a per-finding basis',
@@ -471,13 +471,13 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
       'Run audit before shipping a major release or before handing the project to a new contributor',
       'Run audit after a long sprint where spec-sync may have missed changes (e.g., rapid iterative sessions)',
       'Pass a scope hint for large codebases — audit one domain at a time (stack, then architecture, then features)',
-      'Use the code-follow-up list from audit as input for the next /implement run',
+      'Use the code-follow-up list from audit as input for the next /gspec-implement run',
       'Treat profile drift conservatively — the profile is often aspirational, not descriptive',
     ]}
     pitfalls={[
       'Running audit on a brand-new project with no code — there\'s nothing to compare specs against',
       'Blindly choosing \"update spec to match code\" for every finding — some drift means the code is wrong, not the spec',
-      'Using audit as a substitute for /implement — audit never modifies code',
+      'Using audit as a substitute for /gspec-implement — audit never modifies code',
       'Auditing a massive codebase in one pass — prefer scoped sweeps for comprehension',
     ]}
     related={[
@@ -494,7 +494,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Build Orchestrator"
     description="Runs the entire gspec workflow autonomously — from a plain-language idea to working, verified code. Holds a single up-front intake interview, then launches a deterministic runtime that drives nine stages in order (profile → stack → practices → style → features → architecture → plan → implement → reconcile). Each stage runs as an isolated agent gated by an independent validator (producer ≠ checker). Between plan and implement the run pauses once — every spec written, no code yet — for a human spec review; resume approves it, or skip it with --no-review. Foundation specs that already exist are reused, not regenerated, so build works on greenfield and existing projects alike. Runs on harnesses with a wired headless engine — today Claude Code, Codex, and Pi."
     produces="A working product: specs in gspec/, an ordered plan, and implemented code that passes a generated verify.sh build-and-test gate. The run is tracked in a resumable on-disk manifest, self-heals on validator failure (one revision attempt by default; set the budget with --qa-retries) — each revision is a surgical repair that carries every verdict so far, so later attempts see what earlier ones were told instead of regenerating the draft — and pauses with the full failing verdict in .gspec/build/last-failure.md when a gate still fails. It ends by recording the learnings captured during the run."
-    invocation="/build"
+    invocation="/gspec-build"
     questions={[
       'A plain-language description of what you want to build',
       'Essentials the intake needs up front (audience, platform, key constraints) — asked once, so the run doesn\'t stop to re-ask',
@@ -525,7 +525,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Senior Developer"
     description="Reads all existing gspec documents and implements your software with full project context. Synthesizes profile, style (style.md or style.html), stack, practices, architecture, and feature PRDs, plus any mockups in gspec/design/, to produce code that matches your specifications. When design mockups are present, implement matches their layout and visual hierarchy within the style guide's token constraints."
     produces="Working code committed to your repository. Updates feature PRD capability checkboxes from [ ] to [x] as each capability is implemented. Produces code that follows your stack, practices, and style specifications."
-    invocation="/implement"
+    invocation="/gspec-implement"
     questions={[
       'Which feature(s) to implement (if multiple exist)',
       'Any additional context or constraints for this implementation session',
@@ -559,7 +559,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="QA Lead"
     description="Runs gspec's quality gate on demand. Delegates to read-only validator agents that check your specs and code against their acceptance criteria and quality bars, then presents each verdict. It embodies the producer ≠ checker principle: the agent that grades the work is never the one that wrote it. qa never edits — it only judges and reports, leaving the fixes to you or to the relevant command."
     produces="A set of validator verdicts — pass or fail with specific reasoning per finding — across the specs and/or code you point it at. No files are modified."
-    invocation="/qa"
+    invocation="/gspec-qa"
     questions={[
       'What to check — a spec type, a feature, or the implementation',
       'Any acceptance criteria or definition-of-done to weigh the verdict against',
@@ -585,7 +585,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Steward"
     description="The reviewer half of gspec's learning loop. When validators reject work or you correct an agent, those lessons are captured to per-agent memory, tagged with the layer they belong to. distill reviews those accumulated lessons and proposes surgical edits that promote recurring ones into the skills themselves — presented one at a time for your approval — then prunes lessons that have graduated. Corrections become durable, reusable expertise instead of evaporating after a session."
     produces="Approved edits to skill files that fold in recurring lessons, plus pruning of the memory entries that have graduated. Every change is reviewed and approved by you before it is applied."
-    invocation="/distill"
+    invocation="/gspec-distill"
     questions={[
       'Which captured lessons to review (all, or scoped to a layer or agent)',
       'For each proposed skill edit, whether to apply, modify, or skip',
@@ -612,7 +612,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     role="Migration Specialist"
     description="Upgrades existing gspec documents to the current format when you move to a newer version of gspec. Reads your existing specs, maps them onto the latest structure, and rewrites them in place — preserving all of your content while updating headings, frontmatter, and section organization to match what the current commands expect."
     produces="Your existing gspec/ files, rewritten to the current format with content preserved. Version metadata (spec-version frontmatter, or the style.html version comment) is updated to reflect the new format."
-    invocation="/migrate"
+    invocation="/gspec-migrate"
     questions={[
       'Which specs to migrate (all, or a specific file) when formats differ',
       'How to resolve any content that does not map cleanly onto the new structure',

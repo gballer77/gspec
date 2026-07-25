@@ -288,15 +288,15 @@ const releases = [
     version: '1.18.1',
     date: 'May 20, 2026',
     title: 'Fix: skill descriptions broke YAML parsing',
-    summary: 'Skill <code>description</code> values are now emitted as properly quoted YAML scalars so descriptions containing colons (<code>": "</code>) or embedded quotes no longer break frontmatter parsing in Claude Code, Cursor, Antigravity, Codex, and OpenCode. The build also now validates description length against the documented per-target caps so this kind of regression cannot ship again.',
+    summary: 'Skill <code>description</code> values are now emitted as properly quoted YAML scalars so descriptions containing colons (<code>": "</code>) or embedded quotes no longer break frontmatter parsing in Claude Code, Cursor, Antigravity, Codex, and Open Code. The build also now validates description length against the documented per-target caps so this kind of regression cannot ship again.',
     changes: [
       {
         type: 'fixed',
-        description: '<strong>Skill frontmatter no longer breaks YAML parsing.</strong> Descriptions like <code>/gspec-implement</code>\'s, which contain phrases like <code>"Common triggers include:"</code> and embedded <code>"…"</code> example phrases, were being emitted as unquoted YAML plain scalars — illegal under the YAML 1.2 spec because <code>": "</code> inside a plain scalar is interpreted as a mapping indicator. The emitter now wraps every value in a double-quoted scalar with proper escaping, applied uniformly across all five emit targets (Claude Code, Cursor, Antigravity, Codex, OpenCode).',
+        description: '<strong>Skill frontmatter no longer breaks YAML parsing.</strong> Descriptions like <code>/gspec-implement</code>\'s, which contain phrases like <code>"Common triggers include:"</code> and embedded <code>"…"</code> example phrases, were being emitted as unquoted YAML plain scalars — illegal under the YAML 1.2 spec because <code>": "</code> inside a plain scalar is interpreted as a mapping indicator. The emitter now wraps every value in a double-quoted scalar with proper escaping, applied uniformly across all five emit targets (Claude Code, Cursor, Antigravity, Codex, Open Code).',
       },
       {
         type: 'added',
-        description: '<strong>Build-time description length validator.</strong> <code>npm run build</code> now <strong>fails</strong> if any description exceeds 1024 characters (the documented hard cap for Claude Code and OpenCode) and <strong>warns</strong> for any description over 250 characters (Claude Code\'s effective selection window — content past char 250 is silently dropped when Claude decides whether to invoke a skill). The warning surfaces drift before it ships; the hard fail prevents an unparseable skill from being published.',
+        description: '<strong>Build-time description length validator.</strong> <code>npm run build</code> now <strong>fails</strong> if any description exceeds 1024 characters (the documented hard cap for Claude Code and Open Code) and <strong>warns</strong> for any description over 250 characters (Claude Code\'s effective selection window — content past char 250 is silently dropped when Claude decides whether to invoke a skill). The warning surfaces drift before it ships; the hard fail prevents an unparseable skill from being published.',
       },
       {
         type: 'changed',

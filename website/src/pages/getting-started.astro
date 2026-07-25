@@ -52,11 +52,13 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
   <section id="install">
     <h2>Install</h2>
     <p>
-      Either way, start by installing gspec into your AI coding tool:
+      You'll need two things first: <strong>Node.js</strong> (the <code>npx</code> command ships with it) and at
+      least one supported AI coding tool already set up. Then, either way, start by installing gspec into your
+      AI coding tool:
     </p>
     <CodeBlock code="npx gspec" lang="shell" />
     <p>
-      The CLI will prompt you to select your platform — <strong>Claude Code</strong>, <strong>Cursor</strong>, <strong>Antigravity</strong>, <strong>Codex</strong>, <strong>Open Code</strong>, or <strong>Pi</strong>. It installs the gspec commands, skills, and agents into your tool of choice.
+      The CLI will prompt you to select your platform — <strong>Claude Code</strong>, <strong>Cursor</strong>, <strong><a href="https://antigravity.google/">Antigravity</a></strong>, <strong>Codex</strong>, <strong><a href="https://opencode.ai/">Open Code</a></strong>, or <strong><a href="https://pi.dev/">Pi</a></strong>. It installs the gspec commands, skills, and agents into your tool of choice.
     </p>
     <p>
       <strong>Pi</strong> runs gspec through sub-agents, so it needs the <a href="https://pi.dev/packages/pi-subagents">pi-subagents</a> extension: <code>pi install npm:pi-subagents</code>. The installer reminds you after a Pi install.
@@ -121,8 +123,8 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group
         regenerated — but this path shines on zero-to-one work where there's little or nothing yet.
       </p>
       <p>
-        The autonomous build needs a harness with a wired engine: <strong>Claude Code</strong>,
-        <strong>Codex</strong>, or <strong>Pi</strong>. On other harnesses, use the <a href="#choose-path" data-tab-link="spec">spec-by-spec path</a> instead.
+        The autonomous build needs a harness — the AI coding tool gspec is installed into — with a wired
+        headless engine: <strong>Claude Code</strong>, <strong>Codex</strong>, or <strong>Pi</strong>. On other harnesses, use the <a href="#choose-path" data-tab-link="spec">spec-by-spec path</a> instead.
       </p>
     </section>
 
@@ -200,7 +202,7 @@ gspec build --engine codex --resume`} lang="shell" />
         command defines <em>what your product is, who it serves, and why it exists</em>. It adopts the perspective of
         a Product Strategist and asks you about your product's identity, target audience, and value proposition.
       </p>
-      <CodeBlock code="/profile" lang="command" />
+      <CodeBlock code="/gspec-profile" lang="command" />
       <p>
         The command guides you through a conversation about your product. For TaskFlow, we'd describe it as a task management app for small dev teams. Here's a condensed excerpt of what it produces:
       </p>
@@ -229,12 +231,12 @@ No enterprise overhead, no learning curve.`} lang="markdown" />
       <p>
         The style command generates a <em>visual design system</em> — colors, typography, spacing, component patterns, and design tokens. It adopts the perspective of a UI Designer.
       </p>
-      <CodeBlock code="/style" lang="command" />
+      <CodeBlock code="/gspec-style" lang="command" />
       <p>
         It reads your profile first, then asks about your design vision, target platforms, and visual personality. Pick an output format — a renderable HTML design system (<code>style.html</code>) that design-aware AI tools can inspect directly, or a Markdown style guide (<code>style.md</code>). Either way, the output includes hex colors, font stacks, spacing scales, and component specifications.
       </p>
       <p>
-        Your AI coding tools can now make UI decisions that match your intended design language — consistent colors, proper spacing, correct typography. Drop mockups from external design tools (Figma, v0, Framer AI) into <code>gspec/design/</code> and <code>/implement</code> will use them as authoritative layout guidance.
+        Your AI coding tools can now make UI decisions that match your intended design language — consistent colors, proper spacing, correct typography. Drop mockups from external design tools (Figma, v0, Framer AI) into <code>gspec/design/</code> and <code>/gspec-implement</code> will use them as authoritative layout guidance.
       </p>
     </section>
 
@@ -243,7 +245,7 @@ No enterprise overhead, no learning curve.`} lang="markdown" />
       <p>
         The stack command defines your <em>technology choices</em> — frameworks, languages, infrastructure, and architectural patterns. It adopts the perspective of a Solutions Architect.
       </p>
-      <CodeBlock code="/stack" lang="command" />
+      <CodeBlock code="/gspec-stack" lang="command" />
       <p>
         It asks about your runtime, frontend/backend frameworks, database, hosting, and key libraries. The output documents every technology decision with rationale.
       </p>
@@ -257,7 +259,7 @@ No enterprise overhead, no learning curve.`} lang="markdown" />
       <p>
         The practices command establishes <em>development standards</em> — testing conventions, code quality rules, git workflow, and error handling patterns. It adopts the perspective of an Engineering Lead.
       </p>
-      <CodeBlock code="/practices" lang="command" />
+      <CodeBlock code="/gspec-practices" lang="command" />
       <p>
         It asks about your team size, testing philosophy, code review process, and deployment workflow. The output covers everything from naming conventions to your definition of done.
       </p>
@@ -271,7 +273,7 @@ No enterprise overhead, no learning curve.`} lang="markdown" />
       <p>
         The feature command writes a <em>product requirements document (PRD)</em> for an individual feature. It adopts the perspective of a Product Manager and produces prioritized capabilities with acceptance criteria.
       </p>
-      <CodeBlock code='/feature "Task board with drag-and-drop columns"' lang="command" />
+      <CodeBlock code='/gspec-feature "Task board with drag-and-drop columns"' lang="command" />
       <p>
         The command engages you in a conversation — asking about user stories, scope boundaries, and edge cases. It then generates a structured PRD with P0/P1/P2 prioritized capabilities, each with testable acceptance criteria.
       </p>
@@ -285,7 +287,7 @@ No enterprise overhead, no learning curve.`} lang="markdown" />
       <p>
         The implement command reads <em>all existing specs</em> — profile, style, stack, practices, features, and architecture — and builds your software with the full picture.
       </p>
-      <CodeBlock code="/implement" lang="command" />
+      <CodeBlock code="/gspec-implement" lang="command" />
       <p>
         It doesn't just read one spec — it synthesizes them all. It knows your audience (profile), your design language (style), your technology choices (stack), your code standards (practices), and your feature requirements. Here's a condensed view of what it does:
       </p>

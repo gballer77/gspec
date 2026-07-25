@@ -30,6 +30,10 @@ Judgment applies to *scope*, not to *whether*: a pure internal refactor with zer
 may not need a changelog entry, but say so explicitly rather than silently skipping. When in doubt, add
 the entry.
 
+**Exception — website-only changes:** edits confined to `website/` (site copy, docs pages, site
+components) ship without a version bump or changelog entry. The changelog tracks the installable
+gspec artifact, not the docs site; the site deploys independently of the npm release tags.
+
 ## Release flow
 
 Releases are tag-driven. Ship = merge to `main`, then `git tag vX.Y.Z && git push origin vX.Y.Z`
