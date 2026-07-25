@@ -5,6 +5,39 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '2.5.0',
+    date: 'July 25, 2026',
+    title: 'The QA loop converges: a reachable exit, no discarded verdicts, no redone work',
+    summary: 'A field report from a full autonomous build surfaced a cluster of QA-loop problems — the gate had no reachable exit so every flagged spec drained its whole retry budget, resume silently skipped a spec it had just failed, passing PRDs were re-validated from scratch on every resume, and a writer that crashed after producing a valid file was treated as a gate failure. This release fixes all of them. The gate now passes on severity (a FAIL with only minor/nit findings passes with advisory notes), a resumed <code>failed</code> stage re-validates its on-disk draft instead of skipping it (honoring any hand-edit), passing specs are memoized by content hash and not re-gated, a post-write crash whose artifact is present is accepted, and every stage now reports its elapsed time. Underpinning it all, every failing verdict a run sees — including the ones a self-heal recovers from — is now kept in full in a cumulative <code>.gspec/build/qa-failures.md</code>, so the loop can be studied and tuned across runs.',
+    changes: [
+      {
+        type: 'changed',
+        description: '<strong>Resume re-enforces a failed gate instead of skipping it (correctness fix).</strong> A single-file stage recorded <code>failed</code> used to be skipped on <code>--resume</code> because its output file existed on disk — carrying the rejected spec forward into every downstream stage. Now a resumed <code>failed</code> (or crashed) stage re-validates the current on-disk deliverable first, honoring any edit you made to unblock it, and self-heals from there; skip-if-present is reserved for a genuinely pre-existing spec on a stage that never ran.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The gate passes on severity, so the loop has a reachable exit.</strong> Per the QA contract a spec FAILs only on a <code>blocker</code>/<code>major</code> finding, but validators applied it unevenly and the loop chased fresh precision nits until the retry budget drained. The driver now enforces the contract: a <code>FAIL</code> whose findings are all <code>[minor]</code>/<code>[nit]</code> is passed with advisory notes (kept in <code>.gspec/build/qa-failures.md</code>, tagged <code>ADVISORY</code>). Conservative — any <code>blocker</code>/<code>major</code>, or an untagged verdict, keeps the FAIL. The QA persona was reinforced to match, and revision prompts now forbid growing a document &gt;~10% without resolving a blocker/major, with re-validation asked to confirm resolved findings before raising new ones.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Passing PRDs are memoized, not re-gated.</strong> The features stage restarts over the whole PRD list on every resume; an already-passing PRD used to burn a fresh budget each time (and its verdict was not stable across re-gates). Each PRD that passes is now recorded with a content hash in the run manifest, and an unchanged PRD is skipped on the next pass — removing a large slice of resume wall-clock.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>A crash is no longer mistaken for a gate failure.</strong> A writer that exits non-zero is retried once; if it still exits non-zero but its expected artifact is present and well-formed (a transient post-write crash), it is accepted and handed to QA to judge — instead of restarting the whole stage. Applies to the foundation/architecture writers and the feature-writer fan-out.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Cumulative QA failure log.</strong> Every failing QA verdict — spec gates, the per-PRD feature loop, the plan QA note, the <code>verify.sh</code> build/test gate, and the implementation judgment gate — is appended in full to <code>.gspec/build/qa-failures.md</code>, tagged with the stage, checker, target, and whether it was a self-heal revision (<code>rev N</code>), a downgraded advisory (<code>ADVISORY</code>), or the <code>TERMINAL</code> failure that paused the run. Recovered failures are captured too, so a build that self-heals and completes still leaves a reviewable record. Previously a recovered failure left only a truncated manifest excerpt, and the one detailed report (<code>last-failure.md</code>) was overwritten by the next failure and deleted on completion. The new log is cumulative across runs and never auto-removed — delete it once you have mined it; the end-of-run learnings report and the paused-build banner both point at it.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Per-stage cost signal.</strong> Each stage now reports its elapsed time as it finishes, the manifest carries a running <code>totalElapsedMs</code>, and the completion line shows total stage time across all runs — so a stage that has quietly consumed an hour is visible while you can still act on it.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the reinforced QA persona and revision prompts. No workflow changes: a fresh or resumed <code>gspec build</code> picks up all of this automatically, and older run manifests resume normally (memoization and timing simply start populating). A resume that lands on a previously-<code>failed</code> spec now re-validates it — if you hand-edited that spec to unblock, your edit is validated in place, not overwritten. The build now writes <code>.gspec/build/qa-failures.md</code>; add it to your project\'s <code>.gitignore</code> if you do not want run artifacts committed.',
+  },
+  {
     version: '2.3.0',
     date: 'July 24, 2026',
     title: 'Per-deployable architecture, surgical QA revisions, and a token-literals floor',

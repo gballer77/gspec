@@ -46,7 +46,7 @@ const reliability = [
   },
   {
     title: 'Self-healing QA gates',
-    body: 'Each producer is followed by a read-only validator (producer ≠ checker). A failing verdict hands the work back for a revision — one attempt by default, more with --qa-retries. Revisions are surgical repairs, not rewrites: the writer is restricted to the edits the findings name and sees every verdict so far, so a repeat finding gets fixed differently instead of repeated. If the gate still fails, the run pauses for you rather than shipping something broken, keeping the full failing verdict in .gspec/build/last-failure.md so you can see exactly why.',
+    body: 'Each producer is followed by a read-only validator (producer ≠ checker). The gate passes on severity: a spec fails only on a blocker or major finding, so a verdict carrying only minor/nit notes passes with those notes recorded rather than burning another revision — the loop has an exit it can reach. A real failure hands the work back for a surgical revision (not a rewrite): the writer is restricted to the edits the findings name, is told not to pad the document, and sees every verdict so far, so a repeat finding gets fixed differently instead of repeated. If the gate still fails, the run pauses rather than shipping something broken, keeping the full verdict in .gspec/build/last-failure.md — and every failing verdict, including recovered ones, is appended to a cumulative .gspec/build/qa-failures.md so you can tune the loop. On resume, a stage you left failed is re-validated (honoring any hand-edit), never skipped; specs that already passed are memoized and not re-checked; and each stage reports its elapsed time.',
   },
   {
     title: 'Deterministic verify.sh',

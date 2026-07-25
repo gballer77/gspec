@@ -14,6 +14,7 @@ import { revisePrompt } from '../lib/build.js';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 const LAST_FAILURE = join('.gspec', 'build', 'last-failure.md');
+const QA_LOG = join('.gspec', 'build', 'qa-failures.md');
 
 // Every agent a full run can invoke (foundations are pre-seeded so their
 // writers never run, but the files are cheap to create).
@@ -41,11 +42,31 @@ case "$*" in
 esac
 `;
 
+// A validator that FAILs its FIRST call and PASSes every call after it, so a
+// stage recovers on its self-heal revision and the whole run completes. The
+// call count lives in a file ($FAKE_PI_COUNTER) so it survives across the fake's
+// short-lived processes.
+const FAKE_PI_RECOVER = `#!/bin/sh
+case "$*" in
+  *Validate*)
+    n=$(cat "$FAKE_PI_COUNTER" 2>/dev/null || echo 0)
+    n=$((n + 1))
+    echo "$n" > "$FAKE_PI_COUNTER"
+    if [ "$n" = "1" ]; then
+      printf 'VERDICT: FAIL\\nBlocking findings:\\n- The Deployables table is missing from gspec/architecture.md.\\n'
+    else
+      printf 'VERDICT: PASS\\nLooks complete.\\n'
+    fi
+    ;;
+  *) printf 'ok\\n' ;;
+esac
+`;
+
 // A pi project ready to run headlessly straight to the architecture gate:
 // brief present (skips the interactive intake), foundation outputs pre-seeded
 // (skip-if-present), no feature PRDs (so the features/plan stages are cheap),
-// fake `pi` first on PATH.
-async function seedBuildProject(dir) {
+// fake `pi` first on PATH. `fakePi` swaps the validator behavior per test.
+async function seedBuildProject(dir, fakePi = FAKE_PI) {
   await seedInstall(dir, 'pi', { agentFiles: AGENTS.map((a) => join('.pi', 'agents', `${a}.md`)) });
   await mkdir(join(dir, '.gspec', 'build'), { recursive: true });
   await writeFile(join(dir, '.gspec', 'build', 'brief.md'), 'Build a tiny demo API.\n');
@@ -55,9 +76,9 @@ async function seedBuildProject(dir) {
   }
   const bin = join(dir, 'fake-bin');
   await mkdir(bin, { recursive: true });
-  await writeFile(join(bin, 'pi'), FAKE_PI);
+  await writeFile(join(bin, 'pi'), fakePi);
   await chmod(join(bin, 'pi'), 0o755);
-  return { PATH: `${bin}:${process.env.PATH}` };
+  return { PATH: `${bin}:${process.env.PATH}`, FAKE_PI_COUNTER: join(dir, 'qa-counter') };
 }
 
 test('a failed QA gate pauses with the verdict, an action banner, and a durable report', async (t) => {
@@ -85,6 +106,37 @@ test('a failed QA gate pauses with the verdict, an action banner, and a durable 
   const manifest = JSON.parse(await readFile(join(dir, RUN_JSON), 'utf-8'));
   assert.equal(manifest.stages.architecture.status, 'failed');
   assert.match(manifest.stages.architecture.detail, /Deployables table is missing/);
+
+  // …and the cumulative QA log has the full verdict, including a TERMINAL entry
+  // marking where the run paused.
+  const qalog = await readFile(join(dir, QA_LOG), 'utf-8');
+  assert.match(qalog, /gspec build — QA failure log/);
+  assert.match(qalog, /architecture · TERMINAL/);
+  assert.match(qalog, /Deployables table is missing/);
+});
+
+test('a QA failure the self-heal recovers from is still logged durably, and the log survives completion', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  // Validator fails once (architecture), then passes — the stage recovers on its
+  // revision and the run completes. --no-review so it runs straight through.
+  const env = await seedBuildProject(dir, FAKE_PI_RECOVER);
+
+  const r = await runCli(['build', '--no-review', 'an idea'], dir, env);
+  assert.equal(r.code, 0, r.output);
+  assert.match(r.output, /revision 1\/1/);          // the self-heal happened
+  assert.match(r.output, /✓ Build complete/);       // …and the run still finished
+  assert.match(r.output, /qa-failures\.md/);        // the report points at the durable log
+
+  // A recovered failure never writes last-failure.md, but the full verdict IS in
+  // the cumulative log — tagged a revision (not TERMINAL, since it recovered) —
+  // and that log is NOT removed when the build completes.
+  assert.ok(!(await exists(join(dir, LAST_FAILURE))), 'a recovered failure writes no last-failure.md');
+  assert.ok(await exists(join(dir, QA_LOG)), 'the durable QA log survives a completed build');
+  const qalog = await readFile(join(dir, QA_LOG), 'utf-8');
+  assert.match(qalog, /architecture · rev 1/);
+  assert.match(qalog, /Deployables table is missing/);
+  assert.doesNotMatch(qalog, /· TERMINAL/);   // it recovered — no terminal entry
 });
 
 test('--qa-retries widens every QA gate to n revisions before pausing', async (t) => {
@@ -174,4 +226,9 @@ test('after a QA pause, --resume continues from the failed stage and clears the 
   assert.equal(manifest.stages.architecture.status, 'done');
   assert.equal(manifest.stages.architecture.detail, undefined);
   assert.ok(!(await exists(join(dir, LAST_FAILURE))), 'a completed build must remove last-failure.md');
+
+  // …but the cumulative QA log is NOT cleared: the verdict from the failed run
+  // is still reviewable after the resume completes.
+  assert.ok(await exists(join(dir, QA_LOG)), 'the durable QA log outlives a completed build');
+  assert.match(await readFile(join(dir, QA_LOG), 'utf-8'), /Deployables table is missing/);
 });
