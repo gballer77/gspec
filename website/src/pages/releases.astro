@@ -5,6 +5,19 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '2.5.1',
+    date: 'July 25, 2026',
+    title: 'Resume checkpoints the feature-writing fan-out',
+    summary: 'A follow-up to 2.5.0. When one feature-writer failed — a token exhaustion, say — the whole feature-writing phase restarted on resume: the planner re-ran and every feature-writer was re-invoked, regenerating PRDs that were already written (and overwriting any you hand-edited during the pause) just to reach the one that failed. Now the fan-out is checkpointed by the filesystem: on a resume, a feature whose PRD already exists and is well-formed is skipped, so only the missing or malformed one re-runs. The 2.5.0 memoization covered re-validation; this covers re-generation.',
+    changes: [
+      {
+        type: 'fixed',
+        description: '<strong>One failed feature-writer no longer restarts the whole writing phase.</strong> The features stage fans out one <code>feature-writer</code> per feature and only then validates, so a single writer failing (e.g. running out of tokens) used to pause the run <em>before</em> any memoization — and the resume re-ran the planner and every writer, regenerating already-written PRDs and re-spending their token cost. On a re-run, the driver now skips a feature whose <code>gspec/features/&lt;slug&gt;.md</code> already exists and is well-formed; the skipped PRD is still re-checked by the validation gate, so a truncated draft is caught there. A fresh run is unchanged (it always writes). This also stops a resume from overwriting a PRD you hand-edited while the run was paused.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the updated runtime. No workflow changes — the checkpoint only affects a resume after a feature-writing failure, and only skips PRDs that are already present and well-formed. To force a feature to be regenerated, delete its <code>gspec/features/&lt;slug&gt;.md</code> before resuming.',
+  },
+  {
     version: '2.5.0',
     date: 'July 25, 2026',
     title: 'The QA loop converges: a reachable exit, no discarded verdicts, no redone work',

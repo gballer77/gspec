@@ -233,3 +233,63 @@ test('a PRD unchanged since it passed is skipped on resume, not re-gated', async
   assert.match(resumed.output, /feat-a\.md — unchanged since it passed; skipping re-validation/);
   assert.match(resumed.output, /✓ Build complete/);
 });
+
+// ---------------------------------------------------------------------------
+// Writing-phase checkpoint — one writer failing doesn't regenerate the rest.
+// ---------------------------------------------------------------------------
+
+// A planner that returns two features, a validator that passes, and a writer
+// that OVERWRITES its target PRD with "REGENERATED" content when invoked — so a
+// skipped feature is visibly distinguishable from a regenerated one.
+const FAKE_PI_SKIP_WRITE = `#!/bin/sh
+case "$*" in
+  *feature-plan*) printf '{"features":[{"slug":"feat-a","title":"A"},{"slug":"feat-b","title":"B"}]}\\n' ;;
+  *Validate*) printf 'VERDICT: PASS\\nfine\\n' ;;
+  *Write\\ ONE\\ feature*)
+    f=$(printf '%s' "$*" | grep -o 'gspec/features/[a-z0-9-]*\\.md' | head -1)
+    [ -n "$f" ] && printf '%s\\n' '---' 'feature: regen' '---' '' '# Regenerated' '' 'REGENERATED body content here.' > "$f"
+    ;;
+  *) printf 'ok\\n' ;;
+esac
+`;
+
+// Resumable state: features failed on a prior run; feat-a.md was written,
+// feat-b.md was not. Foundations are already done/skipped so resume lands on features.
+function featuresFailedManifest() {
+  const pending = { status: 'pending', attempts: 0, verdict: null };
+  const skipped = () => ({ status: 'skipped', attempts: 1, verdict: null });
+  return {
+    idea: 'an idea', engine: 'pi', noQa: false, noReview: false, research: false,
+    qaRetries: 1, permissionMode: 'acceptEdits',
+    createdAt: '2026-07-25T00:00:00.000Z', updatedAt: '2026-07-25T00:00:00.000Z',
+    stages: {
+      profile: { status: 'done', attempts: 1, verdict: 'skipped' },
+      research: { status: 'skipped', attempts: 0, verdict: null },
+      stack: skipped(), practices: skipped(), style: skipped(),
+      features: { status: 'failed', attempts: 1, verdict: 'FAIL', detail: 'feature-writer ("feat-b") exited 1' },
+      architecture: { ...pending }, plan: { ...pending }, review: { ...pending },
+      implement: { ...pending }, reconcile: { ...pending },
+    },
+    learnings: [], learningsBaseline: {},
+  };
+}
+
+test('on resume, an already-written PRD is not regenerated; only the missing one re-runs', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  const original = '---\nfeature: feat-a\n---\n\n# Feat A (original)\n\nThis is the ORIGINAL hand-kept content.\n';
+  const env = await seedProject(dir, FAKE_PI_SKIP_WRITE, { 'gspec/features/feat-a.md': original });
+  await writeFile(join(dir, RUN_JSON), JSON.stringify(featuresFailedManifest(), null, 2) + '\n');
+
+  const r = await runCli(['build', '--resume', '--no-review'], dir, env);
+  assert.equal(r.code, 0, r.output);
+  assert.match(r.output, /feat-a\.md — already written; skipping regeneration/);
+  assert.match(r.output, /✓ Build complete/);
+
+  // The existing PRD is preserved byte-for-byte — not overwritten with "REGENERATED".
+  const a = await readFile(join(dir, 'gspec', 'features', 'feat-a.md'), 'utf-8');
+  assert.equal(a, original);
+  assert.doesNotMatch(a, /REGENERATED/);
+  // The one that had failed was produced this run.
+  assert.ok(await exists(join(dir, 'gspec', 'features', 'feat-b.md')));
+});
