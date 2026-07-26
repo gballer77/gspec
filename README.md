@@ -27,6 +27,8 @@ There are two ways to work with gspec: let it **build autonomously** from an ide
 
 New in 2.0: `/gspec-build` turns a plain-language idea into a working, spec-backed codebase in a single run. Answer a short intake interview (or pass the idea directly) and gspec drives the whole pipeline unattended — profile, stack, practices, style, feature PRDs, architecture, an ordered plan, and the implementation — with an independent validator gating every stage and a deterministic `verify.sh` check on the build. Before any code is written, the run pauses once so you can review the finished specs; continue with `--resume`, or pass `--no-review` for a fully unattended run. Want richer requirements out of the gate? Pass `--research` to add a competitive-research stage right after the profile — the build researches your competitors on the web, writes `gspec/research.md`, and feeds the auto-accepted findings into the feature PRDs.
 
+The quality loop is tuned to converge and to resume cheaply. A gate fails only on a **blocker/major** finding — minor/nit notes pass with the notes recorded as advisory — so it reaches a finished state instead of polishing forever. Every failing verdict, including ones a self-heal recovers from, is kept in full in `.gspec/build/qa-failures.md` so you can study and tune the loop, and each stage reports its elapsed time. On `--resume`, a stage you left failed is **re-validated in place** (honoring any hand-edit you made to unblock it) rather than restarted from scratch, and feature PRDs that already passed — or were already written — are skipped instead of regenerated.
+
 ```bash
 /gspec-build                    # in your harness — brief interview, then unattended
 /gspec-build "a URL shortener"  # skip the interview, pass the idea directly
@@ -45,6 +47,61 @@ gspec build --research "an idea"                # competitive research up front,
 ```
 
 The autonomous build has a wired engine for **Claude Code**, **Codex**, and **Pi**. On other harnesses, use the spec-by-spec workflow below.
+
+**Per-agent models (cost control).** The build runs each stage as its own agent, and you can assign each a model — so the checkers and foundations can run on a cheaper model while architecture and implementation keep the strong one. Add a `models` map to `.gspec/config.json` (this project) or `~/.gspec/config.json` (your global default; the project file overrides it). Selectors resolve most-specific-first — exact agent name, then role tier (`writer`, `qa`, `planner`, `implementer`, `researcher`, `inspector`), then `default`:
+
+```jsonc
+// ~/.gspec/config.json
+{
+  "models": {
+    "default": "claude-sonnet-5",           // any agent with no better match
+    "qa":      "claude-haiku-4-5",           // every *-validator
+    "architecture-writer": "claude-opus-4-8", // one specific agent
+    "implementer":         "claude-opus-4-8"
+  }
+}
+```
+
+With no `models` map, every agent runs on the engine/CLI default, unchanged. The model string passes straight to the engine's `--model`, so any model your CLI accepts works.
+
+**Recommended starting points.** The idea is the same on every engine, expressed with the `writer` and `qa` role tiers plus two overrides:
+
+- **`writer` → a balanced model** — the everyday authoring (profile, stack, practices, style, feature, research PRDs).
+- **`qa` → a cheap/fast model** — every `*-validator`; checking a spec needs far less horsepower than writing one.
+- **`architecture-writer` and `implementer` → a strong model** — the two load-bearing jobs (the system design and the code), pinned by name so they beat the `writer`/`default` tier.
+- **`default` → the balanced model** — catches the planners and anything else.
+
+- **Claude engine** — strong `claude-opus-4-8`, balanced `claude-sonnet-5`, cheap `claude-haiku-4-5`:
+
+  ```jsonc
+  // ~/.gspec/config.json
+  {
+    "models": {
+      "default": "claude-sonnet-5",             // planners and anything unlisted
+      "writer":  "claude-sonnet-5",             // every *-writer (balanced)
+      "qa":      "claude-haiku-4-5",            // every *-validator (cheap)
+      "architecture-writer": "claude-opus-4-8", // override: the system design
+      "implementer":         "claude-opus-4-8"  // override: the code
+    }
+  }
+  ```
+
+- **Codex engine** — same shape, using the model IDs your `codex` CLI accepts (run `codex --help` / check your Codex config for the exact strings): a strong reasoning model for `architecture-writer`/`implementer`, a mid model for the `writer` tier and `default`, and a small/fast model for `qa`. For example:
+
+  ```jsonc
+  // .gspec/config.json  (target: codex)
+  {
+    "models": {
+      "default": "gpt-5",                 // planners and anything unlisted
+      "writer":  "gpt-5",                 // every *-writer (balanced)
+      "qa":      "gpt-5-mini",            // every *-validator (cheap)
+      "architecture-writer": "gpt-5-codex", // override: the system design
+      "implementer":         "gpt-5-codex"  // override: the code
+    }
+  }
+  ```
+
+  Model names shown are illustrative — use whatever your installed `codex` accepts for `--model`; gspec passes the string through unchanged.
 
 ### The spec-by-spec workflow
 

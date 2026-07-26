@@ -505,6 +505,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
       'Let existing specs stand — build skips foundation stages whose spec already exists',
       'Use the spec-review pause to read and edit gspec/ before any code is written; resume when it looks right (or pass --no-review to run straight through)',
       'If a QA gate keeps failing on a hard stage, resume with --qa-retries <n> to give it a bigger self-heal budget instead of fixing everything by hand',
+      'Cut token cost by assigning models per agent in .gspec/config.json (or ~/.gspec/config.json) — put QA and foundations on a cheaper model, keep the strong one for architecture and implementation',
       'Review the learnings report at the end; it feeds the distill step',
     ]}
     pitfalls={[

@@ -64,6 +64,10 @@ const reliability = [
     title: 'Learnings report',
     body: 'Every run ends by recording what it learned — QA corrections and feedback that feed the learning loop, so the next build starts smarter.',
   },
+  {
+    title: 'Right-sized models',
+    body: 'Every stage runs as its own agent, so you can assign each a model in .gspec/config.json (or ~/.gspec/config.json) — by exact agent name, by role tier (writer, qa, planner, implementer, …), or a default. Put the checkers and foundation specs on a cheaper model and keep the strong one for architecture and implementation, and a build costs a fraction of running everything on the top tier. With no config, every agent uses the engine default.',
+  },
 ];
 ---
 

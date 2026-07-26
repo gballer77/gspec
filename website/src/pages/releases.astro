@@ -5,6 +5,23 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '2.6.0',
+    date: 'July 25, 2026',
+    title: 'Per-agent model assignment — run each stage on the right-sized model',
+    summary: 'The autonomous build ran every agent on your CLI\'s default model — usually the most expensive one — even though validating a spec or planning a breakdown rarely needs the same horsepower as authoring the architecture. You can now assign a model per agent in <code>.gspec/config.json</code> (project) or <code>~/.gspec/config.json</code> (global), by exact agent name, by role tier (<code>writer</code>, <code>qa</code>, <code>planner</code>, <code>implementer</code>, <code>researcher</code>, <code>inspector</code>), or a <code>default</code> — so you can put QA and foundations on a cheaper model and reserve the strong one for architecture and implementation. It works on all three engines (Claude/Codex/Pi).',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>Per-agent model config.</strong> A <code>models</code> map in <code>.gspec/config.json</code> assigns models by selector, resolved most-specific-first: exact agent name &gt; role tier &gt; <code>default</code>. Role tiers are <code>writer</code> (every <code>*-writer</code>), <code>qa</code> (every <code>*-validator</code>), <code>planner</code> (feature-planner, plan-decomposer, build-orchestrator, research-planner), <code>implementer</code>, <code>researcher</code>, and <code>inspector</code>. Example: <code>{ "models": { "default": "claude-sonnet-5", "qa": "claude-haiku-4-5", "architecture-writer": "claude-opus-4-8" } }</code>. Model strings pass straight through to the engine\'s <code>--model</code> flag — no allowlist, so new models work immediately.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Global defaults, project overrides.</strong> <code>~/.gspec/config.json</code> holds your cross-project defaults; a project\'s <code>.gspec/config.json</code> overrides them. Precedence is most-specific-wins with project breaking ties at the same level — so a global <code>architecture-writer</code> pin still beats a project-wide <code>writer</code> tier, while a project <code>qa</code> tier beats the global <code>qa</code> tier. The config is read fresh each run (not pinned like the engine), so you can retune models and <code>--resume</code>. The run header now prints the active assignments.',
+      },
+    ],
+    migration: 'No change required — with no <code>models</code> map, every agent runs on the engine/CLI default exactly as before. To cut cost, add a <code>models</code> block to <code>~/.gspec/config.json</code>: <code>qa</code> on a cheap model, the <code>writer</code> tier on a mid model, and <code>architecture-writer</code>/<code>implementer</code> pinned to your strong model (the README has copy-paste starting points for Claude and Codex). On the Claude engine this overrides the model an agent definition would otherwise select.',
+  },
+  {
     version: '2.5.1',
     date: 'July 25, 2026',
     title: 'Resume checkpoints the feature-writing fan-out',
