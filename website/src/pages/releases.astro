@@ -944,6 +944,16 @@ const typeColors: Record<string, { bg: string; text: string; label: string }> = 
   removed: { bg: 'bg-red-500/10', text: 'text-red-400', label: 'Removed' },
   fixed: { bg: 'bg-blue-500/10', text: 'text-blue-400', label: 'Fixed' },
 };
+
+// Entries are authored in whatever order a release was written; the page reads
+// them grouped by kind (Keep a Changelog's order), with authoring order kept
+// inside each group. Done here rather than in the data so every past release
+// groups too, and a new entry can be appended wherever it fits the narrative.
+const typeOrder = ['added', 'changed', 'fixed', 'removed'];
+const groupByType = (changes: { type: string; description: string }[]) => [
+  ...typeOrder.flatMap((t) => changes.filter((c) => c.type === t)),
+  ...changes.filter((c) => !typeOrder.includes(c.type)),
+];
 ---
 
 <BaseLayout title="Releases — gspec" description="Release notes and changelog for gspec — what's new in each version.">
@@ -987,7 +997,7 @@ const typeColors: Record<string, { bg: string; text: string; label: string }> = 
 
           {/* Changes list */}
           <div class="space-y-3">
-            {release.changes.map((change) => {
+            {groupByType(release.changes).map((change) => {
               const colors = typeColors[change.type] || typeColors.added;
               return (
                 <div class="flex gap-3">
