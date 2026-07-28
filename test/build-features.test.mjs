@@ -12,7 +12,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, seedInstall, exists } from './helpers.mjs';
+import { runCli, makeProject, cleanup, seedInstall, exists, FAKE_ENGINE_SH } from './helpers.mjs';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 
@@ -32,12 +32,13 @@ const AGENTS = [
 // decomposed writer prompt uniquely contains "decomposed set", and the fallback
 // writer prompt uniquely contains "feature PRD for this idea".
 const FAKE_PI = `#!/bin/sh
+${FAKE_ENGINE_SH}
 case "$*" in
   *feature-plan*) printf '\`\`\`json\\n{"features":[{"slug":"user-auth","title":"User auth","brief":"sign in","priority":"P0","dependencies":[]},{"slug":"dashboard","title":"Dashboard","brief":"see stuff","priority":"P1","dependencies":["user-auth"]}]}\\n\`\`\`\\n' ;;
-  *"decomposed set"*) echo writer >> writer-calls.log; printf 'wrote one PRD\\n' ;;
-  *"feature PRD for this idea"*) echo fallback >> writer-calls.log; printf 'wrote the PRD\\n' ;;
+  *"decomposed set"*) deliver "$*"; echo writer >> writer-calls.log; printf 'wrote one PRD\\n' ;;
+  *"feature PRD for this idea"*) deliver "$*"; echo fallback >> writer-calls.log; printf 'wrote the PRD\\n' ;;
   *Validate*) printf 'VERDICT: PASS\\nLooks complete.\\n' ;;
-  *) printf 'ok\\n' ;;
+  *) fake_default "$*" ;;
 esac
 `;
 
@@ -87,7 +88,7 @@ test('the features stage decomposes the brief and fans out one writer per featur
   const env = await seedBuildProject(dir);
 
   const r = await runCli(['build', 'an idea'], dir, env);
-  assert.equal(r.code, 0, r.output); // pauses at the spec-review gate
+  assert.equal(r.code, 2, r.output); // pauses at the spec-review gate
   assert.match(r.output, /decomposed into 2 feature\(s\): user-auth, dashboard/);
   assert.match(r.output, /Paused for spec review/);
 
@@ -103,7 +104,7 @@ test('a single-feature plan writes exactly one PRD', async (t) => {
   const env = await seedBuildProject(dir, FAKE_PI_SINGLE);
 
   const r = await runCli(['build', 'an idea'], dir, env);
-  assert.equal(r.code, 0, r.output);
+  assert.equal(r.code, 2, r.output); // exit 2 = paused at the spec-review gate, not complete
   assert.match(r.output, /decomposed into 1 feature\(s\): only-thing/);
   assert.equal((await writerCalls(dir)).length, 1);
 });
@@ -114,7 +115,7 @@ test('an unusable plan falls back to a single monolithic writer call (never zero
   const env = await seedBuildProject(dir, FAKE_PI_NOPLAN);
 
   const r = await runCli(['build', 'an idea'], dir, env);
-  assert.equal(r.code, 0, r.output);
+  assert.equal(r.code, 2, r.output); // exit 2 = paused at the spec-review gate, not complete
   assert.doesNotMatch(r.output, /decomposed into/);
   const calls = await writerCalls(dir);
   assert.equal(calls.length, 1, 'the fallback single writer ran');
@@ -128,7 +129,7 @@ test('a plan exceeding the cap is trimmed to MAX_FEATURES writers, drop logged',
   const env = await seedBuildProject(dir, FAKE_PI_MANY);
 
   const r = await runCli(['build', 'an idea'], dir, env);
-  assert.equal(r.code, 0, r.output);
+  assert.equal(r.code, 2, r.output); // exit 2 = paused at the spec-review gate, not complete
   assert.match(r.output, /26 features planned.*writing the first 24/);
   assert.match(r.output, /dropping: feat-25, feat-26/);
   assert.equal((await writerCalls(dir)).length, 24, 'exactly MAX_FEATURES writers ran');

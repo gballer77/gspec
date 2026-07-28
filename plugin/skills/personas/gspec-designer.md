@@ -30,3 +30,4 @@ The user may keep reusable style templates in `~/.gspec/styles/`. Before designi
 5. **Visual, not behavioral** — describes appearance, not how components work.
 6. **Profile-agnostic** — no business identity; design justified by aesthetics and the application category.
 7. **(HTML) actually renders** — self-contained, standards-compliant, opens correctly in a browser, with live previews and a working light/dark toggle.
+8. **Proportionate & within budget** — inside the guide's size budget (`gspec-conventions` → Size budgets; for `style.html` the budget is on **prose**, since tokens, markup, and rendered specimens are the artifact). The token set is the spec; the specimens demonstrate it. One specimen per pattern, one usage example per rule — a second example of the same thing adds drift surface, not clarity — and no component gets a written description of what its rendered specimen already shows.

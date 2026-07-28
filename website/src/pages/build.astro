@@ -11,7 +11,7 @@ const base = import.meta.env.BASE_URL;
 const phases = [
   {
     group: 'Foundation',
-    note: 'Skip-if-present — reused as-is on existing projects',
+    note: 'Skip-if-present — reused as-is on existing projects, or seeded from your saved templates',
     stages: [
       { name: 'profile', desc: 'Product identity & positioning' },
       { name: 'stack', desc: 'Technology & infrastructure' },
@@ -53,8 +53,16 @@ const reliability = [
     body: 'The implementer generates a committed verify.sh that builds and tests every deployable in the project — each independently built and shipped unit, like an API, a web app, or a CLI. The driver runs it and reads the exit code — a real build+test gate, not a vibe check. Polyglot and multi-deployable aware.',
   },
   {
+    title: 'Seeded from your library',
+    body: 'Saved specs in ~/.gspec (stacks, styles, practices, feature PRDs) are templates the run can start from instead of a blank page. With nobody to ask, the build reports what it found and the writer adopts the single best fit — adapting it to this project, never copying it blindly — or writes fresh when none fits. Your product profile and architecture are always written from scratch: both are specific to one project.',
+  },
+  {
     title: 'Resumable runs',
     body: 'Progress is tracked in an on-disk run manifest. If a stage crashes, you stop it, or it pauses at the spec-review gate, the build resumes from where it left off instead of starting over.',
+  },
+  {
+    title: 'It always says how it ended',
+    body: 'A long run must never stop in silence. Each ending gets its own exit code — 0 complete, 1 failed a gate, 2 paused for spec review, 3 crashed — and its own record in .gspec/build/status.json. gspec build --status prints it in one line and exits with that code, so a script or a watching agent branches on a number instead of reading the log. A run killed mid-stage still leaves that record, and one whose process is simply gone is reported as crashed rather than as still working.',
   },
   {
     title: 'Continuation loop',

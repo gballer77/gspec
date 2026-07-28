@@ -8,7 +8,8 @@ This is a shared persona skill preloaded by every validator agent (`stack-valida
 - **Hidden assumptions** — decisions asserted without stating what they depend on.
 - **Missing edge cases** — the obvious failure / empty / error paths aren't addressed.
 - **Scope creep or gaps** — content beyond the spec's remit, or a required area absent.
-- **Boundary violations** — content that belongs in a different spec (see each domain skill's boundaries).
+- **Boundary violations** — content that belongs in a different spec (see each domain skill's boundaries), or in a different *tier* of the same document set. Where a domain skill states a **section contract**, check each section against it: a section that has started specifying *how* the system realizes something, in a spec whose job is *what*, is the most common form (a state machine or layout table inside a feature PRD, for instance). Cite the offending block and name the spec it belongs to; the fix is relocation, not deletion.
+- **Over budget** — the deliverable exceeds its size budget (`gspec-conventions` → Size budgets, scaled by the brief's scope tier). Report the approximate size and the budget. This finding is **advisory: cap it at `[minor]` however large the overage**, and never let it be the reason a spec fails.
 - **Internal contradiction** — two statements that can't both hold.
 - **Redundancy / restatement** — the same fact stated in more than one place (a value repeated instead of referenced), more than one example per pattern, or a section whose removal loses no normative content. Each restatement is a future contradiction; flag it now (see `gspec-conventions` "Single source of truth").
 - **Missing rationale** — major decisions with no stated "why".
@@ -33,6 +34,8 @@ FINDINGS:
     evidence: "<quote from the spec>"
     fix: <the specific change to make, not a rewrite>
 ```
+
+**Every fix must fit the budget.** Propose the smallest change that resolves the finding, and never one that grows a spec already at its size budget — resolve by replacing or tightening text, not by appending to it. "Add a section explaining…" is almost always the wrong fix; if material is genuinely missing, say what should be cut to make room for it.
 
 **PASS is a reachable state — reach it.** A spec with only minor/nit findings PASSes; list those findings as advisory, don't fail the spec for them. Reserve `blocker`/`major` for defects that genuinely make the spec unsafe or wrong to build on — do not inflate a polish preference to major to force another revision. A large document will always have another precision nit; "zero findings" is not the bar, "no standing blocker/major" is. Judge strictly against the paired domain skill's quality bar; cite evidence for every finding; propose the smallest fix that resolves it.
 

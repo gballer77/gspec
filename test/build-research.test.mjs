@@ -9,7 +9,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, seedInstall, exists } from './helpers.mjs';
+import { runCli, makeProject, cleanup, seedInstall, exists, FAKE_ENGINE_SH } from './helpers.mjs';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 
@@ -27,11 +27,12 @@ const AGENTS = [
 // Every validator passes; the research planner returns a two-competitor plan;
 // each researcher fan-out appends a marker line so tests can count the fan-out.
 const FAKE_PI = `#!/bin/sh
+${FAKE_ENGINE_SH}
 case "$*" in
   *Validate*) printf 'VERDICT: PASS\\nLooks complete.\\n' ;;
   *research-plan*) printf '\`\`\`json\\n{"focus":"core capabilities","competitors":[{"name":"Acme"},{"name":"Globex","context":"globex.example"}]}\\n\`\`\`\\n' ;;
   *"one research fan-out"*) echo teardown >> researcher-calls.log; printf 'teardown of one competitor\\n' ;;
-  *) printf 'ok\\n' ;;
+  *) fake_default "$*" ;;
 esac
 `;
 
@@ -66,7 +67,7 @@ test('without --research the stage is skipped as not requested', async (t) => {
   const env = await seedBuildProject(dir);
 
   const r = await runCli(['build', 'an idea'], dir, env);
-  assert.equal(r.code, 0, r.output);
+  assert.equal(r.code, 2, r.output); // exit 2 = paused at the spec-review gate, not complete
   assert.match(r.output, /Competitive research — skipped/);
 
   const manifest = await manifestOf(dir);
@@ -82,7 +83,7 @@ test('--research runs the stage: one researcher per planned competitor, then don
   const env = await seedBuildProject(dir);
 
   const r = await runCli(['build', '--research', 'an idea'], dir, env);
-  assert.equal(r.code, 0, r.output);
+  assert.equal(r.code, 2, r.output); // exit 2 = paused at the spec-review gate, not complete
   assert.match(r.output, /competitive research: on/);
   assert.match(r.output, /researching 2 competitor\(s\): Acme, Globex/);
   assert.match(r.output, /✓ Competitive research — report/);
@@ -102,7 +103,7 @@ test('an existing gspec/research.md short-circuits the stage', async (t) => {
   await writeFile(join(dir, 'gspec', 'research.md'), 'already researched\n');
 
   const r = await runCli(['build', '--research', 'an idea'], dir, env);
-  assert.equal(r.code, 0, r.output);
+  assert.equal(r.code, 2, r.output); // exit 2 = paused at the spec-review gate, not complete
   assert.match(r.output, /Competitive research — skipped/);
   assert.equal((await manifestOf(dir)).stages.research.status, 'skipped');
   assert.ok(!(await exists(join(dir, 'researcher-calls.log'))), 'no researcher may have been spawned');
@@ -114,7 +115,7 @@ test('a planner that names no competitors skips the stage instead of guessing', 
   const env = await seedBuildProject(dir, FAKE_PI_NO_COMPETITORS);
 
   const r = await runCli(['build', '--research', 'an idea'], dir, env);
-  assert.equal(r.code, 0, r.output);
+  assert.equal(r.code, 2, r.output); // exit 2 = paused at the spec-review gate, not complete
   const manifest = await manifestOf(dir);
   assert.equal(manifest.stages.research.status, 'skipped');
   assert.match(manifest.stages.research.reason, /no competitors/);
@@ -126,7 +127,7 @@ test('--research at resume time is ignored: the flag is pinned at run start', as
   const env = await seedBuildProject(dir);
 
   const paused = await runCli(['build', 'an idea'], dir, env); // pauses at spec review
-  assert.equal(paused.code, 0, paused.output);
+  assert.equal(paused.code, 2, paused.output); // exit 2 = paused at the spec-review gate, not complete
 
   const resumed = await runCli(['build', '--resume', '--research'], dir, env);
   assert.equal(resumed.code, 0, resumed.output);

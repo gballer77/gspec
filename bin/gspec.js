@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import chalk from 'chalk';
 import { promptSelect, promptMultiSelect, promptConfirm, promptInput } from '../lib/prompts.js';
 import { TARGETS as EMITTER_TARGETS } from '../lib/emitters.js';
-import { runBuild } from '../lib/build.js';
+import { runBuild, reportBuildStatus, EXIT } from '../lib/build.js';
 import { writeProjectConfig, PROJECT_CONFIG_PATH } from '../lib/config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -2181,21 +2181,38 @@ program
   .option('--qa-retries <n>', 'self-heal revisions each QA gate may attempt before pausing (default: 1)')
   .option('--no-review', 'skip the spec-review pause before implementation (on by default)')
   .option('--research', 'run competitive research after the profile stage, for richer feature requirements (needs web access)')
+  .option('--scope <tier>', 'how big this product is: small | standard | large — scales every spec\'s size budget (default: what the intake recorded, else standard)')
   .option('--resume', 'resume an existing run from where it paused')
+  .option('--status', 'print how the current/last run ended and exit with its code (0 complete · 1 failed · 2 paused for review · 3 crashed)')
   .option('--dry-run', 'print the stage plan without invoking the engine')
   .action(async (idea, opts) => {
-    await runBuild({
-      idea,
-      cwd: process.cwd(),
-      engine: opts.engine,
-      piPermissionLevel: opts.piPermissionLevel,
-      noQa: !opts.qa,
-      noReview: !opts.review,
-      research: !!opts.research,
-      qaRetries: opts.qaRetries,
-      resume: !!opts.resume,
-      dryRun: !!opts.dryRun,
-    });
+    // --status is a read: report the run's terminal state and exit with the
+    // code that describes it, so a watcher branches on a number, not on prose.
+    if (opts.status) {
+      process.exitCode = await reportBuildStatus(process.cwd());
+      return;
+    }
+    try {
+      await runBuild({
+        idea,
+        cwd: process.cwd(),
+        engine: opts.engine,
+        piPermissionLevel: opts.piPermissionLevel,
+        noQa: !opts.qa,
+        noReview: !opts.review,
+        research: !!opts.research,
+        scope: opts.scope,
+        qaRetries: opts.qaRetries,
+        resume: !!opts.resume,
+        dryRun: !!opts.dryRun,
+      });
+    } catch (e) {
+      // Anything thrown before the run installs its own crash handlers (engine
+      // resolution, preflight, intake). Report it as a failure rather than
+      // letting node print a bare stack trace over a half-written run.
+      console.error(chalk.red(`\n  ✗ gspec build could not run: ${e.message}\n`));
+      process.exitCode = EXIT.FAILED;
+    }
   });
 
 program.parse();

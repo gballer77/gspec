@@ -15,7 +15,7 @@ spec-version: <<<SPEC_VERSION>>>
 ```
 
 ## Templates (seed from a saved stack)
-The user may keep reusable stack templates in `~/.gspec/stacks/` (see the `gspec-templates` skill). If the brief names one, read it and adapt it to this project. If the brief is silent (e.g. an autonomous run) and a template clearly fits the project type, you may adopt the best-fitting one; if none fits, write fresh. Always tailor the template to the brief and note in your summary which one seeded the spec.
+The user may keep reusable stack templates in `~/.gspec/stacks/` (see the `gspec-templates` skill). You will not find them yourself — you have no shell to expand `~`. Whoever holds one resolves the library for you: the brief either **names** a template (use it) or lists the candidates by **absolute path** under a "Saved templates you may seed from" heading (pick the single best fit, or none). No heading and no named template means there are none — write fresh. Always tailor a template to the brief and note in your summary which one seeded the spec.
 
 ## No questions — you can't ask
 If the brief leaves a load-bearing decision unresolved, do **not** block and do **not** invent silently. Make a reasonable, clearly-labeled choice and record it under a **Clarifications → Deferred Decisions** entry explaining what was assumed and why. The command is responsible for resolving the important questions before delegating to you.

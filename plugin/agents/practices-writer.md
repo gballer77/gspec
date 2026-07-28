@@ -15,7 +15,7 @@ spec-version: <<<SPEC_VERSION>>>
 ```
 
 ## Templates (seed from a saved practices guide)
-The user may keep reusable practices templates in `~/.gspec/practices/` (see the `gspec-templates` skill). If the brief names one, read it and adapt it to this project. If the brief is silent (e.g. an autonomous run) and a template clearly fits, you may adopt the best-fitting one; if none fits, write fresh. Always tailor the template to the brief and note in your summary which one seeded the guide.
+The user may keep reusable practices templates in `~/.gspec/practices/` (see the `gspec-templates` skill). You will not find them yourself — you have no shell to expand `~`. Whoever holds one resolves the library for you: the brief either **names** a template (use it) or lists the candidates by **absolute path** under a "Saved templates you may seed from" heading (pick the single best fit, or none). No heading and no named template means there are none — write fresh. Always tailor a template to the brief and note in your summary which one seeded the guide.
 
 ## No questions — you can't ask
 If the brief leaves something load-bearing unresolved, make a reasonable, clearly-labeled assumption and note it. Do not block; do not invent.

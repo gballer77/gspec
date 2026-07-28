@@ -9,7 +9,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, exists, seedInstall } from './helpers.mjs';
+import { runCli, makeProject, cleanup, exists, seedInstall, FAKE_ENGINE_SH } from './helpers.mjs';
 import { revisePrompt } from '../lib/build.js';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
@@ -28,27 +28,35 @@ const AGENTS = [
 ];
 
 // Validator prompts are the only ones containing "Validate" (see
-// validatorPrompt in lib/build.js); everything else just needs to exit 0.
+// validatorPrompt in lib/build.js); everything else just needs to exit 0 AND
+// leave its deliverable behind (fake_default, from FAKE_ENGINE_SH — the build
+// now fails a writer that produced nothing). The ARCHITECTURE gate is the one
+// under test here, so only its verdict is driven by $FAKE_PI_VERDICT; every
+// other checker passes, which keeps the run travelling to the stage the test
+// is about.
 const FAKE_PI = `#!/bin/sh
+${FAKE_ENGINE_SH}
 case "$*" in
-  *Validate*)
+  *"Validate the Architecture"*)
     if [ "$FAKE_PI_VERDICT" = "PASS" ]; then
       printf 'VERDICT: PASS\\nLooks complete.\\n'
     else
       printf 'VERDICT: FAIL\\nBlocking findings:\\n- The Deployables table is missing from gspec/architecture.md.\\n- No failure-mode section for the queue worker.\\n'
     fi
     ;;
-  *) printf 'ok\\n' ;;
+  *Validate*) printf 'VERDICT: PASS\\nLooks complete.\\n' ;;
+  *) fake_default "$*" ;;
 esac
 `;
 
-// A validator that FAILs its FIRST call and PASSes every call after it, so a
-// stage recovers on its self-heal revision and the whole run completes. The
-// call count lives in a file ($FAKE_PI_COUNTER) so it survives across the fake's
-// short-lived processes.
+// An architecture validator that FAILs its FIRST call and PASSes every call
+// after it, so the stage recovers on its self-heal revision and the whole run
+// completes. The call count lives in a file ($FAKE_PI_COUNTER) so it survives
+// across the fake's short-lived processes.
 const FAKE_PI_RECOVER = `#!/bin/sh
+${FAKE_ENGINE_SH}
 case "$*" in
-  *Validate*)
+  *"Validate the Architecture"*)
     n=$(cat "$FAKE_PI_COUNTER" 2>/dev/null || echo 0)
     n=$((n + 1))
     echo "$n" > "$FAKE_PI_COUNTER"
@@ -58,14 +66,16 @@ case "$*" in
       printf 'VERDICT: PASS\\nLooks complete.\\n'
     fi
     ;;
-  *) printf 'ok\\n' ;;
+  *Validate*) printf 'VERDICT: PASS\\nLooks complete.\\n' ;;
+  *) fake_default "$*" ;;
 esac
 `;
 
 // A pi project ready to run headlessly straight to the architecture gate:
 // brief present (skips the interactive intake), foundation outputs pre-seeded
-// (skip-if-present), no feature PRDs (so the features/plan stages are cheap),
-// fake `pi` first on PATH. `fakePi` swaps the validator behavior per test.
+// (skip-if-present), and a fake `pi` first on PATH that passes the features and
+// plan stages so the run reaches architecture. `fakePi` swaps the validator
+// behavior per test.
 async function seedBuildProject(dir, fakePi = FAKE_PI) {
   await seedInstall(dir, 'pi', { agentFiles: AGENTS.map((a) => join('.pi', 'agents', `${a}.md`)) });
   await mkdir(join(dir, '.gspec', 'build'), { recursive: true });
@@ -204,6 +214,35 @@ test('revisePrompt repairs surgically and accumulates verdicts across attempts',
   assert.match(second, /Verdict 1 of 2.*earlier attempt/);
   assert.match(second, /Verdict 2 of 2.*current — fix this one/);
   assert.match(second, /reappears in a later verdict means the earlier fix did not land/);
+});
+
+// The anti-growth rule and a "required content is missing" finding pull in
+// opposite directions — a verdict naming eight absent sections is resolved only
+// by multiplying the document's length. Left unranked, which rule gave way was
+// the writer's judgment call. The prompt must state the precedence itself, and
+// state it BEFORE the rule it governs, including on the over-budget path where
+// the conflict is sharpest (the size note used to say the draft "must not grow").
+test('revisePrompt ranks resolving a blocker above every size rule, over budget or not', () => {
+  const stage = { title: 'Feature PRDs', outputs: ['gspec/features/checkout.md'] };
+  const verdict = 'VERDICT: FAIL\n- [blocker] eight required sections are missing';
+
+  for (const sizeNote of ['', 'Size: this draft is 300 words against a 1800-word budget (0.2× over).']) {
+    const p = revisePrompt(stage, 'gspec/features/checkout.md', [verdict], sizeNote);
+    assert.match(p, /Precedence/);
+    assert.match(p, /outranks every size rule/);
+    assert.match(p, /add it in full, however much the document grows/);
+    assert.match(p, /An unresolved blocker fails this gate; an over-budget document never does/);
+    // The precedence has to arrive before the ~10% rule it governs.
+    assert.ok(p.indexOf('Precedence') < p.indexOf('~10%'), 'precedence must precede the growth rule');
+    // …and no surviving instruction may forbid the growth a finding requires.
+    assert.doesNotMatch(p, /must not grow/);
+  }
+
+  // Over budget, the added content is paid for by cutting elsewhere — and an
+  // overage that survives is reported, never traded for an unresolved finding.
+  const over = revisePrompt(stage, 'gspec/features/checkout.md', [verdict], 'Size: 4000 words against a 1800-word budget (2.2× over).');
+  assert.match(over, /pay for anything a finding requires you to add by cutting/);
+  assert.match(over, /rather than leaving a finding unresolved/);
 });
 
 test('after a QA pause, --resume continues from the failed stage and clears the failure report', async (t) => {

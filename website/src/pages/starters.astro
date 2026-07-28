@@ -8,6 +8,7 @@ const sections = [
   { id: 'overview', label: 'Overview' },
   { id: 'save', label: 'Save' },
   { id: 'restore', label: 'Restore' },
+  { id: 'templates', label: 'Templates' },
   { id: 'playbooks', label: 'Playbooks' },
   { id: 'install-flow', label: 'Install Flow' },
 ];
@@ -83,6 +84,39 @@ const headings = sections.map((s) => ({ id: s.id, label: s.label, level: 2 }));
     <CodeBlock code="gspec restore stacks/nextjs-supabase" lang="shell" />
     <p>
       The spec is copied into your project's <code>gspec/</code> directory. If the saved spec was created with an older gspec version, you'll be prompted to run <code>/gspec-migrate</code> to update it.
+    </p>
+  </section>
+
+  <!-- Templates -->
+  <section id="templates">
+    <h2>Templates</h2>
+    <p>
+      Restoring copies a saved spec in <em>verbatim</em>. Your library does a second job that needs no command at all: when gspec <strong>writes</strong> a spec, it first looks for a saved one to start from. A saved spec used this way is a <strong>template</strong> — a proven starting point rather than a blank page.
+    </p>
+    <p>
+      Four spec types have a template library, one folder each:
+    </p>
+    <CodeBlock code={`~/.gspec/stacks/      →  seeds  gspec/stack.md
+~/.gspec/styles/      →  seeds  gspec/style.md · style.html
+~/.gspec/practices/   →  seeds  gspec/practices.md
+~/.gspec/features/    →  seeds  gspec/features/<slug>.md`} lang="text" />
+    <p>
+      <code>profile.md</code> and <code>architecture.md</code> are deliberately excluded — both are inherently specific to one project, so neither is ever seeded from a template. (You can still <code>save</code> and <code>restore</code> a profile; it just won't be used as a starting point for a written one.)
+    </p>
+
+    <h3>How a template gets chosen</h3>
+    <p>
+      Matching is on each file's frontmatter <code>name</code> and <code>description</code>, so a useful description is worth writing — it is what gspec reads to decide whether a template fits.
+    </p>
+    <ul>
+      <li><strong>In a command</strong> (<code>/gspec-stack</code>, <code>/gspec-style</code>, <code>/gspec-practices</code>, <code>/gspec-feature</code>) any match is surfaced by name and description, and you choose: start from it, adapt it, or write fresh.</li>
+      <li><strong>In an autonomous <code>gspec build</code></strong> there is nobody to ask, so the run reports what it found (<code>templates: practices 1 · stacks 2</code>) and the writer adopts the single best fit — or writes fresh if none clearly fits.</li>
+    </ul>
+    <p>
+      Either way a template is a starting point, never a verbatim answer. The writer reconciles every choice against the current project, keeps the spec free of the original project's identity, brings the frontmatter up to the current spec version, and reports which template seeded the result — so the choice stays auditable.
+    </p>
+    <p>
+      An empty or absent folder simply means no templates: gspec writes from scratch, and says nothing about it.
     </p>
   </section>
 

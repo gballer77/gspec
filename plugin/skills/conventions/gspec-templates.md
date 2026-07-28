@@ -15,11 +15,11 @@ Only these four spec types have a library. **profile.md and architecture.md do n
 ## Matching
 List the relevant folder and read each candidate's frontmatter `name` + `description`. A template is *relevant* when its description fits the project's type and intent (e.g. a "pure browser 2D game" stack template for a browser game). Prefer a close fit; never force a mismatched one — a poor template is worse than none.
 
-**Paths.** `~` is the user's home directory; file tools may not expand it. The orchestrating command (which has a shell) resolves the library location and hands the chosen template's **absolute path** to the writer in the brief — so an isolated writer reads that absolute path, never a literal `~/…`. A writer that must discover templates itself should list the folder by its absolute path, not the `~` form.
+**Paths.** `~` is the user's home directory; file tools may not expand it, and a writer has no shell to expand it with. So whoever holds the shell resolves the library and hands the writer **absolute paths**: the orchestrating command in an interactive run, and the build driver in an autonomous one (it lists the matching folder's candidates — path, `name`, `description` — in the stage brief). A writer therefore always reads an absolute path, never a literal `~/…`, and should not go hunting for the library itself.
 
 ## Two modes — offer vs. adopt
 - **Interactive (a command holds the conversation).** Surface the matching template(s) by name + description and let the user choose: **start from it**, **adapt it**, or **write fresh**. Fold the choice into the brief handed to the writer (name the template file, or state "write fresh — ignore templates"). This is where the decision belongs; the isolated writer only executes it.
-- **Isolated / autonomous (a writer runs headless, e.g. the build — no user to ask).** Precedence: an explicit instruction in the brief wins (use the named template, or none). Absent any template instruction, you *may* discover and adopt the **single best-fitting** template yourself; if nothing fits well, write fresh.
+- **Isolated / autonomous (a writer runs headless, e.g. the build — no user to ask).** The brief lists the candidates for your spec type, with absolute paths, under a *"Saved templates you may seed from"* heading. Precedence: an explicit instruction in the brief wins (use the named template, or none). Otherwise the choice is yours — adopt the **single best-fitting** candidate, or write fresh if none clearly fits. No such heading means the user keeps no templates of this type; write fresh without comment.
 
 ## Adapting a template (never blind-copy)
 A template is a starting point, not the answer. When you adopt one:

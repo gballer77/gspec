@@ -9,7 +9,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, exists, seedInstall } from './helpers.mjs';
+import { runCli, makeProject, cleanup, exists, seedInstall, FAKE_ENGINE_SH } from './helpers.mjs';
 import { gradeVerdict } from '../lib/build.js';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
@@ -70,9 +70,10 @@ test('gradeVerdict downgrades a minor/nit-only FAIL to PASS, but never a blockin
 // A validator that only ever returns minor/nit findings. Pre-2.5.0 this drained
 // the whole retry budget and paused the run; now the gate passes with notes.
 const FAKE_PI_MINOR = `#!/bin/sh
+${FAKE_ENGINE_SH}
 case "$*" in
   *Validate*) printf 'VERDICT: FAIL\\n- [minor] naming could be tighter\\n- [nit] trailing whitespace\\n' ;;
-  *) printf 'ok\\n' ;;
+  *) fake_default "$*" ;;
 esac
 `;
 
@@ -107,9 +108,10 @@ test('a minor/nit-only FAIL passes the gate with advisory notes — no wasted re
 // ---------------------------------------------------------------------------
 
 const FAKE_PI_PASS = `#!/bin/sh
+${FAKE_ENGINE_SH}
 case "$*" in
   *Validate*) printf 'VERDICT: PASS\\nlooks complete\\n' ;;
-  *) printf 'ok\\n' ;;
+  *) fake_default "$*" ;;
 esac
 `;
 
@@ -161,10 +163,11 @@ test('resume re-validates a FAILED single-file stage (respecting hand-edits) ins
 // The monolithic feature-writer exits 1 (a post-write crash), but the PRD it was
 // meant to produce already exists and is well-formed.
 const FAKE_PI_WRITER_CRASH = `#!/bin/sh
+${FAKE_ENGINE_SH}
 case "$*" in
   *Validate*) printf 'VERDICT: PASS\\nlooks complete\\n' ;;
   *Write\\ the\\ feature\\ PRD\\ for\\ this\\ idea*) exit 1 ;;  # monolithic feature-writer crashes post-write
-  *) printf 'ok\\n' ;;
+  *) fake_default "$*" ;;
 esac
 `;
 
@@ -197,6 +200,7 @@ test('a writer that exits non-zero but left a valid artifact is accepted, not tr
 // neither the writer's revision prompt (which also names the file) nor the plan
 // validator (tasks/<slug>.md) touches feat-b's counter.
 const FAKE_PI_MEMO = `#!/bin/sh
+${FAKE_ENGINE_SH}
 case "$*" in
   *Validate*features/feat-a.md*) printf 'VERDICT: PASS\\nfine\\n' ;;
   *Validate*features/feat-b.md*)
@@ -207,7 +211,7 @@ case "$*" in
     else printf 'VERDICT: PASS\\nnow fine\\n'; fi
     ;;
   *Validate*) printf 'VERDICT: PASS\\nfine\\n' ;;
-  *) printf 'ok\\n' ;;
+  *) fake_default "$*" ;;
 esac
 `;
 
@@ -215,8 +219,10 @@ test('a PRD unchanged since it passed is skipped on resume, not re-gated', async
   const dir = await makeProject();
   t.after(() => cleanup(dir));
   const files = {
-    'gspec/features/feat-a.md': '---\nfeature: feat-a\n---\n\n# Feat A\n\nDone.\n',
-    'gspec/features/feat-b.md': '---\nfeature: feat-b\n---\n\n# Feat B\n\nDone.\n',
+    // Long enough to read as a complete PRD: the driver treats a too-short file
+    // as "the writer did not deliver", which is a different failure entirely.
+    'gspec/features/feat-a.md': '---\nfeature: feat-a\n---\n\n# Feat A\n\nA complete, well-formed PRD body.\n',
+    'gspec/features/feat-b.md': '---\nfeature: feat-b\n---\n\n# Feat B\n\nA complete, well-formed PRD body.\n',
   };
   const env = await seedProject(dir, FAKE_PI_MEMO, files);
 
@@ -242,6 +248,7 @@ test('a PRD unchanged since it passed is skipped on resume, not re-gated', async
 // that OVERWRITES its target PRD with "REGENERATED" content when invoked — so a
 // skipped feature is visibly distinguishable from a regenerated one.
 const FAKE_PI_SKIP_WRITE = `#!/bin/sh
+${FAKE_ENGINE_SH}
 case "$*" in
   *feature-plan*) printf '{"features":[{"slug":"feat-a","title":"A"},{"slug":"feat-b","title":"B"}]}\\n' ;;
   *Validate*) printf 'VERDICT: PASS\\nfine\\n' ;;
@@ -249,7 +256,7 @@ case "$*" in
     f=$(printf '%s' "$*" | grep -o 'gspec/features/[a-z0-9-]*\\.md' | head -1)
     [ -n "$f" ] && printf '%s\\n' '---' 'feature: regen' '---' '' '# Regenerated' '' 'REGENERATED body content here.' > "$f"
     ;;
-  *) printf 'ok\\n' ;;
+  *) fake_default "$*" ;;
 esac
 `;
 

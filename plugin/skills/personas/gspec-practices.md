@@ -24,9 +24,12 @@ The user may keep reusable practices templates in `~/.gspec/practices/`. Before 
 4. **Pragmatic** — scaled to the team's size and stage; rigor where it pays, not everywhere.
 5. **Referenceable during implementation** — an engineer (or the implementer agent) can check work against it.
 6. **Enforceable** — ends with an `## Enforcement` block (below) whose rules trace back to the prose, so the practices run as hooks rather than living only as advisory context.
+7. **Proportionate & within budget** — inside the guide's size budget (`gspec-conventions` → Size budgets; the `Enforcement` block is exempt). Scale to the team and the product: a rule earns its words from how often it is applied, and a practice that is simply the language's default gets a clause, not a section. Don't restate what a formatter, linter, or lockfile already declares.
 
 ## Required sections (a complete practices guide)
-Overview · Core Development Practices (testing standards, code quality, code organization) · Version Control & Collaboration (git, code review) · Documentation · Error Handling & Logging · Performance & Optimization · Security · Refactoring · Definition of Done · Enforcement.
+Overview · Core Development Practices (testing standards, code quality, code organization) · Version Control & Collaboration (git, code review, **CI/CD pipeline structure** — stages, gates, ordering) · Documentation · Error Handling & Logging · Performance & Optimization · Security · Refactoring · Definition of Done · Enforcement.
+
+Pipeline structure belongs under Version Control & Collaboration — it does **not** get a section of its own (the required list is exhaustive; see `gspec-conventions`).
 
 ## The Enforcement block
 The guide ends with an `## Enforcement` section: a short prose intro followed by one ` ```yaml ` fenced block. This block is the machine-readable contract read live by the `gspec-practices-enforce` PostToolUse hook — the prose is the "why," this block is the "what runs." Without it the hook fails open (no rules) and none of the practices are enforced.

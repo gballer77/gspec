@@ -27,6 +27,8 @@ There are two ways to work with gspec: let it **build autonomously** from an ide
 
 New in 2.0: `/gspec-build` turns a plain-language idea into a working, spec-backed codebase in a single run. Answer a short intake interview (or pass the idea directly) and gspec drives the whole pipeline unattended — profile, stack, practices, style, feature PRDs, architecture, an ordered plan, and the implementation — with an independent validator gating every stage and a deterministic `verify.sh` check on the build. Before any code is written, the run pauses once so you can review the finished specs; continue with `--resume`, or pass `--no-review` for a fully unattended run. Want richer requirements out of the gate? Pass `--research` to add a competitive-research stage right after the profile — the build researches your competitors on the web, writes `gspec/research.md`, and feeds the auto-accepted findings into the feature PRDs.
 
+A long unattended run has to be able to say how it ended, so it never stops in silence. Every ending gets its own exit code — `0` complete, `1` failed a gate, `2` paused for spec review, `3` crashed — and its own record in `.gspec/build/status.json`; `gspec build --status` prints it and exits with that code, so a script (or an agent watching the run) branches on a number rather than reading the log. A build killed mid-stage still leaves that record, and a run whose process is simply gone is reported as crashed rather than as still working.
+
 The quality loop is tuned to converge and to resume cheaply. A gate fails only on a **blocker/major** finding — minor/nit notes pass with the notes recorded as advisory — so it reaches a finished state instead of polishing forever. Every failing verdict, including ones a self-heal recovers from, is kept in full in `.gspec/build/qa-failures.md` so you can study and tune the loop, and each stage reports its elapsed time. On `--resume`, a stage you left failed is **re-validated in place** (honoring any hand-edit you made to unblock it) rather than restarted from scratch, and feature PRDs that already passed — or were already written — are skipped instead of regenerated.
 
 ```bash
@@ -41,12 +43,16 @@ gspec build "a URL shortener"                   # engine defaults to the install
 gspec build "a URL shortener" --engine codex    # or pick one: claude · codex · pi
 gspec build --dry-run "an idea"                 # preview the stage plan
 gspec build --resume                            # continue a paused run (or approve the spec review)
+gspec build --status                            # how did the last run end? exits 0/1/2/3 to say so
 gspec build --no-review "an idea"               # skip the spec-review pause entirely
 gspec build --qa-retries 3 "an idea"            # give each QA gate 3 self-heal revisions (default 1)
 gspec build --research "an idea"                # competitive research up front, for richer feature PRDs
+gspec build --scope small "an idea"             # size the specs to the product: small · standard · large
 ```
 
 The autonomous build has a wired engine for **Claude Code**, **Codex**, and **Pi**. On other harnesses, use the spec-by-spec workflow below.
+
+**Spec size (`--scope`).** Specs are written to a size budget, so the specification matches the product rather than the writers' appetite — a one-level game does not need a 65 KB feature PRD, and every downstream agent pays to read whatever gets written. The intake asks how big the product is and records the tier in the brief; `--scope small|standard|large` overrides it, scaling every budget by ×0.6 / ×1 / ×1.5. The driver measures each spec as it lands and prints its size against the budget. **Going over is advisory** — it is reported in the log and noted by QA as a `[minor]` finding, and never fails a stage.
 
 **Per-agent models (cost control).** The build runs each stage as its own agent, and you can assign each a model — so the checkers and foundations can run on a cheaper model while architecture and implementation keep the strong one. Add a `models` map to `.gspec/config.json` (this project) or `~/.gspec/config.json` (your global default; the project file overrides it). Selectors resolve most-specific-first — exact agent name, then role tier (`writer`, `qa`, `planner`, `implementer`, `researcher`, `inspector`), then `default`:
 
@@ -282,6 +288,23 @@ Saved specs are organized by type in `~/.gspec/` (profiles, stacks, styles, prac
 ```bash
 gspec restore playbook/my-starter
 ```
+
+### Templates — saved specs seed the ones gspec writes
+
+`restore` copies a saved spec in verbatim. Your library also does a second job that needs no command at all: when gspec **writes** a spec, it first looks for a saved one to start from. Four spec types have a template library:
+
+| Folder | Seeds |
+|---|---|
+| `~/.gspec/stacks/` | `gspec/stack.md` |
+| `~/.gspec/styles/` | `gspec/style.md` · `style.html` |
+| `~/.gspec/practices/` | `gspec/practices.md` |
+| `~/.gspec/features/` | `gspec/features/<slug>.md` |
+
+`profile.md` and `architecture.md` are deliberately excluded — both are inherently specific to one project, so neither is ever seeded. (A profile can still be saved and restored; it just isn't used as a starting point for a written one.)
+
+Matching is on each file's frontmatter `name` and `description`, so a useful description is worth writing — it's what gspec reads to decide whether a template fits. In a command (`/gspec-stack`, `/gspec-style`, `/gspec-practices`, `/gspec-feature`) any match is offered by name and description and **you** choose: start from it, adapt it, or write fresh. In an autonomous `gspec build` there's nobody to ask, so the run reports what it found (`templates: practices 1 · stacks 2`) and the writer adopts the single best fit, or writes fresh if none clearly fits.
+
+Either way a template is a starting point, never a verbatim answer: the writer reconciles every choice against the current project, keeps the spec free of the original project's identity, brings its frontmatter current, and reports which template seeded the result. An absent or empty folder simply means no templates — gspec writes from scratch and says nothing about it.
 
 ## Extensions
 

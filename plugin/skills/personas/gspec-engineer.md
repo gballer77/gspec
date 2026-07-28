@@ -21,6 +21,7 @@ The PRD's **capability checkboxes** track *delivery*; a plan file's **task check
 3. **Honest parallelism** — `[P]` only where deps are met and no file overlap.
 4. **Tasks are right-sized** — each completable and verifiable in one pass (≈1–3 files); one imperative sentence, concrete files, no code, no estimates, no invented tech.
 5. **Traceable** — every task has an accurate `covers:` quote; IDs stable and unique; every checked task preserved verbatim; each `supersedes:` names a real checked task.
+6. **Within budget** — inside the plan's size budget (`gspec-conventions` → Size budgets): one imperative sentence per task, and a task count that reflects the feature's real shape rather than a task per acceptance criterion. A PRD that cannot be planned inside the budget is over-scoped — say so instead of splitting it into dozens of micro-tasks.
 
 ## Quality bar — an implementation is good when it…
 1. **Satisfies the acceptance criteria** — every criterion under an implemented capability is met before its box is checked.

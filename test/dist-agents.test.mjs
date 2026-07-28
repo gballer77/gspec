@@ -45,6 +45,36 @@ for (const engine of Object.keys(ENGINES)) {
   });
 }
 
+// Size budgets and the PRD section contract (feedback §1) are the bound on spec
+// volume, and they only work if they reach the writer's context. On Claude they
+// travel as preloaded skills; on every other target the emitter INLINES an
+// agent's skills into its body — a path that has silently dropped content
+// before. Pin both, on a writer and on its validator (the bound has to be seen
+// by the checker too, or revisions fight the ceiling).
+const BOUND_MARKERS = ['Size budgets', 'Section contract'];
+
+test('claude emits the size budgets + section contract as preloadable skills', async () => {
+  const conventions = await readFile(join(REPO_ROOT, 'dist', 'claude', 'gspec-conventions', 'SKILL.md'), 'utf-8');
+  assert.match(conventions, /## Size budgets/, 'the canonical budget table must ship');
+  assert.match(conventions, /features\/<slug>\.md/, 'the budget table must cover feature PRDs');
+  const product = await readFile(join(REPO_ROOT, 'dist', 'claude', 'gspec-product', 'SKILL.md'), 'utf-8');
+  assert.match(product, /## Section contract/, 'the PRD section contract must ship');
+});
+
+for (const [engine, file] of [['codex', 'feature-writer.toml'], ['pi', 'feature-writer.md']]) {
+  test(`dist/${engine} inlines the size budgets + section contract into the feature writer`, async () => {
+    const body = await readFile(join(REPO_ROOT, 'dist', engine, 'agents', file), 'utf-8');
+    for (const marker of BOUND_MARKERS) {
+      assert.ok(body.includes(marker), `dist/${engine}/agents/${file} lost "${marker}" in skill inlining`);
+    }
+  });
+
+  test(`dist/${engine} inlines the size budgets into the feature validator too`, async () => {
+    const body = await readFile(join(REPO_ROOT, 'dist', engine, 'agents', file.replace('writer', 'validator')), 'utf-8');
+    assert.ok(body.includes('Size budgets'), 'the checker must see the same ceiling the writer wrote to');
+  });
+}
+
 // The pi-subagents extension (npm:pi-subagents) SILENTLY skips any agent file
 // whose frontmatter lacks `name:` or `description:`, and its `tools:` allowlist
 // only matches Pi builtin ids (read, bash, edit, write, grep, find, ls — no

@@ -8,7 +8,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, seedInstall } from './helpers.mjs';
+import { runCli, makeProject, cleanup, seedInstall, FAKE_ENGINE_SH } from './helpers.mjs';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 
@@ -23,9 +23,10 @@ const AGENTS = [
 
 // Every validator passes; every other agent just exits 0.
 const FAKE_PI = `#!/bin/sh
+${FAKE_ENGINE_SH}
 case "$*" in
   *Validate*) printf 'VERDICT: PASS\\nLooks complete.\\n' ;;
-  *) printf 'ok\\n' ;;
+  *) fake_default "$*" ;;
 esac
 `;
 
@@ -48,20 +49,20 @@ async function manifestOf(dir) {
   return JSON.parse(await readFile(join(dir, RUN_JSON), 'utf-8'));
 }
 
-test('the build pauses for spec review before implementation — exit 0, nothing implemented', async (t) => {
+test('the build pauses for spec review before implementation — exit 2, nothing implemented', async (t) => {
   const dir = await makeProject();
   t.after(() => cleanup(dir));
   const env = await seedBuildProject(dir);
 
   const r = await runCli(['build', 'an idea'], dir, env);
-  assert.equal(r.code, 0, r.output);
+  assert.equal(r.code, 2, r.output); // exit 2 = paused at the spec-review gate, not complete
   assert.match(r.output, /Paused for spec review/);
   assert.match(r.output, /gspec build --resume/);
   assert.ok(!r.output.includes('Build complete'), 'a paused run must not report completion');
 
   const manifest = await manifestOf(dir);
   assert.equal(manifest.stages.review.status, 'paused');
-  assert.equal(manifest.stages.plan.status, 'skipped'); // no PRDs in this fixture
+  assert.equal(manifest.stages.plan.status, 'done'); // the fixture's writer produced a PRD, so it got a plan
   assert.equal(manifest.stages.implement.status, 'pending', 'implementation must not have started');
 });
 
@@ -71,7 +72,7 @@ test('--resume from the paused gate is the approval: the run continues to comple
   const env = await seedBuildProject(dir);
 
   const paused = await runCli(['build', 'an idea'], dir, env);
-  assert.equal(paused.code, 0, paused.output);
+  assert.equal(paused.code, 2, paused.output); // exit 2 = paused at the spec-review gate, not complete
 
   const resumed = await runCli(['build', '--resume'], dir, env);
   assert.equal(resumed.code, 0, resumed.output);
@@ -118,7 +119,7 @@ test('resuming a pre-gate manifest (no review entry) does not crash — it pause
   await writeFile(join(dir, RUN_JSON), JSON.stringify(manifest, null, 2) + '\n');
 
   const resumed = await runCli(['build', '--resume'], dir, env);
-  assert.equal(resumed.code, 0, resumed.output);
+  assert.equal(resumed.code, 2, resumed.output); // still the pause, not a completion
   assert.match(resumed.output, /Paused for spec review/);
   assert.equal((await manifestOf(dir)).stages.review.status, 'paused');
 });

@@ -15,6 +15,13 @@ This is a shared persona skill. Agents and commands that act as the architect pr
 - **style.md** — visual design tokens and the icon set. The stack names the CSS framework and component library and how it maps to those tokens; it never defines the tokens themselves.
 - **architecture.md** — *how the system is structured* (data model, API, components). Consumes the stack.
 
+## Proportion — how much a decision is worth
+Both bars below reward completeness and rationale, and both scale with the number of items in the document. Without a threshold, that yields a page of justification for a choice that had no alternatives. So:
+
+- **Rationale is for major choices.** A decision with real alternatives and a real tradeoff earns its *why* and the tradeoff accepted. A minor or forced choice — the only option the platform offers, a default nobody would argue with — gets a clause, not a paragraph and not a table row of its own.
+- **Don't enumerate what tooling already lists.** Name the load-bearing dependencies and the versions that matter; the lockfile is the inventory. Same for exhaustive option matrices, directive-by-directive tables, and every-file directory listings — state the rule and the exceptions to it.
+- **Scale to the product.** The brief states a scope tier. Depth that is right for a system with real scale is padding on one that has none; a small product gets a small spec.
+
 ## Quality bar — a stack spec is good when it…
 Use this as the definition of done (writer) and the rubric (validator):
 1. **Complete for the system type** — covers overview / architecture style, core stack (languages, runtime), and every applicable layer (frontend, backend, data, infra/DevOps, auth/security, observability, testing). Irrelevant layers are explicitly marked **Not Applicable**, never omitted silently or padded with fiction.
@@ -25,6 +32,7 @@ Use this as the definition of done (writer) and the rubric (validator):
 6. **Authoritative test tooling** — the unit / integration / E2E frameworks are chosen here (testing *philosophy* lives in practices.md).
 7. **Profile-agnostic** — no product / company / business identity in the title, headings, or body; generic terms ("the application", "the system") only. (See the `gspec-agnosticism` skill. Note: the stack is deliberately *technology*-aware — only *product* identity is excluded.)
 8. **Actionable** — an engineer could set up the project from it without further questions on the core choices.
+9. **Proportionate & within budget** — rationale scaled per **Proportion** above, and the whole spec inside its size budget (`gspec-conventions` → Size budgets).
 
 ## Start from a saved stack (if one fits)
 The user may keep reusable stack templates in `~/.gspec/stacks/`. Before writing a stack from scratch, check for a relevant one and seed the spec from it — offer it interactively, or adopt the best fit when running headless, always adapting it to this project. See the `gspec-templates` skill for the mechanic. (This applies to the **stack** only; the architecture spec is project-specific and is never templated.)
@@ -42,6 +50,7 @@ The architect also authors the **technical architecture** (`gspec/architecture.m
 6. **Profile-agnostic** — technology-aware, but free of product/business identity.
 7. **Verifiable — declares its deployables.** For any buildable system, a **Deployables** table lists every independently build/test-able unit as **name · dir · build · test** — the command that builds it and the command that runs its tests, each run from `dir`. A single-toolchain project has a one-row table; a polyglot system (e.g. a TypeScript frontend + a Java backend) has one row per toolchain. This table — **not `stack.md`** — is the concrete authority the implementer turns into a committed `verify.sh` and the audit checks against reality (`stack.md` is the tooling *palette*; this is what *does* build/test). Mark **Not Applicable** only when there is genuinely nothing to build or test.
 8. **Present-tense state, not history** — the spec describes what the system *is*. When an update supersedes a decision or resolves a gap, fold the outcome into the owning section and remove the superseded text; never accumulate a changelog.
+9. **Proportionate & within budget** — rationale scaled per **Proportion** above, and the whole spec set inside its size budget (`gspec-conventions` → Size budgets). A system that genuinely cannot be described within it is a multi-deployable system: use the two-tier layout below rather than overrunning.
 
 Use Mermaid for the data model (`erDiagram`), page hierarchy (`graph`), and the primary auth flow (`sequenceDiagram`).
 

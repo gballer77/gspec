@@ -7,7 +7,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, seedInstall } from './helpers.mjs';
+import { runCli, makeProject, cleanup, seedInstall, FAKE_ENGINE_SH } from './helpers.mjs';
 import { resolveModel, roleOf, modelSelectors } from '../lib/config.js';
 
 // ---------------------------------------------------------------------------
@@ -96,10 +96,11 @@ const AGENTS = [
 // Fake pi that appends its argv to $ARGV_LOG so the test can see which --model
 // each invocation received, then behaves (validators PASS, everyone else ok).
 const FAKE_PI_DUMP = `#!/bin/sh
+${FAKE_ENGINE_SH}
 printf '%s\\n' "$@" >> "$ARGV_LOG"
 case "$*" in
   *Validate*) printf 'VERDICT: PASS\\nfine\\n' ;;
-  *) printf 'ok\\n' ;;
+  *) fake_default "$*" ;;
 esac
 `;
 

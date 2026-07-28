@@ -51,6 +51,59 @@ export async function exists(path) {
   try { await stat(path); return true; } catch { return false; }
 }
 
+// Shared behavior for the fake engine binaries the build tests put on PATH.
+// Inserted right after the shebang, ahead of each fake's own `case "$*" in`.
+//
+// It exists because the build now verifies that a writer actually PRODUCED its
+// deliverable: an engine that exits 0 having written nothing is a stage failure
+// with an accurate reason, not a silent pass that the next validator gets
+// blamed for. A fake standing in for a writer therefore has to leave the
+// artifact behind, not just print — same as the real thing.
+export const FAKE_ENGINE_SH = `
+write_spec() {
+  mkdir -p gspec
+  printf '# %s\\n\\nWritten by the fake engine.\\n' "$1" > "$1"
+}
+write_prd() {
+  mkdir -p gspec/features
+  printf '%s\\n' '---' "feature: $1" '---' '' "# $1" '' 'A fake PRD, complete enough for QA to judge.' > "gspec/features/$1.md"
+}
+# Produce whatever deliverable this prompt implies. Checkers write nothing.
+deliver() {
+  case "$1" in
+    *Validate*) return 0 ;;
+  esac
+  case "$1" in
+    *"use this exact slug"*)
+      slug=$(printf '%s' "$1" | sed -n 's|.*gspec/features/\\([a-z0-9][a-z0-9-]*\\)\\.md.*|\\1|p' | head -1)
+      [ -n "$slug" ] && write_prd "$slug" ;;
+    *"feature PRD for this idea"*) write_prd only-feature ;;
+  esac
+  case "$1" in
+    *'"Product profile" stage'*) write_spec gspec/profile.md ;;
+    *'"Technology stack" stage'*) write_spec gspec/stack.md ;;
+    *'"Practices" stage'*) write_spec gspec/practices.md ;;
+    # ONE format, like the real style-writer: a stage's outputs are alternatives
+    # (style.html OR style.md), not a checklist. A fake that wrote both hid a
+    # bug where the driver demanded every listed output before calling a stage
+    # delivered — see build-style-outputs.test.mjs.
+    *'"Style guide" stage'*) write_spec gspec/style.html ;;
+    *'"Architecture" stage'*) write_spec gspec/architecture.md ;;
+    *'"Competitive research" stage'*) write_spec gspec/research.md ;;
+  esac
+}
+# The catch-all arm: deliver, then print what that stage parses out of stdout.
+# The plan stage is the one whose FILE is written by the driver from stdout, so
+# its body (task checkboxes and all) has to come back on stdout.
+fake_default() {
+  deliver "$1"
+  case "$1" in
+    *"ordered plan"*) printf '%s\\n' '---' 'feature: fake' '---' '' '## Plan' '' '- [x] T1 Do the thing' ;;
+    *) printf 'ok\\n' ;;
+  esac
+}
+`;
+
 // Seed a project as if `gspec install -t <target>` recorded it, without the
 // full install — for build tests that only need the config + agent files.
 export async function seedInstall(dir, target, { agentFiles = [] } = {}) {
