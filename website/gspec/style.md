@@ -1,5 +1,5 @@
 ---
-spec-version: v1
+spec-version: v2
 ---
 
 # Visual Style Guide
