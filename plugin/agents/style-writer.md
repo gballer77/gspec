@@ -14,6 +14,8 @@ Write the style guide in the chosen format so it meets the designer's **quality 
   ---
   ```
 
+**Write `gspec/style.html`.** It is the format for a new project — not a preference: each feature's `design.html` copies this guide's CSS custom-property block verbatim, which only the HTML form provides. Write `gspec/style.md` **only** when the project already has one (update it in place) or the brief explicitly asks for Markdown.
+
 - **`gspec/style.html`** — a single self-contained HTML document (no external CSS/JS, no build step); the first line, before `<!DOCTYPE html>`, is `<!-- spec-version: <<<SPEC_VERSION>>> -->`; define design tokens as CSS custom properties; render live swatches, type specimens, and styled components; include light + dark. It must render when opened in a browser. The token block is the only place a literal color value appears — everything else uses `var(--…)` — and the contrast table is computed from the tokens by a small inline script (per theme key), not hand-typed.
 
 ## Templates (seed from a saved style)

@@ -1,0 +1,67 @@
+// Token accounting. gspec reported wall-clock per stage but not a single token,
+// so "did that change help?" could only be answered by spelunking the engine's
+// own session logs — and only on Claude. The driver now records what each agent
+// spent, because reading is the expense (a measured run: 79M in, 2M out) and
+// the per-agent view is what shows whose read scope is too wide.
+
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { join } from 'node:path';
+import { writeFile, chmod, mkdir, readFile } from 'node:fs/promises';
+import { runCli, makeProject, cleanup, seedInstall, FAKE_ENGINE_SH, STAGE_AGENTS } from './helpers.mjs';
+
+// A fake `claude` that answers in the real --output-format json envelope.
+const FAKE_CLAUDE = `#!/bin/sh
+# The prompt is the argument after -p; the shared helpers key off it.
+PROMPT="$*"
+${FAKE_ENGINE_SH}
+case "$PROMPT" in
+  *Validate*) BODY='VERDICT: PASS' ;;
+  *) deliver "$PROMPT"; BODY='ok' ;;
+esac
+printf '{"type":"result","result":"%s","num_turns":3,"total_cost_usd":0.25,"usage":{"input_tokens":10,"cache_creation_input_tokens":100,"cache_read_input_tokens":1000,"output_tokens":50}}\\n' "$BODY"
+`;
+
+test('a run records per-agent token usage and reports it', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  await seedInstall(dir, 'claude', { agentFiles: STAGE_AGENTS.map((a) => join('.claude', 'agents', `${a}.md`)) });
+  const bin = join(dir, 'fake-bin');
+  await mkdir(bin, { recursive: true });
+  await writeFile(join(bin, 'claude'), FAKE_CLAUDE); await chmod(join(bin, 'claude'), 0o755);
+  await mkdir(join(dir, '.gspec', 'build'), { recursive: true });
+  await writeFile(join(dir, '.gspec', 'build', 'brief.md'), 'Product: a thing\nscope: small\n');
+
+  const r = await runCli(['build', '--no-review', '--engine', 'claude', 'an idea'], dir,
+    { PATH: `${bin}:${process.env.PATH}` });
+
+  const manifest = JSON.parse(await readFile(join(dir, '.gspec', 'build', 'run.json'), 'utf-8'));
+  assert.ok(manifest.usage, 'the manifest must carry a usage record');
+
+  const profile = manifest.usage['profile-writer'];
+  assert.ok(profile, `expected profile-writer usage, got: ${Object.keys(manifest.usage)}`);
+  assert.equal(profile.cacheRead, 1000 * profile.runs, 'cache reads accumulate per run');
+  assert.equal(profile.out, 50 * profile.runs);
+  assert.ok(profile.turns > 0 && profile.costUsd > 0, 'turns and cost are carried through');
+
+  assert.match(r.output, /Token usage/, 'the run must report what it spent');
+  assert.match(r.output, /Input dominates/);
+});
+
+test('an engine that reports no usage degrades quietly', async (t) => {
+  // codex/pi return plain text; accounting must be absent, never wrong.
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  await seedInstall(dir, 'pi', { agentFiles: STAGE_AGENTS.map((a) => join('.pi', 'agents', `${a}.md`)) });
+  const bin = join(dir, 'fake-bin');
+  await mkdir(bin, { recursive: true });
+  await writeFile(join(bin, 'pi'), `#!/bin/sh\n${FAKE_ENGINE_SH}\ncase "$*" in\n  *Validate*) printf 'VERDICT: PASS\\n' ;;\n  *) fake_default "$*" ;;\nesac\n`);
+  await chmod(join(bin, 'pi'), 0o755);
+  await mkdir(join(dir, '.gspec', 'build'), { recursive: true });
+  await writeFile(join(dir, '.gspec', 'build', 'brief.md'), 'Product: a thing\nscope: small\n');
+
+  const r = await runCli(['build', '--no-review', 'an idea'], dir, { PATH: `${bin}:${process.env.PATH}` });
+  const manifest = JSON.parse(await readFile(join(dir, '.gspec', 'build', 'run.json'), 'utf-8'));
+  assert.equal(manifest.usage, undefined, 'no usage recorded when the engine reports none');
+  assert.doesNotMatch(r.output, /Token usage/, 'and nothing is claimed about it');
+});

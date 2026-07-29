@@ -67,3 +67,23 @@ test('every covering task checked means the capability may be checked', () => {
   const prd = '- [x] **P0**: User can sign in with email and password\n';
   assert.deepEqual(checkboxConsistency('a/prd.md', prd, done), []);
 });
+
+test('the metadata bullet is optional — a bullet-only pattern verified nothing', () => {
+  // Found by dogfooding: a real plan indented `covers:` without a bullet, so a
+  // bullet-only pattern matched NONE of 88 tasks and passed every capability
+  // vacuously. A check that matches nothing reports clean, which is the worst
+  // outcome available.
+  const plain = `## Plan
+
+- [x] **T1** build it in \`src/a.ts\`
+  covers: "User can do the thing"
+- [ ] **T2** finish it
+  covers: "User can do the thing"
+`;
+  assert.deepEqual(filesNamedByCheckedTasks(plain), [{ id: 'T1', path: 'src/a.ts' }]);
+
+  const prd = '- [x] **P0**: User can do the thing\n';
+  const v = checkboxConsistency('a/prd.md', prd, plain);
+  assert.equal(v.length, 1, 'the open covering task must still be caught');
+  assert.match(v[0], /T2 still is not/);
+});

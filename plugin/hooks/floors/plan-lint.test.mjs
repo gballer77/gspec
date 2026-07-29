@@ -175,3 +175,32 @@ test('a <style> block is not markup either', () => {
   ].join('\n');
   assert.deepEqual(designLintViolations('a/design.html', design, ARCH), []);
 });
+
+test('an arch: reference is normalized, not dictated', () => {
+  // Real plans referenced anchors four different ways, all meaning the same
+  // block. A pattern that accepted only "#entity-order" matched NONE of 88 real
+  // lines and reported every file clean — verifying nothing.
+  const arch = ARCH;
+  const forms = [
+    'arch: #entity-order',
+    'arch: ### Entity: Order',
+    'arch: Data > ### Entity: Order',
+    'arch: Entity: Order',
+    'arch: Data (intro, notes) > ### Entity: Order',        // comma inside an aside
+    'arch: Entity: Order (amends gspec/features/x/arch.md)', // provenance aside
+  ];
+  for (const f of forms) {
+    const tasks = `## Plan\n\n- [ ] **T1** do it\n  ${f}\n`;
+    assert.deepEqual(planLintViolations('a/tasks.md', tasks, arch), [], `should resolve: ${f}`);
+  }
+});
+
+test('multiple anchors split on either separator, and a bad one still fails', () => {
+  const ok = '## Plan\n\n- [ ] **T1** x\n  arch: Entity: Order; ### Endpoint: POST /orders\n';
+  assert.deepEqual(planLintViolations('a/tasks.md', ok, ARCH), []);
+
+  const bad = '## Plan\n\n- [ ] **T1** x\n  arch: Entity: Order, Entity: Ghost\n';
+  const v = planLintViolations('a/tasks.md', bad, ARCH);
+  assert.equal(v.length, 1);
+  assert.match(v[0], /Ghost/);
+});

@@ -36,7 +36,7 @@ const STUB_MARKERS = [
 export function filesNamedByCheckedTasks(tasksText) {
   const out = [];
   for (const line of String(tasksText).split('\n')) {
-    const task = line.match(/^\s*-\s*\[([xX])\]\s*\*\*T(\d+)\*\*(.*)$/);
+    const task = line.match(/^\s*[-*]\s*\[([xX])\]\s*\*\*T(\d+)\*\*(.*)$/);
     if (!task) continue;
     for (const m of task[3].matchAll(PATHISH)) out.push({ id: `T${task[2]}`, path: m[1] });
   }
@@ -78,9 +78,13 @@ export function checkboxConsistency(prdRel, prdText, tasksText) {
   const lines = String(tasksText).split('\n');
   let current = null;
   for (const line of lines) {
-    const task = line.match(/^\s*-\s*\[([ xX])\]\s*\*\*T(\d+)\*\*/);
+    const task = line.match(/^\s*[-*]\s*\[([ xX])\]\s*\*\*T(\d+)\*\*/);
     if (task) { current = { id: `T${task[2]}`, checked: task[1] !== ' ' }; continue; }
-    const covers = line.match(/^\s*-\s*covers:\s*(.+)$/);
+    // Bullet OPTIONAL. A writer that indents `covers:` without a bullet produces
+    // the same document; a bullet-only pattern matched none of 88 real tasks and
+    // passed every capability vacuously — the exact check meant to catch a
+    // capability ticked ahead of its plan, running blind.
+    const covers = line.match(/^\s*[-*]?\s*covers:\s*(.+)$/);
     if (!covers || !current) continue;
     for (const raw of covers[1].split(';')) {
       const text = raw.trim().replace(/^["']|["']$/g, '');
@@ -91,7 +95,7 @@ export function checkboxConsistency(prdRel, prdText, tasksText) {
   }
 
   for (const line of String(prdText).split('\n')) {
-    const cap = line.match(/^\s*-\s*\[([xX])\]\s*(?:\*\*[^*]+\*\*:?\s*)?(.+?)\s*$/);
+    const cap = line.match(/^\s*[-*]\s*\[([xX])\]\s*(?:\*\*[^*]+\*\*:?\s*)?(.+?)\s*$/);
     if (!cap) continue;
     const text = cap[2].trim();
     const tasks = covered.get(text);

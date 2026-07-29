@@ -207,15 +207,49 @@ export function planLintViolations(rel, tasksText, archText) {
   const lines = String(tasksText).split('\n');
   let checked = false;
   for (const line of lines) {
-    const task = line.match(/^\s*-\s*\[([ xX])\]\s*\*\*T(\d+)\*\*/);
+    const task = line.match(/^\s*[-*]\s*\[([ xX])\]\s*\*\*T(\d+)\*\*/);
     if (task) { checked = task[1] !== ' '; continue; }
-    const arch = line.match(/^\s*-\s*arch:\s*(.+)$/);
+    const arch = line.match(TASK_FIELD.arch);
     if (!arch || checked) continue;
-    for (const raw of arch[1].split(',')) {
-      const a = raw.trim().replace(/^#/, '');
-      if (!a || a === '—' || a === '-') continue;
-      if (!known.has(a)) v.push(`${rel}: task anchor "#${a}" does not resolve to a heading in arch.md`);
+    // Split on separators OUTSIDE parentheses: a reference like
+    // "UI (intro, integration contract) > ### Component: Panel" carries a comma
+    // inside its aside, and splitting there invents two anchors from one.
+    for (const raw of arch[1].split(/[,;](?![^(]*\))/)) {
+      const a = normalizeAnchorRef(raw);
+      if (!a) continue;
+      if (!known.has(a)) v.push(`${rel}: task anchor "${raw.trim()}" does not resolve to a heading in arch.md`);
     }
   }
   return v;
+}
+
+// A task's metadata line, WITH OR WITHOUT its list bullet.
+//
+// The canonical format bullets these ("  - deps: …"), but a writer that indents
+// them plainly ("  deps: …") is producing the same document — markdown, not
+// meaning. A bullet-only pattern found ZERO of 88 real `arch:` lines and
+// reported the file clean, which is the worst outcome available: a check that
+// silently verifies nothing. Tolerate the cosmetic difference; never fail on it.
+export const TASK_FIELD = {
+  arch: /^\s*[-*]?\s*arch:\s*(.+)$/,
+  covers: /^\s*[-*]?\s*covers:\s*(.+)$/,
+  deps: /^\s*[-*]?\s*deps:\s*(.+)$/,
+};
+
+// One `arch:` reference → the anchor slug it names, or null when it names none.
+//
+// Writers reference an anchor several equally-clear ways — `#entity-order`,
+// `### Entity: Order`, `Data > ### Entity: Order`, or the bare `Entity: Order` —
+// and all of them mean the same block. Normalize rather than dictate: take the
+// last `Kind: Name` in the reference and slug it.
+export function normalizeAnchorRef(ref) {
+  const raw = String(ref).trim()
+    .replace(/^#+\s*/, '')
+    // A trailing aside — "Rule: Content Extraction (amends .../arch.md)" — is
+    // provenance the writer added for a human, not part of the anchor's name.
+    .replace(/\s*\([^)]*\)\s*$/, '')
+    .trim();
+  if (!raw || raw === '—' || raw === '-' || /^none$/i.test(raw)) return null;
+  const kinded = raw.match(/(Entity|Endpoint|Screen|Component|Rule|Machine)\s*:\s*(.+)$/i);
+  return kinded ? slugifyAnchor(`${kinded[1]}: ${kinded[2]}`) : slugifyAnchor(raw);
 }

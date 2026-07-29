@@ -16,7 +16,7 @@ This is a shared persona skill preloaded by the style writer and validator. It s
 
 ## Two valid formats — one file
 - **`style.html`** (recommended — and it is a real recommendation, not a preference: only the HTML form gives each feature's `design.html` a CSS custom-property block to copy, and lets the token-sync check compare values exactly rather than by name) — a single self-contained HTML document that *renders* the system: design tokens as CSS custom properties (the canonical source of truth), live color swatches, type specimens, real styled components, light/dark side-by-side. First line is `<!-- spec-version: … -->`. The accessibility section's contrast table is **computed by inline JS** from the token custom properties (per theme key), never hand-typed — a computed table cannot disagree with the tokens it describes.
-- **`style.md`** — a narrative guide; better for rationale-heavy, PR-reviewed specs. YAML `spec-version` frontmatter.
+- **`style.md`** — **legacy.** A narrative guide, still fully supported when a project already has one: update it in place, keep it tokens-only, never convert it without being asked. It is not written for a new project. Each feature's `design.html` copies the guide's `:root` custom-property block *verbatim*, and a Markdown guide has none — so the copy degrades to transcribing a table by hand, which is the drift surface the copy-then-verify design exists to remove, and the token check drops from comparing values to comparing names.
 
 If one already exists, update it in place; if neither does, the format is chosen during the interview. A project normally has one.
 
