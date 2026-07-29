@@ -14,7 +14,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers.mjs';
-import { SPEC_BUDGETS, SCOPE_FACTOR, budgetFor, countSpecWords, scopeFromBrief } from '../lib/build.js';
+import { SPEC_BUDGETS, SCOPE_FACTOR, budgetFor, budgetLabel, countSpecWords, scopeFromBrief } from '../lib/build.js';
 
 const SKILL = join(REPO_ROOT, 'plugin', 'skills', 'conventions', 'gspec-conventions.md');
 
@@ -35,16 +35,21 @@ test('the skill declares a size budget for every deliverable the driver measures
   const table = parseBudgetTable(await readFile(SKILL, 'utf-8'));
   assert.ok(Object.keys(table).length >= 8, `parsed too few budget rows: ${JSON.stringify(table)}`);
 
-  // The driver keys foundation specs by repo-relative path and PRDs by the
-  // shared 'feature' key; the skill writes the PRD row as features/<slug>.md.
-  const expected = { ...SPEC_BUDGETS };
-  expected['features/<slug>.md'] = expected.feature;
-  delete expected.feature;
-
-  for (const [key, budget] of Object.entries(expected)) {
-    const row = table[key] ?? table[key.replace(/^gspec\//, '')];
-    assert.equal(row, budget, `budget drift for ${key}: skill says ${row}, lib/build.js says ${budget}`);
+  // SPEC_BUDGETS is keyed by the table's own labels, so this is a straight
+  // key-for-key comparison — no translation to get wrong.
+  for (const [label, budget] of Object.entries(SPEC_BUDGETS)) {
+    assert.equal(table[label], budget,
+      `budget drift for ${label}: skill says ${table[label]}, lib/build.js says ${budget}`);
   }
+});
+
+test('budgetLabel maps paths onto table rows, and non-deliverables onto nothing', () => {
+  assert.equal(budgetLabel('gspec/profile.md'), 'profile.md');
+  assert.equal(budgetLabel('gspec/style.html'), 'style.html');
+  assert.equal(budgetLabel('gspec/features/user-auth.md'), 'features/<slug>.md');
+  // Not budgeted: plans (counted in tasks), anything outside gspec/.
+  assert.equal(budgetLabel('gspec/tasks/user-auth.md'), null);
+  assert.equal(budgetLabel('src/index.js'), null);
 });
 
 test('scope tiers scale the budget, and an unknown tier falls back rather than scaling by NaN', () => {

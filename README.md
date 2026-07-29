@@ -196,7 +196,7 @@ Use `/gspec-feature` when you want detailed PRDs with prioritized capabilities a
 
 | Command | Role | What it produces |
 |---|---|---|
-| `/gspec-architect` | Senior Architect | Technical architecture document with data models, API design, project structure, auth flows, technical gap analysis, and Mermaid diagrams. Multi-deployable systems get a two-tier layout: a system-level `architecture.md` plus one `architecture/<name>.md` per deployable |
+| `/gspec-architect` | Senior Architect | Technical architecture document with data models, API design, project structure, auth flows, technical gap analysis, and Mermaid diagrams. Multi-module systems get a two-tier layout: a system-level `architecture.md` plus one `architecture/<name>.md` per module |
 
 Use `/gspec-architect` when your feature involves significant technical complexity — new data models, service boundaries, auth flows, or integration points that benefit from upfront design. It also **identifies technical gaps and ambiguities** in your specs and proposes solutions, so that `/gspec-implement` can focus on building rather than making architectural decisions. For straightforward features, `/gspec-implement` can make sound architectural decisions on its own using your `stack` and `practices` specs.
 
@@ -331,7 +331,7 @@ project-root/
     ├── stack.md            # Technology stack and architecture
     ├── practices.md        # Development standards
     ├── architecture.md     # Technical architecture blueprint (system tier + index)
-    ├── architecture/       # Only for multi-deployable systems — one file per deployable
+    ├── architecture/       # Only for multi-module systems — one file per module
     │   ├── frontend.md
     │   ├── backend.md
     │   └── ...

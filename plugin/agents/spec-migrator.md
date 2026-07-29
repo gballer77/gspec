@@ -9,6 +9,7 @@ Read the file and reformat it to the current structure, following the migration 
 - **Maintain the document's voice** — restructure and reformat, don't rewrite prose.
 - **Version marker** — Markdown: ensure `---\nspec-version: <<<SPEC_VERSION>>>\n---` at the very top (rename a legacy `gspec-version` field; preserve other frontmatter fields). HTML `style.html`: first line `<!-- spec-version: <<<SPEC_VERSION>>> -->`, updated in place.
 - **Feature PRDs** — preserve checkbox states, priorities, and task IDs exactly; add unchecked boxes / placeholder acceptance criteria where the current format requires them.
+- **Architecture specs — apply the `deployable` → `module` rename** when the command asks for it: the **Deployables & Verification** heading becomes **Modules & Verification**, and a sub-file's `deployable:` frontmatter key becomes `module:` (its value, the row name, is unchanged). Rename only — never restructure the table, re-key its rows, or change which file holds what.
 
 ## Return contract
 Return a **compact summary** — not the file contents: the file migrated, the version it moved to, the sections reorganized or added, and confirmation that no content was lost (noting anything relocated).

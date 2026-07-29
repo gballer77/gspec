@@ -1,7 +1,7 @@
 // Unit tests for the spec-integrity floor. Run: node --test plugin/hooks/floors/
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { appliesToSpecIntegrity, specIntegrityViolations } from './spec-integrity.mjs';
+import { appliesToSpecIntegrity, specIntegrityViolations, SPEC_VERSION } from './spec-integrity.mjs';
 
 test('applies only to gspec specs, not design/ or README', () => {
   assert.equal(appliesToSpecIntegrity('gspec/stack.md'), true);
@@ -12,7 +12,7 @@ test('applies only to gspec specs, not design/ or README', () => {
 });
 
 test('clean markdown spec passes', () => {
-  assert.deepEqual(specIntegrityViolations('gspec/stack.md', '---\nspec-version: v1\n---\n\n# Stack\n'), []);
+  assert.deepEqual(specIntegrityViolations('gspec/stack.md', `---\nspec-version: ${SPEC_VERSION}\n---\n\n# Stack\n`), []);
 });
 
 test('missing frontmatter is flagged', () => {
@@ -23,11 +23,11 @@ test('missing frontmatter is flagged', () => {
 
 test('wrong spec-version is flagged with migrate hint', () => {
   const v = specIntegrityViolations('gspec/stack.md', '---\nspec-version: v0\n---\n');
-  assert.match(v[0], /has spec-version v0, expected v1\. Run \/gspec-migrate/);
+  assert.match(v[0], new RegExp(`has spec-version v0, expected ${SPEC_VERSION}\\. Run /gspec-migrate`));
 });
 
 test('html style guide needs first-line comment', () => {
-  assert.deepEqual(specIntegrityViolations('gspec/style.html', '<!-- spec-version: v1 -->\n<html>'), []);
+  assert.deepEqual(specIntegrityViolations('gspec/style.html', `<!-- spec-version: ${SPEC_VERSION} -->\n<html>`), []);
   const v = specIntegrityViolations('gspec/style.html', '<html>no comment</html>');
   assert.match(v[0], /missing its first-line/);
 });

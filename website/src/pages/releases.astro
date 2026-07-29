@@ -5,6 +5,31 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.0.0',
+    date: 'July 28, 2026',
+    title: 'Deployables become modules, and the spec version has one home',
+    summary: 'The first of four releases re-cutting how gspec organizes a specification. This one is deliberately mechanical — a rename and a version bump, no behavior changes — because it touches the same files the layout work ahead touches, and doing it second would mean editing everything twice.<br /><br /><strong>"Deployable" was always the wrong word.</strong> The table\'s own definition has been "independently build/test-able unit" since it shipped — deployment was never the criterion, and a shared library row builds and tests while deploying nowhere. The <strong>Deployables & Verification</strong> section is now <strong>Modules & Verification</strong>, sub-file frontmatter carries <code>module:</code> instead of <code>deployable:</code>, and <code>verify.sh</code> prints <code>FAIL: &lt;module&gt;:&lt;phase&gt;</code>. Because that key is the row <em>name</em>, which does not change, <strong>existing <code>verify.sh</code> scripts keep working untouched.</strong><br /><br />The release also fixes a quiet hazard: <code>SPEC_VERSION</code> existed in <strong>four</strong> places with nothing asserting they agreed — the installer, the emit script, the spec-integrity floor, and the prose in the harness preamble. A drift between any two would have meant specs marked current by one check and stale by another. There is now one exported constant, two importers, and a test that fails if the two copies that <em>cannot</em> import (the floor ships standalone into <code>.claude/hooks/floors/</code>; the preamble is prose) fall out of step.',
+    changes: [
+      {
+        type: 'changed',
+        description: '<strong>"Deployable" is now "module" everywhere.</strong> The <strong>Deployables & Verification</strong> section becomes <strong>Modules & Verification</strong>; per-unit architecture sub-files carry <code>module:</code> frontmatter; <code>verify.sh</code> fail-fast lines read <code>FAIL: &lt;module&gt;:&lt;build|test&gt;</code>; and the audit\'s <code>deployable</code> drift category becomes <code>module</code>. The rename is about accuracy, not taste — the criterion was always "independently build/test-able", never "deployed". The table itself, its <code>name · dir · build · test</code> columns, the one-row/many-row layout gate, and the two-tier file layout are all unchanged.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Spec format is now <code>v2</code>.</strong> A format bump, so existing projects should run <code>/gspec-migrate</code>: it applies the section and frontmatter renames and stamps the new version, and it will tell you it is a rename rather than a restructure. Nothing moves on disk in this release.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong><code>SPEC_VERSION</code> had four independent copies and no test.</strong> It now lives in <code>lib/spec-version.js</code>, imported by the installer and the emit script. The spec-integrity floor keeps a literal copy because floors are copied standalone into a project\'s hooks directory and have no <code>lib/</code> to import from, and <code>templates/preamble.md</code> states the format in prose — so a new test asserts all four agree. The floor\'s own unit tests now build their fixtures from the constant instead of hardcoding a version string, so they cannot drift either.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Size budgets are keyed by the name the skill uses.</strong> <code>SPEC_BUDGETS</code> previously mixed repo-relative paths with a special <code>feature</code> key, and the test that guards it against the canonical table in <code>gspec-conventions</code> had to translate between the two — a translation that could itself be wrong. Budgets are now keyed by the table\'s own labels, with a single <code>budgetLabel()</code> mapping a path onto its row, so the check is a straight key-for-key comparison. No budget values changed.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the updated agents, commands, and skills, then <code>/gspec-migrate</code> in each project to apply the <code>deployable</code> → <code>module</code> renames and stamp <code>spec-version: v2</code>. Your committed <code>verify.sh</code> needs no change — its <code>FAIL:</code> key is the module name, which the rename does not touch. No files move in this release.',
+  },
+  {
     version: '2.7.0',
     date: 'July 27, 2026',
     title: 'Specs sized to the product — and a build that can no longer end in silence',

@@ -1,5 +1,7 @@
 # Per-Deployable Sub-Architecture Files — Proposal
 
+> **Historical record.** Kept in the vocabulary of its time: as of v3.0.0 "deployable" is **module** everywhere (the Deployables table is the **Modules & Verification** table, `deployable:` frontmatter is `module:`). The two-tier layout this proposal introduced still ships unchanged; what each tier *contains* is re-cut by [`gspec-v3-design.md`](./gspec-v3-design.md), which supersedes this document.
+
 - **Status:** **Implemented** (2026-07-24), as the recommended conditional two-tier model. Resolution of the open questions: gated on the Deployables table (>1 row), directory/naming is `gspec/architecture/<name>.md`, and sub-files carry `deployable:`/`covers:` routing frontmatter so consumers load only the units their scope touches. Surface touched: `gspec-architect` persona (layout gate + tier boundary), `architecture-writer`/`architecture-validator`, `gspec-architect` command, `implementer`, `build-orchestrator`, `plan-decomposer`, `spec-cross-referencer` (new architecture-tier category), `codebase-inspector`, `gspec-implement`/`gspec-migrate`/`gspec-build` file lists.
 - **Date:** 2026-07-21
 - **Context:** Discussion about whether each deployable should get its own architecture file, similar to the top-level `gspec/architecture.md`.

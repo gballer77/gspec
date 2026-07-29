@@ -10,11 +10,11 @@ import { promptSelect, promptMultiSelect, promptConfirm, promptInput } from '../
 import { TARGETS as EMITTER_TARGETS } from '../lib/emitters.js';
 import { runBuild, reportBuildStatus, EXIT } from '../lib/build.js';
 import { writeProjectConfig, PROJECT_CONFIG_PATH } from '../lib/config.js';
+import { SPEC_VERSION } from '../lib/spec-version.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = join(__dirname, '..', 'dist');
 const pkg = JSON.parse(await readFile(join(__dirname, '..', 'package.json'), 'utf-8'));
-const SPEC_VERSION = 'v1';
 
 const BANNER = `
   ${chalk.cyan('╔══════════════════════════════════════════════╗')}

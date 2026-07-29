@@ -40,7 +40,7 @@ esac
 const FAKE_PI_FAIL = `#!/bin/sh
 ${FAKE_ENGINE_SH}
 case "$*" in
-  *"Validate the Architecture"*) printf 'VERDICT: FAIL\\n- [blocker] no Deployables table\\n' ;;
+  *"Validate the Architecture"*) printf 'VERDICT: FAIL\\n- [blocker] no Modules table\\n' ;;
   *Validate*) printf 'VERDICT: PASS\\nfine\\n' ;;
   *) fake_default "$*" ;;
 esac

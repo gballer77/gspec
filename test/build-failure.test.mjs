@@ -41,7 +41,7 @@ case "$*" in
     if [ "$FAKE_PI_VERDICT" = "PASS" ]; then
       printf 'VERDICT: PASS\\nLooks complete.\\n'
     else
-      printf 'VERDICT: FAIL\\nBlocking findings:\\n- The Deployables table is missing from gspec/architecture.md.\\n- No failure-mode section for the queue worker.\\n'
+      printf 'VERDICT: FAIL\\nBlocking findings:\\n- The Modules table is missing from gspec/architecture.md.\\n- No failure-mode section for the queue worker.\\n'
     fi
     ;;
   *Validate*) printf 'VERDICT: PASS\\nLooks complete.\\n' ;;
@@ -61,7 +61,7 @@ case "$*" in
     n=$((n + 1))
     echo "$n" > "$FAKE_PI_COUNTER"
     if [ "$n" = "1" ]; then
-      printf 'VERDICT: FAIL\\nBlocking findings:\\n- The Deployables table is missing from gspec/architecture.md.\\n'
+      printf 'VERDICT: FAIL\\nBlocking findings:\\n- The Modules table is missing from gspec/architecture.md.\\n'
     else
       printf 'VERDICT: PASS\\nLooks complete.\\n'
     fi
@@ -102,7 +102,7 @@ test('a failed QA gate pauses with the verdict, an action banner, and a durable 
   // The pause says WHY: the verdict that ended the run, not a truncated excerpt…
   assert.match(r.output, /Architecture — QA gate did not pass after one revision/);
   assert.match(r.output, /Why it failed:/);
-  assert.match(r.output, /Deployables table is missing/);
+  assert.match(r.output, /Modules table is missing/);
   assert.match(r.output, /failure-mode section for the queue worker/);
   // …and says THAT action is needed, and how to continue.
   assert.match(r.output, /Action required: the build is paused at "Architecture"/);
@@ -111,18 +111,18 @@ test('a failed QA gate pauses with the verdict, an action banner, and a durable 
   // The full verdict survives the terminal: last-failure.md and the manifest.
   const report = await readFile(join(dir, LAST_FAILURE), 'utf-8');
   assert.match(report, /Build paused: Architecture \(architecture\) failed/);
-  assert.match(report, /Deployables table is missing/);
+  assert.match(report, /Modules table is missing/);
   assert.match(report, /gspec build --resume/);
   const manifest = JSON.parse(await readFile(join(dir, RUN_JSON), 'utf-8'));
   assert.equal(manifest.stages.architecture.status, 'failed');
-  assert.match(manifest.stages.architecture.detail, /Deployables table is missing/);
+  assert.match(manifest.stages.architecture.detail, /Modules table is missing/);
 
   // …and the cumulative QA log has the full verdict, including a TERMINAL entry
   // marking where the run paused.
   const qalog = await readFile(join(dir, QA_LOG), 'utf-8');
   assert.match(qalog, /gspec build — QA failure log/);
   assert.match(qalog, /architecture · TERMINAL/);
-  assert.match(qalog, /Deployables table is missing/);
+  assert.match(qalog, /Modules table is missing/);
 });
 
 test('a QA failure the self-heal recovers from is still logged durably, and the log survives completion', async (t) => {
@@ -145,7 +145,7 @@ test('a QA failure the self-heal recovers from is still logged durably, and the 
   assert.ok(await exists(join(dir, QA_LOG)), 'the durable QA log survives a completed build');
   const qalog = await readFile(join(dir, QA_LOG), 'utf-8');
   assert.match(qalog, /architecture · rev 1/);
-  assert.match(qalog, /Deployables table is missing/);
+  assert.match(qalog, /Modules table is missing/);
   assert.doesNotMatch(qalog, /· TERMINAL/);   // it recovered — no terminal entry
 });
 
@@ -269,5 +269,5 @@ test('after a QA pause, --resume continues from the failed stage and clears the 
   // …but the cumulative QA log is NOT cleared: the verdict from the failed run
   // is still reviewable after the resume completes.
   assert.ok(await exists(join(dir, QA_LOG)), 'the durable QA log outlives a completed build');
-  assert.match(await readFile(join(dir, QA_LOG), 'utf-8'), /Deployables table is missing/);
+  assert.match(await readFile(join(dir, QA_LOG), 'utf-8'), /Modules table is missing/);
 });

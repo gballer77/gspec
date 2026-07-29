@@ -13,7 +13,7 @@ Return a single fenced ```json block — nothing else — of ordered **waves**. 
 ```json
 {
   "waves": [
-    [ { "label": "scaffold", "instruction": "Scaffold the project per architecture.md (Project Setup, Structure, design tokens); generate verify.sh from the Deployables table. No feature work yet." } ],
+    [ { "label": "scaffold", "instruction": "Scaffold the project per architecture.md (Project Setup, Structure, design tokens); generate verify.sh from the Modules table. No feature work yet." } ],
     [ { "label": "auth", "instruction": "Implement feature gspec/features/auth.md (plan gspec/tasks/auth.md), tasks T1–T6.", "plan": ["gspec/tasks/auth.md"] },
       { "label": "catalog", "instruction": "Implement feature gspec/features/catalog.md (plan gspec/tasks/catalog.md), tasks T1–T5.", "plan": ["gspec/tasks/catalog.md"] } ],
     [ { "label": "checkout", "instruction": "Implement feature gspec/features/checkout.md; depends on auth + catalog.", "plan": ["gspec/tasks/checkout.md"] } ]
