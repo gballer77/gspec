@@ -36,6 +36,13 @@ const NOT_APPLICABLE = /not\s+applicable/i;
 export function slugifyAnchor(heading) {
   return String(heading)
     .replace(/^#+\s*/, '')
+    // Split camel/Pascal boundaries FIRST. Anchor names are routinely
+    // identifiers — `ItemStatusBadge`, `HighlightLayer` — and lowercasing them
+    // whole yields `itemstatusbadge`, which nobody writing an id would produce.
+    // Without this the coverage check reports a mismatch on output that is
+    // perfectly correct.
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')   // HTMLParser → HTML-Parser
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -130,30 +137,61 @@ export function originAnchors(text) {
   return out;
 }
 
-// Screen coverage between arch.md's ## UI section and design.html, both ways.
+// Coverage between arch.md's ## UI section and design.html, both ways.
+//
+// Screens both ways; components are the validator's job (see below).
 export function designLintViolations(rel, designHtml, archText) {
   const v = [];
   const ui = sections(archText).UI || [];
   if (NOT_APPLICABLE.test(ui.slice(0, 6).join(' '))) return v;
 
-  const screens = headingsOf(ui)
-    .map((h) => h.trim().match(/^### Screen: (.+)$/))
+  const declared = headingsOf(ui)
+    .map((h) => h.trim().match(/^### (Screen|Component): (.+)$/))
     .filter(Boolean)
-    .map((m) => ({ name: m[1].trim(), id: `screen-${slugifyAnchor(m[1])}` }));
+    .map((m) => ({ kind: m[1].toLowerCase(), name: m[2].trim(), id: `${m[1].toLowerCase()}-${slugifyAnchor(m[2])}` }));
 
-  const ids = new Set([...String(designHtml).matchAll(/<section[^>]*\bid="([^"]+)"/g)].map((m) => m[1]));
+  // Scan the MARKUP, never the commentary. A design routinely documents its own
+  // structure ("one <section id=\"screen-*\"> per arch.md ### Screen:"), and
+  // matching that text made the lint report ids nobody wrote — which then FAILED
+  // A BUILD on a file that was perfectly correct. A false positive in a blocking
+  // deterministic check is worse than not checking at all.
+  // Only BODY MARKUP counts. Comments explain the structure, and a <style> or
+  // <script> block routinely contains both prose (in /* */ comments) and
+  // selector text that looks like markup. Scanning any of it made the lint
+  // report ids nobody wrote — and it FAILED A BUILD on a correct file, first on
+  // an HTML comment and then on a CSS one. Strip all three rather than chase
+  // comment syntaxes one at a time.
+  const markup = String(designHtml)
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ');
+  const ids = new Set([...markup.matchAll(/<section[^>]*\bid="([^"]+)"/g)].map((m) => m[1]));
 
-  for (const s of screens) {
-    if (!ids.has(s.id)) v.push(`${rel}: no <section id="${s.id}"> for screen "${s.name}" — every screen in the architecture must be rendered`);
+  // SCREENS ONLY, deliberately.
+  //
+  // An earlier version also required every `### Component:` to appear in the
+  // design. It could not be made reliable: a designer writes semantic CSS
+  // (`class="item-card"`), not the architecture's identifier
+  // (`LibraryItemCard`), so matching them is guesswork — and this check BLOCKS,
+  // so a wrong guess stops a build over a correct file. "Is every component
+  // drawn?" is a judgment call; it belongs to feature-design-validator, which
+  // can read the mockup. What stays here is what regex can actually settle: a
+  // screen is a place, it gets its own section, and both directions must agree.
+  for (const d of declared) {
+    if (d.kind !== 'screen') continue;
+    if (!ids.has(d.id)) v.push(`${rel}: no <section id="${d.id}"> for screen "${d.name}" — every screen in the architecture must be rendered`);
   }
   for (const id of ids) {
-    if (id.startsWith('screen-') && !screens.some((s) => s.id === id)) {
+    // Only ids that CLAIM to be a screen or component are held to the mapping;
+    // a design may add its own scaffolding sections (a token swatch, a legend).
+    if (!id.startsWith('screen-')) continue;   // a design may name its own sections
+    if (!declared.some((d) => d.id === id)) {
       v.push(`${rel}: <section id="${id}"> has no matching "### Screen:" in the architecture's ## UI section`);
     }
   }
 
   // Self-contained: the file's whole value is that a human can open it.
-  for (const m of String(designHtml).matchAll(/\b(?:src|href)="(https?:)?\/\/[^"]*"/g)) {
+  for (const m of markup.matchAll(/\b(?:src|href)="(https?:)?\/\/[^"]*"/g)) {
     v.push(`${rel}: external reference ${m[0]} — design.html must render standalone from file://`);
   }
   return v;

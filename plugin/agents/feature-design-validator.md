@@ -8,7 +8,9 @@ The path to one feature's design (`gspec/features/<slug>/design.html`), plus its
 
 1. **Renders standalone** — self-contained, no external CSS/JS/fonts/images, no build step; it must open correctly from `file://`. Any remote reference is a `[blocker]`: the file's whole value is that a human can look at it.
 2. **Screen coverage, both directions** — every `### Screen:` under the architecture's `## UI` has a matching `<section id="screen-…">`, and every such section has a matching screen. An orphan either way is `[major]`.
-3. **Token discipline** — outside the copied token block, every color, spacing, radius, and type value is a `var(--…)` reference. A literal hex/rgb/hsl elsewhere is `[major]`; it is a second copy of a decision that will drift from the guide.
+3. **Token discipline** — outside the copied token block, every **color, spacing, radius, elevation and type-scale** value is a `var(--…)` reference. A literal hex/rgb/hsl elsewhere is `[major]`; it is a second copy of a decision that will drift from the guide.
+
+   **Do not generalize this to "no literal units".** Hairline borders (`1px`/`2px`), icon dimensions (`16px`), container max-widths (`72rem`), letter-spacing (`0.02em`) and **media-query breakpoints** are not token decisions — and a breakpoint *cannot* be one, because custom properties do not work in a media condition. A run failed here demanding exactly that: the bar was unreachable, so the revision could not satisfy it and the stage failed twice over a correct file. Flag a literal only when a token for that value exists in the guide.
 4. **No token authorship** — a custom property defined here with no counterpart in the style guide is `[major]`. A design that needs a new token is asking for a style-guide change; that belongs in `/gspec-style`.
 5. **Real states** — screens whose acceptance criteria imply empty / loading / error states show them. A happy-path-only mockup is `[minor]` on its own, `[major]` when a criterion explicitly describes the missing state.
 6. **Visual, not behavioral** — interaction logic, validation rules, and data flow belong to `arch.md`. Restating them here is `[minor]`.

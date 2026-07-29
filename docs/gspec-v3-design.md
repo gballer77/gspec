@@ -582,6 +582,12 @@ Uses the existing `promptConfirm` (`lib/prompts.js`) and the existing config mer
 
 ---
 
+## Known gaps (found by dogfooding, not yet fixed)
+
+**QA verdict history does not survive a resume.** `reviseUntilPass` builds its `verdicts` array per process, so the revision prompt's "every verdict so far, oldest first" means *so far in this invocation*. After a resume the writer starts from a blank slate, and the prompt's own instruction — *"a finding that reappears in a later verdict means the earlier fix did not land — fix it differently"* — can never fire across invocations.
+
+Seen in the v3 dogfood run: one `design.html` failed token discipline three separate times across resumes, each attempt unaware of the previous two. It read as a stubborn writer; it was amnesia. The fix is to seed `verdicts` from the manifest when resuming a stage that previously failed QA — straightforward for the single-deliverable gate (the stage record already carries `detail`), and needing a per-target store for the per-feature fan-out, where one stage covers N features. Until then `--qa-retries 2` keeps more than one attempt inside a single invocation, where the history does accumulate.
+
 ## Verification
 
 **Per release:**

@@ -51,3 +51,24 @@ test('output stays bounded', () => {
   const s = summarize(long);
   assert.ok(s.length <= 201, `expected a bounded one-liner, got ${s.length} chars`);
 });
+
+test('bare scaffolding headings are skipped too', () => {
+  // Observed twice in one run: a validator opens with its own heading structure
+  // rather than the contract's SUMMARY line, and the log reported the headings.
+  const verdict = [
+    '# VERDICT: FAIL',
+    '## Structured Verdict',
+    '**SPEC:** `gspec/features/reader-view/arch.md`',
+    'The UI section specifies visual treatment that belongs in design.html.',
+  ].join('\n');
+  const s = summarize(verdict);
+  assert.doesNotMatch(s, /Structured Verdict/, 'a bare heading is not the reason');
+  assert.match(s, /visual treatment that belongs in design\.html/);
+});
+
+test('a SUMMARY label on its own line does not leave a dangling separator', () => {
+  const verdict = ['VERDICT: FAIL', '**SUMMARY:**', 'Hardcoded pixel values outside the token system.'].join('\n');
+  const s = summarize(verdict);
+  assert.doesNotMatch(s, /^\s*\//, `leading separator in: ${s}`);
+  assert.match(s, /^Hardcoded pixel values/);
+});

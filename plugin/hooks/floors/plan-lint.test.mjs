@@ -133,3 +133,45 @@ test('slugifyAnchor keeps the anchor KIND — that is what makes fragments unamb
   // design.html ids are built from the screen NAME alone, prefixed by the caller.
   assert.equal(slugifyAnchor('Order Confirmation'), 'order-confirmation');
 });
+
+test('component coverage is NOT enforced here — it cannot be done reliably', () => {
+  // A designer writes semantic CSS (`class="item-card"`), not the
+  // architecture's identifier (`LibraryItemCard`). Matching them is guesswork,
+  // and this lint BLOCKS — a wrong guess stops a build over a correct file.
+  // Verified against real output before removing it.
+  const arch = ARCH.replace('### Screen: Cart', '### Component: LibraryItemCard');
+  assert.deepEqual(designLintViolations('a/design.html', '<div class="item-card"></div>', arch), []);
+});
+
+test('documentation ABOUT the markup is not markup', () => {
+  // This one failed a real build: a design commented "one <section id=\"screen-*\">
+  // per arch.md ### Screen:" and the lint reported `screen-*` as an orphan id.
+  const design = [
+    '<!-- REQUIRED: one <section id="screen-*"> per "### Screen:" -->',
+    '<section id="screen-cart"><h2>Cart</h2></section>',
+  ].join('\n');
+  assert.deepEqual(designLintViolations('a/design.html', design, ARCH), []);
+});
+
+test('a commented-out remote reference is not a remote reference', () => {
+  const design = '<!-- <img src="https://cdn.example.com/a.png"> -->\n<section id="screen-cart"></section>';
+  assert.deepEqual(designLintViolations('a/design.html', design, ARCH), []);
+});
+
+test('a design may carry its own scaffolding sections', () => {
+  // Only ids CLAIMING to be a screen/component are held to the mapping — a
+  // token swatch or legend is the design's own business.
+  const design = '<section id="screen-cart"></section>\n<section id="token-palette"></section>';
+  assert.deepEqual(designLintViolations('a/design.html', design, ARCH), []);
+});
+
+test('a <style> block is not markup either', () => {
+  // The second false positive from the same run: prose inside a CSS comment
+  // ("No <section id=\"screen-*\"> wraps this content.") sat in a <style> block,
+  // so HTML-comment stripping alone did not reach it.
+  const design = [
+    '<style>/* one <section id="screen-*"> per "### Screen:" */ .x{color:red}</style>',
+    '<section id="screen-cart"></section>',
+  ].join('\n');
+  assert.deepEqual(designLintViolations('a/design.html', design, ARCH), []);
+});
