@@ -5,6 +5,47 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.2.0',
+    date: 'July 28, 2026',
+    title: 'Everything about a feature lives in one folder',
+    summary: 'A plan used to be a bare task list. Every agent that read one had to also load the profile, the stack, the style guide, the architecture, and the PRD to have enough context to act — and the implement stage is where that cost multiplies, because each scope spawns up to six fresh agents and every one of them re-reads from scratch.<br /><br />A feature is now a <strong>folder</strong>: <code>gspec/features/&lt;slug&gt;/</code> holding <code>prd.md</code> beside <code>arch.md</code> (that feature\'s own data, API, UI and logic), <code>design.html</code> (a mockup you can actually open), and <code>tasks.md</code>. The three siblings are <strong>deliberately enriched</strong> — they inline the ORM, the framework, the file paths, so an implementer reading only that folder needs nothing else. This inverts the single-source-of-truth rule every other spec follows, and it is the point: the cost is paid once per feature, and every run afterwards reads less.<br /><br />Three writers now produce those files, each gated. <code>feature-architect</code> runs <strong>one feature at a time</strong> — it is the only stage that mints anchors, and two concurrent writers would both find no <code>### Entity: User</code> and both declare themselves its origin. And because the enrichment only pays off when a scope covers <em>one</em> feature, the driver now enforces that rather than asking the orchestrator for it: a bundled scope reads three inlined copies of the same decisions, which is worse than what it replaced, and nothing would have errored.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>The feature folder.</strong> <code>gspec/features/&lt;slug&gt;/</code> holds <code>prd.md</code>, <code>arch.md</code>, <code>design.html</code>, and <code>tasks.md</code>. The PRD stays product-agnostic; its three siblings are not, on purpose — the agnosticism floor now draws that boundary <em>inside</em> one directory, by basename. The slug appears exactly once in the tree, so a feature with no PRD is visible in an <code>ls</code> rather than only to the cross-referencer.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Anchor discipline, with a deterministic backstop.</strong> Every item in <code>arch.md</code> is an H3 in an exact grammar (<code>### Entity: Order</code>, <code>### Endpoint: POST /orders</code>) under the section that owns it, opened by a status line naming it an <strong>origin</strong> or an <strong>amendment</strong> of an earlier one. Exactly one origin per anchor exists across the project — a later feature that changes an entity writes a delta that says what changed, rather than a second definition that can silently disagree. Tasks carry an <code>arch:</code> line naming the anchors they touch, so a continuation run loads a few blocks instead of the whole file.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A deterministic lint runs before every feature-folder validator.</strong> Heading grammar, section shape, duplicate anchors, two origins for one anchor, screen coverage between <code>arch.md</code> and <code>design.html</code> in both directions, and <code>arch:</code> anchors that do not resolve are all pure regex — so they go straight back to the writer with the exact violations at <strong>zero agent cost</strong>, and a precise instruction instead of a vague FAIL. The agent validators then only ever judge mechanically-clean drafts, and spend their whole budget on what regex cannot decide.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>One feature per implement scope, enforced by the driver.</strong> The orchestrator decides ordering and concurrency; it no longer decides how much context an implementer carries. Any scope naming more than one feature is split into siblings in the same wave, and the split is logged. The no-plan fallback — which used to put <em>every</em> plan file into a single scope, reached by a JSON parse hiccup rather than a decision — now yields one scope per feature too. Each scope\'s prompt carries the exact resolved read list.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The plan gate is real now.</strong> <code>plan-validator</code> was non-blocking with no revision loop, and the plan stage\'s only checkpoint was "does the file exist" — so a plan that existed was never re-validated even after a QA failure. All three per-feature stages now gate properly, with a per-feature <code>written</code>/<code>passed</code> record that tells "already written, re-validate" apart from "the writer died here". <strong>A build that used to march past a bad plan now pauses.</strong>',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The style guide is tokens only.</strong> Color, typography, spacing, elevation, radius, themes, icons, accessibility — the vector for implementation, never the concrete elements. Component styling, imagery direction, and usage examples move to each feature\'s <code>design.html</code>, which copies the token block in and references it with <code>var(--…)</code>. <code>style.html</code> is now a real recommendation rather than a preference: only the HTML form gives a design a custom-property block to copy.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Writers write their own files.</strong> <code>plan-decomposer</code> was the only writer in the roster that did not — the driver marshalled a plan out of its stdout, a leftover from an approval gate that lived in the command. It, <code>feature-architect</code>, and <code>feature-designer</code> now all write directly, which means all three get the delivery-check machinery (retry on a writer that exits clean having written nothing; accept an artifact left behind by a post-write crash) that the plan stage never had.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The task-immutability block would have gone silent.</strong> It is the only hard PreToolUse block on a spec path, it fails open, and its matcher knew one path shape. The instant plans moved into the feature folder it would have stopped firing — no error, no log, checked tasks quietly editable — and the Codex baseline snapshot would have gone empty, so that gate would have reported clean having compared against nothing. Both now derive from one shared predicate that covers both layouts, with a regression test naming exactly that.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code>, then <code>/gspec-migrate</code> in each project. It moves <code>features/&lt;slug&gt;.md</code> → <code>features/&lt;slug&gt;/prd.md</code> and <code>tasks/&lt;slug&gt;.md</code> → <code>features/&lt;slug&gt;/tasks.md</code>, preserving every checked task exactly. It will <strong>not</strong> invent the <code>arch.md</code> and <code>design.html</code> your existing features do not have — that is a judgment call, not a reformat — so it reports which features lack them and leaves <code>/gspec-plan</code> to write them (your <code>tasks.md</code> survives). Both layouts stay readable throughout, so a half-migrated project still plans and builds. Your style guide is left untouched: the specimens it holds have nowhere to go until the features are re-planned, so they simply read as over-budget, which is advisory.',
+  },
+  {
     version: '3.1.0',
     date: 'July 28, 2026',
     title: 'The architecture stops growing',

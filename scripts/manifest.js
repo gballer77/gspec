@@ -450,7 +450,10 @@ export const DEGRADE_CAPABILITIES = [
   { command: 'gspec-style',     produce: 'style-writer',        check: 'style-validator' },
   { command: 'gspec-feature',   produce: 'feature-writer',      check: 'feature-validator' },
   { command: 'gspec-architect', produce: 'architecture-writer', check: 'architecture-validator' },
-  { command: 'gspec-plan',      produce: 'plan-decomposer',     check: 'plan-validator' },
+  // The whole feature folder is one capability here: on a target without
+  // sub-agents there is nowhere to fan out to, so all three writers and all
+  // three checkers compose into the single /gspec-plan document.
+  { command: 'gspec-plan',      produce: 'feature-architect',   check: ['feature-architecture-validator', 'feature-design-validator', 'plan-validator'], also: ['feature-designer', 'plan-decomposer'] },
   { command: 'gspec-implement', produce: 'implementer', check: 'implementation-validator', alsoSkills: ['gspec-orchestrator'] },
   { command: 'gspec-analyze',   produce: 'spec-cross-referencer' },
   { command: 'gspec-audit',     produce: 'codebase-inspector' },

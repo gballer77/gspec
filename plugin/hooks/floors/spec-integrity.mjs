@@ -16,6 +16,9 @@ export const SPEC_VERSION = 'v2';
 export function appliesToSpecIntegrity(rel) {
   const r = String(rel).replace(/\\/g, '/');
   if (!r.startsWith('gspec/')) return false;
+  // gspec/design/ is retired as a gspec concept (a feature's design.html
+  // replaces it), but the exclusion stays: a project that still has mockups
+  // there should not suddenly be nagged for a spec-version they never had.
   if (r.startsWith('gspec/design/')) return false;
   const base = r.split('/').pop();
   if (base.toLowerCase() === 'readme.md') return false;

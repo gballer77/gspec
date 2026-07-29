@@ -298,7 +298,7 @@ gspec restore playbook/my-starter
 | `~/.gspec/stacks/` | `gspec/stack.md` |
 | `~/.gspec/styles/` | `gspec/style.md` · `style.html` |
 | `~/.gspec/practices/` | `gspec/practices.md` |
-| `~/.gspec/features/` | `gspec/features/<slug>.md` |
+| `~/.gspec/features/` | `gspec/features/<slug>/prd.md` |
 
 `profile.md` and `architecture.md` are deliberately excluded — both are inherently specific to one project, so neither is ever seeded. (A profile can still be saved and restored; it just isn't used as a starting point for a written one.)
 
@@ -340,17 +340,19 @@ project-root/
     │   ├── dashboard.html
     │   ├── checkout-flow.png
     │   └── ...
-    ├── features/           # Feature PRDs (what & why)
-    │   ├── user-authentication.md
-    │   ├── dashboard-analytics.md
-    │   └── ...
-    └── tasks/              # Ordered, dependency-aware plans (one per feature)
-        ├── user-authentication.md
-        ├── dashboard-analytics.md
-        └── ...
+    └── features/           # One folder per feature — everything about it
+        ├── user-authentication/
+        │   ├── prd.md          # capabilities + acceptance criteria (what & why)
+        │   ├── arch.md         # its data, API, UI and logic (how)
+        │   ├── design.html     # a renderable mockup of its screens
+        │   └── tasks.md        # the ordered, dependency-aware plan
+        └── dashboard-analytics/
+            └── ...
 ```
 
-Most specs are Markdown. The style guide can also be a self-contained HTML file (`style.html`) that renders the design system as live swatches, typography specimens, and styled component previews — ideal for design-aware AI tools. The optional `gspec/design/` folder holds mockups (HTML, SVG, PNG, JPG) exported from external design tools like Figma, v0, or Framer AI; `/gspec-implement` reads them to reason about layout and visual intent. All files live in your repo, are version-controlled with your code, and are readable by both humans and AI tools.
+A feature folder is deliberately **self-sufficient**: `arch.md`, `design.html`, and `tasks.md` inline the concrete decisions they depend on, so building a feature means reading its folder rather than the whole spec set. The PRD beside them stays product-agnostic; its three siblings are the opposite, on purpose.
+
+Most specs are Markdown. The style guide can also be a self-contained HTML file (`style.html`) that renders the design system as live swatches, typography specimens, and styled component previews — ideal for design-aware AI tools. Each feature's `design.html` is a self-contained, renderable mockup of that feature's screens, generated from the style guide's tokens — open it in a browser to see the design rather than read about it. All files live in your repo, are version-controlled with your code, and are readable by both humans and AI tools.
 
 ## Key Design Decisions
 

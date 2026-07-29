@@ -56,7 +56,7 @@ const BOUND_MARKERS = ['Size budgets', 'Section contract'];
 test('claude emits the size budgets + section contract as preloadable skills', async () => {
   const conventions = await readFile(join(REPO_ROOT, 'dist', 'claude', 'gspec-conventions', 'SKILL.md'), 'utf-8');
   assert.match(conventions, /## Size budgets/, 'the canonical budget table must ship');
-  assert.match(conventions, /features\/<slug>\.md/, 'the budget table must cover feature PRDs');
+  assert.match(conventions, /features\/<slug>\/prd\.md/, 'the budget table must cover feature PRDs');
   const product = await readFile(join(REPO_ROOT, 'dist', 'claude', 'gspec-product', 'SKILL.md'), 'utf-8');
   assert.match(product, /## Section contract/, 'the PRD section contract must ship');
 });

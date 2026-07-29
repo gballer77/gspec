@@ -181,14 +181,25 @@ const dedup = (arr) => [...new Set(arr)];
 // the primary agent's task + (folded in as self-review) its validator.
 async function composeDegraded(cap) {
   const cmd = V2_COMMANDS.find((c) => c.name === cap.command);
-  const produce = cap.produce ? V2_AGENTS.find((a) => a.name === cap.produce) : null;
-  const check = cap.check ? V2_AGENTS.find((a) => a.name === cap.check) : null;
-  const also = cap.also ? V2_AGENTS.find((a) => a.name === cap.also) : null;
+  // `also` and `check` accept a NAME or a LIST. A capability used to compose at
+  // most one extra agent and one validator; /gspec-plan now folds three writers
+  // and three checkers into one file, because on a target without sub-agents the
+  // whole capability has to fit in a single document.
+  const byName = (n) => V2_AGENTS.find((a) => a.name === n);
+  const list = (v) => (Array.isArray(v) ? v : v ? [v] : []).map(byName).filter(Boolean);
+  const produce = cap.produce ? byName(cap.produce) : null;
+  const checks = list(cap.check);
+  const also = list(cap.also);
   // Skills to inline: the produce+check agents' skills, plus any `alsoSkills`
   // the capability adds (e.g. gspec-orchestrator for the implement fan-out
   // judgment, which lives on the build-orchestrator agent used only by the
   // autonomous `gspec build`).
-  const skillNames = cap.skills || dedup([...(produce?.skills || []), ...(check?.skills || []), ...(cap.alsoSkills || [])]);
+  const skillNames = cap.skills || dedup([
+    ...(produce?.skills || []),
+    ...checks.flatMap((c) => c.skills || []),
+    ...also.flatMap((a) => a.skills || []),
+    ...(cap.alsoSkills || []),
+  ]);
 
   const parts = [DEGRADE_PREAMBLE, '', await readSource(cmd.source)];
 
@@ -200,13 +211,16 @@ async function composeDegraded(cap) {
     }
   }
 
-  const taskAgents = [produce, also].filter(Boolean);
+  const taskAgents = [produce, ...also].filter(Boolean);
   if (taskAgents.length) {
     parts.push('\n---\n\n# Reference — task & output');
     for (const a of taskAgents) parts.push(`\n## ${a.name}\n\n${await readSource(a.source)}`);
   }
 
-  if (check) parts.push(`\n---\n\n# Reference — quality self-review\n\n${await readSource(check.source)}`);
+  if (checks.length) {
+    parts.push('\n---\n\n# Reference — quality self-review');
+    for (const c of checks) parts.push(`\n## ${c.name}\n\n${await readSource(c.source)}`);
+  }
 
   return parts.join('\n');
 }

@@ -37,10 +37,12 @@ The budgets below are for a **standard**-scope product. The brief states the pro
 | `style.md` | 2,000 words |
 | `style.html` | 1,500 words of prose (tokens, markup, and rendered specimens excluded) |
 | `research.md` | 2,000 words |
-| `features/<slug>.md` | 1,800 words |
+| `features/<slug>/prd.md` | 1,800 words |
+| `features/<slug>/arch.md` | 2,400 words |
+| `features/<slug>/design.html` | 600 words of prose (markup, tokens, and rendered screens excluded) |
 | `architecture.md` | 2,100 words |
 | `architecture/<name>.md` | 600 words |
-| `tasks/<slug>.md` | ≤ 25 tasks, ≤ 3 per capability, one sentence each |
+| `features/<slug>/tasks.md` | ≤ 25 tasks, ≤ 3 per capability, one sentence each |
 
 How to apply them:
 
@@ -50,6 +52,41 @@ How to apply them:
 - **A blocker or major finding outranks every rule on this list.** When a finding names content that is *missing* — a required section, a capability, an acceptance criterion — add it in full, however far past the ceiling that takes the document, and never satisfy it partially to stay near a word count. An unresolved blocker fails the gate; an overage cannot. This is the tie-break whenever two rules here pull against each other.
 - **Subject to that, no fix may grow an at-budget spec.** Growth is for what the findings require and nothing else: resolve every other finding by replacing text rather than appending, and pay for required additions by cutting restatement and duplication elsewhere. A revision that grows a document while resolving no blocker/major finding is itself a defect.
 - **Budget pressure is a decomposition signal, not a reason to overrun.** A feature that can't be specified within its budget is more than one feature; an architecture that can't has almost always absorbed detail belonging to the features that introduced it (entity fields, endpoint signatures, algorithms) — check its altitude before anything else. When you are *authoring*, say so in your summary instead of blowing through the ceiling. When you are *revising* against a finding, resolve the finding first (per the tie-break above) and then say it in your summary — the split is a recommendation to the human, never a reason to leave required content out.
+
+## The feature folder (and why it inverts "state each fact once")
+Everything about one feature lives in `gspec/features/<slug>/`:
+
+| file | holds | agnostic? |
+| --- | --- | --- |
+| `prd.md` | capabilities + acceptance criteria — *what* and *why* | **yes** |
+| `arch.md` | that feature's data, API, UI, and logic — *how* | no |
+| `design.html` | a renderable mockup of its screens | no |
+| `tasks.md` | the ordered plan | no |
+
+The PRD and its three siblings sit on opposite sides of the agnosticism boundary **on purpose**. The three are deliberately **enriched**: an implementer reading only this folder must not need `architecture.md`, `stack.md`, or `style.md`, so concrete technology names and decisions are *inlined* rather than referenced. This is the one place the single-source-of-truth rule above is deliberately inverted — the cost is paid once per feature, and every implementer run afterwards reads less. Product identity is welcome in these three; it is still excluded from `prd.md`.
+
+## Plan-folder anchors (`arch.md`)
+`arch.md` has exactly four H2 concern sections — `## Data`, `## API`, `## UI`, `## Logic` — each specified or marked **Not Applicable**. Every *item* is an **H3** under the section that owns it, in exact form, because the anchor has to be a line-anchored regex a `grep` can find:
+
+| section | item anchor |
+| --- | --- |
+| `## Data` | `### Entity: <PascalName>` |
+| `## API` | `### Endpoint: <METHOD> <path>` (uppercase method, path as routed, no trailing slash) |
+| `## UI` | `### Screen: <Name>` · `### Component: <Name>` |
+| `## Logic` | `### Rule: <Name>` · `### Machine: <Name>` |
+
+A machine-readable status line opens every block:
+
+```
+### Entity: Order
+- **module:** api
+- **defined-in:** gspec/features/checkout/arch.md     ← self ⇒ this block is the ORIGIN
+- **amends:** gspec/features/checkout/arch.md         ← present ⇒ this block is a DELTA
+```
+
+**Exactly one origin per anchor exists across the whole project.** Before writing any item, grep for its anchor under `gspec/features/`: no hit makes you the origin (write the full definition); a hit makes yours a delta that names what it amends and carries only `#### Added` / `#### Changed` / `#### Removed`. Never restate what did not change, and never reword an existing anchor — a rename is a new anchor plus `superseded-by:` on the old one. Deltas of deltas are legal; read them in `features/` lexical order to reconstruct current state.
+
+`design.html` mirrors the UI section: one `<section id="screen-<kebab>">` per `### Screen:`, where `<kebab>` is the slugified screen name, matching in both directions.
 
 ## Capabilities & acceptance criteria (feature specs)
 Capabilities are Markdown checkboxes with a priority and 2–4 observable acceptance criteria:

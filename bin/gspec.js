@@ -1117,7 +1117,19 @@ async function collectLegacyLayout(gspecDir) {
     for (const entry of await readdir(join(gspecDir, 'features'))) {
       if (entry.endsWith('.plan.md') || entry.endsWith('.tasks.md')) {
         legacy.push(`gspec/features/${entry}`);
+      } else if (entry.endsWith('.md')) {
+        // A flat PRD. Layout is checked independently of spec-version precisely
+        // because a file can be stamped current and still sit in the old place —
+        // the version check would never flag it.
+        legacy.push(`gspec/features/${entry}`);
       }
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+  try {
+    for (const entry of await readdir(join(gspecDir, 'tasks'))) {
+      if (entry.endsWith('.md')) legacy.push(`gspec/tasks/${entry}`);
     }
   } catch (e) {
     if (e.code !== 'ENOENT') throw e;

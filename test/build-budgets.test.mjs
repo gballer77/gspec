@@ -46,11 +46,19 @@ test('the skill declares a size budget for every deliverable the driver measures
 test('budgetLabel maps paths onto table rows, and non-deliverables onto nothing', () => {
   assert.equal(budgetLabel('gspec/profile.md'), 'profile.md');
   assert.equal(budgetLabel('gspec/style.html'), 'style.html');
-  assert.equal(budgetLabel('gspec/features/user-auth.md'), 'features/<slug>.md');
+  // Both PRD layouts share the PRD row; the folder's other files key by basename.
+  assert.equal(budgetLabel('gspec/features/user-auth.md'), 'features/<slug>/prd.md');
+  assert.equal(budgetLabel('gspec/features/user-auth/prd.md'), 'features/<slug>/prd.md');
+  assert.equal(budgetLabel('gspec/features/user-auth/arch.md'), 'features/<slug>/arch.md');
+  assert.equal(budgetLabel('gspec/features/user-auth/design.html'), 'features/<slug>/design.html');
   // The module tier is budgeted separately from the system tier it sits under.
   assert.equal(budgetLabel('gspec/architecture.md'), 'architecture.md');
   assert.equal(budgetLabel('gspec/architecture/web.md'), 'architecture/<name>.md');
-  // Not budgeted: plans (counted in tasks), anything outside gspec/.
+  // tasks.md has a table row but no WORD budget — plans are bounded in tasks.
+  // The label resolves; budgetFor is what returns null (asserted below).
+  assert.equal(budgetLabel('gspec/features/user-auth/tasks.md'), 'features/<slug>/tasks.md');
+  assert.equal(SPEC_BUDGETS['features/<slug>/tasks.md'], undefined);
+  // Not budgeted at all: the legacy plan location, anything outside gspec/.
   assert.equal(budgetLabel('gspec/tasks/user-auth.md'), null);
   assert.equal(budgetLabel('src/index.js'), null);
 });
@@ -70,7 +78,7 @@ test('scope tiers scale the budget, and an unknown tier falls back rather than s
   // Every PRD shares one budget, whatever its slug.
   assert.equal(budgetFor('gspec/features/user-auth.md'), budgetFor('gspec/features/anything-else.md'));
   // Plans are budgeted in tasks, not words — nothing to measure.
-  assert.equal(budgetFor('gspec/tasks/user-auth.md'), null);
+  assert.equal(budgetFor('gspec/features/user-auth/tasks.md'), null);
 });
 
 test('word counting matches what the budget claims to count', () => {
