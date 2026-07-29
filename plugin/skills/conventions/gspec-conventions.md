@@ -34,11 +34,11 @@ The budgets below are for a **standard**-scope product. The brief states the pro
 | `profile.md` | 2,000 words |
 | `stack.md` | 2,000 words |
 | `practices.md` | 2,000 words (the `## Enforcement` block is excluded — a hook parses it) |
-| `style.md` | 2,000 words |
-| `style.html` | 1,500 words of prose (tokens, markup, and rendered specimens excluded) |
+| `style.md` | 900 words |
+| `style.html` | 700 words of prose (tokens, markup, and rendered specimens excluded) |
 | `research.md` | 2,000 words |
 | `features/<slug>/prd.md` | 1,800 words |
-| `features/<slug>/arch.md` | 2,400 words |
+| `features/<slug>/arch.md` | 3,000 words |
 | `features/<slug>/design.html` | 600 words of prose (markup, tokens, and rendered screens excluded) |
 | `architecture.md` | 2,100 words |
 | `architecture/<name>.md` | 600 words |

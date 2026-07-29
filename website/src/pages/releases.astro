@@ -5,6 +5,47 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.4.0',
+    date: 'July 29, 2026',
+    title: 'What a full dogfood run taught us',
+    summary: 'A complete <code>gspec build</code> against a real engine — a self-hosted read-later service, six features, two-tier specs, tiered models — and almost everything it found was something the test suite structurally could not: fixtures encode what the author <em>intended</em>, not what a model actually does.<br /><br /><strong>The good news first.</strong> The origin/delta discipline held on real specs: 83 anchors, 7 genuinely shared across features, <strong>zero duplicate origins</strong>. The feature written last found every prior definition across five sibling folders and wrote deltas stating only what changed — even correctly deciding two components needed no delta at all. The architecture altitude rules held too: zero entity field lists, zero endpoint inventories, zero of the detail v3.1 was built to evict.<br /><br /><strong>The rest is what broke.</strong> Half of v3.2 §7 was never implemented. The style writer picked the format the design system depends on <em>not</em> having. Six of six feature architectures blew a budget that was simply set wrong. And a transient engine failure reported nothing but <code>exited 1</code>, costing three manual reproductions to establish it was transient.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong><code>arch.md</code> is structure; <code>design.html</code> is appearance.</strong> The designer was fenced out of behavior from the start — "visual, not behavioral" — but the architect was never fenced out of <em>appearance</em>, and it filled the gap: <strong>255 style-token references across six <code>## UI</code> sections</strong>, plus pixel measurements, hover styling and layout dimensions. A mockup written in prose, sitting beside a mockup that renders. The reciprocal rule now exists on both sides, with one test — <em>could a designer change this without changing any behavior?</em> — and the validator raises it as a major finding. Components, props, state ownership, data flow and keyboard behavior stay exactly where they were.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The style guide\'s tokens-only budgets were never applied.</strong> v3.2 rescoped the style guide to tokens and moved component styling to each feature\'s design — but only the persona changed; the budgets stayed at their pre-v3 values. So a 2,796-word guide reported as 1.4× over when against the intended ceiling it was 3.1×, and the measurement meant to detect "the split did not happen" was itself unchanged. Now 900 words (Markdown) and 700 prose (HTML), as specified.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The autonomous build never told the style writer which format to write.</strong> Its contract says the brief decides and to treat the brief as authoritative — but an autonomous run has no interview to settle it, so the choice fell to model preference and it picked Markdown. That is no longer neutral: each feature\'s <code>design.html</code> copies the guide\'s CSS custom-property block verbatim, and a Markdown guide has none, dropping the token check from an exact comparison to a best-effort transcription. The style stage now states the preference where the writer is actually looking.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The feature architecture budget was miscalibrated.</strong> Six of six features exceeded 2,400 words (1.1×–1.8×). That is not six writers failing — it is the wrong ceiling for the one file whose entire job is restating the stack and architecture so nothing downstream has to, and a ceiling every honest draft breaks teaches writers to ignore ceilings. Raised to 3,000, above the observed median and still under the outlier — which was mostly the prose mockup the appearance boundary now removes.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>A failed writer now says what the engine said.</strong> <code>exited 1</code> alone cannot distinguish a transient overload (resume and it passes) from a broken prompt (resuming loops forever) — and that is exactly when a user is least equipped to dig. A run failed here twice and reported nothing else; establishing it was transient took three manual reproductions. The engine\'s own output is now carried into the failure, and a silent failure says so explicitly and notes that <code>--resume</code> retries just that item.',
+      },
+      {
+        type: 'changed',
+        description: '<strong><code>architecture-validator</code> moves to the strong tier, on a stated principle.</strong> A validator\'s tier should follow how much judgment is left <em>after</em> its lint. Most now sit behind a deterministic floor; this one has none, and the two things it alone polices — no feature detail crept in, no sections invented — are pure judgment. On the cheap tier it passed an architecture 1.7× its budget carrying five sections outside the required list. It also now polices that list as a <strong>ceiling</strong>, not just a floor.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>A Modules row is a verification unit, not a code module.</strong> A brief saying "two modules, deployed separately" correctly produced a <em>one-row</em> table — one pnpm workspace, one build command — which reads like a bug to anyone who wrote that brief. The rename traded one confusion for another, so the architect now states this in the section\'s prose whenever the row count is lower than the number of components a reader would count.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The QA one-liner reported model preamble instead of the finding.</strong> A validator prefaced its verdict with reasoning, and the run log showed <em>that</em> as the entire reason the stage failed — the actual blocker (a missing machine-readable enforcement block) never appeared. The summary now skips past the verdict line to the summary or first severity-tagged finding.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code>. Existing specs are untouched. Your next <code>/gspec-architect</code> or feature-architecture QA pass will start flagging appearance detail in <code>## UI</code> and sections outside the architecture\'s required list — both were always contract, and are now actually checked.',
+  },
+  {
     version: '3.3.2',
     date: 'July 28, 2026',
     title: 'A scripted install no longer stops halfway and calls it success',
