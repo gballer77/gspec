@@ -9,7 +9,10 @@ import chalk from 'chalk';
 import { promptSelect, promptMultiSelect, promptConfirm, promptInput } from '../lib/prompts.js';
 import { TARGETS as EMITTER_TARGETS } from '../lib/emitters.js';
 import { runBuild, reportBuildStatus, EXIT } from '../lib/build.js';
-import { writeProjectConfig, PROJECT_CONFIG_PATH } from '../lib/config.js';
+import {
+  writeProjectConfig, PROJECT_CONFIG_PATH, readProjectConfig, readGlobalConfig,
+  recommendedModels, hasModelsConfigured,
+} from '../lib/config.js';
 import { SPEC_VERSION } from '../lib/spec-version.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -1071,6 +1074,48 @@ function parseSpecVersion(content) {
   return null;
 }
 
+// Offer the recommended per-agent model tiering (v3.3).
+//
+// The `models` map is the largest unused cost lever gspec ships: without one,
+// every agent — validators included — runs on the engine's default, which is
+// usually the top tier. This offers the tiering rather than applying it,
+// because which models spend a user's money is not something an installer
+// should decide quietly. Hence: only on a TTY, only for the engines that
+// actually run the build's agents, never when models are already configured,
+// and never at all unless asked for explicitly in a headless run.
+async function offerRecommendedModels(targetName, cwd, mode) {
+  if (mode === 'none') return;
+  const models = recommendedModels(targetName);
+  if (!models) return; // cursor/opencode don't run these agents; pi moves too fast to table
+
+  // Never second-guess a user who has configured this.
+  if (hasModelsConfigured(await readProjectConfig(cwd), await readGlobalConfig())) {
+    if (mode === 'recommended') {
+      console.log(chalk.dim(`  Per-agent models already configured — left as they are.\n`));
+    }
+    return;
+  }
+
+  const tiers = [...new Set(Object.values(models))];
+  if (mode !== 'recommended') {
+    // A non-TTY install (CI, a piped script) gets nothing by default: silently
+    // changing which models a run bills to is not an install-time default.
+    if (!process.stdin.isTTY) return;
+    console.log(chalk.bold('\n  Per-agent models'));
+    console.log(chalk.dim('  Each build stage runs as its own agent, so they need not share a model.'));
+    console.log(chalk.dim(`  Recommended for ${targetName}: validators on ${tiers[tiers.length - 1]},`));
+    console.log(chalk.dim(`  authoring on ${models.default}, and the architecture + implementation on ${models.implementer}.\n`));
+    const yes = await promptConfirm('Use this recommended model assignment?');
+    if (!yes) {
+      console.log(chalk.dim(`  Skipped — every agent uses the engine default. Add a "models" map to ${PROJECT_CONFIG_PATH} any time.\n`));
+      return;
+    }
+  }
+
+  await writeProjectConfig(cwd, { models });
+  console.log(chalk.dim(`  Recorded the recommended model assignment in ${PROJECT_CONFIG_PATH}\n`));
+}
+
 async function collectGspecFiles(gspecDir) {
   const files = [];
 
@@ -1893,6 +1938,7 @@ program
   .description('Install gspec specification commands')
   .version(pkg.version)
   .option('-t, --target <target>', 'target platform (claude, cursor, antigravity, codex, opencode, pi)')
+  .option('--models <mode>', "assign per-agent models without being asked: 'recommended' writes the tiering for this engine, 'none' skips the question")
   .action(async (opts) => {
     console.log(BANNER);
 
@@ -1916,6 +1962,8 @@ program
     await installPreamble(targetName, process.cwd());
 
     await installHooks(targetName, process.cwd());
+
+    await offerRecommendedModels(targetName, process.cwd(), opts.models);
 
     await installCodexHooks(targetName, process.cwd());
 

@@ -62,22 +62,24 @@ The autonomous build has a wired engine for **Claude Code**, **Codex**, and **Pi
   "models": {
     "default": "claude-sonnet-5",           // any agent with no better match
     "qa":      "claude-haiku-4-5",           // every *-validator
-    "architecture-writer": "claude-opus-4-8", // one specific agent
-    "implementer":         "claude-opus-4-8"
+    "architecture-writer": "claude-opus-5", // one specific agent
+    "implementer":         "claude-opus-5"
   }
 }
 ```
 
 With no `models` map, every agent runs on the engine/CLI default, unchanged. The model string passes straight to the engine's `--model`, so any model your CLI accepts works.
 
-**Recommended starting points.** The idea is the same on every engine, expressed with the `writer` and `qa` role tiers plus two overrides:
+**Let the installer write it.** On a Claude or Codex install, gspec offers this assignment and writes it to `.gspec/config.json` if you accept — or run `gspec install -t claude --models recommended` to take it without being asked. It never overwrites a `models` map you already have, and a non-interactive install writes nothing unless you pass the flag: which models a run bills to is your call, not an install default.
+
+**Recommended starting points.** The idea is the same on every engine, expressed with the `writer` and `qa` role tiers plus a few overrides:
 
 - **`writer` → a balanced model** — the everyday authoring (profile, stack, practices, style, feature, research PRDs).
 - **`qa` → a cheap/fast model** — every `*-validator`; checking a spec needs far less horsepower than writing one.
-- **`architecture-writer` and `implementer` → a strong model** — the two load-bearing jobs (the system design and the code), pinned by name so they beat the `writer`/`default` tier.
+- **`architecture-writer`, `feature-architect` and `implementer` → a strong model** — the load-bearing jobs (the system design, each feature's own architecture, and the code), pinned by name so they beat the `writer`/`default` tier.
 - **`default` → the balanced model** — catches the planners and anything else.
 
-- **Claude engine** — strong `claude-opus-4-8`, balanced `claude-sonnet-5`, cheap `claude-haiku-4-5`:
+- **Claude engine** — strong `claude-opus-5`, balanced `claude-sonnet-5`, cheap `claude-haiku-4-5`:
 
   ```jsonc
   // ~/.gspec/config.json
@@ -86,8 +88,9 @@ With no `models` map, every agent runs on the engine/CLI default, unchanged. The
       "default": "claude-sonnet-5",             // planners and anything unlisted
       "writer":  "claude-sonnet-5",             // every *-writer (balanced)
       "qa":      "claude-haiku-4-5",            // every *-validator (cheap)
-      "architecture-writer": "claude-opus-4-8", // override: the system design
-      "implementer":         "claude-opus-4-8"  // override: the code
+      "architecture-writer": "claude-opus-5", // override: the system design
+      "feature-architect":   "claude-opus-5", // override: each feature's architecture
+      "implementer":         "claude-opus-5"  // override: the code
     }
   }
   ```
@@ -102,6 +105,7 @@ With no `models` map, every agent runs on the engine/CLI default, unchanged. The
       "writer":  "gpt-5",                 // every *-writer (balanced)
       "qa":      "gpt-5-mini",            // every *-validator (cheap)
       "architecture-writer": "gpt-5-codex", // override: the system design
+      "feature-architect":   "gpt-5-codex", // override: each feature's architecture
       "implementer":         "gpt-5-codex"  // override: the code
     }
   }

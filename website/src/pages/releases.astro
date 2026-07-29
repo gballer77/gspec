@@ -5,6 +5,27 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.3.0',
+    date: 'July 28, 2026',
+    title: 'The cheapest thing in the build stops running on the most expensive model',
+    summary: 'gspec has supported per-agent models since 2.6.0, and almost nobody sets one — so every agent runs on the engine\'s default, which is usually the top tier. That includes the <strong>validators</strong>, which are roughly half of all agent runs in a v3 build and the cheapest thing to move: the deterministic lints added in 3.2 and 3.2.1 now handle the mechanical checks, so what is left for a validator is focused judgment over one small file.<br /><br />The tiering was already written down — it just lived in the README as prose, where it did nothing. It now ships as a table the installer can write for you: <strong>validators cheap, everyday authoring balanced, and the three load-bearing jobs strong</strong> (the system design, each feature\'s own architecture, and the code, where a mistake propagates into everything downstream).<br /><br />It is an <em>offer</em>, not a default. Which models a run bills to is the user\'s call, so the install asks, never overwrites a <code>models</code> map you already have, and writes nothing at all in a non-interactive run unless you pass the flag.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>A recommended model assignment, offered at install.</strong> On a Claude or Codex install gspec shows the tiering and writes it to <code>.gspec/config.json</code> if you accept. <code>gspec install -t claude --models recommended</code> takes it without being asked; <code>--models none</code> skips the question. Three guards: an existing <code>models</code> map (project <em>or</em> global) is never touched, a non-TTY install writes nothing without the flag, and only the two engines that actually run the build\'s agents are covered — cursor and opencode do not, and pi\'s roster moves too fast to ship in a table.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>Two agents could not be reached by a role tier at all.</strong> The <code>writer</code> selector keys on the <code>-writer</code> suffix, so <code>feature-architect</code> and <code>feature-designer</code> — added in 3.2.0 — matched only <code>default</code>. Anyone tiering by role would have silently missed them, including the recommendation itself. Both now map to the <code>writer</code> tier, with <code>feature-architect</code> overridden by name to the strong model, since a feature\'s architecture is what every one of its tasks is built from.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The README\'s recommendation and the shipped table are the same thing.</strong> The documented example was the only place these model IDs lived, and it had drifted to a superseded Opus. There is now one table in <code>lib/config.js</code>, the docs describe what the installer actually writes, and keeping up with a new model is a one-line edit in one place.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> and answer the model question, or <code>gspec install -t claude --models recommended</code> to take the assignment directly. Nothing changes for existing projects unless you opt in — and if you already have a <code>models</code> map, gspec leaves it exactly as it is.',
+  },
+  {
     version: '3.2.1',
     date: 'July 28, 2026',
     title: 'A checker the implementer did not write, and an audit that stops growing',
