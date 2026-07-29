@@ -5,6 +5,23 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.3.1',
+    date: 'July 28, 2026',
+    title: 'A migrated plan is never regenerated over',
+    summary: 'Found by running the v3 pipeline against this site\'s own migrated specs rather than against fixtures. The per-feature stages only skipped regeneration when the manifest showed <em>they</em> had written the file — so a <code>tasks.md</code> that arrived through <code>/gspec-migrate</code>, or was written by hand, had no such record and was regenerated over on the next build. The old plan stage skipped on mere existence for exactly this reason; its bug was that it also skipped <em>validation</em>, and in fixing that the preservation went with it.<br /><br />An existing, well-formed file is now never regenerated — whoever wrote it — and is still validated either way. Regeneration happens only when the file is missing or malformed.',
+    changes: [
+      {
+        type: 'fixed',
+        description: '<strong>A hand-authored or migrated feature file is no longer overwritten.</strong> <code>arch.md</code>, <code>design.html</code>, and <code>tasks.md</code> are regenerated only when missing or malformed; a file already present is kept and validated, and the log says whether this run wrote it. For <code>tasks.md</code> this matters most: regenerating over it would discard the checked-task history the immutability contract exists to protect, and relying on the writer to preserve it put a data-loss risk behind agent discipline rather than in front of it.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong><code>plan-decomposer</code>\'s input contract was stale.</strong> It still described the existing plan as living at <code>gspec/tasks/&lt;slug&gt;.md</code> and being handed to it — wrong on both counts after the feature-folder move. It now names the folder path and says plainly to read any plan already there, reproducing every checked task verbatim and appending new work with the next free ID.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code>. Nothing changes on disk. If you migrated a project on 3.2.x and have not re-run a build since, this is worth taking first — a build on 3.2.x would have regenerated your migrated plans rather than preserving them.',
+  },
+  {
     version: '3.3.0',
     date: 'July 28, 2026',
     title: 'The cheapest thing in the build stops running on the most expensive model',
