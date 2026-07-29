@@ -1,9 +1,9 @@
 # gspec v3 — design system, thin architecture, enriched feature folders
 
-- **Status:** Proposed. Decided but not started — no code has changed.
+- **Status:** **Implemented** across v3.0.0 – v3.3.1. Every section below shipped; two decisions were reversed during implementation and are marked in place (the module tier stayed at `gspec/architecture/<name>.md` rather than co-locating; the `gspec/design/` floor exclusion was kept). The per-release user-facing record is `website/src/pages/releases.astro`.
 - **Date:** 2026-07-28
 - **Supersedes:** `docs/per-deployable-architecture.md` (the shipped two-tier layout) and the analysis on `origin/feature/architecture-file-set-analysis` (`docs/architecture-file-set.md`), whose open questions are answered by the Decisions table below.
-- **Scope:** four sequenced releases — v3.0.0, v3.1.0, v3.2.0, v3.3.0.
+- **Scope:** five shipped releases — v3.0.0, v3.1.0, v3.2.0, v3.2.1, v3.3.0 (plus v3.3.1, a fix found by dogfooding the migration).
 
 ---
 
@@ -36,7 +36,7 @@ These are settled; the rest of this document is mechanism.
 | Feature folder | `gspec/features/<slug>/` with exactly four files — `prd.md`, `arch.md`, `design.html`, `tasks.md` — split along the boundaries that are *forced* (the agnosticism boundary; file format; the immutability hook's target), never along concerns. **Four writer/validator pairs**, one file each: `feature-writer`→`prd.md`, `feature-architect`→`arch.md`, `feature-designer`→`design.html`, `plan-decomposer`→`tasks.md`. No parallel `plans/` root — the slug appears once in the tree. |
 | Style scope | **Tokens only.** HTML strongly preferred. No component specimens — concrete visuals live in each feature's `design.html`. |
 | Migration | **Mechanical only** — moves, renames, version stamp; then warn and tell the user to re-run `/gspec-architect` + `/gspec-plan`. No agent-driven content splitting. |
-| `gspec/design/` | **Retired outright.** The mockup *is* `design.html` — self-contained, so any imagery is a `data:` URI inside it. No asset folder anywhere. |
+| `gspec/design/` | **Retired from the flow.** The mockup *is* `design.html` — self-contained, so any imagery is a `data:` URI inside it. No asset folder is ever written. The floors keep their `gspec/design/` *exclusion* though (see v3.2 §8): removing it would start nagging mockups an existing project already has for a `spec-version` they never carried. |
 | Rollout | **Four releases**: v3.0.0 rename + spec-version `v2`; v3.1.0 thin two-tier architecture; v3.2.0 feature folders + tokens-only style + deterministic-first gates; v3.3.0 recommended model tiering at install. |
 
 ### Why `arch.md` is one file, not four
@@ -412,7 +412,7 @@ The persona now serves **two** deliverables with opposite jobs, so state the spl
 
 There is no asset folder in v3. `design.html` is self-contained (the same rule `style.html` already lives under), so a mockup's imagery is a `data:` URI inside it. That removes a whole category of machinery:
 
-- **Delete the exclusion, don't relocate it.** `spec-integrity.mjs:13` and `agnosticism.mjs:13` both carry an explicit `gspec/design/` skip. Both lines go away — every file under `gspec/` is now a governed spec, which is a simpler floor contract than the one that exists today.
+- **Keep the exclusion, don't relocate it — and don't delete it either.** `spec-integrity.mjs` and `agnosticism.mjs` both carry an explicit `gspec/design/` skip. An earlier draft deleted both on the grounds that every file under `gspec/` is then a governed spec, which is a simpler contract. That was wrong in practice: a project upgrading from v2 still has mockups in that folder, and they would immediately start failing the spec-version check for a marker they never had. Retiring the folder from the *flow* costs nothing; retiring it from the *floors* costs every existing user a wall of findings. The lines stay, with a comment saying why.
 - No `isPlanAsset` predicate, and no `design.html`-vs-`design/` prefix ambiguity for the path predicates to discriminate.
 - **Migration:** an existing `gspec/design/**` has no v3 home. `/gspec-migrate` leaves it in place and warns that its mockups belong in the relevant feature's `design.html` — it must not delete user-supplied artwork (same reasoning as the `style.html` no-touch rule in §7).
 - **Cost to accept:** binary mockups get bigger as base64 and are no longer diffable. Worth it — the alternative is a second, unvalidated home for design intent, which is what `gspec/design/` was and why it drifted. Reference-only material (a Figma URL, a brand PDF) belongs in the profile or the brief, not in the spec tree.
