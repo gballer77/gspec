@@ -5,6 +5,19 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.3.2',
+    date: 'July 28, 2026',
+    title: 'A scripted install no longer stops halfway and calls it success',
+    summary: 'Found while setting up a dogfood run: <code>gspec install --models recommended</code> did nothing on a re-install. The cause was worse than the symptom. Every prompt shares one stdin, and off a TTY the fallback only settled when a line <em>arrived</em> — so the moment a script piped fewer answers than there are prompts, the promise hung, node drained its event loop, and the process <strong>exited 0 having skipped every remaining step</strong>.<br /><br />That is an install reporting success with no hooks installed, no harness preamble, and no model assignment — silently, and only in the non-interactive path that CI and setup scripts use. Running out of piped input now means "take the default", which is what a non-interactive caller means by staying quiet.',
+    changes: [
+      {
+        type: 'fixed',
+        description: '<strong>An install that runs out of piped answers completes instead of vanishing.</strong> The off-TTY prompt now settles in both exhaustion cases: stdin ending <em>while</em> a prompt waits, and — the common one — stdin that ended <em>before</em> the prompt, which is every prompt after the first once a script's input is used up. Regression-tested end to end: a fully unanswered install still reaches its last step, and a re-install with a single piped answer both completes and writes the model assignment.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code>. If you install gspec from a script or CI step, re-run it: any prior scripted install may have stopped partway through without saying so — check that <code>.claude/hooks/</code> (or your target's equivalent) is populated.',
+  },
+  {
     version: '3.3.1',
     date: 'July 28, 2026',
     title: 'A migrated plan is never regenerated over',

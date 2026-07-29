@@ -72,3 +72,27 @@ test('the tiering reaches every agent it is meant to, including the suffix-less 
   // Anything unlisted still resolves.
   assert.equal(at('build-orchestrator'), 'claude-sonnet-5');
 });
+
+test('a scripted install runs to completion when it runs out of piped answers', async (t) => {
+  // Every prompt shares one stdin, so a script that pipes fewer answers than
+  // there are prompts hits EOF partway through. readline's question callback
+  // never fires at EOF, so the promise hung, node drained its event loop, and
+  // the process exited 0 having SKIPPED every remaining step — an install that
+  // reported success with no hooks installed. Running out of input now means
+  // "take the default".
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+
+  // First install: no answers at all.
+  const first = await runCli(['install', '-t', 'claude'], dir);
+  assert.equal(first.code, 0, first.output);
+  assert.match(first.output, /Installed \d+ gspec hooks/, 'the install must reach its LAST step, not stop at a prompt');
+
+  // Re-install: one answer (accept the overwrite), then EOF — the case where a
+  // second prompt meets an already-ended stdin.
+  const again = await runCli(['install', '-t', 'claude', '--models', 'recommended'], dir, {}, 'y\n');
+  assert.equal(again.code, 0, again.output);
+  assert.match(again.output, /Installed \d+ gspec hooks/);
+  assert.deepEqual((await config(dir)).models, recommendedModels('claude'),
+    '--models recommended must survive a re-install that exhausts stdin');
+});

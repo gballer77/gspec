@@ -31,15 +31,19 @@ export async function cleanup(...dirs) {
 // Run the CLI; stdin is closed so any unexpected prompt fails fast instead of
 // hanging the suite. `extraEnv` lets a test prepend a fake engine binary to
 // PATH or feed flags to it (HOME/color isolation always wins).
-export async function runCli(args, cwd, extraEnv = {}) {
+export async function runCli(args, cwd, extraEnv = {}, stdin = null) {
   const HOME = await isolatedHome();
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [CLI, ...args], {
       cwd,
       env: { ...process.env, ...extraEnv, HOME, FORCE_COLOR: '0', NO_COLOR: '1' },
-      stdio: ['ignore', 'pipe', 'pipe'],
+      // `stdin` lets a test pipe a FEW answers and then hit EOF — the shape a
+      // scripted install really has. Default stays 'ignore' so an unexpected
+      // prompt fails fast instead of hanging the suite.
+      stdio: [stdin === null ? 'ignore' : 'pipe', 'pipe', 'pipe'],
       timeout: 30_000,
     });
+    if (stdin !== null) { child.stdin.write(stdin); child.stdin.end(); }
     let stdout = '', stderr = '';
     child.stdout.on('data', (d) => { stdout += d; });
     child.stderr.on('data', (d) => { stderr += d; });
