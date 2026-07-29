@@ -9,6 +9,7 @@
 import { appliesToSpecIntegrity, specIntegrityViolations } from './spec-integrity.mjs';
 import { isGuardedSpec, identityCandidates, agnosticismHits } from './agnosticism.mjs';
 import { violations as taskViolations } from './task-immutability.mjs';
+import { isPlanDoc } from './paths.mjs';
 
 // Inputs:
 //   specs         [{ rel, content }]  every .md/.html under gspec/
@@ -35,7 +36,7 @@ export function scanGspecTree({ specs = [], profile = null, taskBaselines = {} }
       }
     }
 
-    if (r.startsWith('gspec/tasks/') && r.endsWith('.md') && taskBaselines[r] != null) {
+    if (isPlanDoc(r) && taskBaselines[r] != null) {
       const dead = taskViolations(taskBaselines[r], content);
       if (dead.length) {
         out.push({ rel: r, floor: 'task-immutability', message: `checked-off task(s) ${dead.map((d) => `T${d}`).join(', ')} were altered or removed; checked tasks are immutable — append a new task with "supersedes:" instead` });

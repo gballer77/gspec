@@ -12,18 +12,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, seedInstall, isolatedHome, FAKE_ENGINE_SH } from './helpers.mjs';
+import { runCli, makeProject, cleanup, seedInstall, isolatedHome, FAKE_ENGINE_SH, STAGE_AGENTS } from './helpers.mjs';
 import { templateMeta, templateNote } from '../lib/build.js';
 
-const AGENTS = [
-  'profile-writer', 'profile-validator', 'stack-writer', 'stack-validator',
-  'practices-writer', 'practices-validator', 'style-writer', 'style-validator',
-  'feature-planner', 'feature-writer', 'feature-validator',
-  'architecture-writer', 'architecture-validator',
-  'plan-decomposer', 'plan-validator',
-  'build-orchestrator', 'implementer', 'implementation-validator',
-  'codebase-inspector',
-];
+const AGENTS = STAGE_AGENTS;
 
 // Every prompt this run hands out, one per file, so a test can read the brief a
 // given stage's writer actually received.

@@ -101,6 +101,18 @@ export function isFeatureTasks(rel) {
   return t !== null && /^features\/[^/]+\/tasks\.md$/.test(t);
 }
 
+// ANY plan file, in either layout — the target of the task-immutability block.
+//
+// This is the one hard PreToolUse block in the system, and it fails open. When
+// plans moved into the feature folder, a matcher that knew only the flat form
+// would have stopped firing with no error anywhere: checked tasks silently
+// editable. Every consumer of "is this a plan?" derives from here so the two
+// layouts can never disagree — the flat form stays recognized for as long as
+// projects exist that have not migrated.
+export function isPlanDoc(rel) {
+  return isFeatureTasks(rel) || isLegacyPlan(rel);
+}
+
 // The feature slug a path belongs to, whichever layout it is in, or null.
 export function featureSlug(rel) {
   const t = tail(rel);

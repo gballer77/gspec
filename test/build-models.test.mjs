@@ -7,7 +7,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, seedInstall, FAKE_ENGINE_SH } from './helpers.mjs';
+import { runCli, makeProject, cleanup, seedInstall, FAKE_ENGINE_SH, STAGE_AGENTS } from './helpers.mjs';
 import { resolveModel, roleOf, modelSelectors } from '../lib/config.js';
 
 // ---------------------------------------------------------------------------
@@ -84,14 +84,7 @@ test('modelSelectors overlays project over global for display', () => {
 // Integration — a configured model reaches the engine's --model flag.
 // ---------------------------------------------------------------------------
 
-const AGENTS = [
-  'profile-writer', 'stack-writer', 'practices-writer', 'style-writer',
-  'feature-planner', 'feature-writer', 'feature-validator',
-  'architecture-writer', 'architecture-validator',
-  'plan-decomposer', 'plan-validator',
-  'build-orchestrator', 'implementer', 'implementation-validator',
-  'codebase-inspector',
-];
+const AGENTS = STAGE_AGENTS;
 
 // Fake pi that appends its argv to $ARGV_LOG so the test can see which --model
 // each invocation received, then behaves (validators PASS, everyone else ok).

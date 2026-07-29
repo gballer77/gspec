@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   norm, isRootSpec, isProfile, isModuleArch, moduleName, isFeaturePrd,
-  isLegacyPlan, isEnrichedDoc, isFeatureDesign, isFeatureTasks, featureSlug,
+  isLegacyPlan, isEnrichedDoc, isFeatureDesign, isFeatureTasks, isPlanDoc, featureSlug,
   isGspecSpec,
 } from './paths.mjs';
 
@@ -57,6 +57,18 @@ test('the enriched set is a closed basename set that excludes prd.md', () => {
   assert.equal(isEnrichedDoc('gspec/features/auth/notes.md'), false);
   assert.equal(isFeatureDesign('gspec/features/auth/design.html'), true);
   assert.equal(isFeatureTasks('gspec/features/auth/tasks.md'), true);
+});
+
+test('isPlanDoc covers BOTH plan layouts — the hard block must never stop firing', () => {
+  // task-immutability is the only hard PreToolUse block on a spec path and it
+  // fails open. A matcher that knew one layout would go silent — no error, no
+  // log, checked tasks quietly editable — so both forms are asserted here and
+  // every consumer derives from this one predicate.
+  assert.equal(isPlanDoc('gspec/features/auth/tasks.md'), true);  // current
+  assert.equal(isPlanDoc('gspec/tasks/auth.md'), true);           // legacy, still live
+  assert.equal(isPlanDoc('gspec/features/auth/prd.md'), false);
+  assert.equal(isPlanDoc('gspec/features/auth/arch.md'), false);
+  assert.equal(isPlanDoc('gspec/architecture.md'), false);
 });
 
 test('featureSlug reads the slug out of every layout that carries one', () => {

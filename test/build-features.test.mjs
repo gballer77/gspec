@@ -12,19 +12,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, seedInstall, exists, FAKE_ENGINE_SH } from './helpers.mjs';
+import { runCli, makeProject, cleanup, seedInstall, exists, FAKE_ENGINE_SH, STAGE_AGENTS } from './helpers.mjs';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 
-const AGENTS = [
-  'profile-writer',
-  'feature-planner', 'feature-writer', 'feature-validator',
-  'stack-writer', 'practices-writer', 'style-writer',
-  'architecture-writer', 'architecture-validator',
-  'plan-decomposer', 'plan-validator',
-  'build-orchestrator', 'implementer', 'implementation-validator',
-  'codebase-inspector',
-];
+const AGENTS = STAGE_AGENTS;
 
 // The planner returns a two-feature breakdown; each feature-writer fan-out
 // appends a marker line so tests can count the fan-out; every validator passes.

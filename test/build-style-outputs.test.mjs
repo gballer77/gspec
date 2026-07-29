@@ -14,19 +14,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, exists, seedInstall, FAKE_ENGINE_SH } from './helpers.mjs';
+import { runCli, makeProject, cleanup, exists, seedInstall, FAKE_ENGINE_SH, STAGE_AGENTS } from './helpers.mjs';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 
-const AGENTS = [
-  'profile-writer', 'profile-validator', 'stack-writer', 'stack-validator',
-  'practices-writer', 'practices-validator', 'style-writer', 'style-validator',
-  'feature-planner', 'feature-writer', 'feature-validator',
-  'architecture-writer', 'architecture-validator',
-  'plan-decomposer', 'plan-validator',
-  'build-orchestrator', 'implementer', 'implementation-validator',
-  'codebase-inspector',
-];
+const AGENTS = STAGE_AGENTS;
 
 // Everything passes; every writer delivers. FAKE_ENGINE_SH's style arm writes
 // gspec/style.html and nothing else.

@@ -12,20 +12,13 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, exists, seedInstall, isolatedHome, REPO_ROOT, FAKE_ENGINE_SH } from './helpers.mjs';
+import { runCli, makeProject, cleanup, exists, seedInstall, isolatedHome, REPO_ROOT, FAKE_ENGINE_SH, STAGE_AGENTS } from './helpers.mjs';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 const STATUS_JSON = join('.gspec', 'build', 'status.json');
 const LAST_FAILURE = join('.gspec', 'build', 'last-failure.md');
 
-const AGENTS = [
-  'profile-writer', 'profile-validator', 'stack-writer', 'practices-writer', 'style-writer',
-  'feature-planner', 'feature-writer', 'feature-validator',
-  'architecture-writer', 'architecture-validator',
-  'plan-decomposer', 'plan-validator',
-  'build-orchestrator', 'implementer', 'implementation-validator',
-  'codebase-inspector',
-];
+const AGENTS = STAGE_AGENTS;
 
 // Everything passes; every writer delivers.
 const FAKE_PI = `#!/bin/sh

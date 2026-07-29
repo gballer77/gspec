@@ -12,17 +12,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, seedInstall, FAKE_ENGINE_SH } from './helpers.mjs';
+import { runCli, makeProject, cleanup, seedInstall, FAKE_ENGINE_SH, STAGE_AGENTS } from './helpers.mjs';
 
-const AGENTS = [
-  'profile-writer', 'profile-validator',
-  'feature-planner', 'feature-writer', 'feature-validator',
-  'stack-writer', 'practices-writer', 'style-writer',
-  'architecture-writer', 'architecture-validator',
-  'plan-decomposer', 'plan-validator',
-  'build-orchestrator', 'implementer', 'implementation-validator',
-  'codebase-inspector',
-];
+const AGENTS = STAGE_AGENTS;
 
 // The profile writer writes a 5,000-word profile — 2.5× the standard budget.
 // Every other agent is a no-op that exits 0.

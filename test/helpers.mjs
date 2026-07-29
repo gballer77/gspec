@@ -6,6 +6,7 @@ import { spawn } from 'node:child_process';
 import { mkdtemp, mkdir, rm, writeFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
+import { STAGES } from '../lib/build.js';
 import { fileURLToPath } from 'node:url';
 
 export const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -65,19 +66,41 @@ write_spec() {
   printf '# %s\\n\\nWritten by the fake engine.\\n' "$1" > "$1"
 }
 write_prd() {
-  mkdir -p gspec/features
-  printf '%s\\n' '---' "feature: $1" '---' '' "# $1" '' 'A fake PRD, complete enough for QA to judge.' > "gspec/features/$1.md"
+  mkdir -p "gspec/features/$1"
+  printf '%s\\n' '---' "feature: $1" '---' '' "# $1" '' 'A fake PRD, complete enough for QA to judge.' > "gspec/features/$1/prd.md"
+}
+# The per-feature writers each own ONE file in the feature folder. The driver
+# names the exact path in the prompt, so the fake reads it back out rather than
+# reconstructing it — the same discipline the real writers are held to.
+feature_path() {
+  printf '%s' "$1" | sed -n "s|.*\\(gspec/features/[a-z0-9][a-z0-9-]*/$2\\).*|\\1|p" | head -1
+}
+write_feature_file() {
+  [ -n "$1" ] || return 0
+  mkdir -p "$(dirname "$1")"
+  case "$1" in
+    */arch.md) printf '%s\\n' '---' 'feature: fake' '---' '' '# Arch' '' '## Data' '' '### Entity: Thing' '' '## API' '' '**Not Applicable** — no HTTP surface.' '' '## UI' '' '### Screen: Main' '' '## Logic' '' '**Not Applicable** — no rules.' > "$1" ;;
+    */design.html) printf '%s\\n' '<!-- spec-version: v2 -->' '<!DOCTYPE html>' '<section id="screen-main"><h2>Main</h2></section>' > "$1" ;;
+    */tasks.md) printf '%s\\n' '---' 'feature: fake' '---' '' '## Plan' '' '- [x] **T1** Do the thing' > "$1" ;;
+  esac
 }
 # Produce whatever deliverable this prompt implies. Checkers write nothing.
 deliver() {
   case "$1" in
     *Validate*) return 0 ;;
   esac
+  # Match each writer by the distinctive VERB of its prompt, never by a path.
+  # Every per-feature prompt also NAMES its sibling files as context, so keying
+  # on "a prd.md path appears" made the arch/design/plan writers clobber the PRD.
   case "$1" in
-    *"use this exact slug"*)
-      slug=$(printf '%s' "$1" | sed -n 's|.*gspec/features/\\([a-z0-9][a-z0-9-]*\\)\\.md.*|\\1|p' | head -1)
+    *"Write ONE feature"*)
+      prd=$(feature_path "$1" prd.md)
+      slug=$(printf '%s' "$prd" | sed -n 's|gspec/features/\\([a-z0-9][a-z0-9-]*\\)/prd.md|\\1|p')
       [ -n "$slug" ] && write_prd "$slug" ;;
     *"feature PRD for this idea"*) write_prd only-feature ;;
+    *"Write the feature architecture"*) write_feature_file "$(feature_path "$1" arch.md)" ;;
+    *"Write the feature design"*) write_feature_file "$(feature_path "$1" design.html)" ;;
+    *"Decompose the feature"*) write_feature_file "$(feature_path "$1" tasks.md)" ;;
   esac
   case "$1" in
     *'"Product profile" stage'*) write_spec gspec/profile.md ;;
@@ -92,15 +115,11 @@ deliver() {
     *'"Competitive research" stage'*) write_spec gspec/research.md ;;
   esac
 }
-# The catch-all arm: deliver, then print what that stage parses out of stdout.
-# The plan stage is the one whose FILE is written by the driver from stdout, so
-# its body (task checkboxes and all) has to come back on stdout.
+# The catch-all arm: deliver, then print. Every writer now writes its own file,
+# so nothing is parsed out of stdout any more.
 fake_default() {
   deliver "$1"
-  case "$1" in
-    *"ordered plan"*) printf '%s\\n' '---' 'feature: fake' '---' '' '## Plan' '' '- [x] T1 Do the thing' ;;
-    *) printf 'ok\\n' ;;
-  esac
+  printf 'ok\\n'
 }
 `;
 
@@ -114,3 +133,13 @@ export async function seedInstall(dir, target, { agentFiles = [] } = {}) {
     await writeFile(join(dir, rel), '---\nname: x\n---\nagent body\n');
   }
 }
+
+// Every agent the stage graph names, derived from STAGES itself.
+//
+// Each build test used to keep its own hand-written list, so adding an agent
+// meant editing ten files and the failure mode was a confusing "agent file not
+// found" mid-run. Deriving it means a new stage is seeded everywhere at once.
+export const STAGE_AGENTS = [...new Set(
+  STAGES.flatMap((s) => [s.writer, s.validator, s.agent, s.orchestrator, s.planner, s.researcher])
+    .filter(Boolean),
+)];

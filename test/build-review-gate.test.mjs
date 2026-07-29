@@ -8,18 +8,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, seedInstall, FAKE_ENGINE_SH } from './helpers.mjs';
+import { runCli, makeProject, cleanup, seedInstall, FAKE_ENGINE_SH, STAGE_AGENTS } from './helpers.mjs';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 
-const AGENTS = [
-  'profile-writer', 'stack-writer', 'practices-writer', 'style-writer',
-  'feature-planner', 'feature-writer', 'feature-validator',
-  'architecture-writer', 'architecture-validator',
-  'plan-decomposer', 'plan-validator',
-  'build-orchestrator', 'implementer', 'implementation-validator',
-  'codebase-inspector',
-];
+const AGENTS = STAGE_AGENTS;
 
 // Every validator passes; every other agent just exits 0.
 const FAKE_PI = `#!/bin/sh

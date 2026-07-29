@@ -15,10 +15,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve, relative } from 'node:path';
 import { checkedBlocks, projectedContent, violations } from './floors/task-immutability.mjs';
+import { isPlanDoc } from './floors/paths.mjs';
 
-function isTaskFile(rel) {
-  return /^gspec\/tasks\/[^/]+\.md$/.test(rel);
-}
+// Both plan layouts: gspec/features/<slug>/tasks.md and the legacy flat
+// gspec/tasks/<slug>.md. This hook is the only HARD block on a spec path and it
+// fails open, so a matcher that knew one layout would stop firing silently.
+const isTaskFile = isPlanDoc;
 
 try {
   let evt = {};

@@ -9,21 +9,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, exists, seedInstall, FAKE_ENGINE_SH } from './helpers.mjs';
+import { runCli, makeProject, cleanup, exists, seedInstall, FAKE_ENGINE_SH, STAGE_AGENTS } from './helpers.mjs';
 import { gradeVerdict } from '../lib/build.js';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 const QA_LOG = join('.gspec', 'build', 'qa-failures.md');
 
-const AGENTS = [
-  'profile-writer', 'profile-validator', 'stack-writer', 'stack-validator',
-  'practices-writer', 'practices-validator', 'style-writer', 'style-validator',
-  'feature-planner', 'feature-writer', 'feature-validator',
-  'architecture-writer', 'architecture-validator',
-  'plan-decomposer', 'plan-validator',
-  'build-orchestrator', 'implementer', 'implementation-validator',
-  'codebase-inspector',
-];
+const AGENTS = STAGE_AGENTS;
 
 // Seed a pi project that runs headlessly to completion: brief present (no
 // intake), foundations pre-seeded (skip-if-present), fake `pi` first on PATH.
@@ -176,7 +168,7 @@ test('a writer that exits non-zero but left a valid artifact is accepted, not tr
   t.after(() => cleanup(dir));
   // Pre-place the PRD the crashing writer "already produced".
   const prd = '---\nfeature: game\n---\n\n# Game\n\nA complete, well-formed PRD.\n';
-  const env = await seedProject(dir, FAKE_PI_WRITER_CRASH, { 'gspec/features/game.md': prd });
+  const env = await seedProject(dir, FAKE_PI_WRITER_CRASH, { 'gspec/features/game/prd.md': prd });
 
   const r = await runCli(['build', '--no-review', 'an idea'], dir, env);
   assert.equal(r.code, 0, r.output);
@@ -196,14 +188,14 @@ test('a writer that exits non-zero but left a valid artifact is accepted, not tr
 // feat-a always passes; feat-b fails through run 1's budget, then passes on the
 // resume. The features stage therefore fails on run 1 (memoizing feat-a) and
 // re-runs on the resume — where feat-a must be skipped as unchanged.
-// Match the FEATURE validator specifically (Validate + features/<slug>.md), so
-// neither the writer's revision prompt (which also names the file) nor the plan
-// validator (tasks/<slug>.md) touches feat-b's counter.
+// Match the FEATURE validator specifically (Validate + features/<slug>/prd.md),
+// so neither the writer's revision prompt (which also names the file) nor the
+// per-feature arch/design/plan validators touch feat-b's counter.
 const FAKE_PI_MEMO = `#!/bin/sh
 ${FAKE_ENGINE_SH}
 case "$*" in
-  *Validate*features/feat-a.md*) printf 'VERDICT: PASS\\nfine\\n' ;;
-  *Validate*features/feat-b.md*)
+  *Validate*features/feat-a/prd.md*) printf 'VERDICT: PASS\\nfine\\n' ;;
+  *Validate*features/feat-b/prd.md*)
     n=$(cat "$FAKE_PI_COUNTER" 2>/dev/null || echo 0)
     n=$((n + 1))
     echo "$n" > "$FAKE_PI_COUNTER"
@@ -221,22 +213,22 @@ test('a PRD unchanged since it passed is skipped on resume, not re-gated', async
   const files = {
     // Long enough to read as a complete PRD: the driver treats a too-short file
     // as "the writer did not deliver", which is a different failure entirely.
-    'gspec/features/feat-a.md': '---\nfeature: feat-a\n---\n\n# Feat A\n\nA complete, well-formed PRD body.\n',
-    'gspec/features/feat-b.md': '---\nfeature: feat-b\n---\n\n# Feat B\n\nA complete, well-formed PRD body.\n',
+    'gspec/features/feat-a/prd.md': '---\nfeature: feat-a\n---\n\n# Feat A\n\nA complete, well-formed PRD body.\n',
+    'gspec/features/feat-b/prd.md': '---\nfeature: feat-b\n---\n\n# Feat B\n\nA complete, well-formed PRD body.\n',
   };
   const env = await seedProject(dir, FAKE_PI_MEMO, files);
 
   // Run 1: feat-a passes (memoized), feat-b drains its budget → features fails.
   const first = await runCli(['build', '--no-review', 'an idea'], dir, env);
   assert.equal(first.code, 1, first.output);
-  assert.match(first.output, /QA gate failed for gspec\/features\/feat-b\.md/);
+  assert.match(first.output, /QA gate failed for gspec\/features\/feat-b\/prd\.md/);
   const m1 = JSON.parse(await readFile(join(dir, RUN_JSON), 'utf-8'));
-  assert.ok(m1.stages.features.passed?.['feat-a.md'], 'feat-a should be memoized after passing');
+  assert.ok(m1.stages.features.passed?.['feat-a'], 'feat-a should be memoized after passing');
 
   // Resume: feat-a is unchanged → skipped without a validator call; feat-b now passes.
   const resumed = await runCli(['build', '--resume', '--no-review'], dir, env);
   assert.equal(resumed.code, 0, resumed.output);
-  assert.match(resumed.output, /feat-a\.md — unchanged since it passed; skipping re-validation/);
+  assert.match(resumed.output, /feat-a\/prd\.md — unchanged since it passed; skipping re-validation/);
   assert.match(resumed.output, /✓ Build complete/);
 });
 
@@ -253,15 +245,15 @@ case "$*" in
   *feature-plan*) printf '{"features":[{"slug":"feat-a","title":"A"},{"slug":"feat-b","title":"B"}]}\\n' ;;
   *Validate*) printf 'VERDICT: PASS\\nfine\\n' ;;
   *Write\\ ONE\\ feature*)
-    f=$(printf '%s' "$*" | grep -o 'gspec/features/[a-z0-9-]*\\.md' | head -1)
-    [ -n "$f" ] && printf '%s\\n' '---' 'feature: regen' '---' '' '# Regenerated' '' 'REGENERATED body content here.' > "$f"
+    f=$(printf '%s' "$*" | grep -o 'gspec/features/[a-z0-9-]*/prd\\.md' | head -1)
+    [ -n "$f" ] && mkdir -p "$(dirname "$f")" && printf '%s\\n' '---' 'feature: regen' '---' '' '# Regenerated' '' 'REGENERATED body content here.' > "$f"
     ;;
   *) fake_default "$*" ;;
 esac
 `;
 
-// Resumable state: features failed on a prior run; feat-a.md was written,
-// feat-b.md was not. Foundations are already done/skipped so resume lands on features.
+// Resumable state: features failed on a prior run; feat-a's PRD was written,
+// feat-b's was not. Foundations are already done/skipped so resume lands on features.
 function featuresFailedManifest() {
   const pending = { status: 'pending', attempts: 0, verdict: null };
   const skipped = () => ({ status: 'skipped', attempts: 1, verdict: null });
@@ -285,18 +277,18 @@ test('on resume, an already-written PRD is not regenerated; only the missing one
   const dir = await makeProject();
   t.after(() => cleanup(dir));
   const original = '---\nfeature: feat-a\n---\n\n# Feat A (original)\n\nThis is the ORIGINAL hand-kept content.\n';
-  const env = await seedProject(dir, FAKE_PI_SKIP_WRITE, { 'gspec/features/feat-a.md': original });
+  const env = await seedProject(dir, FAKE_PI_SKIP_WRITE, { 'gspec/features/feat-a/prd.md': original });
   await writeFile(join(dir, RUN_JSON), JSON.stringify(featuresFailedManifest(), null, 2) + '\n');
 
   const r = await runCli(['build', '--resume', '--no-review'], dir, env);
   assert.equal(r.code, 0, r.output);
-  assert.match(r.output, /feat-a\.md — already written; skipping regeneration/);
+  assert.match(r.output, /feat-a — PRD already written; skipping regeneration/);
   assert.match(r.output, /✓ Build complete/);
 
   // The existing PRD is preserved byte-for-byte — not overwritten with "REGENERATED".
-  const a = await readFile(join(dir, 'gspec', 'features', 'feat-a.md'), 'utf-8');
+  const a = await readFile(join(dir, 'gspec', 'features', 'feat-a', 'prd.md'), 'utf-8');
   assert.equal(a, original);
   assert.doesNotMatch(a, /REGENERATED/);
   // The one that had failed was produced this run.
-  assert.ok(await exists(join(dir, 'gspec', 'features', 'feat-b.md')));
+  assert.ok(await exists(join(dir, 'gspec', 'features', 'feat-b', 'prd.md')));
 });

@@ -9,7 +9,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile, chmod } from 'node:fs/promises';
-import { runCli, makeProject, cleanup, exists, seedInstall, FAKE_ENGINE_SH } from './helpers.mjs';
+import { runCli, makeProject, cleanup, exists, seedInstall, FAKE_ENGINE_SH, STAGE_AGENTS } from './helpers.mjs';
 import { revisePrompt } from '../lib/build.js';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
@@ -18,14 +18,7 @@ const QA_LOG = join('.gspec', 'build', 'qa-failures.md');
 
 // Every agent a full run can invoke (foundations are pre-seeded so their
 // writers never run, but the files are cheap to create).
-const AGENTS = [
-  'profile-writer', 'stack-writer', 'practices-writer', 'style-writer',
-  'feature-planner', 'feature-writer', 'feature-validator',
-  'architecture-writer', 'architecture-validator',
-  'plan-decomposer', 'plan-validator',
-  'build-orchestrator', 'implementer', 'implementation-validator',
-  'codebase-inspector',
-];
+const AGENTS = STAGE_AGENTS;
 
 // Validator prompts are the only ones containing "Validate" (see
 // validatorPrompt in lib/build.js); everything else just needs to exit 0 AND
