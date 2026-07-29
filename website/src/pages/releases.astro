@@ -5,6 +5,31 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.2.1',
+    date: 'July 28, 2026',
+    title: 'A checker the implementer did not write, and an audit that stops growing',
+    summary: 'Two gaps the feature-folder release left open.<br /><br /><strong>The implement gate was producer-equals-checker.</strong> <code>verify.sh</code> is deterministic, but the implementer writes both the code and the tests it runs — so a green run says nothing about a checked task whose file was never created, a stub sitting behind a checked box, or a capability ticked while its covering tasks are still open. All three fell to one broad agentic judgment, which is expensive and vague. They are pure text checks, so they now run <em>before</em> the validator: findings go straight back with the exact problem at zero agent cost, and <code>implementation-validator</code> narrows to what only judgment can answer.<br /><br /><strong>The audit had become the new unbounded reader.</strong> v3 moved the "reads everything, grows with age" problem out of the implementer — and into <code>codebase-inspector</code>, which read every feature folder, and folders accumulate for the life of a project. It is now incremental against a recorded commit. That also makes room for the drift category this layout could not otherwise catch: enriched folders inline the ORM and the framework on purpose, and <strong>nothing re-checked them when the stack changed</strong>.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>An implementation lint runs before the judgment gate.</strong> A checked task naming a file that does not exist; an unfinished-work marker in a file a checked task claimed to complete; a PRD capability checked while a task covering it is still open. Each is a deterministic finding naming exactly what is wrong, fixed without spending a validator run — where a broad "the implementation seems incomplete" FAIL would send a self-heal run off to rediscover it. Scoped strictly to what <em>checked</em> tasks claim: unfinished work is not a finding, it is just unfinished.',
+      },
+      {
+        type: 'changed',
+        description: '<strong><code>implementation-validator</code> narrows to judgment.</strong> It no longer re-derives what the lint just checked, and it validates <strong>per feature folder against its code</strong> rather than judging the repository as a whole — which is where agentic code review gets vague. Its budget goes to whether the acceptance criteria are actually met, whether the tests meaningfully assert them, and whether the UI honors the feature\'s <code>design.html</code>.',
+      },
+      {
+        type: 'added',
+        description: '<strong>The audit is incremental.</strong> It records the commit it last ran at in <code>.gspec/audit-baseline</code> and inspects only the feature folders and source files that changed since, plus the always-small root-tier specs. Every case it cannot answer cheaply and correctly — no baseline, not a git repo, an unreadable ref, a root-tier spec that changed — falls back to a <em>full</em> sweep, because a silently narrow audit is worse than a slow one.',
+      },
+      {
+        type: 'added',
+        description: '<strong>New drift category: <code>enrichment</code>.</strong> This closes the one guarantee v3 traded away against v2\'s single-source-of-truth. Feature folders inline the stack and style decisions so an implementer needs nothing else — which means nothing re-checks them when those decisions change, and a folder can go on naming a library the project replaced months ago. The audit now compares each in-scope folder\'s inlined claims against the current stack, style, and code. Checking it only over the changed set is what lets the correctness fix land without reintroducing the cost problem.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the updated agents and floors. Nothing changes on disk in your project. The first audit after upgrading is a full sweep (there is no baseline yet) and writes one afterwards; subsequent audits are incremental. Expect the implement gate to be stricter than before — it will now stop for a checked task whose file is missing or a capability checked ahead of its plan, both of which previously passed silently.',
+  },
+  {
     version: '3.2.0',
     date: 'July 28, 2026',
     title: 'Everything about a feature lives in one folder',
