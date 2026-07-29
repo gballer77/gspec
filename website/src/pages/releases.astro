@@ -5,6 +5,43 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.1.0',
+    date: 'July 28, 2026',
+    title: 'The architecture stops growing',
+    summary: 'One document was quietly absorbing every technical decision a project ever made. <code>architecture.md</code> held module boundaries <em>and</em> every entity\'s field list, every endpoint signature, every algorithm and resolved edge case — so it grew with each feature, and by feature thirty it was over budget and every agent paid the tax on every run. The two-tier split shipped last release helped multi-module systems for a while; it did not change the growth rate.<br /><br />This release re-cuts what the tiers <em>hold</em>. The architecture is now the <strong>stable</strong> half of the technical spec: system context, module boundaries, what each module owns, how modules talk, and where code goes. The detail that grows with every feature belongs to the feature that introduces it. The writer gets one test — <strong>"would this change if we added one more feature?"</strong> — and the validator raises a <strong>major</strong> finding, naming the content and where it belongs, for field lists, endpoint signatures, algorithms, and per-screen detail. Budgets follow: 3,000 words becomes 2,100, and the module tier gets its own 600-word ceiling — which it never had, because <code>budgetFor()</code> keyed on exact paths and returned <code>null</code> for every sub-file.<br /><br />Underneath, the floors get a shared vocabulary. Each one used to re-derive "is this a gspec spec?" with its own regex, and they disagreed: <code>gspec/architecture/&lt;name&gt;.md</code> was version-checked but <strong>never agnosticism-guarded</strong>, because it matched none of the basenames in a hard-coded list. Per-module architecture shipped a full release unguarded. One module now answers that question for every floor.',
+    changes: [
+      {
+        type: 'changed',
+        description: '<strong>The architecture is high-level, and the validator keeps it that way.</strong> System tier: overview and context, module boundaries, the shared data model <em>at the name level</em> (entities and relationships — not their shape), inter-module contracts, cross-cutting auth, environment, the Modules table, and the gap analysis. Module tier: identity and boundary, owned directories, internal structure and file-placement rules, local config — about a page, and stable. Entity field lists, endpoint signatures, algorithms, business rules, state machines, and per-screen detail are now defects here, each a major finding that names where the content belongs instead.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The layout is always two tiers; one module just carries both in one file.</strong> A single-module project keeps everything in <code>gspec/architecture.md</code> exactly as before — a second file for one module is pure ceremony. What changed is the framing: the tiers are a property of the spec, not of the file count, so the same required sections apply whether they live in one file or several.',
+      },
+      {
+        type: 'removed',
+        description: '<strong>Module sub-files no longer carry a <code>covers:</code> list.</strong> Which features touch a module changes with every feature, so maintaining that index on the module tier would have made the <em>stable</em> file the most-edited one in the repo — and by an agent that should not hold write access to it. The mapping is derived from the features instead. The three consumers that routed on <code>covers:</code> now route on module boundaries and the Modules-table links.',
+      },
+      {
+        type: 'added',
+        description: '<strong>The architecture stage checks both tiers before calling itself done.</strong> A stage\'s <code>outputs</code> answer "did the writer produce its artifact?", but the architecture\'s deliverable is a <em>set</em>: the system file plus one <code>architecture/&lt;name&gt;.md</code> per row of its own Modules table. The root existing never implied the module tier did, so a multi-module run could report success having written half its architecture — with every later stage then routing against boundaries that were never written, and nothing erroring. The required set is now derived from the table (the same authority <code>verify.sh</code> uses) and every file in it must be present.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>Per-module architecture was never agnosticism-guarded.</strong> The floor matched a hard-coded list of spec <em>basenames</em>, and <code>architecture/api.md</code> is not one of them — so product identity could leak into sub-architecture files with nothing to catch it. Both floors now share one path vocabulary (<code>paths.mjs</code>), which fixes this class of bug by construction: a spec kind is described once and every floor agrees about it. A companion <code>modules.mjs</code> parses the Modules table and reports drift in both directions — a row with no file, and a file no row claims, which is exactly what a half-finished rename leaves behind.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The installer\'s outdated-spec check skipped sub-architectures and plans.</strong> It walked <code>gspec/</code>, <code>features/</code>, and <code>epics/</code> only, so a project could be told every spec was current while <code>architecture/*.md</code> and <code>tasks/*.md</code> still carried the previous <code>spec-version</code>. Both directories are now included.',
+      },
+      {
+        type: 'changed',
+        description: '<strong><code>/gspec-migrate</code> reports architecture altitude rather than fixing it.</strong> When it finds feature-level detail still sitting in an architecture spec, it says how much and what kind and tells you to re-run <code>/gspec-architect</code>. Splitting that content across features is a judgment call that rewrites specs you already reviewed — migration stays mechanical: renames, relocations, version stamps. No files move in this release.',
+      },
+    ],
+    migration: 'Run <code>npx gspec</code> to install the updated agents, skills, and floors. Existing architecture specs keep working and keep their layout — nothing moves. To get the new shape, re-run <code>/gspec-architect</code>: it will thin the system tier and write the module tier. Until you do, expect an advisory over-budget note on <code>architecture.md</code> (2,100 words, down from 3,000) and, on your next <code>/gspec-audit</code> or architecture QA pass, major findings naming feature-level detail that now belongs to the feature that introduced it.',
+  },
+  {
     version: '3.0.0',
     date: 'July 28, 2026',
     title: 'Deployables become modules, and the spec version has one home',

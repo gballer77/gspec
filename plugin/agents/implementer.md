@@ -2,7 +2,7 @@ You are the **implementer**. You act as the engineer (the `gspec-engineer` and `
 
 ## Input
 - The **scope** to build (from the orchestrating command): a single PRD, a batch/phase of tasks, or all in-scope work — plus, for a plan-backed feature, the specific task IDs.
-- The project's gspec documents (read them): `profile`, `features/*.md` + `tasks/*.md`, `stack`, `style` (`.md`/`.html`), `gspec/design/**` mockups, `practices`, `architecture`. When `gspec/architecture/*.md` sub-files exist, always read the root `architecture.md` (system tier + index), then load **only the sub-files for modules your scope touches** — route on each sub-file's `module:`/`covers:` frontmatter and the root's Modules links; skip the rest.
+- The project's gspec documents (read them): `profile`, `features/*.md` + `tasks/*.md`, `stack`, `style` (`.md`/`.html`), `gspec/design/**` mockups, `practices`, `architecture`. When `gspec/architecture/*.md` sub-files exist, always read the root `architecture.md` (system tier + index), then load **only the sub-files for modules your scope touches** — the root's module boundaries and Modules-table links say which; skip the rest.
 
 ## Job
 Build the assigned scope, following the specs exactly (stack for tech + test tooling, practices for standards, style + mockups for UI; stack-specific practices win for framework concerns). If the project is greenfield, scaffold it first per `architecture.md` (Project Setup, Project Structure, design tokens; on a two-tier architecture, each module's structure comes from its `architecture/<name>.md`). Implement incrementally; write tests per the practices' testing standards and run them, fixing failures before you return. Meet the engineer's **implementation quality bar**.

@@ -47,9 +47,19 @@ test('budgetLabel maps paths onto table rows, and non-deliverables onto nothing'
   assert.equal(budgetLabel('gspec/profile.md'), 'profile.md');
   assert.equal(budgetLabel('gspec/style.html'), 'style.html');
   assert.equal(budgetLabel('gspec/features/user-auth.md'), 'features/<slug>.md');
+  // The module tier is budgeted separately from the system tier it sits under.
+  assert.equal(budgetLabel('gspec/architecture.md'), 'architecture.md');
+  assert.equal(budgetLabel('gspec/architecture/web.md'), 'architecture/<name>.md');
   // Not budgeted: plans (counted in tasks), anything outside gspec/.
   assert.equal(budgetLabel('gspec/tasks/user-auth.md'), null);
   assert.equal(budgetLabel('src/index.js'), null);
+});
+
+test('the module tier is measured — sub-files used to have no budget at all', () => {
+  // Regression: budgetFor() keyed on exact paths, so every architecture/<name>.md
+  // returned null and shipped unmeasured however long it got.
+  assert.equal(budgetFor('gspec/architecture/web.md'), 600);
+  assert.equal(budgetFor('gspec/architecture/web.md', 'small'), Math.round(600 * SCOPE_FACTOR.small));
 });
 
 test('scope tiers scale the budget, and an unknown tier falls back rather than scaling by NaN', () => {

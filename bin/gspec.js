@@ -1086,7 +1086,11 @@ async function collectGspecFiles(gspecDir) {
     }
   }
 
-  for (const subdir of ['features', 'epics']) {
+  // `architecture` is the module tier, `tasks` the plans — both were missing
+  // here, so the outdated-spec check silently skipped every sub-architecture
+  // file and every plan: a project could be told it was current while half its
+  // specs still carried the previous spec-version.
+  for (const subdir of ['features', 'architecture', 'tasks', 'epics']) {
     try {
       const entries = await readdir(join(gspecDir, subdir));
       for (const entry of entries) {

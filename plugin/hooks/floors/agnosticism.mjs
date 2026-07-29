@@ -6,17 +6,28 @@
 // it catches the common case of the product name leaking. Entry points read
 // profile.md + the file and signal the violation.
 
-// Which paths this floor governs (every gspec spec that is NOT the profile).
+import { isGspecSpec, isProfile, isEnrichedDoc } from './paths.mjs';
+
+// Which paths this floor governs: every gspec spec except the two kinds that are
+// SUPPOSED to carry product identity.
+//
+// Order matters and is load-bearing (both exemptions must be tested before the
+// general case, or the file falls through to guarded):
+//   • the profile IS product identity — guarding it would be incoherent;
+//   • a feature folder's enriched siblings are deliberately denormalized, so an
+//     implementer can work from that folder alone. Nagging them toward
+//     agnosticism would defeat the reason they exist.
+// The PRD sitting beside those siblings is NOT exempt — the boundary runs
+// between basenames inside one folder, which is exactly why it lives in one
+// shared predicate rather than being re-derived per floor.
+//
+// This replaced a hard-coded basename allowlist that silently failed to guard
+// gspec/architecture/<name>.md: sub-files matched none of its listed names.
 export function isGuardedSpec(rel) {
-  const r = String(rel).replace(/\\/g, '/');
-  if (!r.startsWith('gspec/')) return false;
-  if (r.startsWith('gspec/design/')) return false;
-  const base = r.split('/').pop();
-  if (base === 'profile.md') return false; // the profile IS product identity
-  if (base.toLowerCase() === 'readme.md') return false;
-  if (r.startsWith('gspec/features/') && base.endsWith('.md')) return true;
-  if (r.startsWith('gspec/tasks/') && base.endsWith('.md')) return true;
-  return ['stack.md', 'practices.md', 'architecture.md', 'style.md', 'style.html', 'research.md'].includes(base);
+  if (!isGspecSpec(rel)) return false;
+  if (isProfile(rel)) return false;
+  if (isEnrichedDoc(rel)) return false;
+  return true;
 }
 
 const STOP = new Set(['the', 'product', 'profile', 'app', 'application', 'system', 'platform', 'tool', 'service', 'our', 'and', 'for']);

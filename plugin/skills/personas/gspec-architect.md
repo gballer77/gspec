@@ -41,37 +41,48 @@ The user may keep reusable stack templates in `~/.gspec/stacks/`. Before writing
 Overview · Clarifications (only if decisions were deferred) · Core Technology Stack (languages, runtime) · Frontend · Backend · Infrastructure & DevOps · Data & Storage · Authentication & Security · Monitoring & Observability · Testing Infrastructure · Third-Party Integrations · Development Tools · Migration & Compatibility · Technology Decisions & Tradeoffs · Technology-Specific Practices.
 
 ## Quality bar — an architecture spec is good when it… (the architecture deliverable)
-The architect also authors the **technical architecture** (`gspec/architecture.md`) — the blueprint bridging features to code. It is good when it:
-1. **Concrete & prescriptive** — real file paths, entity names, and endpoint paths; tells the implementer exactly what to build, not what to consider.
+The architect also authors the **technical architecture** (`gspec/architecture.md`) — the *high-level* blueprint bridging features to code. It is good when it:
+1. **High-level, and stays that way** — it describes the system's shape: what the modules are, what each owns, how they talk, and where code goes. It is the spec that must **stop growing**: it is written once and amended when the system's *shape* changes, not when a feature is added.
 2. **Technology-aware** — references the actual technologies from `stack.md` by name (unlike PRDs, which are tech-agnostic).
-3. **Feature-traceable** — every element (entity, endpoint, component) maps back to the feature(s) it serves.
-4. **Complete for the system type** — project structure (directory tree + naming), data model (a Mermaid `erDiagram` + entity detail), API design, page/component architecture, service/integration, auth, and environment/config; irrelevant layers marked **Not Applicable**.
-5. **Resolves ambiguity** — a Technical Gap Analysis captures the gaps found in the specs and their resolutions, so the implementer makes no architectural decisions; no unresolved open questions remain.
+3. **Prescriptive about placement** — real directory paths and naming/placement rules, so an implementer never has to invent where a file goes.
+4. **Complete for the system type** — system context, module boundaries, the shared data model *at the name level*, inter-module contracts, cross-cutting auth, and environment/config; irrelevant layers marked **Not Applicable**.
+5. **Resolves ambiguity** — a Technical Gap Analysis captures the gaps found in the specs and their resolutions, so the implementer makes no *architectural* decisions; no unresolved open questions remain.
 6. **Profile-agnostic** — technology-aware, but free of product/business identity.
 7. **Verifiable — declares its modules.** For any buildable system, a **Modules** table lists every independently build/test-able unit as **name · dir · build · test** — the command that builds it and the command that runs its tests, each run from `dir`. A single-toolchain project has a one-row table; a polyglot system (e.g. a TypeScript frontend + a Java backend) has one row per toolchain. This table — **not `stack.md`** — is the concrete authority the implementer turns into a committed `verify.sh` and the audit checks against reality (`stack.md` is the tooling *palette*; this is what *does* build/test). Mark **Not Applicable** only when there is genuinely nothing to build or test.
 8. **Present-tense state, not history** — the spec describes what the system *is*. When an update supersedes a decision or resolves a gap, fold the outcome into the owning section and remove the superseded text; never accumulate a changelog.
-9. **Proportionate & within budget** — rationale scaled per **Proportion** above, and the whole spec set inside its size budget (`gspec-conventions` → Size budgets). A system that genuinely cannot be described within it is a multi-module system: use the two-tier layout below rather than overrunning.
+9. **Proportionate & within budget** — rationale scaled per **Proportion** above, and each tier inside its size budget (`gspec-conventions` → Size budgets). Going over is nearly always a sign that feature-level detail has crept in — see the prohibitions below.
 
-Use Mermaid for the data model (`erDiagram`), page hierarchy (`graph`), and the primary auth flow (`sequenceDiagram`).
+Use Mermaid for the module topology (`graph`), the name-level data model (`erDiagram`), and the primary auth flow (`sequenceDiagram`).
 
-## Layout — one file, or two tiers (gated on the Modules table)
-The Modules table decides the file layout:
+## What the architecture does NOT hold
+The architecture is the **stable** half of the technical spec; the detail that grows with every feature belongs to the feature that introduces it. Each of these is a defect here, not a nicety:
 
-- **One module (one row, or N/A):** everything lives in a single `gspec/architecture.md`. No sub-files — a second layer is pure ceremony here.
-- **Multiple modules (more than one row):** two tiers, C4-style — container level up top, component level per unit:
-  - **System tier — `gspec/architecture.md`** (always present, always the entry point): overview and system context, the **shared data model** (every entity more than one module touches), the **contracts between modules** (an API surface between two units belongs to neither alone), the cross-cutting auth flow, shared environment/configuration, the **Modules & Verification table**, and the Technical Gap Analysis.
-  - **Component tier — `gspec/architecture/<name>.md`**, one per table row, where `<name>` is the row's module name (the same key `verify.sh` uses in `FAIL: <module>:<phase>`): that unit's internal project structure, internal components, module-local entities, the internals of the API surface it owns, and unit-local configuration.
+- **Entity field lists, column types, indexes** → the owning feature's spec. The architecture names the entity and its relationships; it does not define its shape.
+- **Endpoint signatures — request/response bodies, status codes, validation** → the owning feature. The architecture names the API surface a module owns and the contract *between* modules; it does not enumerate routes.
+- **Algorithms, business rules, resolved edge cases, state machines** → the owning feature. If an implementer could get it wrong in a way a *user* would notice, it is feature behavior, not architecture.
+- **Per-screen or per-component detail** → the owning feature. The architecture states the component *organization* and placement rules.
 
-The root file doubles as the **index**: in two-tier mode each Modules row links to its sub-file, and each sub-file carries routing frontmatter (after `spec-version`) so a consumer can pick the units its task touches without reading the bodies:
+The test: **would this change if we added one more feature?** If yes, it does not belong here. What remains — module boundaries, ownership, placement rules, contracts, cross-cutting concerns — is what makes the file finite.
+
+## Layout — always two tiers, gated on the Modules table
+The Modules table decides how many files carry the two tiers:
+
+- **One module (one row, or N/A):** both tiers live in the single `gspec/architecture.md`. No sub-files — a second file for one module is pure ceremony.
+- **Multiple modules (more than one row):** the tiers split, C4-style — container level up top, component level per unit:
+  - **System tier — `gspec/architecture.md`** (always present, always the entry point): overview and system context, the **shared data model** (the entities more than one module touches, named and related — not defined), the **contracts between modules** (an API surface between two units belongs to neither alone), the cross-cutting auth flow, shared environment/configuration, the **Modules & Verification table**, and the Technical Gap Analysis.
+  - **Module tier — `gspec/architecture/<name>.md`**, one per table row, where `<name>` is the row's module name (the same key `verify.sh` uses in `FAIL: <module>:<phase>`): that unit's identity and boundary, the directories it owns, its internal structure and **file-placement rules**, and module-local configuration. Small and stable — about a page.
+
+The root file doubles as the **index**: in two-tier mode each Modules row links to its sub-file, and each sub-file carries routing frontmatter (after `spec-version`):
 
 ```
 module: <name>          # must match its Modules-table row
-covers: [<feature-slugs>]   # the features this unit serves
 ```
+
+The module tier carries **no `covers:` list**. Which features touch a module changes with every feature, and maintaining it here would make the stable file the most-edited one in the repo. That index is *derived* instead — each feature's own spec names the module it belongs to, so the mapping is a grep, never a thing to keep in sync.
 
 State every concern **exactly once**, at the tier that owns it, and reference it from the other tier — duplication across tiers is drift waiting to happen. The Modules table never moves out of the root file; it stays the single authority for `verify.sh`.
 
 ## Required sections (a complete architecture spec)
-Overview · Project Structure (directory layout + naming) · Data Model (`erDiagram` + entity details) · API Design *(or N/A)* · Page & Component Architecture *(or N/A)* · Service & Integration Architecture *(or N/A)* · Authentication & Authorization *(or N/A)* · Environment & Configuration · Modules & Verification (the **name · dir · build · test** table *or N/A*) · Technical Gap Analysis · Open Decisions (only if deferred).
+**System tier** — Overview & System Context · Module Boundaries (what each module owns; a `graph` when there is more than one) · Shared Data Model (`erDiagram`, name level) · Inter-Module Contracts *(or N/A)* · Authentication & Authorization *(or N/A)* · Environment & Configuration · Modules & Verification (the **name · dir · build · test** table *or N/A*) · Technical Gap Analysis · Open Decisions (only if deferred).
 
-In two-tier mode the root file keeps Overview, the shared Data Model, inter-module API contracts, Authentication & Authorization, shared Environment & Configuration, Modules & Verification, Technical Gap Analysis, and Open Decisions; Project Structure and the component-level slices of Data Model / API Design / Page & Component / Service & Integration / Environment move into each `architecture/<name>.md` (each *or N/A* per unit).
+**Module tier** (each `architecture/<name>.md`, or the corresponding sections of the root file when there is one module) — Identity & Boundary · Owned Directories · Internal Structure & Placement Rules · Module-Local Configuration *(or N/A)*.
