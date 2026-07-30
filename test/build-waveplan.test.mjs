@@ -45,8 +45,19 @@ test('ordering across waves is preserved — it is the whole value of the plan',
 
 test('genuinely unusable output still yields null so the fallback engages', () => {
   assert.equal(parseBuildPlan('I could not produce a plan.'), null);
-  assert.equal(parseBuildPlan('```json\n{"waves":[]}\n```'), null);
+  // Waves were offered but none held a usable scope — that IS a read failure.
   assert.equal(parseBuildPlan('```json\n{"waves":[{"label":"x","scopes":[{"label":"no instruction"}]}]}\n```'), null);
+});
+
+test('an empty plan is an answer, not unreadable output', () => {
+  // Observed verbatim on a resume where all 88 tasks were already checked: the
+  // orchestrator replied `{"waves": []}` and explained that no work remained.
+  // Collapsing that to null made the one completely correct reply look exactly
+  // like gibberish, and the driver logged it as a gap in its own parser.
+  assert.deepEqual(parseBuildPlan('```json\n{"waves":[]}\n```'), []);
+  assert.deepEqual(parseBuildPlan('{"waves":[]}'), []);
+  // Still distinct from output that could not be read at all.
+  assert.equal(parseBuildPlan('I could not produce a plan.'), null);
 });
 
 test('a wave that IS a scope (the flattened shape) parses', () => {
