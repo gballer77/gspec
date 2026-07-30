@@ -28,6 +28,10 @@ const releases = [
       },
       {
         type: 'fixed',
+        description: '<strong>A dropped connection was handed to the implementer as a defect to fix.</strong> <code>implementation-validator</code>\'s response was cut off mid-stream, so it carried no <code>VERDICT:</code> line; the driver graded that absence as a failure and opened a QA revision whose entire finding was <em>API Error: Connection closed mid-response</em>. There is nothing in the code to repair for that — the implementer exited 1 and took the build down with it. The protection already existed in <code>reviseUntilPass</code>; the implement stage\'s judgment gate was a second, hand-rolled loop that never received it. Both now share one helper: an absent verdict re-runs the <em>validator</em>, and twice unvalidated fails the stage as an engine error rather than blaming code nobody managed to review.',
+      },
+      {
+        type: 'fixed',
         description: '<strong>"No work to do" was being read as a broken answer.</strong> With the rejected reply finally saved, the very first one recovered turned out to be <code>{"waves": []}</code> — the orchestrator correctly reporting that every task was already checked, with an explanation. The parser collapsed an empty plan to <code>null</code>, identical to gibberish, so the driver announced a gap in its own reader for the one reply that was completely right. An empty plan is now a distinct result from unreadable output. The driver still checks each feature directly rather than taking the report as permission to skip implementation — that costs nothing when the report is right, since each finished scope now skips — but it no longer blames the parser for a correct answer.',
       },
       {
