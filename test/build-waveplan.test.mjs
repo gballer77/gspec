@@ -48,3 +48,22 @@ test('genuinely unusable output still yields null so the fallback engages', () =
   assert.equal(parseBuildPlan('```json\n{"waves":[]}\n```'), null);
   assert.equal(parseBuildPlan('```json\n{"waves":[{"label":"x","scopes":[{"label":"no instruction"}]}]}\n```'), null);
 });
+
+test('a wave that IS a scope (the flattened shape) parses', () => {
+  // Third shape observed from the SAME agent across three runs. The lesson is
+  // not "add another case" — it is that the meaning is stable (a wave is one or
+  // more scopes) while the shape is not, so pin the meaning.
+  const waves = [scope, { ...scope, label: 'billing' }];
+  const plan = parseBuildPlan('```json\n' + JSON.stringify({ waves }) + '\n```');
+  assert.deepEqual(plan.map((w) => w.map((s) => s.label)), [['auth'], ['billing']]);
+});
+
+test('all three observed shapes agree on the same plan', () => {
+  const one = parseBuildPlan('```json\n' + JSON.stringify({ waves: [[scope]] }) + '\n```');
+  const two = parseBuildPlan('```json\n' + JSON.stringify({ waves: [{ label: 'w', scopes: [scope] }] }) + '\n```');
+  const three = parseBuildPlan('```json\n' + JSON.stringify({ waves: [scope] }) + '\n```');
+  for (const p of [one, two, three]) {
+    assert.equal(p.length, 1);
+    assert.equal(p[0][0].instruction, 'Build auth.');
+  }
+});

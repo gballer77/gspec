@@ -5,6 +5,27 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.5.1',
+    date: 'July 30, 2026',
+    title: 'The first gate to see real code was wrong about it',
+    summary: 'The implementation lint — the deterministic half of the implement gate, added in 3.4 — ran against a real repository for the first time during a dogfood build and produced six findings. <strong>None of them were real.</strong> Three were JavaScript methods it mistook for filenames, one was a file being written while it looked, and two were files that plainly existed under names it could not resolve. This gate blocks and spends an implementer run, so every one of those was about to send an agent off to create something that was already there.',
+    changes: [
+      {
+        type: 'fixed',
+        description: '<strong>A backticked API reference is not a filename.</strong> The check finds the files a checked task names by looking for a backticked <code>word.word</code> — which also matches every method a task mentions: <code>jwt.encode</code>, <code>AbortSignal.timeout</code>, <code>res.json</code>. Three of the first six findings were methods. A path now needs a real source extension, and the list is deliberately broad rather than minimal: an early cut of it omitted <code>.astro</code> and called an existing route missing, which is the worse failure of the two — a false <em>positive</em> on this gate costs an agent run, and the tests now pin the frameworks we actually target.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>A task names a path the way a person would.</strong> <code>(library)/layout.tsx</code>, not <code>apps/web/src/app/(library)/layout.tsx</code> — and treating that text as repo-relative reported two files as missing that were sitting right there. A claimed path not found exactly is now resolved by suffix against the real tree, matching only at a segment boundary. The walk happens only when something is unresolved, and skips vendored and generated directories.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The gate now prints its findings, not just how many.</strong> A run reported <code>6 implementation lint issues — fixing</code> and nothing else. The findings were durable in the feedback record, but the only person who could catch a bad one — by noticing that a named file plainly exists — had nothing on screen to catch it with. Each finding is now logged as it is fixed.',
+      },
+    ],
+    migration: 'None. All three changes make an existing check more accurate; a project whose lint was clean stays clean, and one that was being blocked on a phantom finding stops being blocked.',
+  },
+  {
     version: '3.4.0',
     date: 'July 29, 2026',
     title: 'What a full dogfood run taught us',

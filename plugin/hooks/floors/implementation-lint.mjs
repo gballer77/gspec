@@ -14,10 +14,29 @@
 //
 // Text in, messages out. The driver does the I/O.
 
-// Paths a task line names. Tasks are written with concrete files in backticks
-// ("scaffold the route at `src/pages/index.astro`"), which is what makes
-// "did the work land?" answerable without running anything.
-const PATHISH = /`([^`\s]+\.[A-Za-z0-9]{1,10})`/g;
+// Paths a task line names. Tasks write concrete files in backticks ("scaffold
+// the route at `src/pages/index.astro`"), which makes "did the work land?"
+// answerable without running anything.
+//
+// The extension list is NOT decoration. A pattern of `word.word` also matches
+// every backticked API reference a task mentions — `AbortSignal.timeout`,
+// `jwt.encode`, `res.json` — and this gate BLOCKS, so a run was observed sending
+// the implementer off to create files for three JavaScript methods. Only real
+// source extensions count.
+// Broad on purpose. Too narrow and a real file is called missing (an early cut
+// omitted .astro and flagged a route that existed); the job is only to exclude
+// `word.method`, which no extension here resembles.
+const SOURCE_EXT = [
+  'ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'mts', 'cts',
+  'astro', 'vue', 'svelte', 'html', 'htm',
+  'css', 'scss', 'sass', 'less', 'styl',
+  'json', 'jsonc', 'yml', 'yaml', 'toml', 'ini', 'env', 'lock',
+  'sql', 'prisma', 'graphql', 'gql',
+  'md', 'mdx', 'txt', 'sh', 'bash', 'zsh', 'fish',
+  'py', 'rb', 'go', 'rs', 'java', 'kt', 'kts', 'swift', 'php', 'cs', 'ex', 'exs',
+  'dockerfile', 'conf', 'cfg', 'xml', 'svg', 'proto',
+].join('|');
+const PATHISH = new RegExp('`([^`\\s]+\\.(?:' + SOURCE_EXT + '))`', 'gi');
 
 // Deliberately narrow: markers that mean "not finished", not every mention of
 // the word. `TODO(nope)` in a comment is a stub; "todo list" in a UI string is
@@ -52,11 +71,25 @@ export function filesNamedByCheckedTasks(tasksText) {
 export function missingWorkViolations(rel, tasksText, present) {
   const out = [];
   for (const { id, path } of filesNamedByCheckedTasks(tasksText)) {
-    if (!present.has(path)) {
+    if (!resolves(path, present)) {
       out.push(`${rel}: ${id} is checked but ${path} does not exist — a checked task is the record of work that was done and verified`);
     }
   }
   return out;
+}
+
+// Does this named path correspond to something on disk?
+//
+// A task routinely names a path RELATIVE TO ITS MODULE — `(library)/layout.tsx`
+// for what lives at `apps/web/src/app/(library)/layout.tsx` — because that is
+// how a person refers to it. Treating the text as repo-relative flagged files
+// that plainly exist, so match on suffix: the named path must be the tail of a
+// real one, at a segment boundary.
+function resolves(named, present) {
+  if (present.has(named)) return true;
+  const tail = `/${named}`;
+  for (const p of present) if (p.endsWith(tail)) return true;
+  return false;
 }
 
 /** Stub markers in a source file that a checked task claimed to finish. */

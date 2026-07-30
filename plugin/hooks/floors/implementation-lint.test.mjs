@@ -87,3 +87,36 @@ test('the metadata bullet is optional — a bullet-only pattern verified nothing
   assert.equal(v.length, 1, 'the open covering task must still be caught');
   assert.match(v[0], /T2 still is not/);
 });
+
+test('a backticked API reference is not a file path', () => {
+  // The first real run of this gate produced six findings, three of which were
+  // JavaScript methods: a `word.word` pattern matches `AbortSignal.timeout`,
+  // `jwt.encode`, `res.json`. This gate BLOCKS, so it sent the implementer off
+  // to create files for methods. Only a real source extension counts.
+  const tasks = '- [x] **T1** wire `jwt.encode` and `AbortSignal.timeout` in `packages/core/src/jwt.ts`\n';
+  assert.deepEqual(filesNamedByCheckedTasks(tasks), [{ id: 'T1', path: 'packages/core/src/jwt.ts' }]);
+});
+
+test('the extension list covers the frameworks we actually target', () => {
+  // An early cut of that list omitted .astro and called an existing route
+  // missing — the failure mode of narrowing is worse than the one it fixes.
+  for (const ext of ['astro', 'vue', 'svelte', 'py', 'go', 'prisma', 'sql', 'yml']) {
+    const tasks = `- [x] **T1** add \`src/thing.${ext}\`\n`;
+    assert.deepEqual(filesNamedByCheckedTasks(tasks), [{ id: 'T1', path: `src/thing.${ext}` }], ext);
+  }
+});
+
+test('a path named relative to its module resolves against the real one', () => {
+  // Tasks name paths the way people do — `(library)/layout.tsx` for what lives
+  // at `apps/web/src/app/(library)/layout.tsx`. Exact-match called two such
+  // files missing on a real build and would have sent the implementer to
+  // re-create them. The match is on a SEGMENT boundary, so a suffix that only
+  // happens to share trailing characters does not count.
+  const tasks = '- [x] **T1** add `(library)/layout.tsx`\n';
+  assert.deepEqual(missingWorkViolations('a/t.md', tasks, new Set(['apps/web/src/app/(library)/layout.tsx'])), []);
+
+  const near = missingWorkViolations('a/t.md', tasks, new Set(['apps/web/src/app/my(library)/layout.tsx']));
+  assert.equal(near.length, 1, 'a mid-segment match is not a resolution');
+
+  assert.match(missingWorkViolations('a/t.md', tasks, new Set())[0], /does not exist/);
+});
