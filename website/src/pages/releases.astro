@@ -24,6 +24,10 @@ const releases = [
       },
       {
         type: 'fixed',
+        description: '<strong>A resume paid a full implementer run per already-finished feature.</strong> Measured on a real resume: all 88 tasks across six features were checked, and the driver still spent one implementer run on each to be told there was nothing to do. The implementer is roughly <strong>95% of a build\'s input tokens</strong>, which makes this the most expensive no-op in the system. A scope with nothing unchecked now skips the agent. The skip is narrow by construction — it cannot fire on a fresh build, where every box is open — and it skips the <em>agent</em>, never the gates: <code>verify.sh</code>, the deterministic lint and the validator all still run against what is on disk.',
+      },
+      {
+        type: 'fixed',
         description: '<strong>A rejected build plan pointed at a place nothing was written.</strong> When <code>build-orchestrator</code> answers in a shape the parser cannot read, the build correctly falls back to one scope per feature and says so — and told the reader its output was "in the run log". It never was; a grep across a full dogfood run found zero copies. That is worse than saying nothing, because it stops the reader looking, and all three parser gaps found so far cost a manual reproduction to recover text that had been discarded at the moment it was rejected. The reply is now kept verbatim in <code>.gspec/build/unparsed-plan.md</code>, and a test asserts the message names a file the driver actually writes.',
       },
       {
