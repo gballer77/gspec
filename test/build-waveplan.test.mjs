@@ -67,3 +67,20 @@ test('all three observed shapes agree on the same plan', () => {
     assert.equal(p[0][0].instruction, 'Build auth.');
   }
 });
+
+test('the rejection message points at a file the driver actually writes', () => {
+  // The old message said the output was "in the run log". It never was — a
+  // grep across every run of a full dogfood build found zero copies. A pointer
+  // at an empty place is worse than none: it stops the reader looking, and each
+  // of the three parser gaps found so far cost a manual reproduction because the
+  // rejected text was discarded the moment it was rejected.
+  assert.match(src, /const UNPARSED_PLAN_PATH = join\(BUILD_DIR, 'unparsed-plan\.md'\)/);
+
+  const branch = src.match(/its plan was unusable[\s\S]{0,400}/)[0];
+  assert.match(branch, /UNPARSED_PLAN_PATH/, 'the message must name the file it wrote');
+  assert.doesNotMatch(branch, /in the run log/, 'it must not point somewhere nothing is written');
+
+  // and the write is in the same branch as the message, not merely somewhere.
+  const write = src.match(/await writeFile\(join\(ctx\.cwd, UNPARSED_PLAN_PATH\)[\s\S]{0,80}/);
+  assert.ok(write, 'the rejected reply must be written verbatim');
+});
