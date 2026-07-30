@@ -8,7 +8,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { looksRateLimited } from '../lib/build.js';
+import { looksRateLimited, transientBackoffMs, MAX_TRANSIENT_RETRIES } from '../lib/build.js';
 
 test('capacity messages the engines actually emit are recognized', () => {
   for (const t of [
@@ -28,4 +28,20 @@ test('an ordinary fault is NOT a limit — it must still be retried', () => {
     '',
     null,
   ]) assert.equal(looksRateLimited(t), false, `should not be a limit: ${t}`);
+});
+
+test('each transient retry waits longer than the last', () => {
+  // A single fixed 30s pause was not enough: a measured run lost the build to
+  // "Connection closed mid-response" on the first attempt AND on its retry 30s
+  // later. The outage was wider than the one pause, so the waits escalate.
+  const waits = Array.from({ length: MAX_TRANSIENT_RETRIES }, (_, i) => transientBackoffMs(i));
+  assert.equal(waits.length, 3);
+  assert.deepEqual(waits, [30_000, 120_000, 270_000]);
+  for (let i = 1; i < waits.length; i++) assert.ok(waits[i] > waits[i - 1], 'each wait must grow');
+});
+
+test('the retry allowance is bounded — a broken prompt must still surface', () => {
+  // Retrying forever turns a genuinely broken prompt into a run that looks hung,
+  // which is a worse failure than the one the retries fix.
+  assert.ok(MAX_TRANSIENT_RETRIES >= 2 && MAX_TRANSIENT_RETRIES <= 5, 'bounded and small');
 });

@@ -19,6 +19,10 @@ const releases = [
         description: '<strong>A task names a path the way a person would.</strong> <code>(library)/layout.tsx</code>, not <code>apps/web/src/app/(library)/layout.tsx</code> — and treating that text as repo-relative reported two files as missing that were sitting right there. A claimed path not found exactly is now resolved by suffix against the real tree, matching only at a segment boundary. The walk happens only when something is unresolved, and skips vendored and generated directories.',
       },
       {
+        type: 'fixed',
+        description: '<strong>A transient engine error gets more than one retry, and waits longer each time.</strong> The implementer already retried once after a 30-second pause — and a measured run still lost the whole build to <code>API Error: Connection closed mid-response</code>, because it hit the same error on the attempt <em>and</em> on the retry half a minute later. The outage was simply wider than the one pause. Now up to three retries at 30s, 120s and 270s. Still bounded, because a genuinely broken prompt has to surface rather than be retried until the run looks hung; a capacity limit still surfaces immediately, since that resets on a clock and a retry only spends another run on the same wall.',
+      },
+      {
         type: 'changed',
         description: '<strong>The gate now prints its findings, not just how many.</strong> A run reported <code>6 implementation lint issues — fixing</code> and nothing else. The findings were durable in the feedback record, but the only person who could catch a bad one — by noticing that a named file plainly exists — had nothing on screen to catch it with. Each finding is now logged as it is fixed.',
       },
