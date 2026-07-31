@@ -28,7 +28,7 @@ write_dup_arch() {
 }
 case "$*" in
   *feature-plan*) printf '\`\`\`json\\n{"features":[{"slug":"only-thing","title":"Only thing","brief":"just this","priority":"P0","dependencies":[]}]}\\n\`\`\`\\n' ;;
-  *"Fix these mechanical problems"*) write_feature_file "$(feature_path "$*" arch.md)"; printf 'fixed\\n' ;;
+  *"Fix these mechanical problems"*) printf '%s\\n' "$*" >> fix-prompt.txt; write_feature_file "$(feature_path "$*" arch.md)"; printf 'fixed\\n' ;;
   *"Write the feature architecture"*) write_dup_arch "$(feature_path "$*" arch.md)"; printf 'ok\\n' ;;
   *Validate*) printf 'VERDICT: PASS\\nLooks complete.\\n' ;;
   *) fake_default "$*" ;;
@@ -63,6 +63,26 @@ test('a per-feature lint prints what it found, not just how many', async (t) => 
     /duplicate anchor "### Entity: Thing"/,
     'the finding itself must reach the log — a count alone leaves nothing to review',
   );
+});
+
+// The one move that can trade one violation for a different one, on a budget
+// that only covers a single round. Observed end to end: a writer qualified an
+// anchor ("### Entity: SimEvent (wave variants)"), the grammar floor rejected
+// the name, the writer renamed it to the canonical "### Entity: SimEvent" —
+// correct, and the only possible name — then wrote `defined-in:` because
+// nothing in that finding said otherwise. That second origin failed the stage
+// on the re-lint with the retry already spent.
+test('the lint fix warns that a rename inherits the origin/delta rule', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  const env = await seedBuildProject(dir);
+
+  await runCli(['build', '--no-review', 'an idea'], dir, env);
+
+  const prompt = await readFile(join(dir, 'fix-prompt.txt'), 'utf-8');
+  assert.match(prompt, /duplicate anchor "### Entity: Thing"/, 'sanity: the real violation is in the prompt');
+  assert.match(prompt, /If a fix RENAMES an anchor/, 'the rename hazard must reach the writer, not sit in the source');
+  assert.match(prompt, /amends:/, 'and it must name the correct alternative to a second defined-in');
 });
 
 test('a per-feature lint finding is kept in the durable QA log', async (t) => {

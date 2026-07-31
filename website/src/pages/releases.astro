@@ -64,6 +64,10 @@ const releases = [
       },
       {
         type: 'fixed',
+        description: '<strong>A mechanical fix no longer trades one violation for another.</strong> Renaming an anchor is the single fix that can introduce a <em>different</em> violation, and the budget only covers one round. Observed end to end twice in one run: a writer qualified a shared anchor (<code>### Entity: SimEvent (wave variants)</code>) so several features could each extend one union, the grammar floor rejected the name, and the writer renamed it to the canonical <code>### Entity: SimEvent</code> — correct, and the only possible name — then wrote <code>defined-in:</code> because nothing in that finding said otherwise. The second origin failed the stage on re-lint with the retry already spent. The fix prompt now carries the rule the rename inherits: grep for the new heading first, and amend rather than re-originate if it already exists.',
+      },
+      {
+        type: 'fixed',
         description: '<strong><code>verify.sh</code> can no longer hang the build silently.</strong> A run sat about an hour on <code>docker info</code> against a daemon that was down, and a stalled script looks identical to a healthy one from outside. The driver now stops a script that produces no output for 10 minutes — idle, not a total cap, because provisioning a database and running integration tests legitimately takes many minutes — kills the whole process group so the hung grandchild goes with it, and reports it as an environment problem rather than a code failure. The engineer contract now requires every preflight to probe with a timeout and fail with a message instead of waiting.',
       },
       {
