@@ -72,3 +72,31 @@ test('a SUMMARY label on its own line does not leave a dangling separator', () =
   assert.doesNotMatch(s, /^\s*\//, `leading separator in: ${s}`);
   assert.match(s, /^Hardcoded pixel values/);
 });
+
+test('a findings table reports its first finding, not its column names', () => {
+  // Observed live on a dogfood run: a validator returned its findings as a
+  // markdown table and the log read
+  //   "QA flagged issues — revision 1/1… (| Severity | Finding | Fix | / |---|---|---|)"
+  // — the one line a person reads to learn why a revision is running, spent
+  // entirely on scaffolding.
+  const verdict = [
+    'VERDICT: FAIL',
+    '| Severity | Finding | Fix |',
+    '|----------|---------|-----|',
+    '| BLOCKER | The `## API` Not Applicable verdict is wrong | Document the inter-module contracts |',
+  ].join('\n');
+  const s = summarize(verdict);
+  assert.doesNotMatch(s, /Severity \| Finding/, 'the header row is not the reason');
+  assert.doesNotMatch(s, /^\s*\|?-{2,}/, 'nor is the rule beneath it');
+  assert.match(s, /Not Applicable verdict is wrong/, 'the first data row carries the finding');
+});
+
+test('an aligned table rule is skipped too', () => {
+  const verdict = [
+    'VERDICT: FAIL',
+    '| Severity | Finding |',
+    '|:---------|:--------|',
+    '| MAJOR | Screen anchor has no matching section in design.html |',
+  ].join('\n');
+  assert.match(summarize(verdict), /Screen anchor has no matching section/);
+});
