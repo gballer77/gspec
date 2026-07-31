@@ -85,6 +85,11 @@ test('--research runs the stage: one researcher per planned competitor, then don
 
   const calls = (await readFile(join(dir, 'researcher-calls.log'), 'utf-8')).trim().split('\n');
   assert.equal(calls.length, 2, 'exactly one researcher run per competitor');
+
+  // A concurrent fan-out that reports only its plan looks identical to a stalled
+  // one; each competitor is counted as it lands.
+  assert.match(r.output, /\[1\/2\] (Acme|Globex) — researched/);
+  assert.match(r.output, /\[2\/2\] (Acme|Globex) — researched/);
 });
 
 test('an existing gspec/research.md short-circuits the stage', async (t) => {

@@ -50,6 +50,21 @@ const manyFeatures = Array.from({ length: 26 }, (_, i) =>
   `{"slug":"feat-${i + 1}","title":"F${i + 1}","brief":"b","priority":"P1"}`).join(',');
 const FAKE_PI_MANY = FAKE_PI.replace(/\{"features".*?\}\]\}/, `{"features":[${manyFeatures}]}`);
 
+// An orchestrator that returns a real two-wave build plan, so the ORCHESTRATED
+// implement path runs. Every other e2e fixture leaves the orchestrator babbling
+// and the driver falls through to per-feature scopes — meaning the ordered path,
+// in the most expensive stage in the system, had no end-to-end coverage at all.
+const WAVE_PLAN = JSON.stringify({
+  waves: [
+    [{ label: 'user-auth', instruction: 'Build auth.', plan: ['gspec/features/user-auth/tasks.md'] }],
+    [{ label: 'dashboard', instruction: 'Build the dashboard.', plan: ['gspec/features/dashboard/tasks.md'] }],
+  ],
+});
+const FAKE_PI_WAVES = FAKE_PI.replace(
+  '  *Validate*)',
+  `  *"wave build-plan"*) printf '\`\`\`json\\n%s\\n\`\`\`\\n' '${WAVE_PLAN}' ;;\n  *Validate*)`,
+);
+
 async function seedBuildProject(dir, fakePi = FAKE_PI) {
   await seedInstall(dir, 'pi', { agentFiles: AGENTS.map((a) => join('.pi', 'agents', `${a}.md`)) });
   await mkdir(join(dir, '.gspec', 'build'), { recursive: true });
@@ -122,6 +137,37 @@ test('a single feature is not dressed up as a fan-out', async (t) => {
   const r = await runCli(['build', 'an idea'], dir, env);
   assert.equal(r.code, 2, r.output);
   assert.doesNotMatch(r.output, /\[1\/1\]/);
+});
+
+// Implementation is the longest and most expensive stage — ~92% of a build's
+// input, ~10 hours on a measured run — and it emitted nothing between its
+// "orchestrated: N wave(s)" line and its gates.
+test('the orchestrated implement path announces each wave and counts each scope', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  const env = await seedBuildProject(dir, FAKE_PI_WAVES);
+
+  const r = await runCli(['build', '--no-review', 'an idea'], dir, env);
+  assert.match(r.output, /orchestrated: 2 wave\(s\), 2 scope\(s\)/, 'sanity: the wave plan really parsed');
+
+  // The wave is announced with what is in flight, so a stall names it.
+  assert.match(r.output, /wave 1\/2 — building one scope: user-auth/);
+  assert.match(r.output, /wave 2\/2 — building one scope: dashboard/);
+  // And each scope is counted as it lands.
+  assert.match(r.output, /\[1\/2\] user-auth — built/);
+  assert.match(r.output, /\[2\/2\] dashboard — built/);
+});
+
+test('the per-feature fallback implement path counts its scopes too', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  const env = await seedBuildProject(dir); // orchestrator babbles → fallback
+
+  const r = await runCli(['build', '--no-review', 'an idea'], dir, env);
+  assert.match(r.output, /no wave plan — falling back to 2 per-feature scopes/);
+  // Serial here, so each is announced BEFORE it runs.
+  assert.match(r.output, /\[1\/2\] (user-auth|dashboard) — building…/);
+  assert.match(r.output, /\[2\/2\] (user-auth|dashboard) — building…/);
 });
 
 test('a single-feature plan writes exactly one PRD', async (t) => {
