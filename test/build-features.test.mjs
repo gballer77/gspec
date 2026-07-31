@@ -90,6 +90,40 @@ test('the features stage decomposes the brief and fans out one writer per featur
   assert.ok(calls.every((c) => c === 'writer'), 'the decomposed writer path ran, not the fallback');
 });
 
+// A fan-out used to print its stage header and then nothing until the whole
+// stage finished — half an hour of silence on a real run, which is exactly what
+// a STALLED stage looks like too. The log could not distinguish them, so the
+// only way to tell a healthy run from a dead one was to inspect the driver's
+// child processes by hand.
+test('a multi-feature fan-out reports how far along it is, in both phases', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  const env = await seedBuildProject(dir);
+
+  const r = await runCli(['build', 'an idea'], dir, env);
+  assert.equal(r.code, 2, r.output);
+
+  // Write phase: one counted line per feature, denominator = the fan-out width.
+  assert.match(r.output, /\[1\/2\] .*prd\.md/, 'the first written PRD is counted');
+  assert.match(r.output, /\[2\/2\] .*prd\.md/, 'and so is the last, so "done" is visible');
+
+  // Validate phase — the serial half, which reported nothing at all before.
+  assert.match(r.output, /\[1\/2\] .*prd\.md — checking…/);
+  assert.match(r.output, /\[2\/2\] .*prd\.md — checking…/);
+});
+
+test('a single feature is not dressed up as a fan-out', async (t) => {
+  // "[1/1]" is noise: there is no progress to report through a stage that does
+  // one thing, and a counter implies siblings that do not exist.
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  const env = await seedBuildProject(dir, FAKE_PI_SINGLE);
+
+  const r = await runCli(['build', 'an idea'], dir, env);
+  assert.equal(r.code, 2, r.output);
+  assert.doesNotMatch(r.output, /\[1\/1\]/);
+});
+
 test('a single-feature plan writes exactly one PRD', async (t) => {
   const dir = await makeProject();
   t.after(() => cleanup(dir));
