@@ -14,6 +14,8 @@
 //
 // Text in, messages out. The driver does the I/O.
 
+import { coversQuotes } from './plan-lint.mjs';
+
 // Paths a task line names. Tasks write concrete files in backticks ("scaffold
 // the route at `src/pages/index.astro`"), which makes "did the work land?"
 // answerable without running anything.
@@ -119,9 +121,11 @@ export function checkboxConsistency(prdRel, prdText, tasksText) {
     // capability ticked ahead of its plan, running blind.
     const covers = line.match(/^\s*[-*]?\s*covers:\s*(.+)$/);
     if (!covers || !current) continue;
-    for (const raw of covers[1].split(';')) {
-      const text = raw.trim().replace(/^["']|["']$/g, '');
-      if (!text) continue;
+    // One line may carry SEVERAL adjacent quoted capabilities — the form every
+    // real plan used. Splitting on `;` made the whole line one bogus capability
+    // that matched no PRD entry, so this check passed vacuously on exactly the
+    // input it exists for. Shared parser, one definition of the format.
+    for (const text of coversQuotes(covers[1])) {
       if (!covered.has(text)) covered.set(text, []);
       covered.get(text).push(current);
     }

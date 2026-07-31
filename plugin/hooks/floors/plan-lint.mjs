@@ -253,3 +253,120 @@ export function normalizeAnchorRef(ref) {
   const kinded = raw.match(/(Entity|Endpoint|Screen|Component|Rule|Machine)\s*:\s*(.+)$/i);
   return kinded ? slugifyAnchor(`${kinded[1]}: ${kinded[2]}`) : slugifyAnchor(raw);
 }
+
+// Every task in a plan, as a record. The task line carries the id, the optional
+// `[P]` marker and the capability id; the indented fields follow it.
+export function parseTasks(tasksText) {
+  const out = [];
+  let cur = null;
+  for (const line of String(tasksText).split('\n')) {
+    const t = line.match(/^\s*[-*]\s*\[([ xX])\]\s*\*\*T(\d+)\*\*(.*)$/);
+    if (t) {
+      cur = { id: `T${t[2]}`, checked: t[1] !== ' ', parallel: /^\s*\[P\]/.test(t[3]), deps: [], covers: [] };
+      out.push(cur);
+      continue;
+    }
+    if (!cur) continue;
+    const d = line.match(TASK_FIELD.deps);
+    if (d) {
+      const raw = d[1].trim();
+      if (!/^none$/i.test(raw) && raw !== '-' && raw !== '—') {
+        cur.deps.push(...(raw.match(/T\d+/g) || []));
+      }
+      continue;
+    }
+    const c = line.match(TASK_FIELD.covers);
+    if (c) cur.covers.push(...coversQuotes(c[1]));
+  }
+  return out;
+}
+
+/**
+ * A `[P]` marker claims a task can start immediately, in parallel with its
+ * siblings. That is false the moment it depends on a task that is not itself
+ * `[P]` — the dependency has to finish first, so the two cannot overlap.
+ *
+ * This is graph arithmetic, and it was being adjudicated by a language model:
+ * across one dogfood run the plan validator raised it FIVE times over four
+ * revision rounds ("T8 is marked [P] but declares deps: T7"), each round costing
+ * a validator run plus a writer run. The rule existed only as the prose
+ * "honest [P] markers". Now it is computed.
+ *
+ * Only UNCHECKED tasks are judged: a checked task is immutable history, and
+ * flagging it would demand an edit the writer is forbidden to make.
+ */
+export function parallelismViolations(rel, tasksText) {
+  const tasks = parseTasks(tasksText);
+  const byId = new Map(tasks.map((t) => [t.id, t]));
+  const v = [];
+  for (const t of tasks) {
+    if (!t.parallel || t.checked) continue;
+    const blocking = t.deps.filter((d) => {
+      const dep = byId.get(d);
+      return dep && !dep.checked && !dep.parallel;
+    });
+    if (blocking.length) {
+      v.push(`${rel}: ${t.id} is marked [P] but depends on ${blocking.join(', ')}, which ${blocking.length === 1 ? 'is' : 'are'} not [P] — it cannot start until ${blocking.length === 1 ? 'that task' : 'those tasks'} finish, so the marker is not honest`);
+    }
+    if (t.deps.includes(t.id)) v.push(`${rel}: ${t.id} lists itself in deps`);
+  }
+  return v;
+}
+
+/**
+ * `covers:` quotes a capability from the PRD *verbatim* — that is what makes it
+ * a link rather than a paraphrase, and every downstream check that maps tasks to
+ * capabilities depends on the exact match. A near-quote silently covers nothing.
+ *
+ * Also caught by an agent on the same run, one capability at a time. String
+ * containment does not need judgment.
+ *
+ * Matching is whitespace-normalized: a writer that rewraps a long capability
+ * across lines has not changed the quote, and failing that would teach writers
+ * the check is noise.
+ */
+export function coversViolations(rel, tasksText, prdText) {
+  const prd = normalizeSpace(String(prdText));
+  if (!prd.trim()) return []; // no PRD to check against — not this floor's call
+  const v = [];
+  const seen = new Set();
+  for (const t of parseTasks(tasksText)) {
+    for (const quote of t.covers) {
+      const key = `${t.id}\u0000${quote}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (!prd.includes(normalizeSpace(quote))) {
+        v.push(`${rel}: ${t.id} covers: "${truncate(quote)}" but that text does not appear verbatim in the PRD — the quote is the link to the capability, so a paraphrase covers nothing`);
+      }
+    }
+  }
+  return v;
+}
+
+/**
+ * The capability quotes on one `covers:` line.
+ *
+ * Writers routinely put SEVERAL adjacent quoted capabilities on a single line —
+ * `covers: "first capability" "second capability"` — which is what a person
+ * writing markdown does, and every real plan in a dogfood run used that form.
+ * A parser that split on `;` and stripped the outer quotes turned the whole
+ * line into one bogus capability that matched nothing, so the checks built on
+ * it passed VACUOUSLY. Take the quotes wherever they are; fall back to
+ * separator-splitting only when the line carries no quotes at all.
+ */
+export function coversQuotes(raw) {
+  const line = String(raw).trim();
+  const quoted = line.match(/"([^"]+)"|'([^']+)'/g);
+  if (quoted && quoted.length) {
+    return quoted.map((q) => q.slice(1, -1).trim()).filter(Boolean);
+  }
+  return line.split(/[;]/).map((p) => p.trim().replace(/^["']|["']$/g, '').trim()).filter(Boolean);
+}
+
+function normalizeSpace(s) {
+  return String(s).replace(/\s+/g, ' ');
+}
+
+function truncate(s, n = 70) {
+  return s.length > n ? `${s.slice(0, n)}…` : s;
+}

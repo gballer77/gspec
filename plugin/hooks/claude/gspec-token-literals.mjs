@@ -28,7 +28,7 @@ try {
   let content;
   try { content = readFileSync(resolve(projectDir, filePath), 'utf-8'); } catch { process.exit(0); }
 
-  const violations = tokenLiteralViolations(content);
+  const violations = tokenLiteralViolations(content, rel);
   if (!violations.length) process.exit(0);
   process.stderr.write(`gspec token-literals: ${violations.join('\n')}\n`);
   process.exit(2);

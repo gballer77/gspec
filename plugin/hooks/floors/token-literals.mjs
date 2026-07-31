@@ -11,10 +11,21 @@
 // that *displays* a hex code is documentation, not a declaration. Entry points
 // read the file and signal the violation.
 
-// Which paths this floor governs. Only the HTML style guide — a Markdown
-// guide's token tables aren't mechanically separable from its prose.
+// Which paths this floor governs: the HTML style guide AND every feature's
+// design.html. A Markdown guide is excluded because its token tables aren't
+// mechanically separable from prose — with HTML that objection disappears.
+//
+// Extending to design.html was specified when feature folders landed and never
+// shipped, so the rule stayed judgment-only. It cost: in one dogfood run the
+// design validator failed SEVEN times, twice terminally, and the recurring
+// finding was "literal pixel values outside token block". A design that carries
+// its own literals is a second copy of decisions the style guide owns, which is
+// the exact drift this floor exists to prevent.
+import { isFeatureDesign } from './paths.mjs';
+
 export function appliesToTokenLiterals(rel) {
-  return String(rel).replace(/\\/g, '/') === 'gspec/style.html';
+  const r = String(rel).replace(/\\/g, '/');
+  return r === 'gspec/style.html' || isFeatureDesign(r);
 }
 
 // A selector under which literal colors are allowed: the token blocks.
@@ -38,7 +49,7 @@ function stripCssComments(css) {
 
 // Literal colors declared outside a token block ([] = clean). Assumes the
 // caller already filtered with appliesToTokenLiterals().
-export function tokenLiteralViolations(content) {
+export function tokenLiteralViolations(content, rel = 'gspec/style.html') {
   const html = String(content);
   const offenders = []; // { literal, where }
 
@@ -67,7 +78,7 @@ export function tokenLiteralViolations(content) {
     .map((o) => `"${o.literal}" in ${o.where}`).join(', ');
   const more = offenders.length > MAX_REPORTED ? ` (and ${offenders.length - MAX_REPORTED} more)` : '';
   return [
-    `gspec/style.html declares literal colors outside the design-token block: ${shown}${more}. ` +
+    `${rel} declares literal colors outside the design-token block: ${shown}${more}. ` +
     'The token block (:root / theme-key selectors) is the only place a literal color may appear — ' +
     'style everything else with var(--…) so values cannot drift.',
   ];

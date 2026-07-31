@@ -1952,8 +1952,14 @@ program
 
     // Record the target so later commands can infer the platform this project
     // runs on (gspec build defaults its engine from this).
-    await writeProjectConfig(process.cwd(), { target: targetName });
-    console.log(chalk.dim(`  Recorded install target in ${PROJECT_CONFIG_PATH}\n`));
+    // Stamp the version too. The agent/command/skill files this just wrote are
+    // COPIES: upgrading gspec does not touch them, so a project silently keeps
+    // running yesterday's agents. A measured dogfood run did exactly that — all
+    // 29 installed agents were a day behind, and a QA bar that had already been
+    // fixed failed the same stage seven times. Without a stamp the build has no
+    // way to notice.
+    await writeProjectConfig(process.cwd(), { target: targetName, gspecVersion: pkg.version });
+    console.log(chalk.dim(`  Recorded install target and v${pkg.version} in ${PROJECT_CONFIG_PATH}\n`));
 
     await installExtensions(targetName, process.cwd());
 

@@ -25,6 +25,9 @@ yarn-error.log*
 .agent
 .agents
 
+# Local scratch space
+sandbox/
+
 # OS specific
 .DS_Store
 Thumbs.db

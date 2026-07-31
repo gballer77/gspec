@@ -397,7 +397,7 @@ Correspondingly: do **not** preload `gspec-agnosticism` into `feature-architect`
 
 - The copied block is fenced by a provenance comment (`<!-- gspec:tokens from gspec/style.html — generated copy, do not hand-edit -->`) and is the **only** place a literal color may appear.
 - New pure floor **`plugin/hooks/floors/token-sync.mjs`** (takes both texts, does no I/O) extracts the custom-property declarations from the style guide and from `design.html` and reports any name present in one and absent in the other, or any value that differs. Deterministic, so a PostToolUse advisory can carry it.
-- **`floors/token-literals.mjs` now DOES extend to `gspec/features/*/design.html`.** Its own header explains that it governs only `style.html` because a Markdown guide's token tables aren't mechanically separable from prose — with an HTML design that objection disappears. Change `appliesToTokenLiterals` (`:16-18`) from `=== 'gspec/style.html'` to `isRootStyleHtml(rel) || isFeatureDesign(rel)`.
+- **`floors/token-literals.mjs` now DOES extend to `gspec/features/*/design.html`.** *(Shipped in v3.6.0 — specified here at v3.2 and missed; a dogfood run then failed the design stage seven times on token discipline that no floor was checking.)* Its own header explains that it governs only `style.html` because a Markdown guide's token tables aren't mechanically separable from prose — with an HTML design that objection disappears. Change `appliesToTokenLiterals` (`:16-18`) from `=== 'gspec/style.html'` to `isRootStyleHtml(rel) || isFeatureDesign(rel)`.
 - **When the project's style guide is `style.md`**, there is no CSS custom-property block to copy. The designer transcribes the token table into the block and `token-sync` degrades to advisory name-matching. This is the concrete reason `style.html` is the recommended format, and the designer persona should say so.
 
 ### 7. Tokens-only style
@@ -581,6 +581,24 @@ Uses the existing `promptConfirm` (`lib/prompts.js`) and the existing config mer
 **H12 — `arch:` anchors go stale against checked tasks.** A checked task is immutable, so its `arch:` line freezes with it. If a later feature supersedes an anchor (`superseded-by:`), the old task points at a heading that may no longer exist. This is harmless — checked tasks route nothing — but `plan-validator`'s "every `arch:` resolves" check must therefore apply to **unchecked tasks only**, or every mature plan file fails QA. Same carve-out the immutability rule already implies.
 
 ---
+
+## Deterministic checks added after the first full dogfood run (v3.6.0)
+
+Both were being adjudicated by `plan-validator`, repeatedly and expensively —
+five unsafe-`[P]` findings across four revision rounds, plus a non-verbatim
+`covers:` quote — for properties that are arithmetic:
+
+- **`parallelismViolations`** — a task marked `[P]` may not depend on an
+  unchecked task that is not itself `[P]`; the dependency must finish first, so
+  they cannot overlap. Checked tasks are skipped: they are immutable history,
+  and flagging one would demand an edit the writer is forbidden to make.
+- **`coversViolations`** — a `covers:` quote must appear verbatim in the PRD,
+  whitespace-normalized so a rewrapped line is still the same quote.
+
+Both share `coversQuotes()` with `implementation-lint.mjs`, which had been
+splitting the field on `;` while every real plan wrote *several adjacent quoted
+capabilities on one line* — so `checkboxConsistency` matched nothing and passed
+vacuously on exactly the input it exists for.
 
 ## Known gaps (found by dogfooding, not yet fixed)
 

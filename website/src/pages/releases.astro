@@ -5,6 +5,39 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.6.0',
+    date: 'July 30, 2026',
+    title: 'The build was running yesterday\'s agents',
+    summary: 'The first complete <code>gspec build</code> finished — 39 runs, 307 source files, a green <code>verify.sh</code> — and then its own failure log explained why so much of it had been painful. <strong>All 29 installed agents were a day stale.</strong> A QA bar fixed that morning failed the same stage seven times, twice terminally, because agent files are copies and upgrading gspec never rewrites them. Nothing could have noticed: there was no version stamp to compare.<br /><br />The same log showed a language model being paid to do arithmetic — unsafe <code>[P]</code> markers raised five times across four revision rounds, a <code>covers:</code> quote checked for verbatim equality by hand. Both are now regexes that run before any agent does.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>The build warns when a project\'s agents are older than the gspec running it.</strong> <code>install</code> now stamps its version into <code>.gspec/config.json</code>, and the build preflight compares it. Agent, command and skill files are <em>copies</em> — an upgrade leaves them untouched — so a project can run a new driver against old definitions indefinitely, which is exactly what a ten-hour measured run did. It warns rather than blocks: the mismatch is usually harmless, and a project may deliberately pin its agents. A project installed before stamping is told the check could not run, because silence would read as "fresh".',
+      },
+      {
+        type: 'added',
+        description: '<strong><code>[P]</code> parallelism is now checked deterministically.</strong> A task marked parallel-safe may not depend on an unchecked task that is not itself <code>[P]</code> — the dependency has to finish first, so they cannot overlap. The plan validator raised this five times over four revision rounds in one run, each round costing a validator run plus a writer run, for a property a graph walk settles instantly. Checked tasks are exempt: they are immutable history, and flagging one would demand an edit the writer is explicitly forbidden to make.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A <code>covers:</code> quote must appear verbatim in the PRD, and that is now a floor.</strong> The quote is what links a task to a capability; a paraphrase covers nothing and every downstream mapping silently loses the task. Matching is whitespace-normalized, so a writer who rewraps a long capability across lines has not broken anything — a check that fires on cosmetics teaches writers to ignore it.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>A shipped check was passing vacuously on the real format.</strong> Every plan in the dogfood run wrote several adjacent quoted capabilities on one <code>covers:</code> line — <code>covers: "first" "second"</code> — and both floors split the field on <code>;</code>, turning the whole line into one bogus capability that matched no PRD entry. So <code>checkboxConsistency</code>, which exists to catch a capability ticked ahead of its plan, reported clean on exactly the input it was built for. One shared parser now takes the quotes wherever they are.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>Token discipline now covers each feature\'s <code>design.html</code>.</strong> Extending the <code>token-literals</code> floor past <code>style.html</code> was specified when feature folders landed and never shipped, so a design carrying its own literal colors — a second copy of decisions the style guide owns — was caught only by judgment. The design validator failed seven times on token discipline in one run. The floor governs both files now; the message names the file it is talking about instead of always saying <code>style.html</code>.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Size literals stay a judgment call, on purpose.</strong> Measured across the six real designs, nearly every <code>px</code>/<code>rem</code> outside the token block was a hairline border, an icon dimension or a container width — not a token decision. A blanket size check would have been mostly false positives, recreating the unreachable bar that failed a correct file twice earlier this week. The floor still guards colors only, and the validator keeps the narrower prose rule.',
+      },
+    ],
+    migration: 'Run <code>npx gspec -t &lt;target&gt;</code> once to refresh installed agents and record the version stamp. Until you do, the build will note that freshness cannot be checked. The two new plan checks may surface findings in existing plans that previous runs passed — they are real, and each names the task involved.',
+  },
+  {
     version: '3.5.2',
     date: 'July 30, 2026',
     title: 'The stage whose only output is a report was throwing it away',
