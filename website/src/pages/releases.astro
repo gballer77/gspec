@@ -5,6 +5,19 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.5.2',
+    date: 'July 30, 2026',
+    title: 'The stage whose only output is a report was throwing it away',
+    summary: 'A full <code>gspec build</code> ran to completion — 10h40m of stage time, 39 agent runs, 307 source files — and its last stage, the reconcile audit, spent four minutes and ~3M tokens producing a drift report that no one could read. The driver kept the report text only when the stage <em>failed</em>, so the one run that preserved it was the run where the agent crashed.',
+    changes: [
+      {
+        type: 'fixed',
+        description: '<strong>The reconcile audit now keeps its findings.</strong> The stage exists to report drift between the specs and the code, plus capabilities nothing implements — and <code>detail</code> was set only on a non-zero exit, so every successful run ended in the word "report" with the report gone. Findings are now written to <code>.gspec/build/audit-report.md</code> and the path is named in the log. The audit baseline still advances only on success, so a failed run does not silence the next audit.',
+      },
+    ],
+    migration: 'None. A stage that used to discard its output now saves it.',
+  },
+  {
     version: '3.5.1',
     date: 'July 30, 2026',
     title: 'The first gate to see real code was wrong about it',
