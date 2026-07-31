@@ -43,6 +43,6 @@ test('an unvalidated verdict fails the stage instead of driving a revision', () 
 
   // and the bail-out must come before the revision that sends text to the agent
   const nullGuard = gate.indexOf('jg.verdict === null');
-  const revision = gate.indexOf('The implementation failed QA');
-  assert.ok(nullGuard >= 0 && nullGuard < revision, 'bail out before revising');
+  const revision = gate.indexOf('implementRevisePrompt(stage, jvTarget, qaHistory)');
+  assert.ok(nullGuard >= 0 && revision > 0 && nullGuard < revision, 'bail out before revising');
 });

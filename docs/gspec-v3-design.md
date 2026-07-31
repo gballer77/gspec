@@ -1,9 +1,9 @@
 # gspec v3 — design system, thin architecture, enriched feature folders
 
-- **Status:** **Implemented** across v3.0.0 – v3.3.1. Every section below shipped; two decisions were reversed during implementation and are marked in place (the module tier stayed at `gspec/architecture/<name>.md` rather than co-locating; the `gspec/design/` floor exclusion was kept). The per-release user-facing record is `website/src/pages/releases.astro`.
+- **Status:** **Implemented**, and shipped to users as a single **v3.0.0** release. The staged rollout below (v3.0 → v3.6) is how the work was *built* — it stayed on a branch throughout, so users see one version, not eleven. Every section below shipped; two decisions were reversed during implementation and are marked in place (the module tier stayed at `gspec/architecture/<name>.md` rather than co-locating; the `gspec/design/` floor exclusion was kept). The per-release user-facing record is `website/src/pages/releases.astro`.
 - **Date:** 2026-07-28
 - **Supersedes:** `docs/per-deployable-architecture.md` (the shipped two-tier layout) and the analysis on `origin/feature/architecture-file-set-analysis` (`docs/architecture-file-set.md`), whose open questions are answered by the Decisions table below.
-- **Scope:** five shipped releases — v3.0.0, v3.1.0, v3.2.0, v3.2.1, v3.3.0 (plus v3.3.1, a fix found by dogfooding the migration).
+- **Scope:** eleven internal phases, collapsed into one public release. The later phases are almost entirely findings from a full autonomous dogfood build (a self-hosted read-later service: 6 features, 307 source files, a green `verify.sh`), which is also where the design's core claims were confirmed — 83 anchors with zero duplicate origins, and architecture altitude holding with no entity field lists or endpoint inventories.
 
 ---
 

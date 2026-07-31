@@ -5,311 +5,73 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
-    version: '3.6.0',
-    date: 'July 30, 2026',
-    title: 'The build was running yesterday\'s agents',
-    summary: 'The first complete <code>gspec build</code> finished — 39 runs, 307 source files, a green <code>verify.sh</code> — and then its own failure log explained why so much of it had been painful. <strong>All 29 installed agents were a day stale.</strong> A QA bar fixed that morning failed the same stage seven times, twice terminally, because agent files are copies and upgrading gspec never rewrites them. Nothing could have noticed: there was no version stamp to compare.<br /><br />The same log showed a language model being paid to do arithmetic — unsafe <code>[P]</code> markers raised five times across four revision rounds, a <code>covers:</code> quote checked for verbatim equality by hand. Both are now regexes that run before any agent does.',
-    changes: [
-      {
-        type: 'added',
-        description: '<strong>The build warns when a project\'s agents are older than the gspec running it.</strong> <code>install</code> now stamps its version into <code>.gspec/config.json</code>, and the build preflight compares it. Agent, command and skill files are <em>copies</em> — an upgrade leaves them untouched — so a project can run a new driver against old definitions indefinitely, which is exactly what a ten-hour measured run did. It warns rather than blocks: the mismatch is usually harmless, and a project may deliberately pin its agents. A project installed before stamping is told the check could not run, because silence would read as "fresh".',
-      },
-      {
-        type: 'added',
-        description: '<strong><code>[P]</code> parallelism is now checked deterministically.</strong> A task marked parallel-safe may not depend on an unchecked task that is not itself <code>[P]</code> — the dependency has to finish first, so they cannot overlap. The plan validator raised this five times over four revision rounds in one run, each round costing a validator run plus a writer run, for a property a graph walk settles instantly. Checked tasks are exempt: they are immutable history, and flagging one would demand an edit the writer is explicitly forbidden to make.',
-      },
-      {
-        type: 'added',
-        description: '<strong>A <code>covers:</code> quote must appear verbatim in the PRD, and that is now a floor.</strong> The quote is what links a task to a capability; a paraphrase covers nothing and every downstream mapping silently loses the task. Matching is whitespace-normalized, so a writer who rewraps a long capability across lines has not broken anything — a check that fires on cosmetics teaches writers to ignore it.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>A shipped check was passing vacuously on the real format.</strong> Every plan in the dogfood run wrote several adjacent quoted capabilities on one <code>covers:</code> line — <code>covers: "first" "second"</code> — and both floors split the field on <code>;</code>, turning the whole line into one bogus capability that matched no PRD entry. So <code>checkboxConsistency</code>, which exists to catch a capability ticked ahead of its plan, reported clean on exactly the input it was built for. One shared parser now takes the quotes wherever they are.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>Token discipline now covers each feature\'s <code>design.html</code>.</strong> Extending the <code>token-literals</code> floor past <code>style.html</code> was specified when feature folders landed and never shipped, so a design carrying its own literal colors — a second copy of decisions the style guide owns — was caught only by judgment. The design validator failed seven times on token discipline in one run. The floor governs both files now; the message names the file it is talking about instead of always saying <code>style.html</code>.',
-      },
-      {
-        type: 'changed',
-        description: '<strong>Size literals stay a judgment call, on purpose.</strong> Measured across the six real designs, nearly every <code>px</code>/<code>rem</code> outside the token block was a hairline border, an icon dimension or a container width — not a token decision. A blanket size check would have been mostly false positives, recreating the unreachable bar that failed a correct file twice earlier this week. The floor still guards colors only, and the validator keeps the narrower prose rule.',
-      },
-    ],
-    migration: 'Run <code>npx gspec -t &lt;target&gt;</code> once to refresh installed agents and record the version stamp. Until you do, the build will note that freshness cannot be checked. The two new plan checks may surface findings in existing plans that previous runs passed — they are real, and each names the task involved.',
-  },
-  {
-    version: '3.5.2',
-    date: 'July 30, 2026',
-    title: 'The stage whose only output is a report was throwing it away',
-    summary: 'A full <code>gspec build</code> ran to completion — 10h40m of stage time, 39 agent runs, 307 source files — and its last stage, the reconcile audit, spent four minutes and ~3M tokens producing a drift report that no one could read. The driver kept the report text only when the stage <em>failed</em>, so the one run that preserved it was the run where the agent crashed.',
-    changes: [
-      {
-        type: 'fixed',
-        description: '<strong>The reconcile audit now keeps its findings.</strong> The stage exists to report drift between the specs and the code, plus capabilities nothing implements — and <code>detail</code> was set only on a non-zero exit, so every successful run ended in the word "report" with the report gone. Findings are now written to <code>.gspec/build/audit-report.md</code> and the path is named in the log. The audit baseline still advances only on success, so a failed run does not silence the next audit.',
-      },
-    ],
-    migration: 'None. A stage that used to discard its output now saves it.',
-  },
-  {
-    version: '3.5.1',
-    date: 'July 30, 2026',
-    title: 'The first gate to see real code was wrong about it',
-    summary: 'The implementation lint — the deterministic half of the implement gate, added in 3.4 — ran against a real repository for the first time during a dogfood build and produced six findings. <strong>None of them were real.</strong> Three were JavaScript methods it mistook for filenames, one was a file being written while it looked, and two were files that plainly existed under names it could not resolve. This gate blocks and spends an implementer run, so every one of those was about to send an agent off to create something that was already there.',
-    changes: [
-      {
-        type: 'fixed',
-        description: '<strong>A backticked API reference is not a filename.</strong> The check finds the files a checked task names by looking for a backticked <code>word.word</code> — which also matches every method a task mentions: <code>jwt.encode</code>, <code>AbortSignal.timeout</code>, <code>res.json</code>. Three of the first six findings were methods. A path now needs a real source extension, and the list is deliberately broad rather than minimal: an early cut of it omitted <code>.astro</code> and called an existing route missing, which is the worse failure of the two — a false <em>positive</em> on this gate costs an agent run, and the tests now pin the frameworks we actually target.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>A task names a path the way a person would.</strong> <code>(library)/layout.tsx</code>, not <code>apps/web/src/app/(library)/layout.tsx</code> — and treating that text as repo-relative reported two files as missing that were sitting right there. A claimed path not found exactly is now resolved by suffix against the real tree, matching only at a segment boundary. The walk happens only when something is unresolved, and skips vendored and generated directories.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>A transient engine error gets more than one retry, and waits longer each time.</strong> The implementer already retried once after a 30-second pause — and a measured run still lost the whole build to <code>API Error: Connection closed mid-response</code>, because it hit the same error on the attempt <em>and</em> on the retry half a minute later. The outage was simply wider than the one pause. Now up to three retries at 30s, 120s and 270s. Still bounded, because a genuinely broken prompt has to surface rather than be retried until the run looks hung; a capacity limit still surfaces immediately, since that resets on a clock and a retry only spends another run on the same wall.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>A resume paid a full implementer run per already-finished feature.</strong> Measured on a real resume: all 88 tasks across six features were checked, and the driver still spent one implementer run on each to be told there was nothing to do. The implementer is roughly <strong>95% of a build\'s input tokens</strong>, which makes this the most expensive no-op in the system. A scope with nothing unchecked now skips the agent. The skip is narrow by construction — it cannot fire on a fresh build, where every box is open — and it skips the <em>agent</em>, never the gates: <code>verify.sh</code>, the deterministic lint and the validator all still run against what is on disk.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>A dropped connection was handed to the implementer as a defect to fix.</strong> <code>implementation-validator</code>\'s response was cut off mid-stream, so it carried no <code>VERDICT:</code> line; the driver graded that absence as a failure and opened a QA revision whose entire finding was <em>API Error: Connection closed mid-response</em>. There is nothing in the code to repair for that — the implementer exited 1 and took the build down with it. The protection already existed in <code>reviseUntilPass</code>; the implement stage\'s judgment gate was a second, hand-rolled loop that never received it. Both now share one helper: an absent verdict re-runs the <em>validator</em>, and twice unvalidated fails the stage as an engine error rather than blaming code nobody managed to review.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>"No work to do" was being read as a broken answer.</strong> With the rejected reply finally saved, the very first one recovered turned out to be <code>{"waves": []}</code> — the orchestrator correctly reporting that every task was already checked, with an explanation. The parser collapsed an empty plan to <code>null</code>, identical to gibberish, so the driver announced a gap in its own reader for the one reply that was completely right. An empty plan is now a distinct result from unreadable output. The driver still checks each feature directly rather than taking the report as permission to skip implementation — that costs nothing when the report is right, since each finished scope now skips — but it no longer blames the parser for a correct answer.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>A rejected build plan pointed at a place nothing was written.</strong> When <code>build-orchestrator</code> answers in a shape the parser cannot read, the build correctly falls back to one scope per feature and says so — and told the reader its output was "in the run log". It never was; a grep across a full dogfood run found zero copies. That is worse than saying nothing, because it stops the reader looking, and all three parser gaps found so far cost a manual reproduction to recover text that had been discarded at the moment it was rejected. The reply is now kept verbatim in <code>.gspec/build/unparsed-plan.md</code>, and a test asserts the message names a file the driver actually writes.',
-      },
-      {
-        type: 'changed',
-        description: '<strong>The gate now prints its findings, not just how many.</strong> A run reported <code>6 implementation lint issues — fixing</code> and nothing else. The findings were durable in the feedback record, but the only person who could catch a bad one — by noticing that a named file plainly exists — had nothing on screen to catch it with. Each finding is now logged as it is fixed.',
-      },
-    ],
-    migration: 'None. All three changes make an existing check more accurate; a project whose lint was clean stays clean, and one that was being blocked on a phantom finding stops being blocked.',
-  },
-  {
-    version: '3.4.0',
-    date: 'July 29, 2026',
-    title: 'What a full dogfood run taught us',
-    summary: 'A complete <code>gspec build</code> against a real engine — a self-hosted read-later service, six features, two-tier specs, tiered models — and almost everything it found was something the test suite structurally could not: fixtures encode what the author <em>intended</em>, not what a model actually does.<br /><br /><strong>The good news first.</strong> The origin/delta discipline held on real specs: 83 anchors, 7 genuinely shared across features, <strong>zero duplicate origins</strong>. The feature written last found every prior definition across five sibling folders and wrote deltas stating only what changed — even correctly deciding two components needed no delta at all. The architecture altitude rules held too: zero entity field lists, zero endpoint inventories, zero of the detail v3.1 was built to evict.<br /><br /><strong>The rest is what broke.</strong> Half of v3.2 §7 was never implemented. The style writer picked the format the design system depends on <em>not</em> having. Six of six feature architectures blew a budget that was simply set wrong. And a transient engine failure reported nothing but <code>exited 1</code>, costing three manual reproductions to establish it was transient.',
-    changes: [
-      {
-        type: 'added',
-        description: '<strong><code>arch.md</code> is structure; <code>design.html</code> is appearance.</strong> The designer was fenced out of behavior from the start — "visual, not behavioral" — but the architect was never fenced out of <em>appearance</em>, and it filled the gap: <strong>255 style-token references across six <code>## UI</code> sections</strong>, plus pixel measurements, hover styling and layout dimensions. A mockup written in prose, sitting beside a mockup that renders. The reciprocal rule now exists on both sides, with one test — <em>could a designer change this without changing any behavior?</em> — and the validator raises it as a major finding. Components, props, state ownership, data flow and keyboard behavior stay exactly where they were.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>The style guide\'s tokens-only budgets were never applied.</strong> v3.2 rescoped the style guide to tokens and moved component styling to each feature\'s design — but only the persona changed; the budgets stayed at their pre-v3 values. So a 2,796-word guide reported as 1.4× over when against the intended ceiling it was 3.1×, and the measurement meant to detect "the split did not happen" was itself unchanged. Now 900 words (Markdown) and 700 prose (HTML), as specified.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>The autonomous build never told the style writer which format to write.</strong> Its contract says the brief decides and to treat the brief as authoritative — but an autonomous run has no interview to settle it, so the choice fell to model preference and it picked Markdown. That is no longer neutral: each feature\'s <code>design.html</code> copies the guide\'s CSS custom-property block verbatim, and a Markdown guide has none, dropping the token check from an exact comparison to a best-effort transcription. The style stage now states the preference where the writer is actually looking.',
-      },
-      {
-        type: 'changed',
-        description: '<strong>The feature architecture budget was miscalibrated.</strong> Six of six features exceeded 2,400 words (1.1×–1.8×). That is not six writers failing — it is the wrong ceiling for the one file whose entire job is restating the stack and architecture so nothing downstream has to, and a ceiling every honest draft breaks teaches writers to ignore ceilings. Raised to 3,000, above the observed median and still under the outlier — which was mostly the prose mockup the appearance boundary now removes.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>A failed writer now says what the engine said.</strong> <code>exited 1</code> alone cannot distinguish a transient overload (resume and it passes) from a broken prompt (resuming loops forever) — and that is exactly when a user is least equipped to dig. A run failed here twice and reported nothing else; establishing it was transient took three manual reproductions. The engine\'s own output is now carried into the failure, and a silent failure says so explicitly and notes that <code>--resume</code> retries just that item.',
-      },
-      {
-        type: 'changed',
-        description: '<strong><code>architecture-validator</code> moves to the strong tier, on a stated principle.</strong> A validator\'s tier should follow how much judgment is left <em>after</em> its lint. Most now sit behind a deterministic floor; this one has none, and the two things it alone polices — no feature detail crept in, no sections invented — are pure judgment. On the cheap tier it passed an architecture 1.7× its budget carrying five sections outside the required list. It also now polices that list as a <strong>ceiling</strong>, not just a floor.',
-      },
-      {
-        type: 'changed',
-        description: '<strong>A Modules row is a verification unit, not a code module.</strong> A brief saying "two modules, deployed separately" correctly produced a <em>one-row</em> table — one pnpm workspace, one build command — which reads like a bug to anyone who wrote that brief. The rename traded one confusion for another, so the architect now states this in the section\'s prose whenever the row count is lower than the number of components a reader would count.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>The QA one-liner reported model preamble instead of the finding.</strong> A validator prefaced its verdict with reasoning, and the run log showed <em>that</em> as the entire reason the stage failed — the actual blocker (a missing machine-readable enforcement block) never appeared. The summary now skips past the verdict line to the summary or first severity-tagged finding.',
-      },
-    ],
-    migration: 'Run <code>npx gspec</code>. Existing specs are untouched. Your next <code>/gspec-architect</code> or feature-architecture QA pass will start flagging appearance detail in <code>## UI</code> and sections outside the architecture\'s required list — both were always contract, and are now actually checked.',
-  },
-  {
-    version: '3.3.2',
-    date: 'July 28, 2026',
-    title: 'A scripted install no longer stops halfway and calls it success',
-    summary: 'Found while setting up a dogfood run: <code>gspec install --models recommended</code> did nothing on a re-install. The cause was worse than the symptom. Every prompt shares one stdin, and off a TTY the fallback only settled when a line <em>arrived</em> — so the moment a script piped fewer answers than there are prompts, the promise hung, node drained its event loop, and the process <strong>exited 0 having skipped every remaining step</strong>.<br /><br />That is an install reporting success with no hooks installed, no harness preamble, and no model assignment — silently, and only in the non-interactive path that CI and setup scripts use. Running out of piped input now means "take the default", which is what a non-interactive caller means by staying quiet.',
-    changes: [
-      {
-        type: 'fixed',
-        description: '<strong>An install that runs out of piped answers completes instead of vanishing.</strong> The off-TTY prompt now settles in both exhaustion cases: stdin ending <em>while</em> a prompt waits, and — the common one — stdin that ended <em>before</em> the prompt, which is every prompt after the first once a script's input is used up. Regression-tested end to end: a fully unanswered install still reaches its last step, and a re-install with a single piped answer both completes and writes the model assignment.',
-      },
-    ],
-    migration: 'Run <code>npx gspec</code>. If you install gspec from a script or CI step, re-run it: any prior scripted install may have stopped partway through without saying so — check that <code>.claude/hooks/</code> (or your target's equivalent) is populated.',
-  },
-  {
-    version: '3.3.1',
-    date: 'July 28, 2026',
-    title: 'A migrated plan is never regenerated over',
-    summary: 'Found by running the v3 pipeline against this site\'s own migrated specs rather than against fixtures. The per-feature stages only skipped regeneration when the manifest showed <em>they</em> had written the file — so a <code>tasks.md</code> that arrived through <code>/gspec-migrate</code>, or was written by hand, had no such record and was regenerated over on the next build. The old plan stage skipped on mere existence for exactly this reason; its bug was that it also skipped <em>validation</em>, and in fixing that the preservation went with it.<br /><br />An existing, well-formed file is now never regenerated — whoever wrote it — and is still validated either way. Regeneration happens only when the file is missing or malformed.',
-    changes: [
-      {
-        type: 'fixed',
-        description: '<strong>A hand-authored or migrated feature file is no longer overwritten.</strong> <code>arch.md</code>, <code>design.html</code>, and <code>tasks.md</code> are regenerated only when missing or malformed; a file already present is kept and validated, and the log says whether this run wrote it. For <code>tasks.md</code> this matters most: regenerating over it would discard the checked-task history the immutability contract exists to protect, and relying on the writer to preserve it put a data-loss risk behind agent discipline rather than in front of it.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong><code>plan-decomposer</code>\'s input contract was stale.</strong> It still described the existing plan as living at <code>gspec/tasks/&lt;slug&gt;.md</code> and being handed to it — wrong on both counts after the feature-folder move. It now names the folder path and says plainly to read any plan already there, reproducing every checked task verbatim and appending new work with the next free ID.',
-      },
-    ],
-    migration: 'Run <code>npx gspec</code>. Nothing changes on disk. If you migrated a project on 3.2.x and have not re-run a build since, this is worth taking first — a build on 3.2.x would have regenerated your migrated plans rather than preserving them.',
-  },
-  {
-    version: '3.3.0',
-    date: 'July 28, 2026',
-    title: 'The cheapest thing in the build stops running on the most expensive model',
-    summary: 'gspec has supported per-agent models since 2.6.0, and almost nobody sets one — so every agent runs on the engine\'s default, which is usually the top tier. That includes the <strong>validators</strong>, which are roughly half of all agent runs in a v3 build and the cheapest thing to move: the deterministic lints added in 3.2 and 3.2.1 now handle the mechanical checks, so what is left for a validator is focused judgment over one small file.<br /><br />The tiering was already written down — it just lived in the README as prose, where it did nothing. It now ships as a table the installer can write for you: <strong>validators cheap, everyday authoring balanced, and the three load-bearing jobs strong</strong> (the system design, each feature\'s own architecture, and the code, where a mistake propagates into everything downstream).<br /><br />It is an <em>offer</em>, not a default. Which models a run bills to is the user\'s call, so the install asks, never overwrites a <code>models</code> map you already have, and writes nothing at all in a non-interactive run unless you pass the flag.',
-    changes: [
-      {
-        type: 'added',
-        description: '<strong>A recommended model assignment, offered at install.</strong> On a Claude or Codex install gspec shows the tiering and writes it to <code>.gspec/config.json</code> if you accept. <code>gspec install -t claude --models recommended</code> takes it without being asked; <code>--models none</code> skips the question. Three guards: an existing <code>models</code> map (project <em>or</em> global) is never touched, a non-TTY install writes nothing without the flag, and only the two engines that actually run the build\'s agents are covered — cursor and opencode do not, and pi\'s roster moves too fast to ship in a table.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>Two agents could not be reached by a role tier at all.</strong> The <code>writer</code> selector keys on the <code>-writer</code> suffix, so <code>feature-architect</code> and <code>feature-designer</code> — added in 3.2.0 — matched only <code>default</code>. Anyone tiering by role would have silently missed them, including the recommendation itself. Both now map to the <code>writer</code> tier, with <code>feature-architect</code> overridden by name to the strong model, since a feature\'s architecture is what every one of its tasks is built from.',
-      },
-      {
-        type: 'changed',
-        description: '<strong>The README\'s recommendation and the shipped table are the same thing.</strong> The documented example was the only place these model IDs lived, and it had drifted to a superseded Opus. There is now one table in <code>lib/config.js</code>, the docs describe what the installer actually writes, and keeping up with a new model is a one-line edit in one place.',
-      },
-    ],
-    migration: 'Run <code>npx gspec</code> and answer the model question, or <code>gspec install -t claude --models recommended</code> to take the assignment directly. Nothing changes for existing projects unless you opt in — and if you already have a <code>models</code> map, gspec leaves it exactly as it is.',
-  },
-  {
-    version: '3.2.1',
-    date: 'July 28, 2026',
-    title: 'A checker the implementer did not write, and an audit that stops growing',
-    summary: 'Two gaps the feature-folder release left open.<br /><br /><strong>The implement gate was producer-equals-checker.</strong> <code>verify.sh</code> is deterministic, but the implementer writes both the code and the tests it runs — so a green run says nothing about a checked task whose file was never created, a stub sitting behind a checked box, or a capability ticked while its covering tasks are still open. All three fell to one broad agentic judgment, which is expensive and vague. They are pure text checks, so they now run <em>before</em> the validator: findings go straight back with the exact problem at zero agent cost, and <code>implementation-validator</code> narrows to what only judgment can answer.<br /><br /><strong>The audit had become the new unbounded reader.</strong> v3 moved the "reads everything, grows with age" problem out of the implementer — and into <code>codebase-inspector</code>, which read every feature folder, and folders accumulate for the life of a project. It is now incremental against a recorded commit. That also makes room for the drift category this layout could not otherwise catch: enriched folders inline the ORM and the framework on purpose, and <strong>nothing re-checked them when the stack changed</strong>.',
-    changes: [
-      {
-        type: 'added',
-        description: '<strong>An implementation lint runs before the judgment gate.</strong> A checked task naming a file that does not exist; an unfinished-work marker in a file a checked task claimed to complete; a PRD capability checked while a task covering it is still open. Each is a deterministic finding naming exactly what is wrong, fixed without spending a validator run — where a broad "the implementation seems incomplete" FAIL would send a self-heal run off to rediscover it. Scoped strictly to what <em>checked</em> tasks claim: unfinished work is not a finding, it is just unfinished.',
-      },
-      {
-        type: 'changed',
-        description: '<strong><code>implementation-validator</code> narrows to judgment.</strong> It no longer re-derives what the lint just checked, and it validates <strong>per feature folder against its code</strong> rather than judging the repository as a whole — which is where agentic code review gets vague. Its budget goes to whether the acceptance criteria are actually met, whether the tests meaningfully assert them, and whether the UI honors the feature\'s <code>design.html</code>.',
-      },
-      {
-        type: 'added',
-        description: '<strong>The audit is incremental.</strong> It records the commit it last ran at in <code>.gspec/audit-baseline</code> and inspects only the feature folders and source files that changed since, plus the always-small root-tier specs. Every case it cannot answer cheaply and correctly — no baseline, not a git repo, an unreadable ref, a root-tier spec that changed — falls back to a <em>full</em> sweep, because a silently narrow audit is worse than a slow one.',
-      },
-      {
-        type: 'added',
-        description: '<strong>New drift category: <code>enrichment</code>.</strong> This closes the one guarantee v3 traded away against v2\'s single-source-of-truth. Feature folders inline the stack and style decisions so an implementer needs nothing else — which means nothing re-checks them when those decisions change, and a folder can go on naming a library the project replaced months ago. The audit now compares each in-scope folder\'s inlined claims against the current stack, style, and code. Checking it only over the changed set is what lets the correctness fix land without reintroducing the cost problem.',
-      },
-    ],
-    migration: 'Run <code>npx gspec</code> to install the updated agents and floors. Nothing changes on disk in your project. The first audit after upgrading is a full sweep (there is no baseline yet) and writes one afterwards; subsequent audits are incremental. Expect the implement gate to be stricter than before — it will now stop for a checked task whose file is missing or a capability checked ahead of its plan, both of which previously passed silently.',
-  },
-  {
-    version: '3.2.0',
-    date: 'July 28, 2026',
-    title: 'Everything about a feature lives in one folder',
-    summary: 'A plan used to be a bare task list. Every agent that read one had to also load the profile, the stack, the style guide, the architecture, and the PRD to have enough context to act — and the implement stage is where that cost multiplies, because each scope spawns up to six fresh agents and every one of them re-reads from scratch.<br /><br />A feature is now a <strong>folder</strong>: <code>gspec/features/&lt;slug&gt;/</code> holding <code>prd.md</code> beside <code>arch.md</code> (that feature\'s own data, API, UI and logic), <code>design.html</code> (a mockup you can actually open), and <code>tasks.md</code>. The three siblings are <strong>deliberately enriched</strong> — they inline the ORM, the framework, the file paths, so an implementer reading only that folder needs nothing else. This inverts the single-source-of-truth rule every other spec follows, and it is the point: the cost is paid once per feature, and every run afterwards reads less.<br /><br />Three writers now produce those files, each gated. <code>feature-architect</code> runs <strong>one feature at a time</strong> — it is the only stage that mints anchors, and two concurrent writers would both find no <code>### Entity: User</code> and both declare themselves its origin. And because the enrichment only pays off when a scope covers <em>one</em> feature, the driver now enforces that rather than asking the orchestrator for it: a bundled scope reads three inlined copies of the same decisions, which is worse than what it replaced, and nothing would have errored.',
-    changes: [
-      {
-        type: 'added',
-        description: '<strong>The feature folder.</strong> <code>gspec/features/&lt;slug&gt;/</code> holds <code>prd.md</code>, <code>arch.md</code>, <code>design.html</code>, and <code>tasks.md</code>. The PRD stays product-agnostic; its three siblings are not, on purpose — the agnosticism floor now draws that boundary <em>inside</em> one directory, by basename. The slug appears exactly once in the tree, so a feature with no PRD is visible in an <code>ls</code> rather than only to the cross-referencer.',
-      },
-      {
-        type: 'added',
-        description: '<strong>Anchor discipline, with a deterministic backstop.</strong> Every item in <code>arch.md</code> is an H3 in an exact grammar (<code>### Entity: Order</code>, <code>### Endpoint: POST /orders</code>) under the section that owns it, opened by a status line naming it an <strong>origin</strong> or an <strong>amendment</strong> of an earlier one. Exactly one origin per anchor exists across the project — a later feature that changes an entity writes a delta that says what changed, rather than a second definition that can silently disagree. Tasks carry an <code>arch:</code> line naming the anchors they touch, so a continuation run loads a few blocks instead of the whole file.',
-      },
-      {
-        type: 'added',
-        description: '<strong>A deterministic lint runs before every feature-folder validator.</strong> Heading grammar, section shape, duplicate anchors, two origins for one anchor, screen coverage between <code>arch.md</code> and <code>design.html</code> in both directions, and <code>arch:</code> anchors that do not resolve are all pure regex — so they go straight back to the writer with the exact violations at <strong>zero agent cost</strong>, and a precise instruction instead of a vague FAIL. The agent validators then only ever judge mechanically-clean drafts, and spend their whole budget on what regex cannot decide.',
-      },
-      {
-        type: 'changed',
-        description: '<strong>One feature per implement scope, enforced by the driver.</strong> The orchestrator decides ordering and concurrency; it no longer decides how much context an implementer carries. Any scope naming more than one feature is split into siblings in the same wave, and the split is logged. The no-plan fallback — which used to put <em>every</em> plan file into a single scope, reached by a JSON parse hiccup rather than a decision — now yields one scope per feature too. Each scope\'s prompt carries the exact resolved read list.',
-      },
-      {
-        type: 'changed',
-        description: '<strong>The plan gate is real now.</strong> <code>plan-validator</code> was non-blocking with no revision loop, and the plan stage\'s only checkpoint was "does the file exist" — so a plan that existed was never re-validated even after a QA failure. All three per-feature stages now gate properly, with a per-feature <code>written</code>/<code>passed</code> record that tells "already written, re-validate" apart from "the writer died here". <strong>A build that used to march past a bad plan now pauses.</strong>',
-      },
-      {
-        type: 'changed',
-        description: '<strong>The style guide is tokens only.</strong> Color, typography, spacing, elevation, radius, themes, icons, accessibility — the vector for implementation, never the concrete elements. Component styling, imagery direction, and usage examples move to each feature\'s <code>design.html</code>, which copies the token block in and references it with <code>var(--…)</code>. <code>style.html</code> is now a real recommendation rather than a preference: only the HTML form gives a design a custom-property block to copy.',
-      },
-      {
-        type: 'changed',
-        description: '<strong>Writers write their own files.</strong> <code>plan-decomposer</code> was the only writer in the roster that did not — the driver marshalled a plan out of its stdout, a leftover from an approval gate that lived in the command. It, <code>feature-architect</code>, and <code>feature-designer</code> now all write directly, which means all three get the delivery-check machinery (retry on a writer that exits clean having written nothing; accept an artifact left behind by a post-write crash) that the plan stage never had.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>The task-immutability block would have gone silent.</strong> It is the only hard PreToolUse block on a spec path, it fails open, and its matcher knew one path shape. The instant plans moved into the feature folder it would have stopped firing — no error, no log, checked tasks quietly editable — and the Codex baseline snapshot would have gone empty, so that gate would have reported clean having compared against nothing. Both now derive from one shared predicate that covers both layouts, with a regression test naming exactly that.',
-      },
-    ],
-    migration: 'Run <code>npx gspec</code>, then <code>/gspec-migrate</code> in each project. It moves <code>features/&lt;slug&gt;.md</code> → <code>features/&lt;slug&gt;/prd.md</code> and <code>tasks/&lt;slug&gt;.md</code> → <code>features/&lt;slug&gt;/tasks.md</code>, preserving every checked task exactly. It will <strong>not</strong> invent the <code>arch.md</code> and <code>design.html</code> your existing features do not have — that is a judgment call, not a reformat — so it reports which features lack them and leaves <code>/gspec-plan</code> to write them (your <code>tasks.md</code> survives). Both layouts stay readable throughout, so a half-migrated project still plans and builds. Your style guide is left untouched: the specimens it holds have nowhere to go until the features are re-planned, so they simply read as over-budget, which is advisory.',
-  },
-  {
-    version: '3.1.0',
-    date: 'July 28, 2026',
-    title: 'The architecture stops growing',
-    summary: 'One document was quietly absorbing every technical decision a project ever made. <code>architecture.md</code> held module boundaries <em>and</em> every entity\'s field list, every endpoint signature, every algorithm and resolved edge case — so it grew with each feature, and by feature thirty it was over budget and every agent paid the tax on every run. The two-tier split shipped last release helped multi-module systems for a while; it did not change the growth rate.<br /><br />This release re-cuts what the tiers <em>hold</em>. The architecture is now the <strong>stable</strong> half of the technical spec: system context, module boundaries, what each module owns, how modules talk, and where code goes. The detail that grows with every feature belongs to the feature that introduces it. The writer gets one test — <strong>"would this change if we added one more feature?"</strong> — and the validator raises a <strong>major</strong> finding, naming the content and where it belongs, for field lists, endpoint signatures, algorithms, and per-screen detail. Budgets follow: 3,000 words becomes 2,100, and the module tier gets its own 600-word ceiling — which it never had, because <code>budgetFor()</code> keyed on exact paths and returned <code>null</code> for every sub-file.<br /><br />Underneath, the floors get a shared vocabulary. Each one used to re-derive "is this a gspec spec?" with its own regex, and they disagreed: <code>gspec/architecture/&lt;name&gt;.md</code> was version-checked but <strong>never agnosticism-guarded</strong>, because it matched none of the basenames in a hard-coded list. Per-module architecture shipped a full release unguarded. One module now answers that question for every floor.',
-    changes: [
-      {
-        type: 'changed',
-        description: '<strong>The architecture is high-level, and the validator keeps it that way.</strong> System tier: overview and context, module boundaries, the shared data model <em>at the name level</em> (entities and relationships — not their shape), inter-module contracts, cross-cutting auth, environment, the Modules table, and the gap analysis. Module tier: identity and boundary, owned directories, internal structure and file-placement rules, local config — about a page, and stable. Entity field lists, endpoint signatures, algorithms, business rules, state machines, and per-screen detail are now defects here, each a major finding that names where the content belongs instead.',
-      },
-      {
-        type: 'changed',
-        description: '<strong>The layout is always two tiers; one module just carries both in one file.</strong> A single-module project keeps everything in <code>gspec/architecture.md</code> exactly as before — a second file for one module is pure ceremony. What changed is the framing: the tiers are a property of the spec, not of the file count, so the same required sections apply whether they live in one file or several.',
-      },
-      {
-        type: 'removed',
-        description: '<strong>Module sub-files no longer carry a <code>covers:</code> list.</strong> Which features touch a module changes with every feature, so maintaining that index on the module tier would have made the <em>stable</em> file the most-edited one in the repo — and by an agent that should not hold write access to it. The mapping is derived from the features instead. The three consumers that routed on <code>covers:</code> now route on module boundaries and the Modules-table links.',
-      },
-      {
-        type: 'added',
-        description: '<strong>The architecture stage checks both tiers before calling itself done.</strong> A stage\'s <code>outputs</code> answer "did the writer produce its artifact?", but the architecture\'s deliverable is a <em>set</em>: the system file plus one <code>architecture/&lt;name&gt;.md</code> per row of its own Modules table. The root existing never implied the module tier did, so a multi-module run could report success having written half its architecture — with every later stage then routing against boundaries that were never written, and nothing erroring. The required set is now derived from the table (the same authority <code>verify.sh</code> uses) and every file in it must be present.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>Per-module architecture was never agnosticism-guarded.</strong> The floor matched a hard-coded list of spec <em>basenames</em>, and <code>architecture/api.md</code> is not one of them — so product identity could leak into sub-architecture files with nothing to catch it. Both floors now share one path vocabulary (<code>paths.mjs</code>), which fixes this class of bug by construction: a spec kind is described once and every floor agrees about it. A companion <code>modules.mjs</code> parses the Modules table and reports drift in both directions — a row with no file, and a file no row claims, which is exactly what a half-finished rename leaves behind.',
-      },
-      {
-        type: 'fixed',
-        description: '<strong>The installer\'s outdated-spec check skipped sub-architectures and plans.</strong> It walked <code>gspec/</code>, <code>features/</code>, and <code>epics/</code> only, so a project could be told every spec was current while <code>architecture/*.md</code> and <code>tasks/*.md</code> still carried the previous <code>spec-version</code>. Both directories are now included.',
-      },
-      {
-        type: 'changed',
-        description: '<strong><code>/gspec-migrate</code> reports architecture altitude rather than fixing it.</strong> When it finds feature-level detail still sitting in an architecture spec, it says how much and what kind and tells you to re-run <code>/gspec-architect</code>. Splitting that content across features is a judgment call that rewrites specs you already reviewed — migration stays mechanical: renames, relocations, version stamps. No files move in this release.',
-      },
-    ],
-    migration: 'Run <code>npx gspec</code> to install the updated agents, skills, and floors. Existing architecture specs keep working and keep their layout — nothing moves. To get the new shape, re-run <code>/gspec-architect</code>: it will thin the system tier and write the module tier. Until you do, expect an advisory over-budget note on <code>architecture.md</code> (2,100 words, down from 3,000) and, on your next <code>/gspec-audit</code> or architecture QA pass, major findings naming feature-level detail that now belongs to the feature that introduced it.',
-  },
-  {
     version: '3.0.0',
-    date: 'July 28, 2026',
-    title: 'Deployables become modules, and the spec version has one home',
-    summary: 'The first of four releases re-cutting how gspec organizes a specification. This one is deliberately mechanical — a rename and a version bump, no behavior changes — because it touches the same files the layout work ahead touches, and doing it second would mean editing everything twice.<br /><br /><strong>"Deployable" was always the wrong word.</strong> The table\'s own definition has been "independently build/test-able unit" since it shipped — deployment was never the criterion, and a shared library row builds and tests while deploying nowhere. The <strong>Deployables & Verification</strong> section is now <strong>Modules & Verification</strong>, sub-file frontmatter carries <code>module:</code> instead of <code>deployable:</code>, and <code>verify.sh</code> prints <code>FAIL: &lt;module&gt;:&lt;phase&gt;</code>. Because that key is the row <em>name</em>, which does not change, <strong>existing <code>verify.sh</code> scripts keep working untouched.</strong><br /><br />The release also fixes a quiet hazard: <code>SPEC_VERSION</code> existed in <strong>four</strong> places with nothing asserting they agreed — the installer, the emit script, the spec-integrity floor, and the prose in the harness preamble. A drift between any two would have meant specs marked current by one check and stale by another. There is now one exported constant, two importers, and a test that fails if the two copies that <em>cannot</em> import (the floor ships standalone into <code>.claude/hooks/floors/</code>; the preamble is prose) fall out of step.',
+    date: 'July 30, 2026',
+    title: 'Everything about a feature lives in one folder',
+    summary: 'v3 re-cuts gspec\'s specs along <strong>stable vs. growing</strong>. The style guide becomes a pure design system. Architecture becomes thin, high-level, and stops growing. Everything that <em>does</em> grow moves into <code>gspec/features/&lt;slug&gt;/</code> — PRD, architecture, a design you can open in a browser, and the task plan, side by side.<br /><br />The point is what an implementer has to read. Feature folders are deliberately <strong>denormalized</strong>: each one inlines the stack and architecture decisions it depends on, so building a feature means reading that folder and nothing else. The always-loaded context set stays near-constant as a project ages, and growth lands in folders that close when the feature ships.<br /><br />This release is the whole v3 line — the layout, the agents that write it, and everything a full autonomous dogfood build taught us about running it.',
     changes: [
       {
-        type: 'changed',
-        description: '<strong>"Deployable" is now "module" everywhere.</strong> The <strong>Deployables & Verification</strong> section becomes <strong>Modules & Verification</strong>; per-unit architecture sub-files carry <code>module:</code> frontmatter; <code>verify.sh</code> fail-fast lines read <code>FAIL: &lt;module&gt;:&lt;build|test&gt;</code>; and the audit\'s <code>deployable</code> drift category becomes <code>module</code>. The rename is about accuracy, not taste — the criterion was always "independently build/test-able", never "deployed". The table itself, its <code>name · dir · build · test</code> columns, the one-row/many-row layout gate, and the two-tier file layout are all unchanged.',
+        type: 'added',
+        description: '<strong>Feature folders.</strong> <code>gspec/features/&lt;slug&gt;/</code> holds <code>prd.md</code>, <code>arch.md</code>, <code>design.html</code> and <code>tasks.md</code>. Three writers fill it, each with its own validator gate, and the fan-out checkpoints per feature so an interrupted run resumes without regenerating finished work. The PRD stays profile-agnostic; its siblings are the opposite by design.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Designs are HTML you can actually open.</strong> Each feature\'s <code>design.html</code> is a self-contained mockup that renders from <code>file://</code> with no build step — so a human checks it in seconds, and it cannot quietly disagree with the tokens it claims to use. It copies the style guide\'s custom-property block and may not invent tokens of its own; a design that needs a new token is asking for a style-guide change.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Architecture stops growing.</strong> <code>gspec/architecture.md</code> carries the system tier — module boundaries, shared model at the name level, inter-module contracts — and each module gets a thin <code>&lt;dir&gt;/gspec/architecture.md</code> beside its code. Entity field lists, endpoint inventories and algorithms are now findings, not content: they belong to the feature that needs them. A single-module project keeps one file that plays both tiers.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Anchors, with one origin and many deltas.</strong> Every entity, endpoint, screen, component, rule and machine gets a rigid heading and a machine-readable status line. The first feature to define one is the origin; later features write <code>amends:</code> deltas stating only what changed. Verified on a real build: <strong>83 anchors, 7 shared across features, zero duplicate origins</strong> — the feature written last found every prior definition across five sibling folders.',
+      },
+      {
+        type: 'added',
+        description: '<strong>The style guide is tokens only.</strong> Palette, type scale, spacing, radius, elevation, themes, icons, a computed contrast table — the vector for implementation, never the concrete elements. Component specimens and imagery direction move to the feature designs that actually use them.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Deterministic floors run before any agent does.</strong> Anchor grammar, origin uniqueness, <code>amends:</code> targets resolving, screen coverage in both directions, <code>[P]</code> parallelism safety, <code>covers:</code> quotes appearing verbatim in the PRD, token literals outside the token block, stubs behind checked boxes, checked tasks whose files were never written. All pure text, all free, all fixed by a targeted revision instead of an agent run spent rediscovering them.',
+      },
+      {
+        type: 'added',
+        description: '<strong>Per-agent model assignment and real token accounting.</strong> <code>.gspec/config.json</code> maps agents to models by name, role tier, or default, so the cheapest checkers stop running on the most expensive model. Every run now reports input, output, turns and cost per agent — which is how we learned the implementer is <strong>92% of a build\'s input</strong>, and that a stage gets cheaper by reading less, not by writing less.',
+      },
+      {
+        type: 'added',
+        description: '<strong>The build warns when your agents are older than the gspec running them.</strong> Agent, command and skill files are copies; upgrading never rewrites them. A ten-hour measured run executed entirely against day-old definitions — a QA bar fixed that morning failed the same stage seven times because the fix never reached the project, and nothing could notice. <code>install</code> now stamps its version and the build compares it. It warns rather than blocks, and a project installed before stamping is told the check could not run, because silence would read as "fresh".',
       },
       {
         type: 'changed',
-        description: '<strong>Spec format is now <code>v2</code>.</strong> A format bump, so existing projects should run <code>/gspec-migrate</code>: it applies the section and frontmatter renames and stamps the new version, and it will tell you it is a rename rather than a restructure. Nothing moves on disk in this release.',
+        description: '<strong>A QA revision is a repair, not a rewrite — now including code.</strong> Every spec stage already sent a surgical revision naming only the findings; the implement stage re-sent the entire build prompt with a verdict stapled on, which is the shape that makes an agent generate more material instead of fixing what is there. Both implement loops now carry the findings alone, oldest first, and that history <strong>survives a resume</strong> — previously it lived in memory, so a resumed build handed the writer a blank slate and let it repeat a fix it had already been told did not work.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Transient engine failures stop ending builds.</strong> A dropped connection is not a defect: a truncated validator response used to be graded as a failure and handed to the implementer as "API Error: Connection closed mid-response" to repair. An absent verdict now re-runs the <em>validator</em>, twice-unvalidated fails as an engine error, and a transient fault gets three retries at 30s / 120s / 270s. A capacity limit still surfaces immediately — it resets on a clock, and retrying only spends another run on the same wall.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>A resume skips work that is already done.</strong> A scope with every task checked no longer spends an implementer run discovering that — measured at roughly 50 minutes per feature on a run where all 88 tasks were complete. The gates still run against what is on disk; only the agent is skipped.',
       },
       {
         type: 'fixed',
-        description: '<strong><code>SPEC_VERSION</code> had four independent copies and no test.</strong> It now lives in <code>lib/spec-version.js</code>, imported by the installer and the emit script. The spec-integrity floor keeps a literal copy because floors are copied standalone into a project\'s hooks directory and have no <code>lib/</code> to import from, and <code>templates/preamble.md</code> states the format in prose — so a new test asserts all four agree. The floor\'s own unit tests now build their fixtures from the constant instead of hardcoding a version string, so they cannot drift either.',
+        description: '<strong>Readers stopped rejecting correct answers.</strong> A run turned up a whole family of these: <code>VERDICT: **PASS**</code> read as no verdict, an unbulleted <code>covers:</code> matching none of 88 tasks, three legitimate wave-plan JSON shapes discarded, <code>{"waves": []}</code> — a correct "no work remains" — treated as gibberish, backticked API references like <code>jwt.encode</code> mistaken for missing files, and paths named the way people name them (<code>(library)/layout.tsx</code>) reported absent. Each now normalizes rather than dictates: pin the meaning, not the shape.',
       },
       {
-        type: 'changed',
-        description: '<strong>Size budgets are keyed by the name the skill uses.</strong> <code>SPEC_BUDGETS</code> previously mixed repo-relative paths with a special <code>feature</code> key, and the test that guards it against the canonical table in <code>gspec-conventions</code> had to translate between the two — a translation that could itself be wrong. Budgets are now keyed by the table\'s own labels, with a single <code>budgetLabel()</code> mapping a path onto its row, so the check is a straight key-for-key comparison. No budget values changed.',
+        type: 'fixed',
+        description: '<strong>Evidence is kept instead of summarized away.</strong> Four separate diagnostics pointed at nothing: an unreadable build plan said its output was "in the run log" where it had never been written, the implementation lint printed a count without the findings, and the reconcile audit — a stage whose <em>entire</em> output is a report — discarded it on success and kept it only when the agent crashed. Rejected plans now go to <code>.gspec/build/unparsed-plan.md</code>, audit findings to <code>.gspec/build/audit-report.md</code>, and lint findings are printed as they are fixed.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong><code>verify.sh</code> can no longer hang the build silently.</strong> A run sat about an hour on <code>docker info</code> against a daemon that was down, and a stalled script looks identical to a healthy one from outside. The driver now stops a script that produces no output for 10 minutes — idle, not a total cap, because provisioning a database and running integration tests legitimately takes many minutes — kills the whole process group so the hung grandchild goes with it, and reports it as an environment problem rather than a code failure. The engineer contract now requires every preflight to probe with a timeout and fail with a message instead of waiting.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>Three checks that were verifying nothing.</strong> A bullet-only pattern matched none of 88 real tasks; splitting <code>covers:</code> on <code>;</code> missed the several-quotes-per-line form every real plan uses, so the check that catches a capability ticked ahead of its plan reported clean on exactly the input it exists for; and a scripted install exited 0 having skipped hooks and preamble. A check that matches nothing is worse than one that is wrong, because it is silent.',
       },
     ],
-    migration: 'Run <code>npx gspec</code> to install the updated agents, commands, and skills, then <code>/gspec-migrate</code> in each project to apply the <code>deployable</code> → <code>module</code> renames and stamp <code>spec-version: v2</code>. Your committed <code>verify.sh</code> needs no change — its <code>FAIL:</code> key is the module name, which the rename does not touch. No files move in this release.',
+    migration: 'Run <code>/gspec-migrate</code> to move an existing project to the v3 layout — it relocates files, renames <code>deployable:</code> to <code>module:</code> and stamps the spec version, then tells you to re-run <code>/gspec-architect</code> and <code>/gspec-plan</code> so the new tiers are written by the agents that own them. It never touches <code>style.html</code>/<code>style.md</code> or <code>gspec/design/</code>, because stripping them is unrecoverable; move those mockups into the relevant feature\'s <code>design.html</code> yourself. Then run <code>npx gspec -t &lt;target&gt;</code> once to refresh installed agents and record the version stamp — until you do, the build will note that agent freshness cannot be checked.',
   },
   {
     version: '2.7.0',
