@@ -7,7 +7,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
-import { runCli, makeProject, cleanup, exists, seedInstall } from './helpers.mjs';
+import { runCli, makeProject, cleanup, exists, seedInstall, seedRun } from './helpers.mjs';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 
@@ -111,9 +111,9 @@ test('a run stays pinned to its engine — a conflicting --engine on resume is i
   t.after(() => cleanup(dir));
   await seedInstall(dir, 'pi', { agentFiles: ['.pi/agents/profile-writer.md'] });
 
-  // First dry run creates a well-formed manifest pinned to pi.
-  const first = await runCli(['build', '--dry-run', 'an idea'], dir);
-  assert.equal(first.code, 0, first.output);
+  // An existing run, pinned to pi. Seeded directly: a dry run leaves no trace,
+  // and what this test is about is the pin, not how the manifest got written.
+  await seedRun(dir, { engine: 'pi' });
   assert.ok(await exists(join(dir, RUN_JSON)));
 
   const resumed = await runCli(['build', '--resume', '--engine', 'codex', '--dry-run'], dir);
@@ -126,7 +126,7 @@ test('a second fresh build refuses to clobber an existing run', async (t) => {
   const dir = await makeProject();
   t.after(() => cleanup(dir));
   await seedInstall(dir, 'pi', { agentFiles: ['.pi/agents/profile-writer.md'] });
-  await runCli(['build', '--dry-run', 'an idea'], dir);
+  await seedRun(dir);
 
   const r = await runCli(['build', 'another idea'], dir);
   assert.equal(r.code, 1);

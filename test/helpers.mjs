@@ -138,6 +138,40 @@ export async function seedInstall(dir, target, { agentFiles = [] } = {}) {
   }
 }
 
+// Write a run manifest directly, for tests that need an EXISTING run to act on
+// (resume behavior, clobber refusal) but are not testing how it got there.
+//
+// These tests used to seed themselves with `build --dry-run`, which worked only
+// because a dry run wrongly persisted its run record. That made the bug
+// invisible in the one place designed to catch it: a preview left a run.json
+// with every stage marked done, so previewing and then building for real was
+// refused, and resuming skipped the whole build. A dry run now writes nothing,
+// so a test that wants a manifest has to say so.
+export async function seedRun(dir, overrides = {}) {
+  const stages = {};
+  for (const s of STAGES) stages[s.id] = { status: 'pending', attempts: 0, verdict: null };
+  const now = new Date().toISOString();
+  const manifest = {
+    idea: 'an idea',
+    engine: 'pi',
+    noQa: false,
+    noReview: false,
+    research: false,
+    scope: 'standard',
+    qaRetries: 1,
+    permissionMode: 'acceptEdits',
+    createdAt: now,
+    updatedAt: now,
+    stages,
+    learnings: [],
+    learningsBaseline: {},
+    ...overrides,
+  };
+  await mkdir(join(dir, '.gspec', 'build'), { recursive: true });
+  await writeFile(join(dir, '.gspec', 'build', 'run.json'), JSON.stringify(manifest, null, 2) + '\n');
+  return manifest;
+}
+
 // Every agent the stage graph names, derived from STAGES itself.
 //
 // Each build test used to keep its own hand-written list, so adding an agent

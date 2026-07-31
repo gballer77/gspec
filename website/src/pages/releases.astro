@@ -70,6 +70,10 @@ const releases = [
         type: 'fixed',
         description: '<strong>Three checks that were verifying nothing.</strong> A bullet-only pattern matched none of 88 real tasks; splitting <code>covers:</code> on <code>;</code> missed the several-quotes-per-line form every real plan uses, so the check that catches a capability ticked ahead of its plan reported clean on exactly the input it exists for; and a scripted install exited 0 having skipped hooks and preamble. A check that matches nothing is worse than one that is wrong, because it is silent.',
       },
+      {
+        type: 'fixed',
+        description: '<strong><code>--dry-run</code> is a preview again.</strong> It used to persist the full run record — <code>run.json</code> with every stage marked done, plus <code>audit-report.md</code> and <code>unparsed-plan.md</code>. So previewing a plan and then building for real was refused with "a build run already exists", and following that message\'s own advice (<code>--resume</code>) resumed the imaginary finished run: every stage already done, nothing built, exit 0. The intent was there but written at each call site, and six of them never got it — so the rule now lives at the write boundary instead, where a new writer inherits it. The tests that should have caught this were seeding themselves from the very file that should not have existed.',
+      },
     ],
     migration: 'Run <code>/gspec-migrate</code> to move an existing project to the v3 layout — it relocates files, renames <code>deployable:</code> to <code>module:</code> and stamps the spec version, then tells you to re-run <code>/gspec-architect</code> and <code>/gspec-plan</code> so the new tiers are written by the agents that own them. It never touches <code>style.html</code>/<code>style.md</code> or <code>gspec/design/</code>, because stripping them is unrecoverable; move those mockups into the relevant feature\'s <code>design.html</code> yourself. Then run <code>npx gspec -t &lt;target&gt;</code> once to refresh installed agents and record the version stamp — until you do, the build will note that agent freshness cannot be checked.',
   },
