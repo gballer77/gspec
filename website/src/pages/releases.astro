@@ -36,7 +36,7 @@ const releases = [
       },
       {
         type: 'added',
-        description: '<strong>Per-agent model assignment and real token accounting.</strong> <code>.gspec/config.json</code> maps agents to models by name, role tier, or default, so the cheapest checkers stop running on the most expensive model. Every run now reports input, output, turns and cost per agent — which is how we learned the implementer is <strong>92% of a build\'s input</strong>, and that a stage gets cheaper by reading less, not by writing less.',
+        description: '<strong>Per-agent model assignment and real token accounting.</strong> <code>.gspec/config.json</code> maps agents to models by name, role tier, or default, so the cheapest checkers stop running on the most expensive model. Every run now reports input, output, turns and cost per agent — which is how we learned the implementer is <strong>92% of a build\'s input</strong>, and that a stage gets cheaper by reading less, not by writing less. Each agent\'s runs are also split into <strong>authoring vs revision</strong>, reported as input-per-run for each: a per-agent total says who reads the most, but only the split says whether a targeted repair actually reads less than the run that wrote the thing.',
       },
       {
         type: 'added',

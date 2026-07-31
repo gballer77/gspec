@@ -48,6 +48,62 @@ test('a run records per-agent token usage and reports it', async (t) => {
   assert.match(r.output, /Input dominates/);
 });
 
+// A per-agent total answers "who reads the most" but not "does a repair read
+// less than the run that wrote the thing" — and that second question is what
+// decides whether resuming an engine session is worth building, since a resumed
+// session re-pays for authoring context a targeted revision may not need. The
+// totals alone cannot express it: one `runs` count covers both.
+test('usage splits authoring from revision, per agent', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  await seedInstall(dir, 'claude', { agentFiles: STAGE_AGENTS.map((a) => join('.claude', 'agents', `${a}.md`)) });
+  const bin = join(dir, 'fake-bin');
+  await mkdir(bin, { recursive: true });
+  // Fails the very FIRST validation and passes every one after it, so exactly
+  // one stage takes exactly one revision — a countable, unambiguous split.
+  await writeFile(join(bin, 'claude'), `#!/bin/sh
+PROMPT="$*"
+${FAKE_ENGINE_SH}
+STAMP="$PWD/.failed-once"
+case "$PROMPT" in
+  *Validate*)
+    if [ -f "$STAMP" ]; then BODY='VERDICT: PASS'; else : > "$STAMP"; BODY='VERDICT: FAIL one finding to fix'; fi
+    ;;
+  *) deliver "$PROMPT"; BODY='ok' ;;
+esac
+printf '{"type":"result","result":"%s","num_turns":3,"total_cost_usd":0.25,"usage":{"input_tokens":10,"cache_creation_input_tokens":100,"cache_read_input_tokens":1000,"output_tokens":50}}\\n' "$BODY"
+`);
+  await chmod(join(bin, 'claude'), 0o755);
+  await mkdir(join(dir, '.gspec', 'build'), { recursive: true });
+  await writeFile(join(dir, '.gspec', 'build', 'brief.md'), 'Product: a thing\nscope: small\n');
+
+  const r = await runCli(['build', '--no-review', '--engine', 'claude', 'an idea'], dir,
+    { PATH: `${bin}:${process.env.PATH}` });
+
+  const manifest = JSON.parse(await readFile(join(dir, '.gspec', 'build', 'run.json'), 'utf-8'));
+  const revised = Object.entries(manifest.usage || {})
+    .filter(([, u]) => u.byKind?.revision?.runs);
+  assert.ok(revised.length, `a forced QA failure must produce a revision-kind run; got ${JSON.stringify(manifest.usage)}`);
+
+  for (const [agent, u] of Object.entries(manifest.usage)) {
+    const byKind = u.byKind || {};
+    const summed = Object.values(byKind).reduce((n, b) => n + b.runs, 0);
+    assert.equal(summed, u.runs, `${agent}: every run must land in exactly one kind bucket`);
+    assert.equal(
+      Object.values(byKind).reduce((n, b) => n + b.in + b.cacheRead + b.cacheWrite, 0),
+      u.in + u.cacheRead + u.cacheWrite,
+      `${agent}: the split must account for the same input as the total`,
+    );
+  }
+
+  const [, writer] = revised[0];
+  assert.ok(writer.byKind.initial?.runs >= 1, 'the authoring run is recorded as initial');
+  assert.equal(writer.byKind.revision.runs, 1, 'the repair is recorded as a revision, not another initial');
+
+  assert.match(r.output, /Authoring vs revision/, 'the split must be reported, not just stored');
+  assert.match(r.output, /revision reads \d+% of an initial run/);
+});
+
 test('an engine that reports no usage degrades quietly', async (t) => {
   // codex/pi return plain text; accounting must be absent, never wrong.
   const dir = await makeProject();
