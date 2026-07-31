@@ -48,7 +48,7 @@ const releases = [
       },
       {
         type: 'changed',
-        description: '<strong>Transient engine failures stop ending builds.</strong> A dropped connection is not a defect: a truncated validator response used to be graded as a failure and handed to the implementer as "API Error: Connection closed mid-response" to repair. An absent verdict now re-runs the <em>validator</em>, twice-unvalidated fails as an engine error, and a transient fault gets three retries at 30s / 120s / 270s. A capacity limit still surfaces immediately — it resets on a clock, and retrying only spends another run on the same wall.',
+        description: '<strong>Transient engine failures stop ending builds.</strong> A dropped connection is not a defect: a truncated validator response used to be graded as a failure and handed to the implementer as "API Error: Connection closed mid-response" to repair. An absent verdict now re-runs the <em>validator</em>, twice-unvalidated fails as an engine error, and a transient fault gets three retries at 30s / 120s / 270s. A capacity limit still surfaces immediately — it resets on a clock, and retrying only spends another run on the same wall. That now includes <em>validators</em>, which never learned it: a real run died on <code>You&#39;ve hit your session limit · resets 12:30am</code>, having re-run the validator straight into the same wall and then reported &quot;no verdict twice — an engine error&quot; with advice to fix something that was not broken. A limit is now named as a limit, with the reset quoted and the instruction to wait rather than investigate.',
       },
       {
         type: 'changed',

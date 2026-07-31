@@ -39,7 +39,14 @@ test('an unvalidated verdict fails the stage instead of driving a revision', () 
     || gate.match(/if \(jg\.verdict === null\) \{[\s\S]*?\}/g);
   assert.ok(guards && guards.length >= 2,
     'both the first judgment and the revision loop must bail out on unvalidated');
-  for (const g of guards) assert.match(g, /could not be validated/);
+  // The wording lives in unvalidatedReason(), which distinguishes a usage limit
+  // (a clock to wait out) from a genuinely broken engine. What matters here is
+  // that both guards fail the stage through it rather than revising.
+  for (const g of guards) {
+    assert.match(g, /unvalidatedReason\(stage, jvTarget, jv\.text\)/, 'reported through the shared reason');
+    assert.match(g, /status: 'failed'/);
+    assert.match(g, /verdict: 'unvalidated'/);
+  }
 
   // and the bail-out must come before the revision that sends text to the agent
   const nullGuard = gate.indexOf('jg.verdict === null');
