@@ -230,6 +230,40 @@ test('a PRD unchanged since it passed is skipped on resume, not re-gated', async
   assert.equal(resumed.code, 0, resumed.output);
   assert.match(resumed.output, /feat-a\/prd\.md — unchanged since it passed; skipping re-validation/);
   assert.match(resumed.output, /✓ Build complete/);
+
+  // A pass is only reusable while the CHECKER that produced it still holds.
+  // Keying on the file alone meant a fixed gate never re-examined anything that
+  // had already passed — the build kept running yesterday's verdicts, the same
+  // disease install-version stamping fixed one layer up. Correcting the
+  // inverted [P] floor mid-run left the one feature carrying a real conflict
+  // marked "unchanged since it passed".
+  const m2 = JSON.parse(await readFile(join(dir, RUN_JSON), 'utf-8'));
+  assert.match(m2.stages.features.passed['feat-a'], /^\d+\.\d+\.\d+:[0-9a-f]{64}$/,
+    'a memo records the gspec version alongside the content hash');
+});
+
+test('a memo from a different gspec version is not reused', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  const files = {
+    'gspec/features/feat-a/prd.md': '---\nfeature: feat-a\n---\n\n# Feat A\n\nA complete, well-formed PRD body.\n',
+    'gspec/features/feat-b/prd.md': '---\nfeature: feat-b\n---\n\n# Feat B\n\nA complete, well-formed PRD body.\n',
+  };
+  const env = await seedProject(dir, FAKE_PI_MEMO, files);
+
+  const first = await runCli(['build', '--no-review', 'an idea'], dir, env);
+  assert.equal(first.code, 1, first.output);
+
+  // Rewrite the stamp as if an older gspec had recorded it — the file is
+  // untouched, so only the checker's identity differs.
+  const m = JSON.parse(await readFile(join(dir, RUN_JSON), 'utf-8'));
+  const [, hash] = m.stages.features.passed['feat-a'].split(':');
+  m.stages.features.passed['feat-a'] = `0.0.1:${hash}`;
+  await writeFile(join(dir, RUN_JSON), JSON.stringify(m, null, 2));
+
+  const resumed = await runCli(['build', '--resume', '--no-review'], dir, env);
+  assert.doesNotMatch(resumed.output, /feat-a\/prd\.md — unchanged since it passed/,
+    'a pass recorded by a different version must be re-checked, not trusted');
 });
 
 // ---------------------------------------------------------------------------
