@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { writeFile, chmod, mkdir } from 'node:fs/promises';
 import { runCli, makeProject, cleanup, seedInstall, FAKE_ENGINE_SH, STAGE_AGENTS } from './helpers.mjs';
+import { MAX_TRANSIENT_RETRIES } from '../lib/build.js';
 
 const RUN_JSON = join('.gspec', 'build', 'run.json');
 
@@ -90,4 +91,43 @@ test('a usage limit is reported as a clock to wait out, not an engine error', as
   const { readFile } = await import('node:fs/promises');
   const calls = (await readFile(join(dir, 'validator-calls.log'), 'utf-8')).trim().split('\n').filter(Boolean);
   assert.equal(calls.length, 1, `the limited validator must run once, not twice (ran ${calls.length}x)`);
+});
+
+// An outage is usually wider than one pause. The implement loop has waited
+// longer each time since v3; validators re-ran instantly and only once, so a
+// momentary network fault took the whole build — a real run died on "API Error:
+// Unable to connect to API (ENOTFOUND)" at the plan stage with both attempts
+// inside the same blip, and the specs behind it were fine.
+const FAKE_FLAKY = `#!/bin/sh
+${FAKE_ENGINE_SH}
+case "$*" in
+  *Validate*Technology\\ stack*|*Validate*stack.md*)
+    echo v >> validator-calls.log
+    printf 'API Error: Unable to connect to API (ENOTFOUND)\\n' ;;
+  *Validate*) printf 'VERDICT: PASS\\nfine\\n' ;;
+  *) fake_default "$*" ;;
+esac
+`;
+
+test('a validator hitting a transient fault is retried with escalating waits', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  await seedInstall(dir, 'pi', { agentFiles: STAGE_AGENTS.map((a) => join('.pi', 'agents', `${a}.md`)) });
+  const bin = join(dir, 'fake-bin');
+  await mkdir(bin, { recursive: true });
+  await writeFile(join(bin, 'pi'), FAKE_FLAKY); await chmod(join(bin, 'pi'), 0o755);
+  await mkdir(join(dir, '.gspec', 'build'), { recursive: true });
+  await writeFile(join(dir, '.gspec', 'build', 'brief.md'), 'Product: a thing\nscope: small\n');
+  await mkdir(join(dir, 'gspec'), { recursive: true });
+  await writeFile(join(dir, 'gspec', 'profile.md'), '# P\n\nEnough content for the completeness check to pass.\n');
+
+  const r = await runCli(['build', '--no-review', 'an idea'], dir, { PATH: `${bin}:${process.env.PATH}` });
+  assert.equal(r.code, 1, r.output);
+
+  const { readFile } = await import('node:fs/promises');
+  const calls = (await readFile(join(dir, 'validator-calls.log'), 'utf-8')).trim().split('\n').filter(Boolean);
+  assert.equal(calls.length, MAX_TRANSIENT_RETRIES + 1,
+    `a transient fault must get the full retry allowance, not one immediate re-run (got ${calls.length})`);
+  assert.match(r.output, /re-running .* in \d+s/, 'and each retry must announce its wait');
+  assert.match(r.output, /engine error, not a finding/, 'still an engine error, never a finding');
 });

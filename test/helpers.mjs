@@ -36,7 +36,10 @@ export async function runCli(args, cwd, extraEnv = {}, stdin = null) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [CLI, ...args], {
       cwd,
-      env: { ...process.env, ...extraEnv, HOME, FORCE_COLOR: '0', NO_COLOR: '1' },
+      // Transient-retry waits collapse to zero by default: the loops must be
+      // exercisable without the suite sleeping through 30s/120s/270s backoffs.
+      // A test that wants real timing sets GSPEC_BACKOFF_SCALE in extraEnv.
+      env: { GSPEC_BACKOFF_SCALE: '0', ...process.env, ...extraEnv, HOME, FORCE_COLOR: '0', NO_COLOR: '1' },
       // `stdin` lets a test pipe a FEW answers and then hit EOF — the shape a
       // scripted install really has. Default stays 'ignore' so an unexpected
       // prompt fails fast instead of hanging the suite.
