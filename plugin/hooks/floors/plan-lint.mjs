@@ -301,12 +301,29 @@ export function parallelismViolations(rel, tasksText) {
   const v = [];
   for (const t of tasks) {
     if (!t.parallel || t.checked) continue;
-    const blocking = t.deps.filter((d) => {
+    // The hazard is between SIBLINGS — the tasks [P] says may run alongside one
+    // another. If one of them depends on another, they cannot, and one of the
+    // two markers is wrong.
+    //
+    // This check used to be inverted: it flagged a [P] task for depending on a
+    // NON-[P] one, and let a [P]-on-[P] dependency through. That reading makes
+    // the marker unusable. `[P]` means "deps met when this runs" (engineer bar:
+    // "its deps are all complete AND it writes no files a [P] sibling writes"),
+    // and a plan is written before any work exists — so under the old rule no
+    // task with a dependency could ever carry [P] on a fresh plan, while
+    // plan-decomposer is required to produce "honest [P] markers" and report how
+    // many. It also made the verdict move with execution: the same file failed
+    // before its foundation task was checked and passed afterwards.
+    //
+    // A non-[P] dependency is a BARRIER, which is the normal shape — one
+    // foundation task, then a fan-out. Measured on a real plan: 11 findings
+    // across 3 of 8 features, every one of them that shape, every one wrong.
+    const conflicting = t.deps.filter((d) => {
       const dep = byId.get(d);
-      return dep && !dep.checked && !dep.parallel;
+      return dep && !dep.checked && dep.parallel;
     });
-    if (blocking.length) {
-      v.push(`${rel}: ${t.id} is marked [P] but depends on ${blocking.join(', ')}, which ${blocking.length === 1 ? 'is' : 'are'} not [P] — it cannot start until ${blocking.length === 1 ? 'that task' : 'those tasks'} finish, so the marker is not honest`);
+    if (conflicting.length) {
+      v.push(`${rel}: ${t.id} is marked [P] but depends on ${conflicting.join(', ')}, which ${conflicting.length === 1 ? 'is' : 'are'} also [P] — tasks marked to run alongside each other cannot depend on one another, so one of the markers is not honest`);
     }
     if (t.deps.includes(t.id)) v.push(`${rel}: ${t.id} lists itself in deps`);
   }

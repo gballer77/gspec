@@ -9,33 +9,45 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parallelismViolations, coversViolations, coversQuotes, parseTasks } from './plan-lint.mjs';
 
-test('a [P] task depending on a non-[P] task is not honest', () => {
-  // Reported: "T8 is marked [P] at line 43 but declares deps: T7".
-  const tasks = [
-    '- [ ] **T7** **P0** build the thing',
-    '  deps: none',
-    '- [ ] **T8** [P] **P0** build the other thing',
-    '  deps: T7',
-  ].join('\n');
-  const v = parallelismViolations('a/tasks.md', tasks);
-  assert.equal(v.length, 1, v.join('\n'));
-  assert.match(v[0], /T8 is marked \[P\] but depends on T7/);
-});
-
-test('depending on another [P] task is fine — they start together', () => {
+test('two [P] siblings cannot depend on each other', () => {
+  // The real hazard: [P] says these run alongside one another, and T6 needs T5.
   const tasks = [
     '- [ ] **T5** [P] **P0** a',
     '  deps: none',
     '- [ ] **T6** [P] **P0** b',
     '  deps: T5',
   ].join('\n');
+  const v = parallelismViolations('a/tasks.md', tasks);
+  assert.equal(v.length, 1, v.join('\n'));
+  assert.match(v[0], /T6 is marked \[P\] but depends on T5/);
+  assert.match(v[0], /also \[P\]/);
+});
+
+test('a [P] task may depend on a sequential one — that is a barrier, not a conflict', () => {
+  // The canonical shape: one foundation task, then a fan-out that runs after
+  // it. The old rule flagged exactly this, which made [P] unusable on a fresh
+  // plan — nothing is checked yet, so every fan-out looked dishonest.
+  const tasks = [
+    '- [ ] **T7** **P0** build the thing',
+    '  deps: none',
+    '- [ ] **T8** [P] **P0** build the other thing',
+    '  deps: T7',
+  ].join('\n');
   assert.deepEqual(parallelismViolations('a/tasks.md', tasks), []);
 });
 
-test('a dependency already CHECKED does not block parallelism', () => {
-  // Done is done — the work exists, so a [P] successor really can start now.
+test('a fan-out after one foundation task is clean, however wide', () => {
+  // Measured shape from a real plan: T1 sequential, T2..T6 all [P] on T1. The
+  // old rule produced five findings here, every one of them wrong.
+  const tasks = ['- [ ] **T1** **P0** foundation', '  deps: none'];
+  for (const n of [2, 3, 4, 5, 6]) tasks.push(`- [ ] **T${n}** [P] **P0** fan out`, '  deps: T1');
+  assert.deepEqual(parallelismViolations('a/tasks.md', tasks.join('\n')), []);
+});
+
+test('a dependency already CHECKED is never a conflict', () => {
+  // Done is done — the work exists, so nothing can be waiting on it.
   const tasks = [
-    '- [x] **T1** **P0** already built',
+    '- [x] **T1** [P] **P0** already built',
     '  deps: none',
     '- [ ] **T2** [P] **P0** next',
     '  deps: T1',
@@ -54,10 +66,10 @@ test('a checked task is immutable history and is never flagged', () => {
   assert.deepEqual(parallelismViolations('a/tasks.md', tasks), []);
 });
 
-test('multiple blocking deps are named together, not one per line', () => {
+test('multiple conflicting siblings are named together, not one per line', () => {
   const tasks = [
-    '- [ ] **T4** **P0** a', '  deps: none',
-    '- [ ] **T8** **P0** b', '  deps: none',
+    '- [ ] **T4** [P] **P0** a', '  deps: none',
+    '- [ ] **T8** [P] **P0** b', '  deps: none',
     '- [ ] **T11** [P] **P0** c', '  deps: T4, T8',
   ].join('\n');
   const v = parallelismViolations('a/tasks.md', tasks);

@@ -72,6 +72,10 @@ const releases = [
       },
       {
         type: 'fixed',
+        description: '<strong>The <code>[P]</code> parallelism check was inverted.</strong> It flagged a <code>[P]</code> task for depending on a <em>sequential</em> one and let a <code>[P]</code>-on-<code>[P]</code> dependency through — backwards on both halves. The hazard is between siblings: <code>[P]</code> says these run alongside each other, so one depending on another is the thing that cannot work. A sequential dependency is a <em>barrier</em>, which is the normal shape — one foundation task, then a fan-out. The old reading also made the marker unusable: a plan is written before any work exists, so no task with a dependency could ever carry <code>[P]</code>, while the decomposer is required to produce honest ones and report how many. And it made a static verdict move with execution — the same file failed before its foundation task was checked and passed after. Measured on a first-draft plan: <strong>11 findings across 3 of 8 features, every one wrong</strong>, while a fourth feature passed carrying a real <code>[P]</code>-on-<code>[P]</code> conflict. Corrected, the same plans yield zero false findings and four true ones. Its unit tests had encoded the inverted rule, including one asserting that two <code>[P]</code> tasks depending on each other &quot;start together&quot;.',
+      },
+      {
+        type: 'fixed',
         description: '<strong>Three checks that were verifying nothing.</strong> A bullet-only pattern matched none of 88 real tasks; splitting <code>covers:</code> on <code>;</code> missed the several-quotes-per-line form every real plan uses, so the check that catches a capability ticked ahead of its plan reported clean on exactly the input it exists for; and a scripted install exited 0 having skipped hooks and preamble. A check that matches nothing is worse than one that is wrong, because it is silent.',
       },
       {
