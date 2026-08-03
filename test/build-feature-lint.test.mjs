@@ -99,3 +99,81 @@ test('a per-feature lint finding is kept in the durable QA log', async (t) => {
     'qa-failures.md claims to hold every failing verdict a run observes — mechanical ones included',
   );
 });
+
+// A targeted lint fix can resolve exactly what it was told and introduce
+// something else. Seen twice on one dogfood run: renaming an anchor collided
+// with an existing origin, and restructuring a deferred task named an anchor
+// that did not exist. Both times the writer was making real progress and a
+// one-round budget ended the build anyway. Mechanical fixes are free — no
+// validator run — so this loop gets its own allowance.
+test('a lint fix that uncovers a different finding gets another round', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  await seedInstall(dir, 'pi', { agentFiles: STAGE_AGENTS.map((a) => join('.pi', 'agents', `${a}.md`)) });
+  const bin = join(dir, 'fake-bin');
+  await mkdir(bin, { recursive: true });
+  // Round 1: duplicate anchor. The "fix" resolves it but leaves a BAD anchor
+  // name. Round 2 fixes that properly. A one-round budget would fail at round 2.
+  await writeFile(join(bin, 'pi'), `#!/bin/sh
+PROMPT="$*"
+${FAKE_ENGINE_SH}
+STAGE1="$PWD/.fixed-once"
+dup() { mkdir -p "$(dirname "$1")"; printf '%s\\n' '---' 'feature: fake' '---' '' '# Arch' '' '## Data' '' '### Entity: Thing' '' '### Entity: Thing' '' '## API' '' '**Not Applicable** — none.' '' '## UI' '' '### Screen: Main' '' '## Logic' '' '**Not Applicable** — none.' > "$1"; }
+half() { mkdir -p "$(dirname "$1")"; printf '%s\\n' '---' 'feature: fake' '---' '' '# Arch' '' '## Data' '' '### Entity: not a pascal name' '' '## API' '' '**Not Applicable** — none.' '' '## UI' '' '### Screen: Main' '' '## Logic' '' '**Not Applicable** — none.' > "$1"; }
+case "$PROMPT" in
+  *feature-plan*) printf '\`\`\`json\\n{"features":[{"slug":"only-thing","title":"O","brief":"b","priority":"P0","dependencies":[]}]}\\n\`\`\`\\n' ;;
+  *"Fix these mechanical problems"*)
+    p=$(feature_path "$PROMPT" arch.md)
+    if [ -f "$STAGE1" ]; then write_feature_file "$p"; else : > "$STAGE1"; half "$p"; fi
+    printf 'fixed\\n' ;;
+  *"Write the feature architecture"*) dup "$(feature_path "$PROMPT" arch.md)"; printf 'ok\\n' ;;
+  *Validate*) printf 'VERDICT: PASS\\nfine\\n' ;;
+  *) fake_default "$PROMPT" ;;
+esac
+`);
+  await chmod(join(bin, 'pi'), 0o755);
+  await mkdir(join(dir, '.gspec', 'build'), { recursive: true });
+  await writeFile(join(dir, '.gspec', 'build', 'brief.md'), 'Build a tiny demo.\n');
+  await mkdir(join(dir, 'gspec'), { recursive: true });
+  for (const f of ['profile.md', 'stack.md', 'practices.md', 'style.md', 'style.html']) {
+    await writeFile(join(dir, 'gspec', f), 'seeded\n');
+  }
+
+  const r = await runCli(['build', '--no-review', 'an idea'], dir, { PATH: `${bin}:${process.env.PATH}` });
+
+  assert.match(r.output, /duplicate anchor "### Entity: Thing"/, 'round 1 finding');
+  assert.match(r.output, /does not match the anchor grammar/, 'round 2 finding — the one the first fix introduced');
+  assert.doesNotMatch(r.output, /still fails the mechanical lint/, 'progress must not be mistaken for failure');
+});
+
+test('a lint that reports the same findings twice stops instead of looping', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  await seedInstall(dir, 'pi', { agentFiles: STAGE_AGENTS.map((a) => join('.pi', 'agents', `${a}.md`)) });
+  const bin = join(dir, 'fake-bin');
+  await mkdir(bin, { recursive: true });
+  // A writer that never actually fixes anything: the findings repeat verbatim.
+  await writeFile(join(bin, 'pi'), `#!/bin/sh
+PROMPT="$*"
+${FAKE_ENGINE_SH}
+dup() { mkdir -p "$(dirname "$1")"; printf '%s\\n' '---' 'feature: fake' '---' '' '# Arch' '' '## Data' '' '### Entity: Thing' '' '### Entity: Thing' '' '## API' '' '**Not Applicable** — none.' '' '## UI' '' '### Screen: Main' '' '## Logic' '' '**Not Applicable** — none.' > "$1"; }
+case "$PROMPT" in
+  *feature-plan*) printf '\`\`\`json\\n{"features":[{"slug":"only-thing","title":"O","brief":"b","priority":"P0","dependencies":[]}]}\\n\`\`\`\\n' ;;
+  *"Fix these mechanical problems"*) dup "$(feature_path "$PROMPT" arch.md)"; printf 'unchanged\\n' ;;
+  *"Write the feature architecture"*) dup "$(feature_path "$PROMPT" arch.md)"; printf 'ok\\n' ;;
+  *Validate*) printf 'VERDICT: PASS\\nfine\\n' ;;
+  *) fake_default "$PROMPT" ;;
+esac
+`);
+  await chmod(join(bin, 'pi'), 0o755);
+  await mkdir(join(dir, '.gspec', 'build'), { recursive: true });
+  await writeFile(join(dir, '.gspec', 'build', 'brief.md'), 'Build a tiny demo.\n');
+  await mkdir(join(dir, 'gspec'), { recursive: true });
+  for (const f of ['profile.md', 'stack.md', 'practices.md', 'style.md', 'style.html']) {
+    await writeFile(join(dir, 'gspec', f), 'seeded\n');
+  }
+
+  const r = await runCli(['build', '--no-review', 'an idea'], dir, { PATH: `${bin}:${process.env.PATH}` });
+  assert.equal(r.code, 1, r.output);
+  assert.match(r.output, /it is not converging/, 'a writer going in circles must be stopped, not funded');
+});

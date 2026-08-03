@@ -72,6 +72,10 @@ const releases = [
       },
       {
         type: 'fixed',
+        description: '<strong>A mechanical lint gets room to converge.</strong> The deterministic lint loop borrowed <code>--qa-retries</code>, which is sized for expensive judgment revisions — so it had one round. But a targeted fix can resolve exactly what it was told and reveal something else, which happened twice in one run: renaming an anchor collided with an existing origin, and restructuring a deferred task named an anchor that did not exist. Both times the writer was making real progress and the build died anyway. The loop now has its own allowance, because a lint fix costs one writer run and no validator, and it stops the moment a round reports findings it has already been given — a writer going in circles will not converge, and more rounds only spend money.',
+      },
+      {
+        type: 'fixed',
         description: '<strong>A memoized pass now expires when the checker changes.</strong> Content-addressed memoization skipped re-validating any deliverable whose file hash was unchanged — but it keyed on the deliverable alone, never on what judged it. So fixing a gate never re-examined anything that had already passed: the build kept running yesterday\'s <em>verdicts</em>, the same disease install-version stamping fixed one layer up when a run was caught executing yesterday\'s <em>agents</em>. Caught the moment it mattered: correcting the inverted <code>[P]</code> floor mid-run left the one feature carrying a real conflict marked &quot;unchanged since it passed&quot;, so the corrected check never saw the file it was written for. Memos now record the gspec version beside the hash, and an upgrade invalidates them — the conservative direction, since a redundant re-validation costs one cheap run and a skipped one ships the defect.',
       },
       {
