@@ -59,6 +59,57 @@ test('--dry-run does not block the real build that follows it', async (t) => {
   );
 });
 
+// The sibling half of the same rule. The tests above prove a preview writes no
+// files; they never asked what it SAYS about those files, and that gap let two
+// messages survive that describe writes preview mode had just skipped:
+//
+//   "…its reply is kept verbatim in .gspec/build/unparsed-plan.md"
+//   "findings kept in .gspec/build/audit-report.md"
+//
+// The first is worse than a stale pointer: with no engine to call, the preview
+// parses the stub answer, fails, and reports a READER DEFECT that did not
+// happen — so previewing a healthy build accuses the build-orchestrator of
+// emitting an unreadable plan. Both send the reader to a file that is not
+// there, which is the exact failure that keeping the reply verbatim was added
+// to end.
+test('--dry-run does not describe writes it skipped', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  await seedInstall(dir, 'pi', { agentFiles: ['.pi/agents/profile-writer.md'] });
+
+  // A brief on disk so the preview walks past intake into implement + audit,
+  // which are the two stages that make these claims.
+  await mkdir(join(dir, BUILD_DIR), { recursive: true });
+  await writeFile(join(dir, BUILD_DIR, 'brief.md'), '# Brief\n\nscope: standard\n');
+
+  const r = await runCli(['build', '--dry-run', 'an idea'], dir);
+  assert.equal(r.code, 0, r.output);
+  assert.match(r.output, /would run: pi /, 'sanity: it really walked the stage graph');
+
+  assert.doesNotMatch(
+    r.output,
+    /parser gap|could not read|unusable/,
+    'a preview never called the orchestrator, so it must not diagnose its answer as unreadable',
+  );
+  assert.doesNotMatch(
+    r.output,
+    /kept verbatim in/,
+    'no pointer at unparsed-plan.md — the preview did not write it',
+  );
+  assert.doesNotMatch(
+    r.output,
+    /^\s*findings kept in/m,
+    'the audit report was not written, so it was not "kept" anywhere',
+  );
+
+  // The pointer is still worth previewing — stated as a future, not a fact.
+  assert.match(
+    r.output,
+    /would keep findings in .*audit-report\.md/,
+    'a preview should still say where the findings would land',
+  );
+});
+
 test('a dry run over an existing run does not mutate it', async (t) => {
   const dir = await makeProject();
   t.after(() => cleanup(dir));
