@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   archLintViolations, designLintViolations, planLintViolations,
-  originAnchors, slugifyAnchor, TASK_FIELD,
+  originAnchors, slugifyAnchor, TASK_FIELD, coversQuotes,
 } from './plan-lint.mjs';
 
 const ARCH = `---
@@ -100,6 +100,32 @@ test('a status line is read however it is emphasised', () => {
     const t = `### Entity: Cart\n${key} gspec/features/checkout/arch.md\n`;
     assert.deepEqual(kinds(t), ['delta'], `delta unreadable when written "${key}"`);
   }
+});
+
+// A capability that contains quotation marks can only be written unambiguously
+// by escaping them. Caught live in a build: the writer escaped, the parser
+// stopped at the first inner quote and produced a fragment ending in a
+// backslash, the lint said it "does not appear verbatim in the PRD", and the
+// mechanical fix repaired it by REMOVING the escapes — leaving one capability
+// as two fragments that each happen to be a PRD substring, so the check passes
+// while the link it exists to verify is gone.
+test('a covers: capability may contain escaped quotes', () => {
+  const escaped = '"A query with no matches shows a clear \\"no results\\" state."';
+  assert.deepEqual(
+    coversQuotes(escaped),
+    ['A query with no matches shows a clear "no results" state.'],
+    'an escaped capability is ONE quote, unescaped back to what the PRD actually says',
+  );
+
+  // The shapes this function has already been broken on twice. None may move.
+  assert.deepEqual(coversQuotes('"first capability" "second capability"'), ['first capability', 'second capability']);
+  assert.deepEqual(coversQuotes('"first cap." / "second cap."'), ['first cap.', 'second cap.']);
+  assert.deepEqual(coversQuotes('first capability; second capability'), ['first capability', 'second capability']);
+
+  // Unescaped inner quotes are genuinely ambiguous — `"a "b" c"` reads equally
+  // as one capability or three — so they are deliberately left as they were
+  // rather than guessed at.
+  assert.equal(coversQuotes('"A query shows a clear "no results" state."').length, 2);
 });
 
 // The same rule on the task side. `- **covers:**` finding nothing means a task

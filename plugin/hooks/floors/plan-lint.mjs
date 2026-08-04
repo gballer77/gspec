@@ -402,10 +402,31 @@ export function coversViolations(rel, tasksText, prdText) {
  */
 export function coversQuotes(raw) {
   const line = String(raw).trim();
-  const quoted = line.match(/"([^"]+)"|'([^']+)'/g);
-  if (quoted && quoted.length) {
-    return quoted.map((q) => q.slice(1, -1).trim()).filter(Boolean);
+  // A capability may itself contain quotation marks — UI capabilities routinely
+  // do ("shows a clear \"no results\" state") — and the only unambiguous way to
+  // write one is to escape them. Stopping at the first inner quote made that
+  // impossible: the escaped capability came out as a fragment ending in a
+  // backslash, which then "does not appear verbatim in the PRD", failing a plan
+  // whose covers: line was right.
+  //
+  // Seen live in a build. A writer escaped the inner quotes, the lint rejected
+  // it, and the mechanical fix "repaired" the line by REMOVING the escapes —
+  // leaving one capability parsed as two fragments that each happen to be a
+  // PRD substring. The check then passes while the link it exists to verify is
+  // gone: the third vacuous pass this function has had, after splitting on `;`
+  // and after ignoring adjacent quotes.
+  //
+  // Unescaped inner quotes stay ambiguous by construction — `"a "b" c"` is
+  // equally readable as one capability or three — so they are left exactly as
+  // they were. What changes is that escaping now WORKS, which gives a writer a
+  // correct way to say it.
+  const re = /"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'/g;
+  const quoted = [];
+  for (const m of line.matchAll(re)) {
+    const q = (m[1] ?? m[2] ?? '').replace(/\\(["'\\])/g, '$1').trim();
+    if (q) quoted.push(q);
   }
+  if (quoted.length) return quoted;
   return line.split(/[;]/).map((p) => p.trim().replace(/^["']|["']$/g, '').trim()).filter(Boolean);
 }
 
