@@ -123,6 +123,22 @@ export function archLintViolations(rel, text, others = {}) {
   return v;
 }
 
+// Does this block declare `key:` as a status line, however it is dressed up?
+//
+// Matching the one shape writers happen to use today — `- **amends:**` — made
+// the origin-uniqueness backstop silently STOP CHECKING any anchor written
+// another way. An anchor whose key came out `- amends:` or `- *amends*:`
+// matched neither branch below, so it was classified as neither origin nor
+// delta and dropped from the comparison entirely. That is the worst direction
+// for a check to fail: a genuine duplicate origin — the failure mode durable
+// feature folders cannot tolerate — would pass in silence, and the run would
+// report the floor as clean.
+//
+// Emphasis, bullets and backticks carry no meaning here, so strip them and pin
+// the word. Same reasoning as `parseVerdict` reading `VERDICT: **PASS**`.
+const declaresKey = (block, key) =>
+  new RegExp(`^\\s*[-*+]?\\s*${key}\\s*:`, 'im').test(String(block).replace(/[*_`]/g, ''));
+
 // [anchorHeading, 'origin' | 'delta'] for each block that declares itself.
 export function originAnchors(text) {
   const out = [];
@@ -131,8 +147,8 @@ export function originAnchors(text) {
     if (!/^###\s/.test(lines[i])) continue;
     const anchor = lines[i].trim();
     const block = lines.slice(i + 1, i + 8).join('\n');
-    if (/^\s*-\s*\*\*amends:\*\*/m.test(block)) out.push([anchor, 'delta']);
-    else if (/^\s*-\s*\*\*defined-in:\*\*/m.test(block)) out.push([anchor, 'origin']);
+    if (declaresKey(block, 'amends')) out.push([anchor, 'delta']);
+    else if (declaresKey(block, 'defined-in')) out.push([anchor, 'origin']);
   }
   return out;
 }
@@ -230,10 +246,23 @@ export function planLintViolations(rel, tasksText, archText) {
 // meaning. A bullet-only pattern found ZERO of 88 real `arch:` lines and
 // reported the file clean, which is the worst outcome available: a check that
 // silently verifies nothing. Tolerate the cosmetic difference; never fail on it.
+// …and WITH OR WITHOUT emphasis, for the same reason. Tolerating only the
+// bullet left the identical hole one cosmetic step away: these writers bold
+// freely — the task line itself is `**T12**` and every anchor status line comes
+// out `- **defined-in:**` — so `- **covers:**` finds nothing, and a task that
+// covers a capability reads as a task covering none. Silent again, in the check
+// whose entire job is linking tasks to the PRD.
+//
+// The trailing `**` after the colon is stepped over rather than captured, so the
+// value stays exactly what the writer wrote — `covers:` quotes have to match the
+// PRD verbatim, and a stray marker in the captured text would break the compare
+// this is meant to protect.
+const taskField = (key) => new RegExp(`^\\s*[-*+]?\\s*[*_\`]{0,2}\\s*${key}\\s*[*_\`]{0,2}\\s*:\\s*[*_\`]{0,2}\\s*(.+?)\\s*$`);
+
 export const TASK_FIELD = {
-  arch: /^\s*[-*]?\s*arch:\s*(.+)$/,
-  covers: /^\s*[-*]?\s*covers:\s*(.+)$/,
-  deps: /^\s*[-*]?\s*deps:\s*(.+)$/,
+  arch: taskField('arch'),
+  covers: taskField('covers'),
+  deps: taskField('deps'),
 };
 
 // One `arch:` reference → the anchor slug it names, or null when it names none.

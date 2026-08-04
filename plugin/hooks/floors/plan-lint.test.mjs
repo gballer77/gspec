@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   archLintViolations, designLintViolations, planLintViolations,
-  originAnchors, slugifyAnchor,
+  originAnchors, slugifyAnchor, TASK_FIELD,
 } from './plan-lint.mjs';
 
 const ARCH = `---
@@ -84,6 +84,44 @@ test('two origins for one anchor across features is caught deterministically', (
 
 test('originAnchors distinguishes origins from deltas', () => {
   assert.deepEqual(originAnchors(ARCH).map(([, k]) => k), ['origin', 'origin', 'origin']);
+});
+
+// The backstop must not stop checking because a writer emphasised the key
+// differently. Classified as NEITHER, an anchor drops out of the uniqueness
+// comparison and a real duplicate origin passes in silence — the one failure
+// mode this check exists to catch, reported clean.
+test('a status line is read however it is emphasised', () => {
+  const kinds = (t) => originAnchors(t).map(([, k]) => k);
+  for (const key of ['- **defined-in:**', '- defined-in:', '- *defined-in*:', '-  `defined-in`:']) {
+    const t = `### Entity: Cart\n${key} gspec/features/checkout/arch.md\n`;
+    assert.deepEqual(kinds(t), ['origin'], `origin unreadable when written "${key}"`);
+  }
+  for (const key of ['- **amends:**', '- amends:', '- *amends*:']) {
+    const t = `### Entity: Cart\n${key} gspec/features/checkout/arch.md\n`;
+    assert.deepEqual(kinds(t), ['delta'], `delta unreadable when written "${key}"`);
+  }
+});
+
+// The same rule on the task side. `- **covers:**` finding nothing means a task
+// that covers a capability reads as covering none — silent, in the check whose
+// whole job is linking tasks to the PRD.
+test('a task field is read however it is emphasised, and its value survives', () => {
+  const variants = ['- covers: "ship it"', '- **covers:** "ship it"', 'covers: "ship it"', '- *covers*: "ship it"'];
+  for (const line of variants) {
+    const m = `  ${line}`.match(TASK_FIELD.covers);
+    assert.ok(m, `unreadable: ${line}`);
+    assert.equal(m[1], '"ship it"', `value corrupted by emphasis in: ${line}`);
+  }
+  assert.equal('  - **arch:** Entity: Order'.match(TASK_FIELD.arch)[1], 'Entity: Order');
+  assert.equal('  - **deps:** T1, T2'.match(TASK_FIELD.deps)[1], 'T1, T2');
+});
+
+test('duplicate origins are caught even when the status line is not bold', () => {
+  const plain = ARCH.replaceAll('- **defined-in:**', '- defined-in:');
+  const v = archLintViolations('gspec/features/checkout/arch.md', plain, {
+    'gspec/features/billing/arch.md': plain,
+  }).filter((m) => /is also defined as an origin/.test(m));
+  assert.ok(v.length, 'two files originating the same anchors must still collide');
 });
 
 test('design screens must match the architecture in both directions', () => {
