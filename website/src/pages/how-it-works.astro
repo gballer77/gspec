@@ -5,7 +5,7 @@ import Footer from '../components/Footer.astro';
 
 const base = import.meta.env.BASE_URL;
 
-// The five layers (docs/gspec-v2-design.md).
+// The five layers (docs/gspec-v3-design.md).
 const layers = [
   {
     n: '1',
@@ -18,14 +18,14 @@ const layers = [
     n: '2',
     name: 'Agents',
     tag: 'the hands',
-    count: '23',
-    body: 'Isolated workers, each bounded to one job: 7 producers that write a single spec type, 8 read-only validators that return a verdict, 3 investigators, 3 transformers (plan, implement, migrate), and 2 that run the learning loop. Fresh context every time — no drift.',
+    count: '29',
+    body: 'Isolated workers, each bounded to one job: 9 producers that write a single spec type, 10 read-only validators that return a verdict, 6 investigators and planners (codebase inspection, competitor research, cross-referencing, build ordering), 3 transformers (decompose, implement, migrate), and 1 that runs the learning loop. Fresh context every time — no drift.',
   },
   {
     n: '3',
     name: 'Commands',
     tag: 'the conversations',
-    count: '15',
+    count: '16',
     body: 'The slash commands you actually talk to. Each is a thin orchestrator that loads the right persona skill, asks what it needs, and delegates the real work to agents behind a writer → validator quality gate.',
   },
   {
@@ -55,7 +55,7 @@ const gate = [
 
 <BaseLayout
   title="How gspec works — the architecture"
-  description="gspec v2 is an agent-team framework: skills are the brains, agents are the hands, commands are the conversations, the runtime is the deterministic driver, and hooks are the hard floors."
+  description="gspec is an agent-team framework: skills are the brains, agents are the hands, commands are the conversations, the runtime is the deterministic driver, and hooks are the hard floors."
 >
   <Navbar slot="navbar" />
 
@@ -67,7 +67,7 @@ const gate = [
           An agent team, not a pile of prompts.
         </h1>
         <p class="text-lg sm:text-xl text-[var(--text-secondary)] leading-relaxed">
-          gspec v2 is built in five layers with a single organizing idea:
+          gspec is built in five layers with a single organizing idea:
         </p>
         <p class="text-lg sm:text-xl text-[var(--text-primary)] font-medium leading-relaxed mt-4">
           Skills are the brains, agents are the hands, commands are the conversations,
@@ -116,7 +116,7 @@ const gate = [
           Producer ≠ checker
         </h2>
         <p class="text-[var(--text-secondary)] leading-relaxed">
-          The single biggest reason v2 produces better output: the agent that <em>writes</em> a spec or a slice of
+          The single biggest reason gspec produces better output: the agent that <em>writes</em> a spec or a slice of
           code is never the one that <em>approves</em> it. Every producer is followed by an independent, read-only
           validator. Nothing advances on the author's own say-so.
         </p>
