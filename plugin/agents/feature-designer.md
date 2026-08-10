@@ -18,13 +18,14 @@ The style guide owns the design system; you apply it. Copy its `:root` custom-pr
 <!-- gspec:tokens from gspec/style.html — generated copy, do not hand-edit -->
 ```
 
-That block is the **only** place a literal **color, spacing, radius, elevation or type-scale** value may appear. Everything else reaches for `var(--…)`.
+That block is the **only** place a literal **color, spacing, radius, elevation, motion-duration or type-scale** value may appear. Everything else reaches for `var(--…)`.
 
-Four things are **not** token decisions and stay as literals — a design that tokenizes them is worse, not better:
+Five things are **not** token decisions and stay as literals — a design that tokenizes them is worse, not better:
 - **hairline borders** (`1px`, `2px`) — a border width is a rendering detail, not a scale value;
 - **media-query breakpoints** (`@media (max-width: 640px)`) — custom properties *cannot* be used in a media condition; this one is impossible, not merely unidiomatic;
 - **icon dimensions** (`16px`, `20px`) — set by the icon set, which the style guide names;
-- **container max-widths** (`72rem`) — layout geometry, not spacing scale.
+- **container max-widths** (`72rem`) — layout geometry, not spacing scale;
+- **sub-base-unit optical adjustments** (a `1px`–`2px` nudge below the spacing scale's base unit — `padding: 2px var(--space-2)`, `margin-top: 2px` to align an SVG) — an alignment correction, not a spacing decision. There is no token to drift from, and minting a `--space-0` to hold one is worse than the literal. Anything **at or above** the base unit uses a token.
 
 **Define no new tokens** — a `--custom-thing` with no counterpart in the style guide is a style-guide change wearing a disguise; note it in your summary instead.
 

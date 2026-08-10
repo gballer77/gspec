@@ -197,7 +197,8 @@ test('revisePrompt repairs surgically and accumulates verdicts across attempts',
   assert.match(first, /gspec\/style\.html/);
   assert.match(first, /ONLY the edits the findings below name/);
   assert.match(first, /byte-for-byte/);
-  assert.match(first, /gspec-memory/); // capture-on-failure is a stated step of the run
+  assert.match(first, /gspec-memory/); // recording-on-failure is a stated step of the run
+  assert.match(first, /\.gspec\/memory\/pending\//); // …and it names where the memory goes
   assert.doesNotMatch(first, /comprehensive|Produce your deliverable/); // no authoring prompt re-sent
   assert.doesNotMatch(first, /reappears/); // one verdict — no history framing yet
 

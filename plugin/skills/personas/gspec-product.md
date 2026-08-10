@@ -27,13 +27,13 @@ Use as the definition of done (writer) and the rubric (validator):
 Product Overview · Mission & Vision · Target Audience · Value Proposition · Product Description (what it is / what it isn't) · Use Cases & Scenarios · Market & Competition *(or N/A)* · Brand & Positioning *(or N/A)* · Public-Facing Information *(optional / or N/A)* · Risks & Assumptions.
 
 ## Quality bar — a feature PRD is good when it… (the feature deliverable)
-The product strategist also authors **feature PRDs** (`gspec/features/<slug>.md`). Unlike the profile, a PRD is portable and identity-free. It is good when it:
+The product strategist also authors **feature PRDs** (`gspec/features/<slug>/prd.md`). Unlike the profile, a PRD is portable and identity-free. It is good when it:
 1. **Is an implementation-ready blueprint of what & why** — not a project plan; no timelines, sprints, estimates, or team assignments.
 2. **Right-sized** — one focused feature per PRD; a large request is decomposed into independent features (each delivering distinct user value), confirmed with the user before writing.
 3. **Portable** — technology-agnostic **and** profile-agnostic (generic roles, no specific tech, no project identity), so the PRD is reusable across stacks and products.
-4. **Capabilities are tracked & testable** — each capability is an unchecked checkbox with a P0/P1/P2 priority and 2–4 observable acceptance criteria.
+4. **Capabilities are tracked & testable** — each capability is an unchecked checkbox with a P0/P1/P2 priority and 2–4 observable acceptance criteria, reached by **grouping related variants into one criterion** ("each of filters A/B/C matches by X/Y/Z respectively") — never by dropping criteria that are genuinely required. A capability needing eight criteria is usually one criterion per variant; consolidate it. Truncating to hit the number ships a PRD that looks conformant with four requirements silently missing.
 5. **Complete & bounded** — includes exactly Overview, Users & Use Cases, Scope (in/out/deferred), Capabilities, Dependencies, Assumptions & Risks, Success Metrics, and Implementation Context, plus an optional **Deferred Decisions** (brief bullets: the decision and why it is deferred) where unresolved items land. **No other section, under any name** — in particular no "Technology Notes", "Implementation Details", or "Technical Architecture". No open questions embedded.
-6. **Unambiguous** — no vague verbs without a what/when, no undefined nouns, edge/failure cases covered, dependencies named specifically, success metrics measurable. (This is the ambiguity check the feature validator enforces — it moved here from analyze.)
+6. **Unambiguous** — no vague verbs without a what/when, no undefined nouns, edge/failure cases covered, dependencies named specifically, success metrics measurable. When the capabilities form a pipeline (parse → normalize → transform → render), an early capability that "returns a value" turns ambiguous the moment a later one canonicalizes that same value — capabilities read as independent checkboxes, so nothing tells the reader which side of the transform the first one sits on. Add one clause to the earlier acceptance criterion naming the exact form it yields and the capability that transforms it further; the minimal fix is that clause, not a new "pipeline" section. (This is the ambiguity check the feature validator enforces — it moved here from analyze.)
 7. **Within budget and on-tier** — meets every item above inside the PRD's size budget (`gspec-conventions` → Size budgets), and every section stays inside the contract below. Content pushed out by the contract is not deleted, it is *relocated* — the architecture spec is where it belongs.
 
 ## Decomposing a large request
@@ -57,7 +57,7 @@ What each section holds — and what it must **not**, with where that content be
 | Overview | what the feature is and why it exists, ≤ 2 paragraphs | structure, layout, mechanism → architecture |
 | Users & Use Cases | generic roles and their scenarios | personas or positioning lifted from `profile.md` |
 | Scope | in / out / deferred, as bullets | rationale essays — state the boundary, not its defence |
-| Capabilities | checkbox + priority + 2–4 observable acceptance criteria | state machines, transition tables, algorithms, formulas, coordinates, timing or layout tables → architecture |
+| Capabilities | checkbox + priority + 2–4 observable acceptance criteria, reached by grouping variants — never by dropping them (bar 4) | state machines, transition tables, algorithms, formulas, coordinates, timing or layout tables → architecture |
 | Dependencies | sibling feature slugs and external services, one line each | the *contents* of what is depended on — name it, don't restate it |
 | Assumptions & Risks | brief bullets | mitigation plans and contingency design |
 | Success Metrics | outcomes that are genuinely measurable for this product, **or Not Applicable with a reason** | invented instrumentation the product has no way to collect |

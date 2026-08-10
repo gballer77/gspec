@@ -60,6 +60,26 @@ test('an empty plan is an answer, not unreadable output', () => {
   assert.equal(parseBuildPlan('I could not produce a plan.'), null);
 });
 
+test('a correct empty plan is not ALSO reported as a parser gap', () => {
+  // parseBuildPlan was fixed to return [] for `{"waves":[]}` (above), but both
+  // the no-work branch and the unreadable-output branch keyed off `plan` being
+  // null — which the two cases share. So the recipe-box resume logged both for
+  // one reply, back to back:
+  //   build-orchestrator reports no remaining work — checking each feature directly.
+  //   build-orchestrator answered but its plan was unusable ... this is a parser gap
+  // and wrote unparsed-plan.md blaming the reader for the one answer that was
+  // completely right — the exact failure the empty-plan fix set out to end.
+  assert.match(src, /let reportedNoWork = false;/, 'the two causes of a null plan must be distinguishable');
+
+  // Anchored on the log line itself, not the phrase — the phrase also appears in
+  // the comment explaining the fix.
+  const noWork = src.match(/reports no remaining work — checking each feature directly[\s\S]{0,200}/)[0];
+  assert.match(noWork, /reportedNoWork = true/, 'the no-work branch must record that the agent did answer');
+
+  assert.match(src, /if \(!plan && !reportedNoWork && !ctx\.dryRun\)/,
+    'the parser-gap report must not fire for a plan that was merely empty');
+});
+
 test('a wave that IS a scope (the flattened shape) parses', () => {
   // Third shape observed from the SAME agent across three runs. The lesson is
   // not "add another case" — it is that the meaning is stable (a wave is one or

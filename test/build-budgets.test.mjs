@@ -66,8 +66,12 @@ test('budgetLabel maps paths onto table rows, and non-deliverables onto nothing'
 test('the module tier is measured — sub-files used to have no budget at all', () => {
   // Regression: budgetFor() keyed on exact paths, so every architecture/<name>.md
   // returned null and shipped unmeasured however long it got.
-  assert.equal(budgetFor('gspec/architecture/web.md'), 600);
-  assert.equal(budgetFor('gspec/architecture/web.md', 'small'), Math.round(600 * SCOPE_FACTOR.small));
+  //
+  // 2,000 rather than the original 600: the tier stopped being prose-only when it
+  // took ownership of the module's spine — the anchors more than one feature
+  // references — and 600 words is not a ceiling that block list can live under.
+  assert.equal(budgetFor('gspec/architecture/web.md'), 2000);
+  assert.equal(budgetFor('gspec/architecture/web.md', 'small'), Math.round(2000 * SCOPE_FACTOR.small));
 });
 
 test('scope tiers scale the budget, and an unknown tier falls back rather than scaling by NaN', () => {

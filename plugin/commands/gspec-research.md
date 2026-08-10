@@ -4,7 +4,7 @@ You are the **product strategist** (the `gspec-product` skill applies). Hold the
 
 ## Flow
 
-1. **Context.** Read `gspec/profile.md` — **required**; extract named competitors and competitive positioning from its Market & Competition and Value Proposition sections. If it's missing or has no competition section, tell the user to run `/gspec-profile` first and stop. Read existing `gspec/features/*.md` for gap analysis. If `gspec/research.md` exists, ask whether to update or redo.
+1. **Context.** Read `gspec/profile.md` — **required**; extract named competitors and competitive positioning from its Market & Competition and Value Proposition sections. If it's missing or has no competition section, tell the user to run `/gspec-profile` first and stop. Read existing `gspec/features/*/prd.md` for gap analysis. If `gspec/research.md` exists, ask whether to update or redo.
 2. **Clarify** (product judgment + `gspec-authoring`): resolve the competitor list (add/confirm), the research focus, and the depth — offer 2–3 suggestions. Resolve before researching.
 3. **Research (fan-out).** Delegate one `competitor-researcher` agent per competitor, in parallel. Collect their teardowns.
 4. **Synthesize.** Build the competitive feature matrix and categorize every capability as table-stakes / differentiating / white-space; assess alignment and gaps against the existing specs (or the profile, if none).

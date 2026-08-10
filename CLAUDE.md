@@ -18,11 +18,12 @@ that the change touches:
 - **`package.json` + `package-lock.json`** — bump the version (patch/minor/major) for any shipped change,
   and keep both files in lockstep.
 - **`README.md`** — when install steps, flags, commands, or the top-level feature set change.
-- **`docs/gspec-v2-design.md`** — when the stage graph, agent roster, or an architectural contract
-  changes (e.g. adding an agent or a build stage).
 - **`plugin/` prose** — the agent/command/skill Markdown *is* user-facing behavior docs; keep the
   `.md` you change consistent with what the code now does, and update `scripts/manifest.js` when adding
-  or renaming an agent/command/skill.
+  or renaming an agent/command/skill. **`scripts/manifest.js` is easy to miss and load-bearing:** a
+  skill's frontmatter `description` is the *routing* signal an engine reads to decide when to invoke it,
+  and it lives there rather than in the command body — so a path or behavior named in a description
+  must change in lockstep with the prose.
 - **`website/` content pages and `website/gspec/` specs** — when a described behavior (build flow,
   platform support, getting-started steps) changes.
 

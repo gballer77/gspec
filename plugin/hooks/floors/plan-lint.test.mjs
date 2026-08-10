@@ -4,7 +4,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   archLintViolations, designLintViolations, planLintViolations,
-  originAnchors, slugifyAnchor, TASK_FIELD, coversQuotes,
+  originAnchors, anchorRefs, anchorModules, duplicateOrigins, containedAnchors,
+  slugifyAnchor, TASK_FIELD, coversQuotes,
 } from './plan-lint.mjs';
 
 const ARCH = `---
@@ -84,6 +85,135 @@ test('two origins for one anchor across features is caught deterministically', (
 
 test('originAnchors distinguishes origins from deltas', () => {
   assert.deepEqual(originAnchors(ARCH).map(([, k]) => k), ['origin', 'origin', 'origin']);
+});
+
+// The `uses:` stub is what makes a shared anchor's home movable for free: the
+// heading stays in the feature's own arch.md, so planLint and designLint keep
+// resolving against it unchanged. Classifying it as an origin would make every
+// consumer of a spine anchor a duplicate origin — the exact opposite of the job.
+test('a uses: stub is its own kind, not an origin', () => {
+  const stub = `### Rule: Progressive Enhancement Contract
+- **module:** site
+- **uses:** gspec/architecture/site.md
+`;
+  assert.deepEqual(originAnchors(stub).map(([, k]) => k), ['use']);
+
+  // Two features BOTH using one spine anchor is the normal case, not a clash.
+  const a = ARCH.replace('## Logic\n\n**Not Applicable** — no rules beyond CRUD.\n', `## Logic\n\n${stub}`);
+  const b = a.replaceAll('gspec/features/checkout/arch.md', 'gspec/features/billing/arch.md');
+  assert.deepEqual(
+    archLintViolations('gspec/features/checkout/arch.md', a, { 'gspec/features/billing/arch.md': b })
+      .filter((m) => /Progressive Enhancement/.test(m)),
+    []);
+});
+
+// C8. Every REFERENCE to an anchor resolves through slugifyAnchor, so a
+// punctuation variant is already one anchor to tasks.md and design.html. A `===`
+// compare reported that pair clean — a duplicate origin passing in silence.
+test('anchor identity is the slug, so a punctuation variant is still a clash', () => {
+  const hyphenated = ARCH
+    .replace('### Entity: Order', '### Entity: OrderX')  // keep Data unique
+    .replace('### Screen: Cart', '### Screen: Shopping Cart');
+  const other = ARCH
+    .replace('### Entity: Order', '### Entity: OrderX')
+    .replace('### Screen: Cart', '### Screen: Shopping-Cart')
+    .replaceAll('gspec/features/checkout/arch.md', 'gspec/features/billing/arch.md');
+
+  const v = archLintViolations('gspec/features/checkout/arch.md', hyphenated,
+    { 'gspec/features/billing/arch.md': other });
+  assert.ok(v.some((m) => /same anchor once slugified/.test(m)), v.join('\n'));
+
+  // …and within one file, too.
+  const inFile = ARCH.replace('## API\n', '### Entity: order\n\n## API\n');
+  assert.ok(archLintViolations('a/arch.md', inFile).some((m) => /same anchor once slugified/.test(m)));
+});
+
+test('anchorRefs carries the target path, which is what O3 turns on', () => {
+  const t = `### Screen: Lesson
+- **module:** site
+- **amends:** gspec/architecture/site.md
+`;
+  assert.deepEqual(anchorRefs(t), [['### Screen: Lesson', 'delta', 'gspec/architecture/site.md']]);
+});
+
+// The ANCHOR carries the module, not the feature: a feature spanning api and web
+// declares anchors in both, so feature frontmatter cannot be the unit.
+test('anchorModules reads the per-block module line', () => {
+  const mods = anchorModules(ARCH);
+  assert.equal(mods.get('### Entity: Order'), 'api');
+  assert.equal(mods.get('### Screen: Cart'), undefined, 'a block that says nothing claims nothing');
+});
+
+test('duplicateOrigins is the work list, keyed by slug across every file', () => {
+  const a = '### Rule: Seeded Randomness\n- **defined-in:** a.md\n';
+  const b = '### Rule: Seeded-Randomness\n- **defined-in:** b.md\n';
+  const c = '### Rule: Something Else\n- **defined-in:** c.md\n';
+  const dupes = duplicateOrigins({ 'a.md': a, 'b.md': b, 'c.md': c });
+  assert.equal(dupes.length, 1);
+  assert.equal(dupes[0].slug, 'rule-seeded-randomness');
+  assert.deepEqual(dupes[0].sites.map((s) => s.rel), ['a.md', 'b.md']);
+});
+
+// Regression: the `]` closing a bracketed `arch:` list rode on the FINAL element
+// after the split and defeated the provenance-aside strip, which is anchored to
+// end-of-string. A bare anchor survived the same bracket (slugifyAnchor drops it
+// as punctuation), so this only ever bit refs carrying a `(…)` aside — which is
+// every cross-tier reference, the one thing the two-tier split added. It fired
+// nine times in one file on a dogfood build, all false, and the free self-heal
+// "fixed" them by abandoning the bracketed format.
+test('a bracketed arch: list resolves its last entry, provenance aside and all', () => {
+  const arch = '### Endpoint: POST /borrowers\n### Rule: Error Response Contract\n';
+  const task = (refs) => `- [ ] **T1** add the endpoint\n  - arch: ${refs}\n`;
+
+  assert.deepEqual(planLintViolations('t.md',
+    task('[Endpoint: POST /borrowers, Rule: Error Response Contract (api.md)]'), arch), []);
+  // The unbracketed form a self-heal falls back to still works.
+  assert.deepEqual(planLintViolations('t.md',
+    task('Endpoint: POST /borrowers, Rule: Error Response Contract (api.md)'), arch), []);
+  // A single bracketed ref, which is where the bracket and the aside collide.
+  assert.deepEqual(planLintViolations('t.md',
+    task('[Rule: Error Response Contract (api.md)]'), arch), []);
+  // …and the check must still CATCH a genuinely unresolvable anchor, or the fix
+  // has just turned it off.
+  assert.equal(planLintViolations('t.md', task('[Rule: Nonexistent Thing (api.md)]'), arch).length, 1);
+});
+
+// The containment half of "one definition per shared concept" — mechanical, and
+// the shape every later writer in build #3 actually used: prefix the canonical
+// name with your own feature's name instead of amending it.
+test('containedAnchors flags a name that swallows another whole', () => {
+  const files = {
+    'one.md': '### Rule: Progressive Enhancement Contract\n- **defined-in:** one.md\n',
+    'two.md': '### Rule: Glossary Progressive Enhancement Contract\n- **defined-in:** two.md\n',
+    'three.md': '### Rule: Accessibility Baseline\n- **defined-in:** three.md\n',
+  };
+  const hits = containedAnchors(files);
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0].rel, 'two.md', 'the WIDER name is the one that should have amended');
+  assert.equal(hits[0].contains.rel, 'one.md');
+
+  // Order carries meaning in a name, and a different kind is a different thing.
+  assert.deepEqual(containedAnchors({
+    'a.md': '### Rule: Contract Enhancement\n- **defined-in:** a.md\n',
+    'b.md': '### Rule: Enhancement Contract Extra\n- **defined-in:** b.md\n',
+  }), []);
+  // An Endpoint name is a URL PATH, and paths nest by design. Every hit on a
+  // dogfood build was this false positive, and all three were fed to the resolve
+  // barrier as signal on a run where it had no real work.
+  assert.deepEqual(containedAnchors({
+    'a.md': '### Endpoint: GET /books\n- **defined-in:** a.md\n',
+    'b.md': '### Endpoint: GET /books/:id\n- **defined-in:** b.md\n',
+  }), []);
+  // Same file means one writer named both, so there was no canonical anchor to
+  // amend — the failure this check exists for is a LATER writer prefixing an
+  // EARLIER feature's name.
+  assert.deepEqual(containedAnchors({
+    'a.md': '### Rule: Enhancement Contract\n- **defined-in:** a.md\n### Rule: Glossary Enhancement Contract\n- **defined-in:** a.md\n',
+  }), []);
+  assert.deepEqual(containedAnchors({
+    'a.md': '### Rule: Lesson\n- **defined-in:** a.md\n',
+    'b.md': '### Screen: Reader Lesson\n- **defined-in:** b.md\n',
+  }), []);
 });
 
 // The backstop must not stop checking because a writer emphasised the key

@@ -13,7 +13,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { architectureDeliverables, splitScopesByFeature } from '../lib/build.js';
+import { architectureDeliverables, splitScopesByFeature, featureModules } from '../lib/build.js';
 import { makeProject, cleanup } from './helpers.mjs';
 
 const withTable = (rows) => `---
@@ -29,12 +29,20 @@ spec-version: v2
 ${rows.map((r) => `| ${r} | ${r === 'app' ? '.' : r} | npm run build | npm test |`).join('\n')}
 `;
 
-test('a single-module project owes only the system tier', async () => {
+// A single-module project owes its module tier too, now that the tier holds the
+// module's SPINE — the shared anchors every feature references. It used to owe
+// only the system file, because the tier minted zero anchors and a second file
+// for one module was pure ceremony. Folding the spine back into architecture.md
+// would put anchors in the system tier, which is the one file that must mint none.
+test('a single-module project owes its module tier as well', async () => {
   const dir = await makeProject();
   try {
     await mkdir(join(dir, 'gspec'), { recursive: true });
     await writeFile(join(dir, 'gspec', 'architecture.md'), withTable(['app']), 'utf-8');
-    assert.deepEqual(await architectureDeliverables(dir), ['gspec/architecture.md']);
+    assert.deepEqual(await architectureDeliverables(dir), [
+      'gspec/architecture.md',
+      'gspec/architecture/app.md',
+    ]);
   } finally { await cleanup(dir); }
 });
 
@@ -76,6 +84,63 @@ test('the legacy Deployables heading still resolves its tier (pre-migrate projec
       'gspec/architecture/web.md',
       'gspec/architecture/api.md',
     ]);
+  } finally { await cleanup(dir); }
+});
+
+// --- a feature spans modules -----------------------------------------------
+//
+// `module:` in the frontmatter was singular — "the module this feature belongs
+// to" — so a feature with an endpoint in `api` and a screen in `web` got ONE
+// module tier handed to its implementer and silently missed the other. The
+// ANCHOR carries the module, because an anchor names a thing in the codebase and
+// code lives in one module's dir.
+
+const SPANNING_ARCH = `---
+spec-version: v2
+feature: sessions
+module: api, web
+---
+
+## Data
+
+### Entity: Session
+- **module:** api
+- **defined-in:** gspec/architecture/api.md
+
+## API
+
+### Endpoint: POST /sessions
+- **module:** api
+- **defined-in:** gspec/features/sessions/arch.md
+
+## UI
+
+### Screen: Login
+- **module:** web
+- **defined-in:** gspec/features/sessions/arch.md
+
+## Logic
+
+**Not Applicable** — no rules yet.
+`;
+
+test('a feature reports every module its anchors name, not just one', async () => {
+  const dir = await makeProject();
+  try {
+    await mkdir(join(dir, 'gspec', 'features', 'sessions'), { recursive: true });
+    await writeFile(join(dir, 'gspec', 'features', 'sessions', 'arch.md'), SPANNING_ARCH, 'utf-8');
+    assert.deepEqual((await featureModules(dir, 'sessions')).sort(), ['api', 'web']);
+  } finally { await cleanup(dir); }
+});
+
+test('a comma-separated frontmatter list is not read as one oddly-named module', async () => {
+  const dir = await makeProject();
+  try {
+    await mkdir(join(dir, 'gspec', 'features', 'sessions'), { recursive: true });
+    // Anchors carry no module: line — the frontmatter is all there is.
+    const bare = SPANNING_ARCH.replace(/^- \*\*module:\*\* \w+\n/gm, '');
+    await writeFile(join(dir, 'gspec', 'features', 'sessions', 'arch.md'), bare, 'utf-8');
+    assert.deepEqual((await featureModules(dir, 'sessions')).sort(), ['api', 'web']);
   } finally { await cleanup(dir); }
 });
 

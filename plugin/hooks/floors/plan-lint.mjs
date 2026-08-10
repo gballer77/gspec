@@ -98,29 +98,131 @@ export function archLintViolations(rel, text, others = {}) {
 
   // Uniqueness within the file: two blocks with one anchor make the grep
   // ambiguous, which is the whole mechanism.
+  //
+  // Compared by SLUG, not by heading string. Every *reference* to an anchor
+  // resolves through slugifyAnchor, so `Entity: TunableConstants` and
+  // `Entity: Tunable Constants` are already one anchor to `tasks.md` and to
+  // `design.html` — two blocks under those two headings are ambiguous in exactly
+  // the way this check exists to prevent, and a string compare reports them
+  // clean.
   const all = headingsOf(String(text).split('\n')).map((h) => h.trim());
-  const seen = new Set();
+  const seen = new Map();
   for (const h of all) {
-    if (seen.has(h)) v.push(`${rel}: duplicate anchor "${h}" — one block per item`);
-    seen.add(h);
+    const slug = slugifyAnchor(h);
+    if (seen.has(slug)) {
+      const first = seen.get(slug);
+      v.push(first === h
+        ? `${rel}: duplicate anchor "${h}" — one block per item`
+        : `${rel}: "${h}" and "${first}" are the same anchor once slugified (${slug}) — one block per item, and a punctuation or case variant is not a distinction`);
+      continue;
+    }
+    seen.set(slug, h);
   }
 
   // Origin uniqueness across the tree. This is the deterministic backstop for
-  // the race the serial fan-out prevents; belt and braces, because two origins
-  // silently disagreeing is the failure mode durable feature folders cannot
-  // tolerate.
+  // the race the serial fan-out used to prevent; under declare/resolve it is no
+  // longer a race but a WORK LIST — two features legitimately declaring the same
+  // anchor is the input consolidation consumes, not a writer's mistake. The
+  // computation is unchanged; what changed is who reads the output.
+  //
+  // Slug-keyed for the same reason as above (C8): `### Rule: Progressive
+  // Enhancement Contract` and `### Rule: Progressive-Enhancement Contract` are
+  // two origins that every reference resolves to as one anchor, and a `===`
+  // compare reported that pair clean.
   for (const [anchor, kind] of originAnchors(text)) {
     if (kind !== 'origin') continue;
+    const slug = slugifyAnchor(anchor);
     for (const [otherRel, otherText] of Object.entries(others)) {
       if (otherRel === rel) continue;
-      const match = originAnchors(otherText).find(([a, k]) => a === anchor && k === 'origin');
+      const match = originAnchors(otherText).find(([a, k]) => k === 'origin' && slugifyAnchor(a) === slug);
       if (match) {
-        v.push(`${rel}: "${anchor}" is also defined as an origin in ${otherRel} — exactly one origin per anchor; make one of them an amendment`);
+        v.push(match[0] === anchor
+          ? `${rel}: "${anchor}" is also defined as an origin in ${otherRel} — exactly one origin per anchor; make one of them an amendment`
+          : `${rel}: "${anchor}" and "${match[0]}" in ${otherRel} are the same anchor once slugified (${slug}) — exactly one origin per anchor; make one of them an amendment`);
       }
     }
   }
 
   return v;
+}
+
+/**
+ * Duplicate origins across a whole set of arch.md files, as DATA rather than as
+ * findings — the work list the resolve step consumes.
+ *
+ * `files` maps path → text. Returns one entry per slug that more than one file
+ * originates, carrying every spelling it was written under, so a caller can both
+ * merge them and report what it merged.
+ *
+ * This is the same computation `archLintViolations` does for its cross-file
+ * check, hoisted so it can be run once over N files instead of N times over N−1.
+ */
+export function duplicateOrigins(files = {}) {
+  const bySlug = new Map();
+  for (const [rel, text] of Object.entries(files)) {
+    for (const [anchor, kind] of originAnchors(text)) {
+      if (kind !== 'origin') continue;
+      const slug = slugifyAnchor(anchor);
+      if (!bySlug.has(slug)) bySlug.set(slug, []);
+      bySlug.get(slug).push({ rel, anchor });
+    }
+  }
+  return [...bySlug.entries()]
+    .filter(([, sites]) => sites.length > 1)
+    .map(([slug, sites]) => ({ slug, sites }));
+}
+
+/**
+ * Anchor names that CONTAIN another anchor's name as a whole-token subsequence —
+ * `Rule: Glossary Progressive Enhancement Contract` ⊃ `Rule: Progressive
+ * Enhancement Contract`. The containment half of "one definition per shared
+ * concept", and the half that needs no judgment.
+ *
+ * A synonym with no shared tokens is NOT detectable here and never will be;
+ * that half is a judging step, and this function deliberately does not guess.
+ *
+ * Returns `{ slug, anchor, rel, contains: { slug, anchor, rel } }` per hit —
+ * the wider name first, because it is the one that should have amended.
+ */
+export function containedAnchors(files = {}) {
+  const all = [];
+  for (const [rel, text] of Object.entries(files)) {
+    for (const [anchor] of originAnchors(text)) {
+      const m = anchor.trim().match(/^###\s+(\w+):\s*(.+)$/);
+      if (!m) continue;
+      all.push({ rel, anchor: anchor.trim(), kind: m[1], tokens: tokensOf(m[2]), slug: slugifyAnchor(anchor) });
+    }
+  }
+  const out = [];
+  for (const wide of all) {
+    for (const narrow of all) {
+      if (wide.slug === narrow.slug || wide.kind !== narrow.kind) continue;
+      // An Endpoint name is a URL PATH, and paths nest by design: `GET /books`
+      // is a prefix of `GET /books/:id` because REST says so, not because one
+      // feature prefixed the other's name. Containment cannot tell the two
+      // apart, and every hit on a dogfood build was this false positive.
+      if (wide.kind.toLowerCase() === 'endpoint') continue;
+      // Same file means one writer named both, so there was no canonical anchor
+      // to amend and nothing to adjudicate — the failure this check exists for
+      // is a LATER writer prefixing an EARLIER feature's name.
+      if (wide.rel === narrow.rel) continue;
+      if (narrow.tokens.length >= wide.tokens.length) continue;
+      if (!isSubsequence(narrow.tokens, wide.tokens)) continue;
+      out.push({ slug: wide.slug, anchor: wide.anchor, rel: wide.rel, contains: { slug: narrow.slug, anchor: narrow.anchor, rel: narrow.rel } });
+    }
+  }
+  return out;
+}
+
+const tokensOf = (name) => slugifyAnchor(name).split('-').filter(Boolean);
+
+// Whole-token subsequence, in order. `[progressive, enhancement, contract]` is
+// inside `[glossary, progressive, enhancement, contract]`; `[contract,
+// progressive]` is not, because order carries meaning in a name.
+function isSubsequence(needle, haystack) {
+  let i = 0;
+  for (const t of haystack) if (t === needle[i]) i++;
+  return i === needle.length;
 }
 
 // Does this block declare `key:` as a status line, however it is dressed up?
@@ -139,7 +241,19 @@ export function archLintViolations(rel, text, others = {}) {
 const declaresKey = (block, key) =>
   new RegExp(`^\\s*[-*+]?\\s*${key}\\s*:`, 'im').test(String(block).replace(/[*_`]/g, ''));
 
-// [anchorHeading, 'origin' | 'delta'] for each block that declares itself.
+// [anchorHeading, 'origin' | 'delta' | 'use'] for each block that declares itself.
+//
+// `uses:` is the third kind, and it is what makes a shared anchor's home movable
+// without breaking anything downstream. A feature that merely CONSUMES a spine
+// anchor keeps a two-line stub under the right `##` section — the heading, and
+// `uses:` pointing at the module tier — so the anchor is still greppable in that
+// feature's own arch.md. `planLintViolations` (task `arch:` refs resolve against
+// arch.md headings) and `designLintViolations` (every `<section id="screen-*">`
+// needs a `### Screen:`) therefore keep working with no change at all.
+//
+// It has to be checked BEFORE `defined-in:`, and it has to be its own kind:
+// classifying a stub as an origin would make every consumer of a shared anchor a
+// duplicate origin, which is the exact opposite of what the stub is for.
 export function originAnchors(text) {
   const out = [];
   const lines = String(text).split('\n');
@@ -148,7 +262,60 @@ export function originAnchors(text) {
     const anchor = lines[i].trim();
     const block = lines.slice(i + 1, i + 8).join('\n');
     if (declaresKey(block, 'amends')) out.push([anchor, 'delta']);
+    else if (declaresKey(block, 'uses')) out.push([anchor, 'use']);
     else if (declaresKey(block, 'defined-in')) out.push([anchor, 'origin']);
+  }
+  return out;
+}
+
+/**
+ * Where each block says its definition lives: `[anchor, kind, target]`.
+ *
+ * `target` is the path on the `amends:` / `uses:` / `defined-in:` line, which is
+ * what O3 turns on — a delta an agent reads has to arrive with its base, and the
+ * only way to check that mechanically is to resolve the path and ask whether it
+ * is in the reader's scope.
+ */
+export function anchorRefs(text) {
+  const out = [];
+  const lines = String(text).split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^###\s/.test(lines[i])) continue;
+    const anchor = lines[i].trim();
+    const block = lines.slice(i + 1, i + 8).join('\n');
+    for (const key of ['amends', 'uses', 'defined-in']) {
+      const target = keyValue(block, key);
+      if (target === null) continue;
+      out.push([anchor, key === 'defined-in' ? 'origin' : key === 'uses' ? 'use' : 'delta', target]);
+      break;
+    }
+  }
+  return out;
+}
+
+// The value on a `- **key:** value` status line, stripped of markdown dressing.
+// Same tolerance as declaresKey — emphasis, bullets and backticks carry no
+// meaning, and pinning one spelling is how the origin backstop silently stopped
+// checking anchors once before.
+function keyValue(block, key) {
+  const m = String(block).replace(/[*_`]/g, '')
+    .match(new RegExp(`^\\s*[-*+]?\\s*${key}\\s*:\\s*(.*)$`, 'im'));
+  return m ? m[1].trim() : null;
+}
+
+// The module a block belongs to, from its `- **module:** <name>` status line.
+//
+// The ANCHOR carries the module, not the feature. A feature spanning `api` and
+// `web` declares anchors in both, so the feature-level frontmatter cannot be the
+// unit: an anchor names a thing in the codebase, and code lives in one module's
+// dir. Returns a Map of anchor heading → module name for every block that says.
+export function anchorModules(text) {
+  const out = new Map();
+  const lines = String(text).split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^###\s/.test(lines[i])) continue;
+    const mod = keyValue(lines.slice(i + 1, i + 8).join('\n'), 'module');
+    if (mod) out.set(lines[i].trim(), mod);
   }
   return out;
 }
@@ -213,6 +380,26 @@ export function designLintViolations(rel, designHtml, archText) {
   return v;
 }
 
+// The canonical `arch:` value is a bracketed list — `arch: [A, B, C]` — so the
+// closing `]` rides on the LAST element after the split. That bracket silently
+// defeats the provenance-aside strip in normalizeAnchorRef, which is anchored to
+// end-of-string: `Rule: X (api.md)]` slugs to `rule-x-api-md` and resolves to
+// nothing. A BARE anchor survives the same bracket (slugifyAnchor drops it as
+// punctuation), so this only ever bit refs carrying a `(…)` aside — which is to
+// say every cross-tier reference, the one thing the two-tier split added. On a
+// dogfood build it fired nine times in one file, all false, and the free
+// self-heal "fixed" them by abandoning the bracketed format entirely.
+//
+// Unwrap only a list that wraps the WHOLE value and contains no inner `]`, so a
+// markdown link (`[Entity: X](arch.md)`, ending in `)`) and the pathological
+// `[A], [B]` are both left alone.
+const unwrapList = (value) => {
+  const t = String(value).trim();
+  if (!t.startsWith('[') || !t.endsWith(']')) return t;
+  const inner = t.slice(1, -1);
+  return inner.includes(']') ? t : inner.trim();
+};
+
 // Every `arch:` anchor an UNCHECKED task names must resolve in the sibling
 // arch.md. Checked tasks are immutable, so their anchors freeze with them and
 // may legitimately point at something a later feature superseded — they route
@@ -230,7 +417,7 @@ export function planLintViolations(rel, tasksText, archText) {
     // Split on separators OUTSIDE parentheses: a reference like
     // "UI (intro, integration contract) > ### Component: Panel" carries a comma
     // inside its aside, and splitting there invents two anchors from one.
-    for (const raw of arch[1].split(/[,;](?![^(]*\))/)) {
+    for (const raw of unwrapList(arch[1]).split(/[,;](?![^(]*\))/)) {
       const a = normalizeAnchorRef(raw);
       if (!a) continue;
       if (!known.has(a)) v.push(`${rel}: task anchor "${raw.trim()}" does not resolve to a heading in arch.md`);
@@ -274,6 +461,11 @@ export const TASK_FIELD = {
 export function normalizeAnchorRef(ref) {
   const raw = String(ref).trim()
     .replace(/^#+\s*/, '')
+    // A list-closing bracket that survived the split (see unwrapList) has to come
+    // off BEFORE the aside strip below, which is anchored to end-of-string and is
+    // silently defeated by it. Belt-and-braces: unwrapList already handles the
+    // canonical shape, this covers a writer who brackets an individual ref.
+    .replace(/\s*\]\s*$/, '')
     // A trailing aside — "Rule: Content Extraction (amends .../arch.md)" — is
     // provenance the writer added for a human, not part of the anchor's name.
     .replace(/\s*\([^)]*\)\s*$/, '')

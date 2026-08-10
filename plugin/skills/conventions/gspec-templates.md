@@ -8,7 +8,7 @@ The user keeps a personal library of reusable, saved specs — **templates** —
 | `~/.gspec/stacks/` | `gspec/stack.md` | `gspec-architect` |
 | `~/.gspec/styles/` | `gspec/style.md` or `style.html` | `gspec-designer` |
 | `~/.gspec/practices/` | `gspec/practices.md` | `gspec-practices` |
-| `~/.gspec/features/` | `gspec/features/<slug>.md` | `gspec-product` |
+| `~/.gspec/features/` | `gspec/features/<slug>/prd.md` | `gspec-product` |
 
 Only these four spec types have a library. **profile.md and architecture.md do not** — they are inherently project-specific, so never seed them from a template. If a folder is absent or empty, there are simply no templates; proceed as normal.
 

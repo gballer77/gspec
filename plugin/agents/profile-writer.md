@@ -20,6 +20,8 @@ spec-version: <<<SPEC_VERSION>>>
 If the brief leaves something load-bearing unresolved (e.g. product type, primary audience), make a reasonable, clearly-labeled assumption and note it — do not block and do not invent silently. The command is responsible for resolving the important questions before delegating.
 
 ## Return contract
+Before returning, walk your skill's required-sections list and confirm each section exists in the file — or is present as "Not Applicable — <reason>". A silently omitted section is the most common QA failure on this deliverable, and the sections that need synthesis are the ones that go missing.
+
 After writing the file, return a **compact summary** — not the file contents:
 - the path written (`gspec/profile.md`);
 - the product type and the core positioning, one line each;

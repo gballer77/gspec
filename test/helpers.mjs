@@ -86,10 +86,26 @@ write_feature_file() {
   [ -n "$1" ] || return 0
   mkdir -p "$(dirname "$1")"
   case "$1" in
-    */arch.md) printf '%s\\n' '---' 'feature: fake' '---' '' '# Arch' '' '## Data' '' '### Entity: Thing' '' '## API' '' '**Not Applicable** — no HTTP surface.' '' '## UI' '' '### Screen: Main' '' '## Logic' '' '**Not Applicable** — no rules.' > "$1" ;;
+    */arch.md) printf '%s\\n' '---' 'feature: fake' 'module: app' '---' '' '# Arch' '' '## Data' '' '### Entity: Thing' '- **module:** app' "- **defined-in:** $1" '' '## API' '' '**Not Applicable** — no HTTP surface.' '' '## UI' '' '### Screen: Main' '- **module:** app' "- **defined-in:** $1" '' '## Logic' '' '**Not Applicable** — no rules.' > "$1" ;;
     */design.html) printf '%s\\n' '<!-- spec-version: v2 -->' '<!DOCTYPE html>' '<section id="screen-main"><h2>Main</h2></section>' > "$1" ;;
     */tasks.md) printf '%s\\n' '---' 'feature: fake' '---' '' '## Plan' '' '- [x] **T1** Do the thing' > "$1" ;;
   esac
+}
+# The declare pass's skeleton: the same anchors, the same status lines, and the
+# frontmatter key that marks it a declaration rather than a finished spec — which
+# is exactly what stops the elaborate pass from mistaking it for one.
+write_declaration() {
+  [ -n "$1" ] || return 0
+  mkdir -p "$(dirname "$1")"
+  printf '%s\\n' '---' 'feature: fake' 'module: app' 'stage: declared' '---' '' '# Arch' '' '## Data' '' '### Entity: Thing' '- **module:** app' "- **defined-in:** $1" '- **intent:** the thing' '' '## API' '' '**Not Applicable** — no HTTP surface.' '' '## UI' '' '### Screen: Main' '- **module:** app' "- **defined-in:** $1" '- **intent:** the main screen' '' '## Logic' '' '**Not Applicable** — no rules.' > "$1"
+}
+# The resolve barrier writes the module tier. Path comes out of the prompt, same
+# discipline as the per-feature writers.
+write_module_tier() {
+  path=$(printf '%s' "$1" | sed -n 's|.*\\(gspec/architecture/[a-z0-9][a-z0-9-]*\\.md\\).*|\\1|p' | head -1)
+  [ -n "$path" ] || return 0
+  mkdir -p "$(dirname "$path")"
+  printf '%s\\n' '---' 'spec-version: v2' 'module: app' '---' '' '# Module architecture' '' 'Written by the fake engine.' > "$path"
 }
 # Produce whatever deliverable this prompt implies. Checkers write nothing.
 deliver() {
@@ -105,6 +121,8 @@ deliver() {
       slug=$(printf '%s' "$prd" | sed -n 's|gspec/features/\\([a-z0-9][a-z0-9-]*\\)/prd.md|\\1|p')
       [ -n "$slug" ] && write_prd "$slug" ;;
     *"feature PRD for this idea"*) write_prd only-feature ;;
+    *"DECLARE the architecture anchors"*) write_declaration "$(feature_path "$1" arch.md)" ;;
+    *"Resolve the shared architecture"*) write_module_tier "$1" ;;
     *"Write the feature architecture"*) write_feature_file "$(feature_path "$1" arch.md)" ;;
     *"Write the feature design"*) write_feature_file "$(feature_path "$1" design.html)" ;;
     *"Decompose the feature"*) write_feature_file "$(feature_path "$1" tasks.md)" ;;

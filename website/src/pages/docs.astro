@@ -22,20 +22,20 @@ const sections = [
   { id: 'build', label: 'build', group: 'Build' },
   { id: 'implement', label: 'implement', group: 'Build' },
   { id: 'qa', label: 'qa', group: 'Build' },
-  { id: 'distill', label: 'distill', group: 'Maintenance' },
+  { id: 'memorize', label: 'memorize', group: 'Maintenance' },
   { id: 'migrate', label: 'migrate', group: 'Maintenance' },
 ];
 
 const headings = sections.map((s) => ({ id: s.id, label: s.label, level: s.group ? 3 : 2 }));
 ---
 
-<SidebarLayout title="Documentation — gspec" description="Complete command reference for gspec — workflow overview and detailed documentation for all 15 commands.">
+<SidebarLayout title="Documentation — gspec" description="Complete command reference for gspec — workflow overview and detailed documentation for all 16 commands.">
   <SidebarNav sections={sections} slot="sidebar" />
   <TableOfContents headings={headings} slot="toc" />
 
   <h1>Documentation</h1>
   <p class="text-lg text-[var(--text-secondary)] !mt-2 !mb-12">
-    Complete reference for the gspec workflow and all 15 commands.
+    Complete reference for the gspec workflow and all 16 commands.
   </p>
 
   <!-- Workflow Overview -->
@@ -333,7 +333,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     name="feature"
     role="Product Manager"
     description="Writes one or more product requirements documents (PRDs) for features. Handles both single features and larger bodies of work — if the scope is large enough, it proposes a multi-feature breakdown for your approval before generating individual PRDs."
-    produces="One or more feature PRDs saved to gspec/features/<feature-name>.md. Each includes overview, user stories, scope (in/out/deferred), prioritized capabilities with acceptance criteria, dependencies, assumptions and risks, and success metrics."
+    produces="One or more feature PRDs saved to gspec/features/<slug>/prd.md. Each includes overview, user stories, scope (in/out/deferred), prioritized capabilities with acceptance criteria, dependencies, assumptions and risks, and success metrics."
     invocation={'/gspec-feature "Task board with drag-and-drop columns"'}
     questions={[
       'Feature description and user need it addresses',
@@ -365,8 +365,8 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     id="architect"
     name="architect"
     role="Technical Architect"
-    description="Designs the technical architecture — project structure, data model, API design, component architecture, and environment configuration. Reads your stack, practices, and feature PRDs to produce a comprehensive blueprint. The file layout follows the Modules table: a single-module system keeps everything in one gspec/architecture.md, while a multi-module system gets a two-tier layout — a system-level architecture.md (shared data model, inter-module contracts, cross-cutting auth, the Modules table) plus one gspec/architecture/<name>.md per module for that unit's internals, each carrying routing frontmatter so downstream commands load only the units their work touches."
-    produces="A technical architecture document saved to gspec/architecture.md — plus, for multi-module systems, one gspec/architecture/<name>.md per module, linked from its Modules-table row. Includes project structure with directory layout, data model, API design, component architecture, environment configuration, CI/CD setup, and a technical gap analysis. Every concern is stated exactly once, at the tier that owns it."
+    description="Designs the technical architecture — project structure, data model, API design, component architecture, and environment configuration. Reads your stack, practices, and feature PRDs to produce a comprehensive blueprint. The file layout follows the Modules table and is always two-tier: a system-level architecture.md (shared data model, inter-module contracts, cross-cutting auth, the Modules table) plus one gspec/architecture/<name>.md per row — including a single-module project — carrying that unit's internals and its spine, the architecture anchors more than one feature references. Each sub-file carries routing frontmatter so downstream commands load only the units their work touches."
+    produces="A technical architecture document saved to gspec/architecture.md, plus one gspec/architecture/<name>.md per Modules-table row, linked from its row. Includes project structure with directory layout, data model, API design, component architecture, environment configuration, CI/CD setup, and a technical gap analysis. Every concern is stated exactly once, at the tier that owns it."
     invocation="/gspec-architect"
     questions={[
       'Architectural patterns and preferences',
@@ -400,7 +400,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     name="plan"
     role="Engineering Lead"
     description="Decomposes a feature PRD into an ordered, dependency-aware plan with explicit parallel-execution markers. Sits between feature (the 'what') and implement (the 'how'). Reads the PRD plus the architecture and stack for ordering signals, then proposes 1–N concrete tasks per capability with stable IDs, deps lines, and [P] markers for tasks that are safe to run in parallel. When a plan file exists, implement skips its own plan-mode step and executes the plan directly."
-    produces="A sibling file at gspec/features/<feature>.plan.md with YAML frontmatter linking it back to the PRD, plus a single ## Plan section containing ordered, checkboxed tasks. Each task carries a priority (P0/P1/P2), an optional [P] marker, a deps: line listing prerequisite task IDs, and a covers: line quoting the PRD capability text the task contributes to."
+    produces="A sibling file at gspec/features/<slug>/tasks.md with YAML frontmatter linking it back to the PRD, plus a single ## Plan section containing ordered, checkboxed tasks. Each task carries a priority (P0/P1/P2), an optional [P] marker, a deps: line listing prerequisite task IDs, and a covers: line quoting the PRD capability text the task contributes to."
     invocation={'/gspec-plan "home-page"'}
     questions={[
       'Which feature PRD to decompose (if multiple PRDs exist)',
@@ -511,7 +511,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
       'Use the spec-review pause to read and edit gspec/ before any code is written; resume when it looks right (or pass --no-review to run straight through)',
       'If a QA gate keeps failing on a hard stage, resume with --qa-retries <n> to give it a bigger self-heal budget instead of fixing everything by hand',
       'Cut token cost by assigning models per agent in .gspec/config.json (or ~/.gspec/config.json) — put QA and foundations on a cheaper model, keep the strong one for architecture and implementation',
-      'Review the learnings report at the end; it feeds the distill step',
+      'Review the report at the end; it feeds the memorize step',
     ]}
     pitfalls={[
       'Expecting an autonomous build on a harness without a wired engine — use the interactive commands there instead',
@@ -521,7 +521,7 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     related={[
       { name: 'implement', relation: 'Build runs implement as its implementation stage, gated by verify.sh and the implementation validator' },
       { name: 'qa', relation: 'Build applies the same producer ≠ checker quality gate that qa runs on demand' },
-      { name: 'distill', relation: 'Build records learnings each run; distill promotes recurring ones into skills' },
+      { name: 'memorize', relation: 'Build records memories each run; memorize commits recurring ones to skills' },
     ]}
   />
 
@@ -586,28 +586,56 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
   />
 
   <CommandSection
-    id="distill"
-    name="distill"
+    id="memorize"
+    name="memorize"
     role="Steward"
-    description="The reviewer half of gspec's learning loop. When validators reject work or you correct an agent, those lessons are captured to per-agent memory, tagged with the layer they belong to. distill reviews those accumulated lessons and proposes surgical edits that promote recurring ones into the skills themselves — presented one at a time for your approval — then prunes lessons that have graduated. Corrections become durable, reusable expertise instead of evaporating after a session."
-    produces="Approved edits to skill files that fold in recurring lessons, plus pruning of the memory entries that have graduated. Every change is reviewed and approved by you before it is applied."
-    invocation="/gspec-distill"
+    description="The reviewer half of gspec's learning loop. When validators reject work or you correct an agent, that memory is recorded to .gspec/memory/pending/ — one file per memory, tagged with the layer it belongs to. memorize reviews those pending memories and proposes surgical edits that commit recurring ones to the skills themselves — presented one at a time for your approval — then deletes the ones that have graduated. Corrections become durable, reusable expertise instead of evaporating after a session."
+    produces="Approved edits to skill files that fold in recurring memories, plus deletion of the pending entries that have graduated. Every change is reviewed and approved by you before it is applied."
+    invocation="/gspec-memorize"
     questions={[
-      'Which captured lessons to review (all, or scoped to a layer or agent)',
+      'Which pending memories to review (all, or scoped to a layer or agent)',
       'For each proposed skill edit, whether to apply, modify, or skip',
     ]}
     bestPractices={[
-      'Run distill periodically after several build or interactive sessions, once lessons have accumulated',
-      'Review each proposed edit — distill suggests, you decide',
-      'Let it prune graduated lessons so memory stays focused on what is still unresolved',
+      'Run memorize periodically after several build or interactive sessions, once memories have accumulated',
+      'Review each proposed edit — memorize suggests, you decide',
+      'Let it delete graduated memories so pending stays focused on what is still unresolved',
     ]}
     pitfalls={[
-      'Running it with no captured feedback yet — there is nothing to distill on a fresh install',
+      'Running it with no recorded feedback yet — there is nothing to review on a fresh install',
       'Blindly approving every proposed edit — skills are load-bearing, so review the wording',
     ]}
     related={[
-      { name: 'build', relation: 'Build records the learnings that distill later reviews' },
-      { name: 'qa', relation: 'A failing qa verdict is one of the signals captured for distillation' },
+      { name: 'build', relation: 'Build records the memories that memorize later reviews' },
+      { name: 'qa', relation: 'A failing qa verdict is one of the signals recorded as a memory' },
+      { name: 'teach', relation: 'teach is the same reviewed edit, started from your correction instead of memory' },
+    ]}
+  />
+
+  <CommandSection
+    id="teach"
+    name="teach"
+    role="Steward"
+    description="The other half of the learning loop — the half that starts with you. memorize can only commit what an agent already recorded after something went wrong, so it is powerless when nothing went wrong from any agent's point of view: a spec that satisfies its own quality bar while missing something the bar never thought to ask for. The writer follows its guide exactly, the validator checks it against that same guide and passes it, and the output is self-consistently incomplete — no failure, so nothing recorded, so nothing to review. teach lets you state the correction directly. The memorizer works out where it belongs and drafts the minimal edit; you approve before anything changes."
+    produces="Approved, surgical edits to the skill, agent or command files that govern how an agent works — plus an explicit verdict on whether the edit survives your next gspec upgrade."
+    invocation="/gspec-teach <what the agent should do differently>"
+    questions={[
+      'What should change about how the agent works (name a target, or just describe the symptom)',
+      'For each proposed edit, whether to apply, modify, or skip',
+    ]}
+    bestPractices={[
+      'Describe the symptom you saw — you do not have to know which file governs it, that is the job',
+      'Expect two proposals for one correction: the rule itself, and the quality bar a validator checks against',
+      'Reach for it when reviewing built output, which is where the gaps no gate can catch actually show up',
+    ]}
+    pitfalls={[
+      'Using it for a product decision — anything true of this product belongs in gspec/ via its own command, not in a skill',
+      'Applying only the rule and skipping the quality-bar edit, which teaches the writer but leaves the checker unable to catch a regression',
+      'Assuming the edit is permanent in an installed project — skills under .claude/skills/ are overwritten on the next upgrade, and teach tells you when that applies',
+    ]}
+    related={[
+      { name: 'memorize', relation: 'The same reviewed edit path, sourced from recorded memories rather than from you' },
+      { name: 'build', relation: 'Reviewing a build\'s output is where corrections worth teaching usually surface' },
     ]}
   />
 

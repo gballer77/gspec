@@ -7,6 +7,7 @@ Identity leaks through more than prose — sweep every one of these sites:
 - **Document metadata** — an HTML guide's `<title>` element, meta tags, and source comments;
 - **Chrome copy** — footer bylines, header wordmarks, and sample text rendered inside example components;
 - **Identifiers** — token, class, CSS custom-property, and constant names must be generic (`--color-accent`, `type-display-16`). A product-derived prefix (`acme-micro-8` for a product named Acme) is an agnosticism breach even when every heading and paragraph is clean.
+- **Facts and examples** — an exact module count ("three independently buildable modules"), a deployment property ("local-first", "single-user"), or a domain-flavoured illustrative parenthetical all read as product identity even with no name attached. State a scope-limiting fact as an explicit **Assumption:** tied to the brief rather than a bare declarative, and keep examples domain-neutral ("input normalization", not "unit-variant parsing"). Fix these by grep — a guide reuses the same example across many sections, and QA scores that as one pervasive violation, not one line.
 
 Why: it makes specs portable (a stack or style can be reused across projects) and keeps each spec's concern clean.
 

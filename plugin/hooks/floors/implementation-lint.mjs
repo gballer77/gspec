@@ -40,6 +40,21 @@ const SOURCE_EXT = [
 ].join('|');
 const PATHISH = new RegExp('`([^`\\s]+\\.(?:' + SOURCE_EXT + '))`', 'gi');
 
+// A BARE `.js` token is a package name far more often than a repo file, and
+// getting it wrong is unrecoverable. `fraction.js`, `chart.js`, `three.js`,
+// `vue.js`, `d3.js`, `next.js` are libraries a plan names in backticks exactly
+// as it names a file — but no file will ever appear at that path, so the
+// implementer cannot satisfy the finding, the self-heal round reports it again,
+// and the stage dies as "not converging". That is what ended a 12-hour run at
+// the final gate, on `fraction.js`.
+//
+// The asymmetry decides the rule: a missed check costs one unverified checkbox,
+// a false positive costs the whole build. So a token with no path separator and
+// a `.js` extension is left alone. Everything else is unchanged — `verify.sh`,
+// `package.json` and `vite.config.ts` are still checked at the repo root,
+// because no ecosystem names packages that way.
+const looksLikePackageName = (path) => !path.includes('/') && /\.js$/i.test(path);
+
 // Deliberately narrow: markers that mean "not finished", not every mention of
 // the word. `TODO(nope)` in a comment is a stub; "todo list" in a UI string is
 // not, so the marker must sit at a word boundary and read as an annotation.
@@ -59,7 +74,10 @@ export function filesNamedByCheckedTasks(tasksText) {
   for (const line of String(tasksText).split('\n')) {
     const task = line.match(/^\s*[-*]\s*\[([xX])\]\s*\*\*T(\d+)\*\*(.*)$/);
     if (!task) continue;
-    for (const m of task[3].matchAll(PATHISH)) out.push({ id: `T${task[2]}`, path: m[1] });
+    for (const m of task[3].matchAll(PATHISH)) {
+      if (looksLikePackageName(m[1])) continue;
+      out.push({ id: `T${task[2]}`, path: m[1] });
+    }
   }
   return out;
 }

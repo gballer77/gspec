@@ -14,9 +14,9 @@ Return a single fenced ```json block — nothing else — of ordered **waves**. 
 {
   "waves": [
     [ { "label": "scaffold", "instruction": "Scaffold the project per architecture.md (Project Setup, Structure, design tokens); generate verify.sh from the Modules table. No feature work yet." } ],
-    [ { "label": "auth", "instruction": "Implement feature gspec/features/auth.md (plan gspec/tasks/auth.md), tasks T1–T6.", "plan": ["gspec/tasks/auth.md"] },
-      { "label": "catalog", "instruction": "Implement feature gspec/features/catalog.md (plan gspec/tasks/catalog.md), tasks T1–T5.", "plan": ["gspec/tasks/catalog.md"] } ],
-    [ { "label": "checkout", "instruction": "Implement feature gspec/features/checkout.md; depends on auth + catalog.", "plan": ["gspec/tasks/checkout.md"] } ]
+    [ { "label": "auth", "instruction": "Implement feature gspec/features/auth/prd.md (plan gspec/features/auth/tasks.md), tasks T1–T6.", "plan": ["gspec/features/auth/tasks.md"] },
+      { "label": "catalog", "instruction": "Implement feature gspec/features/catalog/prd.md (plan gspec/features/catalog/tasks.md), tasks T1–T5.", "plan": ["gspec/features/catalog/tasks.md"] } ],
+    [ { "label": "checkout", "instruction": "Implement feature gspec/features/checkout/prd.md; depends on auth + catalog.", "plan": ["gspec/features/checkout/tasks.md"] } ]
   ]
 }
 ```
@@ -32,4 +32,4 @@ Return a single fenced ```json block — nothing else — of ordered **waves**. 
 4. **Scopes are right-sized & self-contained** — one feature or phase each, with an instruction an isolated implementer can act on alone.
 
 ## Trainable
-This judgment improves across runs: lessons the `build-orchestrator` records in memory (a wrong parallelization, a missed dependency) are promoted back into this skill via `/gspec-distill`. Treat past lessons as binding refinements of the rules above.
+This judgment improves across runs: a wrong parallelization or a missed dependency surfaces as a failing verdict in `.gspec/agent-runs/feedback-log.md` — the `build-orchestrator` is read-only, so that log is its channel into the loop — and `/gspec-memorize` commits the memory back into this skill. Treat anything under **Remembered** as a binding refinement of the rules above.

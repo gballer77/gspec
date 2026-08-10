@@ -41,7 +41,7 @@ When a skill needs feedback on more than one question, first preview all of them
 
 2. **Spec before you build** — If the user asks for a feature or capability that isn't covered by an existing feature PRD in `gspec/features/`, run the `gspec-feature` command to create a new feature PRD before implementing it. Every feature should be specified before it's built — don't skip straight to code.
 
-3. **Update feature checkboxes** — When you implement a capability defined in a feature PRD (`gspec/features/*.md`), change its checkbox from `- [ ]` to `- [x]`. **If a plan file exists** at `gspec/features/<feature>.plan.md`, also flip the checkbox of each completed task in that file. Only flip the PRD capability checkbox once every task whose `covers:` references it is checked.
+3. **Update feature checkboxes** — When you implement a capability defined in a feature PRD (`gspec/features/<slug>/prd.md`), change its checkbox from `- [ ]` to `- [x]`. **If a plan file exists** at `gspec/features/<slug>/tasks.md`, also flip the checkbox of each completed task in that file. Only flip the PRD capability checkbox once every task whose `covers:` references it is checked. A project that has not yet run `/gspec-migrate` keeps these one level up, as `gspec/features/<slug>.md` and `gspec/tasks/<slug>.md` — read whichever layout is on disk, and never create a second copy in the other one.
 
 4. **Update specs that your changes contradict** — If your code change makes a spec statement incorrect (e.g., you changed the data model, switched a dependency, altered a UI pattern, or added a new API endpoint), update the spec to reflect reality. Common candidates:
    - `gspec/architecture.md` — project structure, data model, API routes, component hierarchy

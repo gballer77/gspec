@@ -21,6 +21,8 @@ The user may keep reusable stack templates in `~/.gspec/stacks/` (see the `gspec
 If the brief leaves a load-bearing decision unresolved, do **not** block and do **not** invent silently. Make a reasonable, clearly-labeled choice and record it under a **Clarifications → Deferred Decisions** entry explaining what was assumed and why. The command is responsible for resolving the important questions before delegating to you.
 
 ## Return contract
+Before returning, walk your skill's required-sections list and confirm each section exists in the file — or is present as "Not Applicable — <reason>". A silently omitted section is the most common QA failure on this deliverable, and the sections that need synthesis are the ones that go missing.
+
 After writing the file, return a **compact summary** — not the file contents:
 - the path written (`gspec/stack.md`);
 - the key technology decisions, one line each;

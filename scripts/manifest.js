@@ -2,7 +2,8 @@
 // classes. Replaces build.js's flat COMMANDS map as capabilities migrate to the
 // v2 architecture. Each entry names a source file (relative to the repo root),
 // the emitted artifact name, and its metadata. Agents additionally declare the
-// skills they preload plus tools / model / memory.
+// skills they preload plus tools / model, and `remembers:` — whether the agent
+// records memories to `.gspec/memory/pending/` (write-capable agents only).
 //
 // See docs/gspec-v2-design.md for the full design.
 
@@ -69,16 +70,17 @@ export const V2_SKILLS = [
   },
 ];
 
-// Learning-loop skills — Claude-only (per-agent `memory:` is a Claude Code
-// feature; the other targets have no silo). The build emits these and appends
-// them to every agent's `skills:` ONLY for a target with `learningLoop: true`
-// (currently just claude), so they never leak into the non-Claude inline/degrade
-// bodies. Kept out of V2_SKILLS for exactly that reason. See docs §13 (T1).
-export const LEARNING_SKILLS = [
+// Memory skills. Recording a memory is a plain file write under
+// `.gspec/memory/pending/`, so this ships to EVERY target — it used to ride on
+// Claude's per-agent `memory:` silo, which left the learning loop nonexistent on
+// every other engine. The build appends it to the `skills:` of each agent flagged
+// `remembers: true` (the write-capable ones — see V2_AGENTS). Kept out of
+// V2_SKILLS because that append is conditional. See docs §13 (T1).
+export const MEMORY_SKILLS = [
   {
     name: 'gspec-memory',
     source: 'skills/conventions/gspec-memory.md',
-    description: 'Per-agent memory convention: feedback-driven capture, the target+layer address tag, and lean curation of MEMORY.md. Preloaded by every agent on Claude Code.',
+    description: 'Memory convention: feedback-driven recording, the target+layer address tag, and one-file-per-memory writes to .gspec/memory/pending/. Preloaded by every agent that remembers.',
   },
 ];
 
@@ -89,7 +91,7 @@ export const V2_AGENTS = [
     description: 'Write gspec/stack.md from a resolved brief, acting as the architect. Delegated by /gspec-stack; runs in isolation and returns a summary.',
     skills: ['gspec-architect', 'gspec-conventions', 'gspec-agnosticism', 'gspec-templates'],
     tools: 'Read, Write, Edit, Glob, Grep',
-    memory: 'project',
+    remembers: true,
   },
   {
     name: 'stack-validator',
@@ -98,7 +100,6 @@ export const V2_AGENTS = [
     skills: ['gspec-qa', 'gspec-architect', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'profile-writer',
@@ -107,7 +108,7 @@ export const V2_AGENTS = [
     // Note: no gspec-agnosticism — the profile is the one spec that IS product identity.
     skills: ['gspec-product', 'gspec-conventions'],
     tools: 'Read, Write, Edit, Glob, Grep',
-    memory: 'project',
+    remembers: true,
   },
   {
     name: 'profile-validator',
@@ -116,7 +117,6 @@ export const V2_AGENTS = [
     skills: ['gspec-qa', 'gspec-product', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'spec-cross-referencer',
@@ -126,7 +126,6 @@ export const V2_AGENTS = [
     skills: ['gspec-steward', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'style-writer',
@@ -134,7 +133,7 @@ export const V2_AGENTS = [
     description: 'Write the visual style guide (gspec/style.html or style.md, in the format the brief specifies) from a resolved brief, acting as the designer. Delegated by /gspec-style; returns a summary.',
     skills: ['gspec-designer', 'gspec-conventions', 'gspec-agnosticism', 'gspec-templates'],
     tools: 'Read, Write, Edit, Glob, Grep',
-    memory: 'project',
+    remembers: true,
   },
   {
     name: 'style-validator',
@@ -143,7 +142,6 @@ export const V2_AGENTS = [
     skills: ['gspec-qa', 'gspec-designer', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'practices-writer',
@@ -151,7 +149,7 @@ export const V2_AGENTS = [
     description: 'Write gspec/practices.md from a resolved brief, acting as the practice lead. Delegated by /gspec-practices; runs in isolation and returns a summary.',
     skills: ['gspec-practices', 'gspec-conventions', 'gspec-agnosticism', 'gspec-templates'],
     tools: 'Read, Write, Edit, Glob, Grep',
-    memory: 'project',
+    remembers: true,
   },
   {
     name: 'practices-validator',
@@ -160,7 +158,6 @@ export const V2_AGENTS = [
     skills: ['gspec-qa', 'gspec-practices', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'feature-planner',
@@ -170,15 +167,14 @@ export const V2_AGENTS = [
     skills: ['gspec-product'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'feature-writer',
     source: 'agents/feature-writer.md',
-    description: 'Write one gspec/features/<slug>.md PRD from a resolved brief, acting as the product manager (technology- and profile-agnostic). Delegated by /gspec-feature (also research, audit); returns a summary.',
+    description: 'Write one gspec/features/<slug>/prd.md PRD from a resolved brief, acting as the product manager (technology- and profile-agnostic). Delegated by /gspec-feature (also research, audit); returns a summary.',
     skills: ['gspec-product', 'gspec-conventions', 'gspec-agnosticism', 'gspec-templates'],
     tools: 'Read, Write, Edit, Glob, Grep',
-    memory: 'project',
+    remembers: true,
   },
   {
     name: 'feature-validator',
@@ -187,7 +183,6 @@ export const V2_AGENTS = [
     skills: ['gspec-qa', 'gspec-product', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'architecture-writer',
@@ -196,7 +191,7 @@ export const V2_AGENTS = [
     skills: ['gspec-architect', 'gspec-conventions', 'gspec-agnosticism'],
     tools: 'Read, Write, Edit, Glob, Grep',
     model: 'opus',
-    memory: 'project',
+    remembers: true,
   },
   {
     name: 'architecture-validator',
@@ -205,7 +200,6 @@ export const V2_AGENTS = [
     skills: ['gspec-qa', 'gspec-architect', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'feature-architect',
@@ -214,7 +208,7 @@ export const V2_AGENTS = [
     skills: ['gspec-architect', 'gspec-conventions'],
     tools: 'Read, Write, Edit, Glob, Grep',
     model: 'opus',
-    memory: 'project',
+    remembers: true,
   },
   {
     name: 'feature-architecture-validator',
@@ -223,7 +217,6 @@ export const V2_AGENTS = [
     skills: ['gspec-qa', 'gspec-architect', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'feature-designer',
@@ -232,7 +225,7 @@ export const V2_AGENTS = [
     skills: ['gspec-designer', 'gspec-conventions'],
     tools: 'Read, Write, Edit, Glob, Grep',
     model: 'opus',
-    memory: 'project',
+    remembers: true,
   },
   {
     name: 'feature-design-validator',
@@ -241,7 +234,6 @@ export const V2_AGENTS = [
     skills: ['gspec-qa', 'gspec-designer', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'plan-decomposer',
@@ -250,7 +242,7 @@ export const V2_AGENTS = [
     skills: ['gspec-engineer', 'gspec-conventions'],
     tools: 'Read, Write, Edit, Glob, Grep',
     model: 'opus',
-    memory: 'project',
+    remembers: true,
   },
   {
     name: 'plan-validator',
@@ -259,7 +251,6 @@ export const V2_AGENTS = [
     skills: ['gspec-qa', 'gspec-engineer', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'implementer',
@@ -268,8 +259,17 @@ export const V2_AGENTS = [
     // One agent, scope is a runtime parameter (not split per-type). The only agent with Bash.
     skills: ['gspec-engineer', 'gspec-practices', 'gspec-conventions'],
     tools: 'Read, Write, Edit, Glob, Grep, Bash',
-    model: 'opus',
-    memory: 'project',
+    // Sonnet, not opus. Implementation is the highest-volume agent in a build —
+    // it runs per scope, per wave, and again on every continuation — and it is
+    // the one job whose output is checked by something DETERMINISTIC: the gate
+    // runs verify.sh (build + test), so a weak result fails rather than ships.
+    // By the time it runs the design is settled and what is left is following
+    // it. `implementation-validator` keeps `opus` here (its interactive default)
+    // because grading acceptance criteria and the DoD is the judgment half of
+    // that gate; on the build path the recommended tier drops it to the qa tier,
+    // where verify.sh carries the hard signal (see RECOMMENDED_MODELS).
+    model: 'sonnet',
+    remembers: true,
   },
   {
     name: 'implementation-validator',
@@ -279,17 +279,16 @@ export const V2_AGENTS = [
     skills: ['gspec-qa', 'gspec-engineer', 'gspec-practices'],
     tools: 'Read, Grep, Glob, Bash',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'build-orchestrator',
     source: 'agents/build-orchestrator.md',
     description: 'Turn the in-scope features/plans into an ordered, fan-out-aware build plan (waves of file-disjoint implementer scopes), acting with the orchestrator judgment. Read-only — plans, never builds. Delegated by the build implement stage.',
-    // Read-only planner; memory: project makes its scope/fan-out judgment trainable via /gspec-distill.
+    // Read-only, so it records no memory of its own; its scope/fan-out judgment
+    // stays trainable through the FAIL verdicts the feedback log records for it.
     skills: ['gspec-orchestrator', 'gspec-engineer', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'codebase-inspector',
@@ -299,7 +298,6 @@ export const V2_AGENTS = [
     skills: ['gspec-steward', 'gspec-conventions'],
     tools: 'Read, Grep, Glob, Bash',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'spec-migrator',
@@ -308,7 +306,7 @@ export const V2_AGENTS = [
     skills: ['gspec-steward', 'gspec-conventions'],
     tools: 'Read, Write, Edit',
     model: 'opus',
-    memory: 'project',
+    remembers: true,
   },
   {
     name: 'research-planner',
@@ -318,7 +316,6 @@ export const V2_AGENTS = [
     skills: ['gspec-product'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'competitor-researcher',
@@ -328,7 +325,6 @@ export const V2_AGENTS = [
     skills: ['gspec-product'],
     tools: 'WebSearch, WebFetch, Read',
     model: 'opus',
-    memory: 'project',
   },
   {
     name: 'research-writer',
@@ -336,17 +332,17 @@ export const V2_AGENTS = [
     description: 'Write gspec/research.md (competitive matrix, categorized findings, gap analysis) from synthesized research, acting as the product strategist. Delegated by /gspec-research; returns a summary.',
     skills: ['gspec-product', 'gspec-conventions', 'gspec-agnosticism'],
     tools: 'Read, Write, Edit, Glob, Grep',
-    memory: 'project',
+    remembers: true,
   },
   {
-    name: 'distiller',
-    source: 'agents/distiller.md',
-    description: "Read agents' accumulated memory and propose reviewed skill improvements (surgical diffs with provenance), acting as the steward. Read-only — proposes, never applies. Delegated by /gspec-distill (learning loop).",
-    // memory: project auto-attaches gspec-memory so it understands the lesson format.
-    skills: ['gspec-steward', 'gspec-qa'],
+    name: 'memorizer',
+    source: 'agents/memorizer.md',
+    description: "Read the pending memories agents recorded and propose reviewed skill improvements (surgical diffs with provenance), acting as the steward. Read-only — proposes, never applies. Delegated by /gspec-memorize (learning loop).",
+    // Reads pending memories but never writes one, so it carries no `remembers:`
+    // flag — gspec-memory is preloaded explicitly, for the format it has to parse.
+    skills: ['gspec-steward', 'gspec-qa', 'gspec-memory'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
-    memory: 'project',
   },
 ];
 
@@ -394,7 +390,7 @@ export const V2_COMMANDS = [
   {
     name: 'gspec-plan',
     source: 'commands/gspec-plan.md',
-    description: 'Decompose a feature PRD into an ordered plan (gspec/tasks/<slug>.md) with parallel markers. Delegates plan-decomposer, plan-mode approval, gates on plan-validator (--no-qa skips). TRIGGER to sequence work or build a plan from a PRD.',
+    description: 'Decompose a feature PRD into an ordered plan (gspec/features/<slug>/tasks.md) with parallel markers. Delegates plan-decomposer, plan-mode approval, gates on plan-validator (--no-qa skips). TRIGGER to sequence work or build a plan from a PRD.',
   },
   {
     name: 'gspec-implement',
@@ -417,9 +413,14 @@ export const V2_COMMANDS = [
     description: 'Research competitors from gspec/profile.md and produce a competitive analysis (gspec/research.md) with gap identification; fans out competitor-researcher, optionally drafts feature PRDs. TRIGGER for market/competitor research or feature gaps.',
   },
   {
-    name: 'gspec-distill',
-    source: 'commands/gspec-distill.md',
-    description: 'Review lessons agents accumulated in memory and promote worthy ones into their skills — one at a time, surgically, with approval. Delegates the distiller; applies approved edits. TRIGGER to review agent lessons or improve skills from memory.',
+    name: 'gspec-memorize',
+    source: 'commands/gspec-memorize.md',
+    description: 'Review the memories agents recorded to .gspec/memory/pending/ and commit worthy ones to their skills — one at a time, with approval. Delegates the memorizer. TRIGGER to review pending agent memories or improve skills from them.',
+  },
+  {
+    name: 'gspec-teach',
+    source: 'commands/gspec-teach.md',
+    description: "Teach an agent a correction directly, without waiting for it to fail: you state it, the memorizer drafts the minimal edit, you approve before anything changes. TRIGGER to correct how an agent works, or when output was wrong in a way no gate catches.",
   },
   {
     name: 'gspec-build',
@@ -459,7 +460,8 @@ export const DEGRADE_CAPABILITIES = [
   { command: 'gspec-audit',     produce: 'codebase-inspector' },
   { command: 'gspec-migrate',   produce: 'spec-migrator' },
   { command: 'gspec-research',  produce: 'competitor-researcher', also: 'research-writer' },
-  { command: 'gspec-distill',   produce: 'distiller' },
+  { command: 'gspec-memorize',  produce: 'memorizer' },
+  { command: 'gspec-teach',     produce: 'memorizer' },
   { command: 'gspec-qa',        skills: ['gspec-qa'] },
 ];
 

@@ -15,6 +15,7 @@ Route by intent: "do my docs contradict each other?" → analyze; "do my docs ma
 - Prioritize by impact — the discrepancies that would most confuse an implementer come first.
 - Stay neutral: present options fairly, recommend if you have a view, but let the user decide each one.
 - Resolve **one at a time** and edit **surgically** (see `gspec-authoring`): the minimum change that resolves the conflict, preserving format, tone, and `spec-version`. Never create new files; never silently edit.
+- **On a repeat audit, skip the boilerplate and spend the budget on drift.** Directory structure, token parity and verification plumbing hold once established; re-verifying them each pass spends the budget where nothing changes. Go instead at the two places drift actually lands: version numbers in `stack.md` versus `architecture/*.md` and the lockfile (the stack goes stale first, because code gets upgraded without anyone reopening it), and the details a feature `arch.md` inlined — error-category names, enum values, paths — against the code that now owns them. Enrichment inlines facts by design, so enriched files are where fidelity drift concentrates.
 
 ## Quality bar — a reconciliation pass is good when it…
 1. **Reads everything in scope** before judging — all specs (or, in scoped mode, the target feature + foundations).

@@ -25,6 +25,8 @@ The user may keep reusable style templates in `~/.gspec/styles/` (see the `gspec
 If the brief leaves something load-bearing unresolved (mood, dark mode, format), make a reasonable, clearly-labeled choice and note it. Do not block; do not invent business identity.
 
 ## Return contract
+Before returning, walk your skill's required-sections list and confirm each section exists in the file — or is present as "Not Applicable — <reason>". A silently omitted section is the most common QA failure on this deliverable, and the sections that need synthesis are the ones that go missing.
+
 After writing the file, return a **compact summary** — not the file contents:
 - the path written (`gspec/style.md` or `gspec/style.html`) and the format;
 - the core token decisions (palette direction, type, spacing base), one line each;

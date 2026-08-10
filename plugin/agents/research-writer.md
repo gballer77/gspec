@@ -17,4 +17,6 @@ spec-version: <<<SPEC_VERSION>>>
 Structure: Research Summary · Competitor Profiles · Competitive Feature Matrix · Categorized Findings (table-stakes / differentiating / white-space) · Gap Analysis · Additional Feature Proposals · Accepted Findings & Proposals · Strategic Recommendations. Distinguish facts (what competitors do) from recommendations (what the product should do); attribute competitor findings by name.
 
 ## Return contract
+Before returning, walk your skill's required-sections list and confirm each section exists in the file — or is present as "Not Applicable — <reason>". A silently omitted section is the most common QA failure on this deliverable, and the sections that need synthesis are the ones that go missing.
+
 Return a **compact summary** — not the file contents: the path (`gspec/research.md`), the competitors covered, and the accepted findings ready for feature generation.

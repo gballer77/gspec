@@ -32,14 +32,31 @@ export function isGuardedSpec(rel) {
 
 const STOP = new Set(['the', 'product', 'profile', 'app', 'application', 'system', 'platform', 'tool', 'service', 'our', 'and', 'for']);
 
+// H1 parts that are the DOCUMENT's name, never the product's — dropped whichever
+// side of the separator they land on.
+const BOILERPLATE = /^(the\s+)?(product|project|company)?\s*(profile|overview|brief|spec(ification)?)?$/i;
+
 // Product/company identity strings derived from profile.md.
 export function identityCandidates(profile) {
   const names = new Set();
   const text = String(profile);
   const h1 = text.match(/^#\s+(.+?)\s*$/m);
   if (h1) {
-    const t = h1[1].replace(/[-—:]\s*(product\s+)?profile\s*$/i, '').replace(/\bprofile\b/i, '').trim();
-    if (t) names.add(t);
+    // Split the title into parts and drop the boilerplate ones, rather than
+    // stripping "Profile" off the END. The old shape only understood name-first
+    // ("# Acme Rocket - Product Profile"); a writer that emitted name-LAST
+    // ("# Product Profile — Shelfkeeper") left "Product  — Shelfkeeper" as a
+    // single candidate, which matches nothing, so the guard failed OPEN and the
+    // product name shipped in stack.md and practices.md. Nothing pins the order
+    // — so the leak was nondeterministic across builds, the worst failure mode
+    // available to a guard.
+    //
+    // Separators need surrounding space so a hyphenated name ("Foo-Bar") stays
+    // whole; a colon is allowed to hug the left, as titles are usually written.
+    for (const part of h1[1].split(/\s+[-—–|]\s+|\s*:\s+/)) {
+      const t = part.replace(/\bprofile\b/i, '').trim();
+      if (t && !BOILERPLATE.test(t)) names.add(t);
+    }
   }
   for (const m of text.matchAll(/product\s*name[^\S\n]*[:|*]{0,2}[^\S\n]*([A-Za-z0-9][\w .&'-]{1,60})/gi)) {
     names.add(m[1].trim());

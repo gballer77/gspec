@@ -358,7 +358,7 @@ const headings = sections.map((s) => ({
     </p>
     <ul>
       <li><strong>Producer ≠ checker.</strong> The agent that writes a spec or a slice of code is never the one that approves it. An independent, read-only validator returns a verdict, and the implementation gate is backed by a generated build-and-test script — so quality is enforced, not assumed.</li>
-      <li><strong>A learning loop.</strong> When a validator rejects work or you correct an agent, that lesson is captured and can be distilled back into the skills. The system's expertise compounds across runs, not just its context.</li>
+      <li><strong>A learning loop.</strong> When a validator rejects work or you correct an agent, that memory is recorded and can be committed back into the skills. The system's expertise compounds across runs, not just its context.</li>
     </ul>
     <p>
       The result is that gspec can take a plain-language idea and drive it to working, verified code autonomously — while still letting you drop into any single stage by hand when you want control.

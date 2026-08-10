@@ -40,8 +40,8 @@ The budgets below are for a **standard**-scope product. The brief states the pro
 | `features/<slug>/prd.md` | 1,800 words |
 | `features/<slug>/arch.md` | 3,000 words |
 | `features/<slug>/design.html` | 600 words of prose (markup, tokens, and rendered screens excluded) |
-| `architecture.md` | 2,100 words |
-| `architecture/<name>.md` | 600 words |
+| `architecture.md` | 1,500 words (the system tier alone — every project now has a module-tier file, so the 600 a single-module project used to carry here moved out with it) |
+| `architecture/<name>.md` | 2,000 words (prose *plus* the module's spine: the anchors more than one feature references — a short list, roughly ten blocks, not a catalogue) |
 | `features/<slug>/tasks.md` | ≤ 25 tasks, ≤ 3 per capability, one sentence each |
 
 How to apply them:

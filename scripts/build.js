@@ -4,7 +4,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { TARGETS } from '../lib/emitters.js';
-import { V2_SKILLS, V2_AGENTS, V2_COMMANDS, V2_TARGETS, DEGRADE_CAPABILITIES, LEARNING_SKILLS } from './manifest.js';
+import { V2_SKILLS, V2_AGENTS, V2_COMMANDS, V2_TARGETS, DEGRADE_CAPABILITIES, MEMORY_SKILLS } from './manifest.js';
 import { SPEC_VERSION } from '../lib/spec-version.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -103,7 +103,7 @@ function validateCommands(commands) {
 // name/description and a non-empty skills[] preload list.
 function validateV2() {
   const errors = [];
-  for (const meta of [...V2_SKILLS, ...V2_COMMANDS]) {
+  for (const meta of [...V2_SKILLS, ...MEMORY_SKILLS, ...V2_COMMANDS]) {
     if (!meta.name) errors.push(`v2 ${meta.source || '?'}: missing name`);
     if (!meta.description) { errors.push(`v2 ${meta.name || meta.source}: missing description`); continue; }
     if (meta.description.length > DESCRIPTION_MAX) {
@@ -130,18 +130,19 @@ async function emitV2(target, outDir) {
   // Persona/convention skill catalog. Skipped where commands share the skills
   // namespace (Codex) — there the persona is inlined into agents, so a standalone
   // catalog would only collide with the command-skills.
-  // Learning-loop skills (gspec-memory) only ship to targets with per-agent
-  // memory — currently just Claude. Elsewhere they'd only add dead weight to the
-  // inline/degrade bodies, so they never enter the skill list or agent skills[].
-  const learningSkills = target.learningLoop ? LEARNING_SKILLS : [];
+  // Memory skills (gspec-memory) ship everywhere: recording a memory is a plain
+  // file write under .gspec/memory/pending/, not a Claude-only agent silo, so
+  // every engine can run the loop.
   if (target.emitSkills !== false) {
-    for (const meta of [...V2_SKILLS, ...learningSkills]) { await target.emitSkill(outDir, await readSource(meta.source), meta); skills++; }
+    for (const meta of [...V2_SKILLS, ...MEMORY_SKILLS]) { await target.emitSkill(outDir, await readSource(meta.source), meta); skills++; }
   }
   for (const meta of V2_AGENTS) {
-    // On a learning-loop target, every memory-bearing agent also preloads the
-    // gspec-memory convention (appended here so it stays out of the manifest).
-    const emitMeta = (learningSkills.length && meta.memory)
-      ? { ...meta, skills: [...(meta.skills || []), ...learningSkills.map((s) => s.name)] }
+    // Every remembering agent (`remembers: true`) also preloads the gspec-memory
+    // convention — appended here so it stays out of each manifest skills[].
+    // Skipped for one that already names it explicitly (the memorizer reads the
+    // format without recording), so it is never listed twice.
+    const emitMeta = meta.remembers
+      ? { ...meta, skills: [...new Set([...(meta.skills || []), ...MEMORY_SKILLS.map((s) => s.name)])] }
       : meta;
     // Claude preloads skills via `skills:` frontmatter; targets that can't (e.g.
     // OpenCode) get the persona inlined into the agent body.
@@ -153,6 +154,13 @@ async function emitV2(target, outDir) {
   console.log(`  + v2: ${skills} skills, ${agents} agents, ${commands} commands → dist/${target.distSubdir}/`);
 }
 
+// Resolve a skill name against every catalog that ships one. MEMORY_SKILLS is
+// separate from V2_SKILLS only because its append is conditional (`remembers:`) —
+// looking in V2_SKILLS alone would silently drop gspec-memory from every target
+// that inlines rather than preloads, which is exactly the engine gap that moving
+// memory off the Claude agent silo was meant to close.
+const findSkill = (name) => V2_SKILLS.find((x) => x.name === name) || MEMORY_SKILLS.find((x) => x.name === name);
+
 // Inline an agent's persona/convention skills into its body, for targets whose
 // agents can't preload skills (OpenCode). Claude uses the `skills:` field instead.
 async function composeAgentBody(agent) {
@@ -160,7 +168,7 @@ async function composeAgentBody(agent) {
   if (names.length === 0) return readSource(agent.source);
   const parts = ['> **Persona & conventions** (inlined — this platform does not preload skills; apply all of the following throughout your work).'];
   for (const name of names) {
-    const s = V2_SKILLS.find((x) => x.name === name);
+    const s = findSkill(name);
     if (s) parts.push(`\n## ${name}\n\n${await readSource(s.source)}`);
   }
   parts.push('\n---\n\n# Your task\n');
@@ -206,7 +214,7 @@ async function composeDegraded(cap) {
   if (skillNames.length) {
     parts.push('\n---\n\n# Reference — persona & conventions');
     for (const name of skillNames) {
-      const s = V2_SKILLS.find((x) => x.name === name);
+      const s = findSkill(name);
       if (s) parts.push(`\n## ${name}\n\n${await readSource(s.source)}`);
     }
   }

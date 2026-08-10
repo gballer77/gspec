@@ -43,6 +43,25 @@ test('derives identity candidates from the profile', () => {
   assert.ok(c.includes('Acme Rocket'));
 });
 
+// Regression: identity extraction only understood a name-FIRST H1. A writer that
+// emitted name-last ("# Product Profile — Shelfkeeper") left the single mangled
+// candidate "Product  — Shelfkeeper", which matches nothing, so the guard failed
+// OPEN and the product name shipped in stack.md and practices.md. Nothing pins
+// the order, so the leak was nondeterministic across builds — the worst failure
+// mode available to a guard.
+test('identity extraction does not depend on H1 word order', () => {
+  assert.deepEqual(identityCandidates('# Product Profile — Shelfkeeper'), ['Shelfkeeper']);
+  assert.deepEqual(identityCandidates('# Shelfkeeper - Product Profile'), ['Shelfkeeper']);
+  assert.deepEqual(identityCandidates('# Shelfkeeper: Product Profile'), ['Shelfkeeper']);
+  // A hyphenated name stays whole: separators need surrounding space.
+  assert.deepEqual(identityCandidates('# Product Profile — Foo-Bar'), ['Foo-Bar']);
+  // The exact leak that shipped: a guarded spec titled after the product.
+  assert.deepEqual(
+    agnosticismHits('# Technology Stack — Shelfkeeper', identityCandidates('# Product Profile — Shelfkeeper')),
+    ['Shelfkeeper'],
+  );
+});
+
 test('flags leaked product identity, whole-word only', () => {
   const c = identityCandidates(PROFILE);
   assert.deepEqual(agnosticismHits('The Acme Rocket dashboard shows metrics.', c), ['Acme Rocket']);

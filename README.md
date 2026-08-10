@@ -54,7 +54,7 @@ The autonomous build has a wired engine for **Claude Code**, **Codex**, and **Pi
 
 **Spec size (`--scope`).** Specs are written to a size budget, so the specification matches the product rather than the writers' appetite — a one-level game does not need a 65 KB feature PRD, and every downstream agent pays to read whatever gets written. The intake asks how big the product is and records the tier in the brief; `--scope small|standard|large` overrides it, scaling every budget by ×0.6 / ×1 / ×1.5. The driver measures each spec as it lands and prints its size against the budget. **Going over is advisory** — it is reported in the log and noted by QA as a `[minor]` finding, and never fails a stage.
 
-**Per-agent models (cost control).** The build runs each stage as its own agent, and you can assign each a model — so the checkers and foundations can run on a cheaper model while architecture and implementation keep the strong one. Add a `models` map to `.gspec/config.json` (this project) or `~/.gspec/config.json` (your global default; the project file overrides it). Selectors resolve most-specific-first — exact agent name, then role tier (`writer`, `qa`, `planner`, `implementer`, `researcher`, `inspector`), then `default`:
+**Per-agent models (cost control).** The build runs each stage as its own agent, and you can assign each a model — so the checkers and the high-volume jobs can run on a cheaper model while the architecture work keeps the strong one. Add a `models` map to `.gspec/config.json` (this project) or `~/.gspec/config.json` (your global default; the project file overrides it). Selectors resolve most-specific-first — exact agent name, then role tier (`writer`, `qa`, `planner`, `implementer`, `researcher`, `inspector`), then `default`:
 
 ```jsonc
 // ~/.gspec/config.json
@@ -63,7 +63,7 @@ The autonomous build has a wired engine for **Claude Code**, **Codex**, and **Pi
     "default": "claude-sonnet-5",           // any agent with no better match
     "qa":      "claude-haiku-4-5",           // every *-validator
     "architecture-writer": "claude-opus-5", // one specific agent
-    "implementer":         "claude-opus-5"
+    "implementer":         "claude-sonnet-5"
   }
 }
 ```
@@ -76,7 +76,8 @@ With no `models` map, every agent runs on the engine/CLI default, unchanged. The
 
 - **`writer` → a balanced model** — the everyday authoring (profile, stack, practices, style, feature, research PRDs).
 - **`qa` → a cheap/fast model** — every `*-validator`; checking a spec needs far less horsepower than writing one.
-- **`architecture-writer`, `feature-architect` and `implementer` → a strong model** — the load-bearing jobs (the system design, each feature's own architecture, and the code), pinned by name so they beat the `writer`/`default` tier.
+- **`architecture-writer` and `feature-architect` → a strong model** — the load-bearing design jobs (the system design, each feature's own architecture), pinned by name so they beat the `writer`/`default` tier. A mistake there propagates into everything downstream and no gate catches it.
+- **`implementer` → the balanced model** — deliberately *not* the strong tier on Claude. It's the highest-volume agent in a build (per scope, per wave, and again on every continuation), and the only one whose output is checked by something deterministic: the gate runs `verify.sh`, so a weak result fails rather than ships. By the time it runs, the design is settled and what's left is following it. On Codex it stays `gpt-5-codex` — the code-specialized model, not the strong tier.
 - **`default` → the balanced model** — catches the planners and anything else.
 
 - **Claude engine** — strong `claude-opus-5`, balanced `claude-sonnet-5`, cheap `claude-haiku-4-5`:
@@ -89,8 +90,8 @@ With no `models` map, every agent runs on the engine/CLI default, unchanged. The
       "writer":  "claude-sonnet-5",             // every *-writer (balanced)
       "qa":      "claude-haiku-4-5",            // every *-validator (cheap)
       "architecture-writer": "claude-opus-5", // override: the system design
-      "feature-architect":   "claude-opus-5", // override: each feature's architecture
-      "implementer":         "claude-opus-5"  // override: the code
+      "feature-architect":   "claude-opus-5"  // override: each feature's architecture
+      // implementer: balanced — verify.sh is its checker (see above)
     }
   }
   ```
@@ -200,7 +201,7 @@ Use `/gspec-feature` when you want detailed PRDs with prioritized capabilities a
 
 | Command | Role | What it produces |
 |---|---|---|
-| `/gspec-architect` | Senior Architect | High-level technical architecture: system context, module boundaries, the name-level data model, inter-module contracts, auth flows, the Modules table, and a technical gap analysis. Feature-level detail (entity fields, endpoint signatures, algorithms) belongs to the feature that introduces it, which is what keeps this spec finite. Multi-module systems split the two tiers across a system-level `architecture.md` plus one `architecture/<name>.md` per module |
+| `/gspec-architect` | Senior Architect | High-level technical architecture: system context, module boundaries, the name-level data model, inter-module contracts, auth flows, the Modules table, and a technical gap analysis. Feature-level detail (entity fields, endpoint signatures, algorithms) belongs to the feature that introduces it, which is what keeps this spec finite. The two tiers always split: a system-level `architecture.md` plus one `architecture/<name>.md` per Modules-table row — including a single-module project, because the module tier carries that module's shared anchors |
 
 Use `/gspec-architect` when your feature involves significant technical complexity — new data models, service boundaries, auth flows, or integration points that benefit from upfront design. It also **identifies technical gaps and ambiguities** in your specs and proposes solutions, so that `/gspec-implement` can focus on building rather than making architectural decisions. For straightforward features, `/gspec-implement` can make sound architectural decisions on its own using your `stack` and `practices` specs.
 
@@ -218,6 +219,7 @@ Use `/gspec-plan` after `/gspec-feature` (and after `/gspec-architect` when it e
 |---|---|---|
 | `/gspec-analyze` | Specification Analyst | Cross-references specs against **each other**, identifies contradictions, and walks you through reconciling each one. Optionally takes a feature slug to scope to one PRD and add an ambiguity sweep against the document itself |
 | `/gspec-audit` | Specification Auditor | Cross-references specs against the **actual codebase**, finds drift (stack mismatches, stale data models, design tokens that don't match the stylesheet, capability checkboxes that lie), and walks you through updating specs to match reality |
+| `/gspec-qa` | QA Lead | Runs the producer ≠ checker quality gate over one spec, or all of them, on demand. Every spec-writing command already runs this as a gate when it produces a spec (`--no-qa` skips); use it to re-check later |
 
 Use `/gspec-analyze` after `/gspec-architect` (or any time multiple specs exist) to catch spec-to-spec conflicts before `/gspec-implement` sees them — for example, if the stack says PostgreSQL but the architecture references MongoDB. Pass a feature slug (`/gspec-analyze user-authentication`) to scope the run to one PRD and surface ambiguity inside it — missing acceptance criteria, vague verbs, undefined nouns, implicit state assumptions, missing edge cases, and unmeasurable success metrics. Especially useful on aged or imported PRDs that may have accumulated unstated assumptions.
 
@@ -322,6 +324,37 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/
 
 When you next run `npx gspec` in a project, the installer copies the built-in skills first, then emits each valid extension into the same per-platform install directory using the same formatting. Extension names that collide with built-in `gspec-*` skills are rejected with an error; malformed or duplicate extensions are skipped with a warning.
 
+## Memory
+
+Everything gspec remembers lives under `.gspec/memory/`, in two tiers.
+
+**Pending** — when a QA gate or a correction from you sends an agent back to fix its work, the agent records the generalizable memory to `.gspec/memory/pending/<agent>/<file>.md`, one file per memory. Nothing there changes any behavior: a pending memory is a queue entry, not a rule. It works on every engine, because recording is just writing a file.
+
+**Committed** — `/gspec-teach` and `/gspec-memorize` commit a pending memory (or a correction you state directly) to a store that *is* composed back into the relevant skill on every install, so it survives a gspec upgrade instead of being overwritten by it. Each memory is a `## ` heading plus a sentence or two, and its scope decides the store:
+
+| scope | store | composed into skills | shared with |
+| --- | --- | --- | --- |
+| project | `.gspec/memory/<skill>.md` | yes — and overrides personal | your team, via version control |
+| personal | `~/.gspec/memory/<skill>.md` | yes | you, on every project |
+| gspec | `~/.gspec/memory/gspec/<slug>.md` | **no** — it's a report | the gspec maintainers, if you file it |
+
+```bash
+gspec memory                      # What's composed into each skill, plus anything pending review
+gspec memory apply                # Recompose into the installed skills (no full re-install)
+gspec memory report               # Reports about gspec itself + a prefilled issue link each
+gspec memory filed <name> <url>   # Record that you submitted one
+```
+
+`pending/` is a subdirectory rather than a sibling file on purpose — the composer only reads `*.md` directly inside a memory store, so an unreviewed memory cannot reach a skill by accident. Committing stays a decision you make. Pending memories are committed to version control by default so your team sees what runs have been learning; add `.gspec/memory/pending/` to `.gitignore` if you'd rather keep them local.
+
+Read-only agents — validators, planners — have no `Write` tool and so record nothing. Their failing verdicts land in `.gspec/agent-runs/feedback-log.md`, which `/gspec-memorize` reads as corroborating evidence.
+
+**The third category is for defects in gspec itself** — a check that fires falsely, a persona whose quality bar misses something. No text composed onto your machine fixes that, so it's stored as a report instead. `gspec memory report` prints a **prefilled GitHub issue URL**: gspec stores no token and posts nothing, so the report stays on your machine until you open the link and submit it yourself. `/gspec-teach` and `/gspec-memorize` recommend a category from context and you override freely.
+
+The installer composes the gspec source skill first, then your personal memory, then your project memory — **project wins**, being the more specific of the two. The pass is idempotent, so repeated installs never stack duplicates, and a memory file naming a skill that isn't installed is reported rather than silently ignored.
+
+Editing an installed skill under `.claude/skills/` directly is *not* durable — that file is regenerated on every install. Put the guidance in a memory store instead.
+
 ## Output Structure
 
 All specifications live in a `gspec/` directory at your project root:
@@ -335,7 +368,8 @@ project-root/
     ├── stack.md            # Technology stack and architecture
     ├── practices.md        # Development standards
     ├── architecture.md     # High-level architecture — system tier + index
-    ├── architecture/       # Only for multi-module systems — one thin file per module
+    ├── architecture/       # One file per Modules-table row, always — each carries that
+    │                       # module's boundary and its SPINE (the anchors features share)
     │   ├── frontend.md
     │   ├── backend.md
     │   └── ...

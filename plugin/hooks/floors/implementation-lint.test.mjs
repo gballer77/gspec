@@ -27,6 +27,30 @@ test('only CHECKED tasks contribute the files we expect to exist', () => {
   ]);
 });
 
+test('a backticked npm package is not mistaken for a repo file', () => {
+  // This ended a 12-hour, $136 dogfood run at its final gate. The plan said
+  // "...re-implementing Rule: ScalingFactor with `fraction.js`", and the lint
+  // reported `fraction.js` as a checked task's missing file. It is a dependency,
+  // so no file could ever appear there: the implementer cannot satisfy the
+  // finding, the self-heal round reports it again, and the stage dies as "not
+  // converging" — with no way forward from inside the tool.
+  const tasks = '- [x] **T5** build `web/src/lib/scaling.ts` with `fraction.js` and `chart.js`\n';
+  assert.deepEqual(filesNamedByCheckedTasks(tasks), [{ id: 'T5', path: 'web/src/lib/scaling.ts' }]);
+  assert.deepEqual(missingWorkViolations('tasks.md', tasks, new Set(['web/src/lib/scaling.ts'])), []);
+});
+
+test('the package-name escape is narrow — it never covers a real path', () => {
+  // Only a BARE `.js` token is ambiguous. A `.js` file named with its path is
+  // still checked, and so are the root-level files plans genuinely name, because
+  // no ecosystem publishes packages called `verify.sh` or `package.json`.
+  const named = (text) => filesNamedByCheckedTasks(text).map((f) => f.path);
+  assert.deepEqual(named('- [x] **T1** the config at `eslint.config.js`'), [], 'bare .js is left alone');
+  assert.deepEqual(named('- [x] **T1** the config at `web/eslint.config.js`'), ['web/eslint.config.js']);
+  assert.deepEqual(named('- [x] **T1** generate `verify.sh`'), ['verify.sh']);
+  assert.deepEqual(named('- [x] **T1** the manifest `package.json`'), ['package.json']);
+  assert.deepEqual(named('- [x] **T1** the entry `src/main.ts`'), ['src/main.ts']);
+});
+
 test('a checked task whose file was never written is caught', () => {
   const present = new Set(['src/pages/login.astro']);
   const v = missingWorkViolations('a/tasks.md', TASKS, present);

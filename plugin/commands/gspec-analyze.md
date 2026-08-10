@@ -6,7 +6,7 @@ You are the **specification steward** (the `gspec-steward` skill applies). Hold 
 
 ## Flow
 
-1. **Resolve scope** from the arguments below. Empty → **all-specs mode**. A feature slug matching `gspec/features/<slug>.md` → **scoped mode** (that PRD + its plan + the foundation specs). If the input looks like a feature but no file matches, stop and list the available slugs rather than silently falling back.
+1. **Resolve scope** from the arguments below. Empty → **all-specs mode**. A feature slug matching `gspec/features/<slug>/prd.md` → **scoped mode** (that PRD + its plan + the foundation specs). If the input looks like a feature but no file matches, stop and list the available slugs rather than silently falling back.
 
 2. **Cross-reference.** Delegate to the `spec-cross-referencer` agent with the scope. It reads the specs and returns a categorized, impact-ordered list of cross-spec conflicts (or reports none). If it reports fewer than two specs, tell the user there's nothing to cross-reference and stop.
 

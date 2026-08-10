@@ -59,14 +59,20 @@ export function parseModulesTable(architectureMdText) {
   return rows;
 }
 
-// The module-tier spec paths this table implies.
-//
-// The layout gate: ONE module is described entirely by the root architecture.md
-// (a second file for a single module is pure ceremony), so a one-row table
-// implies no sub-files at all. More than one row → exactly one file per row,
+// The module-tier spec paths this table implies: exactly one file per row,
 // keyed by the row name.
+//
+// This used to return [] below two rows — "a second file for a single module is
+// pure ceremony". That was true only while the module tier held nothing but
+// prose: it minted ZERO anchors, so for a one-module project there was genuinely
+// nothing to put in the file. Now the tier owns the module's SPINE — the shared
+// anchors every feature references — and a single-module project has a spine
+// like any other. Folding it back into architecture.md would put anchors in the
+// system tier, which is the one thing that file must not mint.
+//
+// Dropping the guard also removes a branch from every caller: architectureDeliverables,
+// scopeReadList and moduleSpecDrift all stop having a one-module special case.
 export function moduleSpecPaths(modules = []) {
-  if (modules.length < 2) return [];
   return modules.map((m) => `gspec/architecture/${m.name}.md`);
 }
 

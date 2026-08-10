@@ -51,9 +51,11 @@ test('absent or Not Applicable section yields no rows', () => {
     parseModulesTable('## Modules & Verification\n\n**Not Applicable** — nothing to build.\n'), []);
 });
 
-test('the layout gate: one module implies NO sub-files, two imply one each', () => {
+test('one file per row, single-module included — the tier holds the spine', () => {
+  // The old layout gate returned [] below two rows. It cannot now: the module
+  // tier mints the shared anchors, and a one-module project has a spine too.
   const one = [{ name: 'app', dir: '.', build: 'b', test: 't' }];
-  assert.deepEqual(moduleSpecPaths(one), []);
+  assert.deepEqual(moduleSpecPaths(one), ['gspec/architecture/app.md']);
   assert.deepEqual(moduleSpecPaths([]), []);
   assert.deepEqual(moduleSpecPaths(parseModulesTable(TWO_MODULES)), [
     'gspec/architecture/web.md',
@@ -72,8 +74,9 @@ test('drift reports both directions — a half-done rename leaves one of each', 
     moduleSpecDrift(rows, ['gspec/architecture/web.md', 'gspec/architecture/backend.md']),
     { missing: ['gspec/architecture/api.md'], orphans: ['gspec/architecture/backend.md'] });
 
-  // A single-module project with a leftover sub-file from when it had two.
+  // A single-module project owes its own sub-file, and a leftover from a rename
+  // is still an orphan.
   assert.deepEqual(
     moduleSpecDrift([{ name: 'app', dir: '.', build: 'b', test: 't' }], ['gspec/architecture/old.md']),
-    { missing: [], orphans: ['gspec/architecture/old.md'] });
+    { missing: ['gspec/architecture/app.md'], orphans: ['gspec/architecture/old.md'] });
 });

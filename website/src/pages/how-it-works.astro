@@ -148,23 +148,23 @@ const gate = [
     <div class="max-w-[1152px] mx-auto px-4 lg:px-8">
       <div class="max-w-2xl mb-12">
         <span class="inline-block text-xs font-semibold uppercase tracking-wider text-[var(--badge-accent-text)] bg-[var(--badge-accent-bg)] px-3 py-1 rounded-full mb-4">
-          New in 2.0
+          New in 3.0
         </span>
         <h2 class="text-2xl sm:text-[1.953rem] font-semibold text-[var(--text-primary)] mb-4 tracking-tight">
           It gets better every run
         </h2>
         <p class="text-[var(--text-secondary)] leading-relaxed">
-          When a validator rejects work or you correct an agent, that lesson is captured to the agent's own memory —
-          tagged with exactly which layer it belongs to. A reviewer step then distills recurring lessons into the
+          When a validator rejects work or you correct an agent, that memory is recorded to .gspec/memory/pending/ —
+          tagged with exactly which layer it belongs to. A reviewer step then commits recurring memories to the
           skills themselves, with your approval. Corrections become durable expertise instead of evaporating.
         </p>
       </div>
 
       <div class="flex flex-col md:flex-row items-stretch gap-3 max-w-4xl">
         {[
-          { title: 'Capture', body: 'A failing QA verdict or a user correction is written to per-agent memory, address-tagged to its target layer.' },
-          { title: 'Distill', body: 'The distiller reviews tagged lessons and proposes surgical skill edits — one at a time, for your approval.' },
-          { title: 'Improve', body: 'Approved lessons graduate into the skills. The next run starts with the correction already baked in.' },
+          { title: 'Record', body: 'A failing QA verdict or a user correction is written to .gspec/memory/pending/ — one file per memory, address-tagged to its target layer.' },
+          { title: 'Memorize', body: 'The memorizer reviews pending memories and proposes surgical skill edits — one at a time, for your approval. Nothing recorded changes behavior until you commit it.' },
+          { title: 'Improve', body: 'Committed memories are composed into the skills. The next run starts with the correction already baked in.' },
         ].map((s, i, arr) => (
           <div class="flex-1 flex flex-col md:flex-row items-stretch">
             <div class="flex-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
@@ -183,10 +183,11 @@ const gate = [
       </div>
 
       <p class="text-sm text-[var(--text-muted)] leading-relaxed mt-8 max-w-3xl pl-3 border-l-2 border-[var(--border-primary-subtle)]">
-        <span class="font-medium text-[var(--text-secondary)]">Harness support varies.</span> The full loop is
-        available today on Claude Code, which has native per-agent memory. Codex and Pi capture build-path learnings
-        but lack native memory (runtime-managed injection and distill are on the roadmap); the remaining harnesses
-        don't yet support it.{' '}
+        <span class="font-medium text-[var(--text-secondary)]">Harness support varies.</span> Recording and
+        /gspec-memorize run on every harness that ships agents — it is a plain file write, not a harness memory
+        feature. Claude Code is
+        the only one where the address tag is <em>hook-enforced</em>; elsewhere it is a convention the agents follow.
+        Antigravity runs workflows rather than agents, so recording lands there with its agent adapter.{' '}
         <a href={`${base}platforms/`} class="text-[var(--text-accent)] hover:text-primary-300 underline underline-offset-2">Compare platform capabilities →</a>
       </p>
     </div>

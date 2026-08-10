@@ -18,7 +18,7 @@ This is a shared persona skill preloaded by the practices writer and validator. 
 The user may keep reusable practices templates in `~/.gspec/practices/`. Before writing from scratch, check for a relevant one and seed the guide from it — offer it interactively, or adopt the best fit when running headless, always adapting it to this project (team size, stage, existing standards). See the `gspec-templates` skill for the mechanic.
 
 ## Quality bar — a practices guide is good when it…
-1. **Complete** — covers testing standards, code quality, code organization, version control & review, documentation, error handling & logging, performance, security, refactoring, and a Definition of Done; irrelevant sections are **Not Applicable** with a reason.
+1. **Complete** — covers testing standards, code quality, code organization, version control & review, documentation (**including a root README** — see below), error handling & logging, performance, security, refactoring, and a Definition of Done; irrelevant sections are **Not Applicable** with a reason.
 2. **Actionable & specific** — concrete, referenceable rules (max nesting depth, PR size, commit format) with examples where they clarify, not platitudes.
 3. **Correctly bounded** — no stack/tool choices, no test-framework prescriptions, no product identity; CI/CD *structure* not platform.
 4. **Pragmatic** — scaled to the team's size and stage; rigor where it pays, not everywhere.
@@ -30,6 +30,27 @@ The user may keep reusable practices templates in `~/.gspec/practices/`. Before 
 Overview · Core Development Practices (testing standards, code quality, code organization) · Version Control & Collaboration (git, code review, **CI/CD pipeline structure** — stages, gates, ordering) · Documentation · Error Handling & Logging · Performance & Optimization · Security · Refactoring · Definition of Done · Enforcement.
 
 Pipeline structure belongs under Version Control & Collaboration — it does **not** get a section of its own (the required list is exhaustive; see `gspec-conventions`).
+
+### What `Documentation` must require: a README at the repository root
+What goes in each section is your judgment, with one floor — **the guide must require a
+well-formed README at the repository root**, and say what it contains. A multi-module project
+gets per-module READMEs *as well*, never *instead*: a reader arrives at the root, and a root
+with nothing there leaves them guessing which folder to open first. An autonomous build wrote
+a clean README into each of its two modules and left the root bare, because the guide had
+scoped the requirement to modules.
+
+Require it as a practice with stated contents, not as "write a README":
+
+- **what this is** — a line or two a newcomer understands without opening the specs;
+- **how to run it locally** — the shortest path from clone to running, for *each* deployable;
+- **how to run the tests** — the command, plus anything that has to exist first;
+- **how the pieces fit** — the modules and what each owns, whenever there is more than one;
+- **where the specs live**, so the README stays a pointer and never becomes a second source
+  of truth that can drift from them.
+
+Keep the guide itself tool-agnostic — write *"each module's test command"*, not a named
+runner (§ Boundaries). The concrete commands belong in the README the implementer writes,
+which is where they can be checked against what actually runs.
 
 ## The Enforcement block
 The guide ends with an `## Enforcement` section: a short prose intro followed by one ` ```yaml ` fenced block. This block is the machine-readable contract read live by the `gspec-practices-enforce` PostToolUse hook — the prose is the "why," this block is the "what runs." Without it the hook fails open (no rules) and none of the practices are enforced.

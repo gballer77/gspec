@@ -64,13 +64,23 @@ The architecture is the **stable** half of the technical spec; the detail that g
 
 The test: **would this change if we added one more feature?** If yes, it does not belong here. What remains — module boundaries, ownership, placement rules, contracts, cross-cutting concerns — is what makes the file finite.
 
-## Layout — always two tiers, gated on the Modules table
-The Modules table decides how many files carry the two tiers:
+## Layout — always two tiers, always two files per module
+The Modules table decides how many module-tier files there are: **exactly one per row, always** — including when there is only one row. The tiers split C4-style, container level up top, component level per unit:
 
-- **One module (one row, or N/A):** both tiers live in the single `gspec/architecture.md`. No sub-files — a second file for one module is pure ceremony.
-- **Multiple modules (more than one row):** the tiers split, C4-style — container level up top, component level per unit:
-  - **System tier — `gspec/architecture.md`** (always present, always the entry point): overview and system context, the **shared data model** (the entities more than one module touches, named and related — not defined), the **contracts between modules** (an API surface between two units belongs to neither alone), the cross-cutting auth flow, shared environment/configuration, the **Modules & Verification table**, and the Technical Gap Analysis.
-  - **Module tier — `gspec/architecture/<name>.md`**, one per table row, where `<name>` is the row's module name (the same key `verify.sh` uses in `FAIL: <module>:<phase>`): that unit's identity and boundary, the directories it owns, its internal structure and **file-placement rules**, and module-local configuration. Small and stable — about a page.
+- **System tier — `gspec/architecture.md`** (always present, always the entry point): overview and system context, the **shared data model** (the entities more than one module touches, named and related — not defined), the **contracts between modules** (an API surface between two units belongs to neither alone), the cross-cutting auth flow, shared environment/configuration, the **Modules & Verification table**, and the Technical Gap Analysis. It mints **no anchors** — that is what keeps it finite.
+- **Module tier — `gspec/architecture/<name>.md`**, one per table row, where `<name>` is the row's module name (the same key `verify.sh` uses in `FAIL: <module>:<phase>`): that unit's identity and boundary, the directories it owns, its internal structure and **file-placement rules**, module-local configuration — **and the module's spine**.
+
+A single-module project gets its own `architecture/<name>.md` like any other. It used to fold both tiers into the root file, on the reasoning that a second file for one module is pure ceremony; that held only while the tier was prose. It now carries anchors, and putting those in the system tier is the one thing that file must not do.
+
+### The spine — what the module tier mints
+The spine is the anchors **more than one feature will reference**, written in the same H3 grammar the feature architecture uses, under the same `## Data` / `## API` / `## UI` / `## Logic` sections, each with `- **module:** <name>` and `- **defined-in:** gspec/architecture/<name>.md`:
+
+- **the global invariants** — the rules every feature must honour. An invariant stated as *prose* cannot be amended, so a feature that needs an exception has nothing to point at and invents its own name for the rule. Write it as a `### Rule:`.
+- **the shared data model** — the entities the module's core passes around, plus any registry or constants file features contribute to (define the registry's *shape*; each feature keeps its own entries).
+- **the core entry points** — the loop, the pipeline, the shell that every feature plugs into.
+- **the main surfaces** — a screen or component more than one feature touches.
+
+Nothing a single feature alone will use. Same test as the altitude rule — *would this change if we added one more feature?* Err toward **fewer, load-bearing anchors**: measured on real builds the genuine spine is 5 anchors of 47, and 10 of 107. Anything missed is caught at the resolve barrier rather than lost.
 
 The root file doubles as the **index**: in two-tier mode each Modules row links to its sub-file, and each sub-file carries routing frontmatter (after `spec-version`):
 
@@ -80,7 +90,9 @@ module: <name>          # must match its Modules-table row
 
 The module tier carries **no `covers:` list**. Which features touch a module changes with every feature, and maintaining it here would make the stable file the most-edited one in the repo. That index is *derived* instead — each feature's own spec names the module it belongs to, so the mapping is a grep, never a thing to keep in sync.
 
-State every concern **exactly once**, at the tier that owns it, and reference it from the other tier — duplication across tiers is drift waiting to happen. The Modules table never moves out of the root file; it stays the single authority for `verify.sh`.
+State every concern **exactly once**, at the tier that owns it, and reference it from the other tier — duplication across tiers is drift waiting to happen. In practice the split is: the root's Module Boundaries cells carry **one summarizing clause**; the clause-by-clause enumeration lives only in that module's *Identity & Boundary*. Module-local facts (startup behaviour, local env vars, internal placement) never appear in the root at all — not even as an Assumptions bullet. Technical Gap Analysis **points, it does not resolve twice**: drop rows the owning section already resolves. **Where an owning section already resolves it, the fix for a tie is always deletion** — never reword both copies, or the spec grows on every duplication finding. Where **no** anchor resolves the gap, deleting the row loses the resolution and leaving it as prose gives features nothing to amend (deltas amend anchors; a table cell is not one, and the system tier mints none): mint or extend an anchor in the **module** tier and reduce the row to that anchor's bare name. Cite an anchor in one consistent bare form (`### Rule: Pagination`) — never decorated with a file path or a parenthetical module name, which is a second thing to keep in sync for no lookup benefit. The Modules table never moves out of the root file; it stays the single authority for `verify.sh`.
+
+Run the altitude test **sentence-by-sentence inside an anchor**, not only section-by-section. A correctly-minted anchor still fails when its own prose enumerates its contents, because the feature deltas then contradict the thing they amend: `### Screen:` / `### Component:` states one fetch, one route, and "regions contributed by the features that own them" — never the region list. `### Rule:` keeps the invariant and cuts emitted output, message format and exit conditions, closing with "defined by the owning feature as deltas against this anchor". `### Entity:` keeps only the states other anchors branch on and cuts the field/variant list and the illustrative example.
 
 ## Required sections (a complete architecture spec)
 **System tier** — Overview & System Context · Module Boundaries (what each module owns; a `graph` when there is more than one) · Shared Data Model (`erDiagram`, name level) · Inter-Module Contracts *(or N/A)* · Authentication & Authorization *(or N/A)* · Environment & Configuration · Modules & Verification (the **name · dir · build · test** table *or N/A*) · Technical Gap Analysis · Open Decisions (only if deferred).

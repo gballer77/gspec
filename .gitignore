@@ -28,6 +28,9 @@ yarn-error.log*
 # Local scratch space
 sandbox/
 
+# Design notes — kept locally, not published with the repo
+docs/
+
 # OS specific
 .DS_Store
 Thumbs.db

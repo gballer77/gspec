@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 // gspec SubagentStop hook — feedback capture (model-free, passive).
 //
-// The learning loop's capture (T1) relies on a corrected agent choosing to
-// self-record a lesson. This hook makes capture automatic and independent of
+// The learning loop's recording (T1) relies on a corrected agent choosing to
+// self-record a memory. This hook makes capture automatic and independent of
 // that: when a subagent returns a FAILING QA verdict — the feedback signal a
-// lesson should come from — it appends a compact record to a rolling log at
-// .gspec/agent-runs/feedback-log.md. The distiller (/gspec-distill) reads that
-// log alongside the agent memory silos as corroborating evidence of recurring
-// failure modes. Feedback-driven (FAIL only), so it stays low-noise and
-// consistent with the gspec-memory capture philosophy.
+// memory should come from — it appends a compact record to a rolling log at
+// .gspec/agent-runs/feedback-log.md. The memorizer (/gspec-memorize) reads that
+// log alongside the pending memories in .gspec/memory/ as corroborating evidence
+// of recurring failure modes. Feedback-driven (FAIL only), so it stays low-noise
+// and consistent with the gspec-memory philosophy.
+//
+// This is also the ONLY channel a read-only agent has: a validator or a planner
+// has no Write tool, so it cannot record a pending memory — its verdict landing
+// here is how its failure modes reach the memorizer.
 //
 // Passive: always exit 0 — a capture hook must never disrupt a run. Fails OPEN.
 // NOTE: SubagentStop is documented to fire on subagent (Task-tool) completion;
