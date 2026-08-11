@@ -5,6 +5,31 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.1.0',
+    date: 'August 10, 2026',
+    title: 'Adding a feature to a product that already has an architecture',
+    summary: 'The architecture stage is the one stage that is not skip-if-present — deliberately, because a new feature routinely needs a new module, contract or spine anchor. But it ran as though it were authoring from nothing: the writer was never told an architecture already existed, and nothing stopped it renaming a module. <strong>The Modules &amp; Verification table is the derivation key for the whole module tier</strong>, so a rename orphaned <code>gspec/architecture/&lt;name&gt;.md</code> and dangled every feature <code>arch.md</code> pointing at it — silently, because the feature specs kept parsing and kept validating. The writer now amends, and a deterministic floor holds the table.',
+    changes: [
+      {
+        type: 'fixed',
+        description: '<strong>An existing <code>gspec/architecture.md</code> is amended, not rewritten.</strong> The <code>architecture-writer</code> now checks whether the file exists before writing a word, and on a project that already has one it reads the system tier and every <code>gspec/architecture/&lt;name&gt;.md</code> first, then makes the smallest change the new feature PRDs require. Recorded decisions, resolved gaps and stated assumptions are preserved rather than re-litigated, and anything it does change gets a Technical Gap Analysis entry so the diff is reviewable. This fixes <code>/gspec-architect</code> and <code>gspec build</code> together — the gap was in the agent, so both paths had it.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A floor on the Modules table: it only grows.</strong> The build captures the table before the architecture writer runs and checks it after. A row that was renamed or dropped comes straight back to the writer as a mechanical violation naming the module and the <code>gspec/architecture/&lt;name&gt;.md</code> path it would orphan — no validator run spent discovering it. A module that really is retired keeps its row and says so, so the tier file and every reference to it stay resolvable.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The deterministic-lint loop is now shared by every stage that has one.</strong> It was written once for the per-feature fan-out; the single-deliverable gate had no way to run a floor at all. One implementation now backs both, so the non-convergence signature, the per-round recording to <code>qa-failures.md</code> and printing violations rather than counting them cannot drift apart between them. <code>--no-qa</code> skips the floor alongside the validators, as it already did per-feature.',
+      },
+      {
+        type: 'changed',
+        description: '<strong><code>/gspec-architect</code> confirms before it regenerates the system tier.</strong> It already refused to overwrite a feature\'s <code>arch.md</code> or <code>design.html</code> without asking; <code>gspec/architecture.md</code> had no such guard one step earlier in the same flow. It now names the amendment as an amendment, and checks the writer\'s summary still carries every module row it started with.',
+      },
+    ],
+    migration: 'Nothing to do — <code>npx gspec -t &lt;target&gt;</code> to pick up the revised <code>architecture-writer</code> and <code>/gspec-architect</code>. If you have been running <code>gspec build</code> on a project that already had an architecture, this is worth a look at <code>git log gspec/architecture.md</code>: a module row renamed by an earlier run left the old <code>gspec/architecture/&lt;name&gt;.md</code> on disk as an orphan and left every feature <code>arch.md</code> referencing it dangling. Nothing detects that retroactively — grep your feature folders for <code>uses:</code>, <code>amends:</code> and <code>defined-in:</code> paths and confirm each one resolves.',
+  },
+  {
     version: '3.0.0',
     date: 'August 9, 2026',
     title: 'Everything about a feature lives in one folder, and gspec remembers what it learns',

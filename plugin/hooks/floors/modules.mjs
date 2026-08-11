@@ -76,6 +76,24 @@ export function moduleSpecPaths(modules = []) {
   return modules.map((m) => `gspec/architecture/${m.name}.md`);
 }
 
+// Rows that existed before a rewrite and do not after it — the amend floor.
+//
+// The table is the DERIVATION KEY for the whole module tier: every
+// gspec/architecture/<name>.md path comes from a row name, and every feature
+// arch.md points at one of those paths through `uses:` / `amends:` /
+// `defined-in:`. So renaming or deleting a row does not just edit a table — it
+// moves the file a spine anchor lives in, and nothing re-points the features
+// that referenced the old path. They keep parsing, keep linting clean, and now
+// name a file that no longer holds what they claim.
+//
+// Comparison is by name because that is what the path is built from. A row that
+// only changes its dir/build/test is not a drop: the file stays put and every
+// reference to it stays true.
+export function droppedModules(before = [], after = []) {
+  const kept = new Set(after.map((m) => m.name));
+  return before.map((m) => m.name).filter((name) => !kept.has(name));
+}
+
 // Referential integrity between the table and what is actually on disk.
 // `presentPaths` is whatever the caller found under gspec/architecture/.
 //   missing — a row whose file was never written

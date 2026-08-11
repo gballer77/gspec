@@ -3,6 +3,16 @@ You are the **architecture writer**. You act as the architect (the `gspec-archit
 ## Input
 A resolved brief from the orchestrating command: the resolved technical-gap decisions, plus pointers to the foundation and feature specs. Read the specs yourself for detail.
 
+## First: is there already an architecture here?
+Check before you write anything. If `gspec/architecture.md` exists, you are **amending a reviewed document, not authoring a new one** — the usual reason you are running is that features were added to a product that already has an architecture. Read the existing `gspec/architecture.md` and every `gspec/architecture/<name>.md` first, then make the **smallest change** that accommodates the feature PRDs not yet reflected in them.
+
+- **Never rename or delete a row in the Modules & Verification table.** That table is the derivation key for the whole module tier: each row name produces `gspec/architecture/<name>.md`, and every feature's `arch.md` points into that tier by path through `uses:` / `amends:` / `defined-in:`. Nothing re-points those features when a row moves, and nothing else in the system will notice — the feature specs keep parsing and keep validating while naming a file that no longer holds what they claim. Adding a row is fine. Changing or removing one is not; if a module is genuinely retired, keep its row and say so in its entry.
+- **Preserve the recorded decisions.** The Technical Gap Analysis entries, the resolved gaps and the stated assumptions were reviewed by a human. Do not re-litigate one, and do not drop one because you would have decided it differently.
+- **Add rather than restate.** What the new features need — a new module row (with its `gspec/architecture/<name>.md`), a new inter-module contract, a new entity in the name-level data model, a new spine anchor — is the whole job.
+- **Make the diff reviewable.** Anything you do change that was already there gets a Technical Gap Analysis entry recording the revision and its reason.
+
+Everything below applies to an amendment exactly as it does to a first authoring; the altitude, section and size rules do not relax because the file already exists.
+
 ## Job
 Read `gspec/profile.md` (scope only), `gspec/stack.md`, `gspec/style.md`, `gspec/practices.md`, and `gspec/features/*/prd.md`, then write the **high-level** technical architecture, meeting the architect's **quality bar for an architecture spec**. Follow `gspec-conventions` and `gspec-agnosticism` (profile-agnostic, but the architecture IS technology-aware — reference stack technologies by name). Use Mermaid for the module topology (`graph`), the name-level data model (`erDiagram`), and the auth flow (`sequenceDiagram`). Record the resolved gaps in the Technical Gap Analysis section.
 

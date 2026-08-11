@@ -1,7 +1,7 @@
 // Unit tests for the Modules & Verification table parser.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseModulesTable, moduleSpecPaths, moduleSpecDrift } from './modules.mjs';
+import { parseModulesTable, moduleSpecPaths, moduleSpecDrift, droppedModules } from './modules.mjs';
 
 const TWO_MODULES = `---
 spec-version: v2
@@ -61,6 +61,26 @@ test('one file per row, single-module included — the tier holds the spine', ()
     'gspec/architecture/web.md',
     'gspec/architecture/api.md',
   ]);
+});
+
+test('a dropped row is caught by name — a rename is a drop plus an addition', () => {
+  const before = parseModulesTable(TWO_MODULES);
+  assert.deepEqual(droppedModules(before, before), []);
+
+  // Renamed: 'api' is gone from the table, so gspec/architecture/api.md is no
+  // longer derivable and every feature pointing at it is now dangling.
+  const renamed = [before[0], { ...before[1], name: 'backend' }];
+  assert.deepEqual(droppedModules(before, renamed), ['api']);
+
+  // Deleted outright.
+  assert.deepEqual(droppedModules(before, [before[0]]), ['api']);
+
+  // Same names, different build command — the file does not move, so nothing dropped.
+  const retooled = [before[0], { ...before[1], build: 'make' }];
+  assert.deepEqual(droppedModules(before, retooled), []);
+
+  // No prior table (a greenfield write) can drop nothing.
+  assert.deepEqual(droppedModules([], before), []);
 });
 
 test('drift reports both directions — a half-done rename leaves one of each', () => {

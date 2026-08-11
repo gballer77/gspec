@@ -187,7 +187,7 @@ export const V2_AGENTS = [
   {
     name: 'architecture-writer',
     source: 'agents/architecture-writer.md',
-    description: 'Read the foundation + feature specs and write gspec/architecture.md (technology-aware, Mermaid diagrams, gap analysis) — plus per-module gspec/architecture/<name>.md sub-files for a multi-module system — from resolved gap decisions. Delegated by /gspec-architect; returns a summary.',
+    description: 'Read the foundation + feature specs and write gspec/architecture.md (technology-aware, Mermaid diagrams, gap analysis) — plus per-module gspec/architecture/<name>.md sub-files for a multi-module system — from resolved gap decisions. Amends an architecture that already exists rather than rewriting it, never renaming or dropping a Modules-table row. Delegated by /gspec-architect; returns a summary.',
     skills: ['gspec-architect', 'gspec-conventions', 'gspec-agnosticism'],
     tools: 'Read, Write, Edit, Glob, Grep',
     model: 'opus',
