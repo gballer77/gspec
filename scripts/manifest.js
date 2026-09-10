@@ -16,7 +16,7 @@ export const V2_SKILLS = [
   {
     name: 'gspec-qa',
     source: 'skills/personas/gspec-qa.md',
-    description: 'QA-reviewer persona — how to critique a spec against its quality bar and return a structured verdict. Preloaded by every validator agent and by /gspec-qa.',
+    description: 'QA-reviewer persona — how to critique a spec against its quality bar and return a structured verdict whose findings each carry a severity and an anchor (the heading they are about). Preloaded by every validator agent and by /gspec-qa.',
   },
   {
     name: 'gspec-product',
