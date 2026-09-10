@@ -68,18 +68,32 @@ const STUB_MARKERS = [
   /\bpass\s*#\s*stub\b/i,
 ];
 
-/** Every repo-relative path named by a CHECKED task. */
-export function filesNamedByCheckedTasks(tasksText) {
+// Every repo-relative path named by a task line whose checkbox matches `box`.
+function filesNamedByTasks(tasksText, box) {
   const out = [];
   for (const line of String(tasksText).split('\n')) {
-    const task = line.match(/^\s*[-*]\s*\[([xX])\]\s*\*\*T(\d+)\*\*(.*)$/);
-    if (!task) continue;
+    const task = line.match(/^\s*[-*]\s*\[([ xX])\]\s*\*\*T(\d+)\*\*(.*)$/);
+    if (!task || !box.test(task[1])) continue;
     for (const m of task[3].matchAll(PATHISH)) {
       if (looksLikePackageName(m[1])) continue;
       out.push({ id: `T${task[2]}`, path: m[1] });
     }
   }
   return out;
+}
+
+/** Every repo-relative path named by a CHECKED task. */
+export function filesNamedByCheckedTasks(tasksText) {
+  return filesNamedByTasks(tasksText, /[xX]/);
+}
+
+/**
+ * Every repo-relative path named by an UNCHECKED task. A file among these that
+ * already exists is evidence of work an interrupted run did but never
+ * recorded — the retry is told about it so it verifies rather than recreates.
+ */
+export function filesNamedByUncheckedTasks(tasksText) {
+  return filesNamedByTasks(tasksText, / /);
 }
 
 /**
