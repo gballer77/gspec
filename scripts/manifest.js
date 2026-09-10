@@ -283,7 +283,7 @@ export const V2_AGENTS = [
   {
     name: 'build-orchestrator',
     source: 'agents/build-orchestrator.md',
-    description: 'Turn the in-scope features/plans into an ordered, fan-out-aware build plan (waves of file-disjoint implementer scopes), acting with the orchestrator judgment. Read-only — plans, never builds. Delegated by the build implement stage.',
+    description: 'Turn the in-scope features/plans into an ordered, fan-out-aware build plan (waves of file-disjoint implementer scopes), acting with the orchestrator judgment over the driver\'s computed file-overlap evidence. Read-only — plans, never builds. Delegated by the build implement stage.',
     // Read-only, so it records no memory of its own; its scope/fan-out judgment
     // stays trainable through the FAIL verdicts the feedback log records for it.
     skills: ['gspec-orchestrator', 'gspec-engineer', 'gspec-conventions'],

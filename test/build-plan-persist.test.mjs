@@ -53,7 +53,9 @@ test('--status renders the plan one wave per line', () => {
 
 test('the implement stage records the plan after splitting scopes per feature', async () => {
   const src = await readFile(join(REPO_ROOT, 'lib', 'build.js'), 'utf-8');
-  const loop = src.match(/plan = await Promise\.all\(plan\.map\(\(wave\) => splitScopesByFeature[\s\S]{0,200}/)[0];
-  assert.match(loop, /recordWavePlan\(ctx, stage\.id, plan\)/, 'the accepted (split) plan is what gets persisted');
+  const split = src.indexOf('plan = await Promise.all(plan.map((wave) => splitScopesByFeature');
+  const merge = src.indexOf('mergeWaves(plan, overlapTable');
+  const record = src.indexOf('recordWavePlan(ctx, stage.id, plan)');
+  assert.ok(split > 0 && merge > split && record > merge, 'the accepted plan — split per feature, then merged — is what gets persisted');
   assert.match(src, /stages\?\.implement\?\.plan/, 'and --status reads it back');
 });

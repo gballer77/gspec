@@ -2672,6 +2672,7 @@ program
   .option('--no-review', 'skip the spec-review pause before implementation (on by default)')
   .option('--research', 'run competitive research after the profile stage, for richer feature requirements (needs web access)')
   .option('--scope <tier>', 'how big this product is: small | standard | large — scales every spec\'s size budget (default: what the intake recorded, else standard)')
+  .option('--parallel <mode>', 'auto | off — auto (default) builds provably file-disjoint features concurrently by merging the orchestrator\'s single-scope waves; off keeps its serial order')
   .option('--resume', 'resume an existing run from where it paused')
   .option('--status', 'print how the current/last run ended and exit with its code (0 complete · 1 failed · 2 paused for review · 3 crashed)')
   .option('--dry-run', 'print the stage plan without invoking the engine')
@@ -2693,6 +2694,7 @@ program
         research: !!opts.research,
         scope: opts.scope,
         qaRetries: opts.qaRetries,
+        parallel: opts.parallel,
         resume: !!opts.resume,
         dryRun: !!opts.dryRun,
       });

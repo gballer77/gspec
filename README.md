@@ -48,11 +48,14 @@ gspec build --no-review "an idea"               # skip the spec-review pause ent
 gspec build --qa-retries 3 "an idea"            # give each QA gate 3 self-heal revisions (default 1)
 gspec build --research "an idea"                # competitive research up front, for richer feature PRDs
 gspec build --scope small "an idea"             # size the specs to the product: small · standard · large
+gspec build --parallel off "an idea"            # keep the orchestrator's serial waves (auto merges provably disjoint ones)
 ```
 
 The autonomous build has a wired engine for **Claude Code**, **Codex**, and **Pi**. On other harnesses, use the spec-by-spec workflow below.
 
 **Spec size (`--scope`).** Specs are written to a size budget, so the specification matches the product rather than the writers' appetite — a one-level game does not need a 65 KB feature PRD, and every downstream agent pays to read whatever gets written. The intake asks how big the product is and records the tier in the brief; `--scope small|standard|large` overrides it, scaling every budget by ×0.6 / ×1 / ×1.5. The driver measures each spec as it lands and prints its size against the budget. **Going over is advisory** — it is reported in the log and noted by QA as a `[minor]` finding, and never fails a stage.
+
+**Parallel waves (`--parallel`).** The implement stage runs the orchestrator's waves in order and fans out the scopes within a wave. The orchestrator is handed a computed file-overlap table — each feature's modules, which pairs are provably file-disjoint, which share, and the dependencies the PRDs declare — and is told that table is authoritative. With `--parallel auto` (the default) the driver also merges consecutive single-scope waves whose features are *provably* disjoint and dependency-free into one wave, at most three scopes at a time, and logs each merge. It only ever acts on proof; anything short of that stays serial. Pass `--parallel off` to run the waves exactly as the orchestrator emitted them.
 
 **Per-agent models (cost control).** The build runs each stage as its own agent, and you can assign each a model — so the checkers and the high-volume jobs can run on a cheaper model while the architecture work keeps the strong one. Add a `models` map to `.gspec/config.json` (this project) or `~/.gspec/config.json` (your global default; the project file overrides it). Selectors resolve most-specific-first — exact agent name, then role tier (`writer`, `qa`, `planner`, `implementer`, `researcher`, `inspector`), then `default`:
 
