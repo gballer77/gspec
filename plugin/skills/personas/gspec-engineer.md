@@ -43,3 +43,13 @@ The PRD's **capability checkboxes** track *delivery*; a plan file's **task check
 - It is **committed and hand-editable** — a generated command list can't express real setup (a test database, env vars, `docker compose up`), so it's a starting point the engineer refines, not a locked artifact.
 - The `implementer` runs it before returning; the build runs it deterministically as the implement gate; `/gspec-audit` checks it against the real toolchain. A project with genuinely nothing to build or test has no `verify.sh` (architecture marks Modules *Not Applicable*).
 - **Every preflight is non-blocking, and nothing in it may wait on a human.** If a step needs something external — a Docker daemon, a database, a network service, a credential — it must *probe with a timeout and fail with a message*, never wait. Any command that can prompt runs in its non-interactive form (`--yes`, `--no-input`, `CI=1`, stdin closed). This is not hygiene: an autonomous build has no one to answer a prompt and no way to tell waiting from working, and a run was observed sitting for about an hour on `docker info` against a daemon that was down. Prefer `timeout 30 docker info >/dev/null 2>&1 || { echo "FAIL: docker unavailable"; exit 1; }` over `docker info`. The build now stops a script that goes silent for 10 minutes and reports it as an environment problem, so a blocking preflight costs a wasted gate rather than a wasted night.
+
+## Mechanical floors (what the build lints a plan for, before any validator)
+The build runs these checks over `tasks.md` **before** the plan validator sees it and sends each violation straight back to the writer — every miss costs a **full extra writer run**. Stated in the words the violation uses, so the plan can be self-checked against the same list:
+
+- `task anchor "<ref>" does not resolve to a heading in arch.md` — every `arch:` entry on an unchecked task names an H3 that exists in the sibling `arch.md` (compared by slug: `#entity-order`, `### Entity: Order` and `Entity: Order` all resolve the same way).
+- `T<n> is marked [P] but depends on T<m>, which is also [P] — tasks marked to run alongside each other cannot depend on one another, so one of the markers is not honest`. A `[P]` task may depend on a non-`[P]` task (a barrier); it may not depend on another `[P]` task.
+- `T<n> lists itself in deps`.
+- `T<n> covers: "<quote>" but that text does not appear verbatim in the PRD — the quote is the link to the capability, so a paraphrase covers nothing`. Whitespace is normalized; wording is not. Escape inner quotes (`\"`) rather than dropping them.
+
+The file-shape floors (frontmatter and `spec-version`) are listed in `gspec-conventions`.

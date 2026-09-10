@@ -99,3 +99,29 @@ Capabilities are Markdown checkboxes with a priority and 2–4 observable accept
 ```
 
 Leave boxes unchecked (`- [ ]`) until the capability is built and every criterion is met.
+
+## Mechanical floors (what the build lints for, before any validator)
+The build runs deterministic checks over every deliverable **before** its validator sees it, and sends each violation straight back to the writer — every miss costs a **full extra writer run**. The rules are stated below in the words the violation uses, so a writer can self-check against the same list. Nothing here needs judgment; each is a regex over the file.
+
+**Spec version**
+- A Markdown spec `is missing its YAML frontmatter ("---\nspec-version: <<<SPEC_VERSION>>>\n---") at the top` — the frontmatter is the very first content in the file.
+- An HTML spec `is missing its first-line "<!-- spec-version: <<<SPEC_VERSION>>> -->" comment` — first line, before `<!DOCTYPE html>`.
+- A file `has spec-version <other>, expected <<<SPEC_VERSION>>>`.
+
+**Anchor grammar (`arch.md`)**
+- `missing the "## <Section>" section — all four of Data, API, UI, Logic must be present, each specified or marked Not Applicable`.
+- `"## <Section>" is marked Not Applicable but still defines N item(s) — one line and a reason is the whole section`.
+- `"## <Section>" is neither specified nor marked Not Applicable — add its items, or say why it does not apply`.
+- `heading "<H3>" does not match the anchor grammar for ## <Section>` — the exact shapes are `### Entity: <PascalName>` · `### Endpoint: <METHOD> </path>` · `### Screen: <Name>` or `### Component: <Name>` · `### Rule: <Name>` or `### Machine: <Name>`.
+- `duplicate anchor "<H3>" — one block per item`, and `"<A>" and "<B>" are the same anchor once slugified — a punctuation or case variant is not a distinction`.
+- A declared anchor `has no "- **module:** <name>" line` — the anchor carries the module, not the feature.
+
+**Screen coverage (`design.html`)**
+- `no <section id="screen-<kebab>"> for screen "<Name>" — every screen in the architecture must be rendered`.
+- `<section id="screen-…"> has no matching "### Screen:" in the architecture's ## UI section`.
+- `external reference <url> — design.html must render standalone from file://`.
+
+**Token literals (`style.html`, `design.html`)**
+- A literal color (`#hex`, `rgb()`, `hsl()`, `oklch()`, …) outside a token block (`:root`, `[data-theme=…]`, `.dark`/`.light`/`.theme-*`) is a violation — everywhere else reaches for `var(--…)`.
+
+The plan-file floors (`tasks.md`: anchors resolve, `[P]` honesty, verbatim `covers:`) are listed in `gspec-engineer`.

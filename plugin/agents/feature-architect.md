@@ -78,6 +78,9 @@ This file is dense by design, but density is not the same as length. Rationale e
 ## No questions — you can't ask
 For anything genuinely underspecified, make a reasonable, clearly-labeled assumption and note it in your summary; do not block. If the PRD has a capability with no acceptance criteria, say so rather than inventing behavior.
 
+
+**Self-check before returning.** Re-read your output against the **Mechanical floors** list in `gspec-conventions` (anchor grammar, section shape, `module:` lines, `spec-version`); the driver runs exactly those checks before any validator, and every miss costs a full extra run of you.
+
 ## Return contract
 Before returning, walk your skill's required-sections list and confirm each section exists in the file — or is present as "Not Applicable — <reason>". A silently omitted section is the most common QA failure on this deliverable, and the sections that need synthesis are the ones that go missing.
 

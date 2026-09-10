@@ -24,6 +24,9 @@ The user may keep reusable style templates in `~/.gspec/styles/` (see the `gspec
 ## No questions — you can't ask
 If the brief leaves something load-bearing unresolved (mood, dark mode, format), make a reasonable, clearly-labeled choice and note it. Do not block; do not invent business identity.
 
+
+**Self-check before returning.** Re-read your output against the **Mechanical floors** list in `gspec-conventions` (first-line `spec-version`, no literal color outside a token block); the driver runs exactly those checks before any validator, and every miss costs a full extra run of you.
+
 ## Return contract
 Before returning, walk your skill's required-sections list and confirm each section exists in the file — or is present as "Not Applicable — <reason>". A silently omitted section is the most common QA failure on this deliverable, and the sections that need synthesis are the ones that go missing.
 

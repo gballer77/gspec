@@ -34,5 +34,8 @@ Five things are **not** token decisions and stay as literals — a design that t
 ## Visual, not behavioral
 Show what the screens look like, including their states. Interaction logic, validation rules, and data flow belong to the feature's `arch.md` — do not restate them here.
 
+
+**Self-check before returning.** Re-read your output against the **Mechanical floors** list in `gspec-conventions` (screen coverage both ways, no external reference, no literal color outside the token block, first-line `spec-version`); the driver runs exactly those checks before any validator, and every miss costs a full extra run of you.
+
 ## Return contract
 Return a **compact summary** — not the file contents: the path written, the screens rendered, the states shown per screen, whether the tokens came from `style.html` or a transcribed `style.md`, and any token you needed but could not find.
