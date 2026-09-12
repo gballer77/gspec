@@ -14,6 +14,8 @@
 //
 // Same shape as every other floor: text in, messages out, no I/O.
 
+import { pathsNamedBy } from './named-paths.mjs';
+
 const SECTIONS = ['Data', 'API', 'UI', 'Logic'];
 
 // The exact H3 grammar each section owns. The rigidity is the point: an anchor
@@ -559,6 +561,34 @@ export function parallelismViolations(rel, tasksText) {
       v.push(`${rel}: ${t.id} is marked [P] but depends on ${conflicting.join(', ')}, which ${conflicting.length === 1 ? 'is' : 'are'} also [P] — tasks marked to run alongside each other cannot depend on one another, so one of the markers is not honest`);
     }
     if (t.deps.includes(t.id)) v.push(`${rel}: ${t.id} lists itself in deps`);
+  }
+  return v;
+}
+
+/**
+ * Two unchecked `[P]` tasks that name the same file cannot run alongside
+ * each other — one overwrites the other. Tasks name their files in backticks,
+ * so this is regex; the plan validator was raising it by hand (twice in one
+ * run, a validator run plus a writer run each). One message per file.
+ */
+export function parallelFileOverlapViolations(rel, tasksText) {
+  const lines = String(tasksText).split('\n');
+  const blocks = []; // { id, parallel, checked, text }
+  let cur = null;
+  for (const line of lines) {
+    const t = line.match(/^\s*[-*]\s*\[([ xX])\]\s*\*\*T(\d+)\*\*(.*)$/);
+    if (t) { cur = { id: `T${t[2]}`, checked: t[1] !== ' ', parallel: /^\s*\[P\]/.test(t[3]), text: line }; blocks.push(cur); continue; }
+    if (cur) cur.text += `\n${line}`;
+  }
+  const byFile = new Map();
+  for (const b of blocks) {
+    if (b.checked || !b.parallel) continue;
+    for (const f of pathsNamedBy(b.text)) (byFile.get(f) || byFile.set(f, []).get(f)).push(b.id);
+  }
+  const v = [];
+  for (const [file, ids] of byFile) {
+    if (ids.length < 2) continue;
+    v.push(`${rel}: ${ids.join(' and ')} are both [P] and both write \`${file}\` — tasks marked to run alongside each other cannot write the same file; drop [P] from all but one, or sequence them with deps:`);
   }
   return v;
 }
