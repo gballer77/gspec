@@ -33,6 +33,10 @@ const ANCHOR_SHAPE = {
 
 const NOT_APPLICABLE = /not\s+applicable/i;
 
+// A slug with its hyphens removed: the comparison key when a writer's
+// hyphenation differs from slugifyAnchor's (see planLintViolations).
+export const looseSlug = (slug) => String(slug).replace(/-/g, '').toLowerCase();
+
 export function slugifyAnchor(heading) {
   return String(heading)
     .replace(/^#+\s*/, '')
@@ -360,15 +364,17 @@ export function designLintViolations(rel, designHtml, archText) {
   // drawn?" is a judgment call; it belongs to feature-design-validator, which
   // can read the mockup. What stays here is what regex can actually settle: a
   // screen is a place, it gets its own section, and both directions must agree.
+  // Loose on hyphens, both ways — see planLintViolations for why that is safe.
+  const idsLoose = new Set([...ids].map(looseSlug));
   for (const d of declared) {
     if (d.kind !== 'screen') continue;
-    if (!ids.has(d.id)) v.push(`${rel}: no <section id="${d.id}"> for screen "${d.name}" — every screen in the architecture must be rendered`);
+    if (!ids.has(d.id) && !idsLoose.has(looseSlug(d.id))) v.push(`${rel}: no <section id="${d.id}"> for screen "${d.name}" — every screen in the architecture must be rendered`);
   }
   for (const id of ids) {
     // Only ids that CLAIM to be a screen or component are held to the mapping;
     // a design may add its own scaffolding sections (a token swatch, a legend).
     if (!id.startsWith('screen-')) continue;   // a design may name its own sections
-    if (!declared.some((d) => d.id === id)) {
+    if (!declared.some((d) => d.id === id || looseSlug(d.id) === looseSlug(id))) {
       v.push(`${rel}: <section id="${id}"> has no matching "### Screen:" in the architecture's ## UI section`);
     }
   }
@@ -407,6 +413,12 @@ const unwrapList = (value) => {
 export function planLintViolations(rel, tasksText, archText) {
   const v = [];
   const known = new Set(headingsOf(String(archText).split('\n')).map((h) => slugifyAnchor(h)));
+  // Hyphenation is not meaning. `#entity-ingredientline` for
+  // `### Entity: IngredientLine` names the anchor unambiguously — the arch
+  // floor already rejects two headings that differ only by hyphenation as
+  // duplicates, so a loose match can never pick the wrong one. On a measured
+  // run 27 of 31 plan violations were this, each costing a writer run.
+  const knownLoose = new Set([...known].map(looseSlug));
   const lines = String(tasksText).split('\n');
   let checked = false;
   for (const line of lines) {
@@ -420,7 +432,7 @@ export function planLintViolations(rel, tasksText, archText) {
     for (const raw of unwrapList(arch[1]).split(/[,;](?![^(]*\))/)) {
       const a = normalizeAnchorRef(raw);
       if (!a) continue;
-      if (!known.has(a)) v.push(`${rel}: task anchor "${raw.trim()}" does not resolve to a heading in arch.md`);
+      if (!known.has(a) && !knownLoose.has(looseSlug(a))) v.push(`${rel}: task anchor "${raw.trim()}" does not resolve to a heading in arch.md`);
     }
   }
   return v;
