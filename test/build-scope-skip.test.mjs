@@ -28,7 +28,10 @@ test('a scope with nothing unchecked returns without running the agent', () => {
 test('the guard sits after the count and before the run loop', () => {
   // Order is the whole correctness argument: counting first is what makes the
   // skip safe, and being before the loop is what makes it save anything.
-  const count = fn.indexOf('remaining = await countUnchecked');
+  // The count now arrives through planCounts (so a plan with no tasks at all
+  // is told apart from one whose tasks are all checked); the ordering argument
+  // is unchanged.
+  const count = fn.indexOf('remaining = counts.unchecked');
   const guard = fn.indexOf('if (!remaining)');
   const loop  = fn.indexOf('for (let run = 1');
   assert.ok(count >= 0 && guard > count, 'the guard must read a fresh count');
