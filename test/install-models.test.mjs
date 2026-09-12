@@ -71,7 +71,9 @@ test('the tiering reaches every agent it is meant to, including the suffix-less 
   // The implementer is deliberately NOT on the strong tier: highest-volume agent
   // in a build, and the only one with a checker (verify.sh) behind it.
   assert.equal(at('implementer'), 'claude-sonnet-5');
-  assert.equal(at('implementation-validator'), 'claude-haiku-4-5', 'the *-validator suffix still reaches the qa tier');
+  // Pinned by name since 3.2.0 — the one checker kept off the cheap tier (it
+  // judges rendered captures). plan-validator above covers the suffix rule.
+  assert.equal(at('implementation-validator'), 'claude-sonnet-5', 'pinned above the qa tier by name');
   // Anything unlisted still resolves.
   assert.equal(at('build-orchestrator'), 'claude-sonnet-5');
 });

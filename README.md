@@ -96,6 +96,7 @@ With no `models` map, every agent runs on the engine/CLI default, unchanged. The
 - **`writer` → a balanced model** — the everyday authoring (profile, stack, practices, style, feature, research PRDs).
 - **`qa` → a cheap/fast model** — every `*-validator`; checking a spec needs far less horsepower than writing one.
 - **`architecture-writer` and `feature-architect` → a strong model** — the load-bearing design jobs (the system design, each feature's own architecture), pinned by name so they beat the `writer`/`default` tier. A mistake there propagates into everything downstream and no gate catches it.
+- **`implementation-validator` → the balanced model.** The one checker kept off the cheap tier: it judges rendered captures against the design, and the cheap tier was observed passing a page in browser-default layout with the capture in hand. It runs once per build, so the cost is negligible.
 - **`implementer` → the balanced model** — deliberately *not* the strong tier on Claude. It's the highest-volume agent in a build (per scope, per wave, and again on every continuation), and the only one whose output is checked by something deterministic: the gate runs `verify.sh`, so a weak result fails rather than ships. By the time it runs, the design is settled and what's left is following it. On Codex it stays `gpt-5-codex` — the code-specialized model, not the strong tier.
 - **`default` → the balanced model** — catches the planners and anything else.
 

@@ -91,6 +91,22 @@ const releases = [
         description: '<strong>The render floor reaches a Vite dev server.</strong> Vite binds <code>localhost</code>, which Node resolves to <code>::1</code>; the probe hit <code>127.0.0.1</code> alone and waited the full minute on a server that was up. All three loopback spellings are tried, and once a server fails for one feature the remaining features are skipped that round instead of waiting a minute each.',
       },
       {
+        type: 'changed',
+        description: '<strong>Implementer runs are capped at 120 engine turns, and continue on a fresh agent.</strong> Cost is turns × a full context window, and one uncapped feature run was measured at 419 turns and 130M tokens, the context mostly re-read test output by the end. The Claude adapter passes <code>--max-turns</code>; a run stopped by the cap is not an error — whatever it checked stands and the continuation loop briefs the next agent on what is left. The implementer is told to check each task the moment it is verified and to keep test output terse. <code>GSPEC_IMPLEMENTER_MAX_TURNS</code> overrides the cap; a scope may now take up to ten slices.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A validator whose FAIL the driver cannot read is asked to restate it — once, in the contract shape.</strong> No <code>- [severity]</code> item, or no <code>anchor:</code> on any finding, used to send the writer down the whole-document path at 133–831% of an initial run. Re-asking the validator to return the same findings in the contract shape costs a validator run, an order of magnitude less; the original is kept unless the restatement is strictly better.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A <code>[P]</code> file-overlap floor.</strong> Two <code>[P]</code> tasks naming the same file in backticks cannot run alongside each other; the plan validator was raising it by hand (twice per run). It is now mechanical, and the driver repairs it by dropping the marker from the later task.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The implementation validator moves to the balanced tier in the recommended models.</strong> On the cheap tier it read four rendered captures beside the design and passed a page in browser-default layout. It runs once per build, so the cost is negligible; its brief now says browser-default rendering — unstyled controls, default margins, no spacing scale — is a major finding, tokens being in effect or not.',
+      },
+      {
         type: 'fixed',
         description: '<strong>A writer retried after a crash continues its partial draft instead of re-authoring.</strong> When the retry finds the deliverable on disk but not yet well-formed, its brief opens with "a partial draft exists at <code>&lt;path&gt;</code>; read it, keep what is correct, and complete it — do not start over", and the run is recorded as a continuation rather than a fresh attempt.',
       },
