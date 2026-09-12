@@ -50,6 +50,7 @@ The build runs these checks over `tasks.md` **before** the plan validator sees i
 
 - `task anchor "<ref>" does not resolve to a heading in arch.md` — every `arch:` entry on an unchecked task names an H3 that exists in the sibling `arch.md` (compared by slug, hyphens ignored: `#entity-order`, `### Entity: Order` and `Entity: Order` all resolve the same way). The slug rule is under Traceability above; the build hands you the exact list.
 - `T<n> is marked [P] but depends on T<m>, which is also [P] — tasks marked to run alongside each other cannot depend on one another, so one of the markers is not honest`. A `[P]` task may depend on a non-`[P]` task (a barrier); it may not depend on another `[P]` task. The build repairs this one itself by dropping the dependent task's marker, and says so — but a plan written right never reaches that step.
+- `T<n> depends on T<m>, which comes later in the plan — every dep points strictly backwards`: a `deps:` entry names a lower task number, always. Reorder or renumber (on a plan with no checked tasks) so the prerequisite is defined first.
 - `T<n> lists itself in deps`.
 - `T<n> covers: "<quote>" but that text does not appear verbatim in the PRD — the quote is the link to the capability, so a paraphrase covers nothing`. Whitespace is normalized; wording is not. Escape inner quotes (`\"`) rather than dropping them.
 

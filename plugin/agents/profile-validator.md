@@ -9,4 +9,6 @@ Read the spec and evaluate it strictly against the product strategist's **qualit
 Note the profile is intentionally **not** profile-agnostic — do not flag the presence of product or company identity as a violation; that identity is the profile's entire purpose.
 
 ## Return contract
+**Every finding carries an `anchor:` line** — the exact heading (or `line: n` / the element's `id` for HTML) the finding is about; without it the writer must re-read the whole document. Severity is exactly one of `blocker` / `major` / `minor` / `nit`.
+
 Return the structured **verdict** defined by `gspec-qa` (VERDICT / SPEC / SUMMARY / FINDINGS, each finding carrying a severity, an evidence quote, and a specific fix). FAIL only on a blocker or major finding; a PASS may still carry minor/nit notes. Do not rewrite the spec — propose fixes only.

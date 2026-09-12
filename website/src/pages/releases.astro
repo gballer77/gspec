@@ -72,6 +72,26 @@ const releases = [
       },
       {
         type: 'fixed',
+        description: '<strong>The implementation floor no longer fails a build over a wildcard or a directory name.</strong> A task naming <code>fixtures/pantry-*.json</code> was reported as missing work on every round — no file can match a glob — until the gate called it non-converging and paused the stage; globs are now ignored. A path whose file name exists exactly once in the tree (<code>web/src/recipes/x.ts</code> written, <code>web/src/recipe/x.ts</code> landed) counts as present, with a note, instead of sending the implementer to create a duplicate it cannot avoid because the checked task is immutable.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>Large first runs split even when the orchestrator writes "all tasks T1–T17".</strong> The task-group split treated any task id in the scope instruction as a granularity decision, so a range covering every unchecked task — the orchestrator\'s habit — disabled it, and six features each ran as one 170–420-turn agent with a full context window. Only a proper subset of the plan now counts as the orchestrator\'s choice.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A forward-dependency floor.</strong> <code>deps:</code> naming a higher task number is a numeric comparison the plan validator was raising by hand (twice in one run, each a validator run plus a writer run). It is now a mechanical violation with the exact fix stated, listed with the other plan floors in <code>gspec-engineer</code>.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Validators are told, in their own brief, that every finding carries <code>anchor:</code>.</strong> Five of the ten validators omitted it on a measured run despite the skill\'s contract, so every revision they triggered re-read the whole document. Severity synonyms validators reach for anyway (<code>moderate</code>, <code>critical</code>, <code>low</code>) are read as the contract\'s four. An unprefixed anchor that lives in a sibling of the architecture\'s deliverable set is found there. Revisions are asked to rewrite a file in one write when a fix touches many places — one rule-class sweep was measured at 36 turns of single edits.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The render floor reaches a Vite dev server.</strong> Vite binds <code>localhost</code>, which Node resolves to <code>::1</code>; the probe hit <code>127.0.0.1</code> alone and waited the full minute on a server that was up. All three loopback spellings are tried, and once a server fails for one feature the remaining features are skipped that round instead of waiting a minute each.',
+      },
+      {
+        type: 'fixed',
         description: '<strong>A writer retried after a crash continues its partial draft instead of re-authoring.</strong> When the retry finds the deliverable on disk but not yet well-formed, its brief opens with "a partial draft exists at <code>&lt;path&gt;</code>; read it, keep what is correct, and complete it — do not start over", and the run is recorded as a continuation rather than a fresh attempt.',
       },
     ],

@@ -12,4 +12,6 @@ The **scope** just built (from the orchestrating command or build): one feature,
 **Summarize test output — never dump it.** Quote the decisive `FAIL:` line or the failing test name; don't paste full logs.
 
 ## Return contract
+**Every finding carries an `anchor:` line** — the exact heading (or `line: n` / the element's `id` for HTML) the finding is about; without it the writer must re-read the whole document. Severity is exactly one of `blocker` / `major` / `minor` / `nit`.
+
 Return the structured **verdict** defined by `gspec-qa` — first line `VERDICT: PASS` or `VERDICT: FAIL`, then SPEC (the scope), SUMMARY, and FINDINGS (each with a severity, evidence, and a specific fix). **FAIL on any build/test failure or any unmet in-scope acceptance criterion / DoD item** (blocker or major); a PASS may still carry minor/nit notes. Do not fix anything — propose the specific change for each finding so the implementer can be re-delegated against it.

@@ -7,4 +7,6 @@ The path to the style guide (default: `gspec/style.html` or `gspec/style.md`, wh
 Read the guide and evaluate it strictly against the designer's **quality bar for a style guide**: token-driven, complete (with honest "Not Applicable"), exact values, accessibility stated and met, visual-not-behavioral, profile-agnostic, and — for HTML — self-contained and actually renderable (tokens as CSS custom properties, live previews, light/dark). Apply the QA failure-mode lens and severity levels from `gspec-qa`.
 
 ## Return contract
+**Every finding carries an `anchor:` line** — the exact heading (or `line: n` / the element's `id` for HTML) the finding is about; without it the writer must re-read the whole document. Severity is exactly one of `blocker` / `major` / `minor` / `nit`.
+
 Return the structured **verdict** defined by `gspec-qa` (VERDICT / SPEC / SUMMARY / FINDINGS, each finding carrying a severity, an evidence quote, and a specific fix). FAIL only on a blocker or major finding; a PASS may still carry minor/nit notes. Do not rewrite the spec — propose fixes only.

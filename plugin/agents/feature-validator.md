@@ -16,4 +16,6 @@ Read the PRD and evaluate it against the product manager's **feature-PRD quality
 Do **not** flag items explicitly under "Out of Scope"/"Deferred", or gaps that belong to a foundation spec (e.g. which database — that's the stack's job).
 
 ## Return contract
+**Every finding carries an `anchor:` line** — the exact heading (or `line: n` / the element's `id` for HTML) the finding is about; without it the writer must re-read the whole document. Severity is exactly one of `blocker` / `major` / `minor` / `nit`.
+
 Return the structured **verdict** defined by `gspec-qa` (VERDICT / SPEC / SUMMARY / FINDINGS, each finding carrying a severity, an evidence quote, and a specific fix). FAIL only on a blocker or major finding. Do not rewrite — propose fixes only.

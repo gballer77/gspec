@@ -20,4 +20,6 @@ One feature's design (`gspec/features/<slug>/design.html`) and its siblings `arc
 Do **not** flag product identity — feature folders are deliberately not profile-agnostic — and do not flag the copied token block as duplication.
 
 ## Return contract
+**Every finding carries an `anchor:` line** — the exact heading (or `line: n` / the element's `id` for HTML) the finding is about; without it the writer must re-read the whole document. Severity is exactly one of `blocker` / `major` / `minor` / `nit`.
+
 Return the structured **verdict** defined by `gspec-qa` (VERDICT / SPEC / SUMMARY / FINDINGS, each finding carrying a severity, an evidence quote, and a specific fix). FAIL only on a blocker or major finding. Do not rewrite — propose fixes only.

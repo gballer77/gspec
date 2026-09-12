@@ -157,9 +157,17 @@ export async function renderChecks(cwd, routes = [], expectations = {}, opts = {
   const stop = () => { try { process.kill(-server.pid, 'SIGTERM'); } catch { try { server.kill('SIGTERM'); } catch { /* gone */ } } };
 
   try {
+    // Vite binds `localhost`, which Node resolves to ::1 first; a probe on
+    // 127.0.0.1 alone waited the full timeout on a server that was up. Try
+    // every loopback spelling, then whatever the server announced.
+    const spellings = [base, `http://localhost:${port}`, `http://[::1]:${port}`];
     let origin = null;
-    if (await waitFor(base, startTimeoutMs, fetchFn)) origin = base;
-    else if (announced && await waitFor(announced, 5_000, fetchFn)) origin = announced;
+    const until = Date.now() + startTimeoutMs;
+    while (!origin && Date.now() < until) {
+      for (const u of spellings) if (await waitFor(u, 1, fetchFn)) { origin = u; break; }
+      if (!origin) await new Promise((r) => setTimeout(r, 500));
+    }
+    if (!origin && announced && await waitFor(announced, 5_000, fetchFn)) origin = announced;
     if (!origin) return skip(`the ${avail.script} server did not answer within ${Math.round(startTimeoutMs / 1000)}s`);
 
     let browser;

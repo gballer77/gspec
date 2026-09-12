@@ -564,6 +564,24 @@ export function parallelismViolations(rel, tasksText) {
 }
 
 /**
+ * Every `deps:` entry on an unchecked task points strictly BACKWARDS — at a
+ * lower task number. A forward reference is a topological-order defect the
+ * plan validator raised twice in one run, each time costing a validator run
+ * plus a writer run for what is a numeric comparison. No auto-repair: the
+ * fix (renumber, or reorder) is the writer's call.
+ */
+export function forwardDepViolations(rel, tasksText) {
+  const v = [];
+  for (const t of parseTasks(tasksText)) {
+    if (t.checked) continue;
+    const n = Number(t.id.slice(1));
+    const forward = t.deps.filter((d) => Number(d.slice(1)) > n);
+    if (forward.length) v.push(`${rel}: ${t.id} depends on ${forward.join(', ')}, which ${forward.length === 1 ? 'comes' : 'come'} later in the plan — every dep points strictly backwards (a lower number); reorder or renumber so the prerequisite is defined first`);
+  }
+  return v;
+}
+
+/**
  * `covers:` quotes a capability from the PRD *verbatim* — that is what makes it
  * a link rather than a paraphrase, and every downstream check that maps tasks to
  * capabilities depends on the exact match. A near-quote silently covers nothing.

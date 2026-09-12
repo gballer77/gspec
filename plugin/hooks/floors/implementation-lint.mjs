@@ -76,6 +76,11 @@ function filesNamedByTasks(tasksText, box) {
     if (!task || !box.test(task[1])) continue;
     for (const m of task[3].matchAll(PATHISH)) {
       if (looksLikePackageName(m[1])) continue;
+      // A glob names a SET of files, and no single file can ever match it. A
+      // task that wrote `fixtures/pantry-*.json` was flagged as missing work
+      // on every round, the implementer could not satisfy it, and the gate
+      // failed the stage as "not converging" over a wildcard.
+      if (/[*?{]/.test(m[1])) continue;
       out.push({ id: `T${task[2]}`, path: m[1] });
     }
   }
