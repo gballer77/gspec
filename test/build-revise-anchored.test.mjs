@@ -182,3 +182,85 @@ test('summarizeRounds handles a prose verdict without findings', () => {
   const [line] = summarizeRounds(['VERDICT: FAIL\nSUMMARY: the retry policy is unstated everywhere'], []);
   assert.match(line, /^Round 1 asked for: the retry policy is unstated everywhere/);
 });
+
+// --- shapes a validator was observed writing that the contract did not name ---
+
+const HEADING_SHAPED = `## VERDICT: FAIL
+
+## SPEC
+gspec/features/recipe-catalog/arch.md
+
+## FINDINGS
+
+### 1. [MAJOR] Incomplete "Rule: No Derived Copy" definition
+
+**Location:** Lines 12–14
+**Evidence:**
+\`\`\`
+### Rule: No Derived Copy
+- **module:** web
+\`\`\`
+The rule is listed with metadata but contains no description.
+
+**Fix:** Add a description.
+
+---
+
+### 2. [MINOR] Imprecise reference
+
+**Location:** Line 3
+**Evidence:**
+> Timeout for every call is fixed once.
+
+**Fix:** name the place.
+`;
+
+test('numbered-heading findings with bold keys and Location lines are parsed', () => {
+  const f = parseFindings(HEADING_SHAPED);
+  assert.equal(f.length, 2);
+  assert.equal(f[0].severity, 'major');
+  assert.equal(f[0].criterion, 'Incomplete "Rule: No Derived Copy" definition');
+  assert.equal(f[0].line, 12, 'Location: Lines a–b becomes a line locator');
+  assert.equal(f[0].evidence, '### Rule: No Derived Copy', 'a fenced evidence block yields its first line');
+  assert.equal(f[1].line, 3);
+  assert.equal(f[1].evidence, 'Timeout for every call is fixed once.', 'a quoted evidence line loses its >');
+});
+
+test('a heading-shaped verdict takes the lean path with line locators', () => {
+  const doc = Array.from({ length: 20 }, (_, i) => (i === 11 ? '### Rule: No Derived Copy' : `line ${i + 1}`)).join('\n');
+  const { anchored, findingsCount, prompt } = revisePromptDetailed({ title: 'x' }, 't', [HEADING_SHAPED], '', doc);
+  assert.equal(findingsCount, 2);
+  assert.equal(anchored, true);
+  assert.match(prompt, /### Rule: No Derived Copy/);
+});
+
+test('an anchor into another file is sliced from that file when it is supplied', () => {
+  const verdict = 'VERDICT: FAIL\nFINDINGS:\n- [minor] Altitude — fields enumerated\n    evidence: "x"\n    anchor: gspec/architecture/api.md → ### Entity: PantryItem\n    fix: cut the list.\n';
+  const api = '# api\n\n## Data\n\n### Entity: PantryItem\n- **module:** api\n\nA pantry item has a quantity.\n\n### Entity: Other\n';
+  const withDoc = anchoredRevisionBlocks(verdict, DOC, { docs: { 'gspec/architecture/api.md': api } });
+  assert.equal(withDoc.unanchored.length, 0);
+  assert.match(withDoc.blocks[0], /gspec\/architecture\/api\.md → ### Entity: PantryItem/);
+  assert.match(withDoc.blocks[0], /A pantry item has a quantity\./);
+  assert.doesNotMatch(withDoc.blocks[0], /Entity: Other/);
+  const without = anchoredRevisionBlocks(verdict, DOC);
+  assert.equal(without.unanchored.length, 1);
+  assert.match(without.unanchored[0].reason, /names a file that was not read/);
+});
+
+test('a FAIL with no parsable finding is reported as such, not as "no anchors"', () => {
+  const r = revisePromptDetailed({ title: 'x' }, 't', ['VERDICT: FAIL\nThe whole thing is vague and I will not itemize it.'], '', DOC);
+  assert.equal(r.findingsCount, 0);
+  assert.equal(r.anchored, false);
+  assert.equal(r.unanchored.length, 0);
+});
+
+test('the driver reads files named by anchors and logs the no-findings fallback', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { join } = await import('node:path');
+  const { REPO_ROOT } = await import('./helpers.mjs');
+  const src = await readFile(join(REPO_ROOT, 'lib', 'build.js'), 'utf-8');
+  const fn = src.match(/async function reviseBrief[\s\S]*?\n}\n/)[0];
+  assert.match(fn, /fileAnchor\(f\.anchor\)/);
+  assert.match(fn, /docs\[fa\.file\] = text/);
+  assert.match(fn, /returned no finding in the gspec-qa shape/);
+});
