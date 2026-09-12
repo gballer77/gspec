@@ -93,3 +93,12 @@ test('the render root is the first candidate that can be rendered — a module d
   assert.equal(picked.script, 'dev');
   assert.equal(pickRenderRoot([root, api]), null);
 });
+
+import { isResourceFailure } from './render-lint.mjs';
+
+test('a failed network fetch is the environment, not a finding; a thrown error still is', () => {
+  assert.equal(isResourceFailure('Failed to load resource: net::ERR_CONNECTION_REFUSED'), true);
+  assert.equal(isResourceFailure('TypeError: Failed to fetch'), true);
+  assert.equal(isResourceFailure('Uncaught TypeError: Cannot read properties of undefined'), false);
+  assert.equal(isResourceFailure('Warning: Each child in a list should have a unique key'), false);
+});

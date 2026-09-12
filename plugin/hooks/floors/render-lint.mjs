@@ -100,6 +100,13 @@ export function renderEnabled({ config = {}, env = process.env, available = { pl
   return Boolean(available.playwright);
 }
 
+// Console errors that describe a failed network fetch rather than a defect
+// in the page: the floor starts the web module alone, so anything it calls
+// is down by construction.
+export function isResourceFailure(text) {
+  return /Failed to load resource|net::ERR_|ERR_CONNECTION_REFUSED|NetworkError|Failed to fetch|ECONNREFUSED/i.test(String(text));
+}
+
 // A route as a file name: `/` → index, `/a/b` → a__b.
 export const routeFileName = (route) => (route === '/' ? 'index' : route.replace(/^\//, '').replace(/[^a-z0-9._-]+/gi, '__')) + '.png';
 
@@ -179,7 +186,11 @@ export async function renderChecks(cwd, routes = [], expectations = {}, opts = {
       const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
       for (const route of routes) {
         const errors = [];
-        const onConsole = (msg) => { if (msg.type() === 'error') errors.push(msg.text()); };
+        // A resource that failed to LOAD is the environment talking — the web
+        // app calling an API the floor did not start (ERR_CONNECTION_REFUSED),
+        // a favicon, a font the sandbox lacks. Only errors the page's own code
+        // raised are findings.
+        const onConsole = (msg) => { if (msg.type() === 'error' && !isResourceFailure(msg.text())) errors.push(msg.text()); };
         const onPageError = (e) => errors.push(String(e?.message || e));
         page.on('console', onConsole); page.on('pageerror', onPageError);
         let res = null;
