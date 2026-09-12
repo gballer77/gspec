@@ -44,6 +44,34 @@ const releases = [
       },
       {
         type: 'fixed',
+        description: '<strong>A plan file with no task checkboxes is untracked, not finished.</strong> The orchestrator was seen handing a scaffold scope <code>plan: ["gspec/architecture.md"]</code>; with no boxes to count, the driver skipped the scaffold as "every task already checked" and the next feature happened to scaffold on its own. A scope whose plan carries no task lines now runs once, like a scaffold with no plan file, and says so.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Writers are handed the exact anchors and screen ids; self-checks are inline.</strong> The plan prompt lists every <code>arch.md</code> anchor with its exact <code>arch:</code> reference (<code>#entity-ingredient-line</code>, computed with the floor\'s own slug rule) and the design prompt lists each screen\'s <code>&lt;section id&gt;</code>, so the writer copies rather than derives — 27 of 31 plan violations on a measured run were hyphenation. The writer self-checks now state their rules inline and say "already in your instructions; do not search for or re-read any skill file", after a decompose run was seen grepping the plugin tree for the skill it already had. A lint fix for an unresolved reference is handed the valid targets.',
+      },
+      {
+        type: 'added',
+        description: '<strong>The driver repairs unique mechanical violations itself before spending a writer.</strong> An anchor reference that matches exactly one heading once hyphens are ignored is rewritten; a <code>[P]</code> on a task that depends on a <code>[P]</code> task is dropped (serial is never wrong); a <code>### Rule:</code> filed under <code>## API</code> moves to <code>## Logic</code>; a <code>screen-*</code> section id off by hyphenation is renamed. Each repair is logged with ⚙, recorded in <code>qa-failures.md</code> as an autofix, and the re-lint is free. The plan and design floors also compare loosely on hyphens as the fallback — safe, because two headings that differ only by hyphenation are already rejected as duplicates.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The engineer\'s <code>[P]</code> rule agrees with the floor.</strong> The persona said a task whose deps all point backward may carry <code>[P]</code>; the floor forbids a <code>[P]</code> task depending on a <code>[P]</code> task, and writers followed the sentence. A <code>[P]</code> task\'s deps are now stated as barriers, the quality bar names three checks, and the slug rule is written down with examples.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The verdict parser reads the shapes validators actually write, and cross-file anchors resolve.</strong> Numbered-heading findings (<code>### 1. [MAJOR] …</code>), bold keys with the colon inside (<code>**Evidence:**</code>), <code>Location: Lines a–b</code> as a line locator and a fenced evidence block are all understood; one revision had read 133% of an initial run because none of them were. An anchor naming another file (<code>gspec/architecture/api.md → ### Entity: PantryItem</code>) is sliced from that file. A FAIL that yields no parsable finding is logged by validator name instead of silently taking the whole-document path.',
+      },
+      {
+        type: 'added',
+        description: '<strong>The report names which lint rules fired, and how often.</strong> <em>Lint vs QA</em> gains "rules fired: anchor does not resolve ×27 · [P] honesty ×4" and an auto-repaired line. One rule firing on most features in a run means the rule\'s statement is wrong, not the writers; that used to take grep to see.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A sleep-policy warning, and the render floor finds the web module.</strong> On macOS the run warns at start when idle sleep is under ten minutes — a measured build spent four hours at three minutes per turn because the laptop slept between them (51 suspend events in its transcripts); the README says to run under <code>caffeinate -i</code>. The render floor now looks for Playwright and a dev script in each Modules-table directory, not only the project root, so a multi-deployable project can be rendered.',
+      },
+      {
+        type: 'fixed',
         description: '<strong>A writer retried after a crash continues its partial draft instead of re-authoring.</strong> When the retry finds the deliverable on disk but not yet well-formed, its brief opens with "a partial draft exists at <code>&lt;path&gt;</code>; read it, keep what is correct, and complete it — do not start over", and the run is recorded as a continuation rather than a fresh attempt.',
       },
     ],
