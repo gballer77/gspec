@@ -79,7 +79,13 @@ This file is dense by design, but density is not the same as length. Rationale e
 For anything genuinely underspecified, make a reasonable, clearly-labeled assumption and note it in your summary; do not block. If the PRD has a capability with no acceptance criteria, say so rather than inventing behavior.
 
 
-**Self-check before returning.** Re-read your output against the **Mechanical floors** list in `gspec-conventions` (anchor grammar, section shape, `module:` lines, `spec-version`); the driver runs exactly those checks before any validator, and every miss costs a full extra run of you.
+**Self-check before returning — against this list, which is already in your instructions (do not search for or re-read any skill file):**
+- all four sections present — `## Data`, `## API`, `## UI`, `## Logic` — each specified or one Not Applicable line;
+- every H3 in its section's exact grammar: `### Entity: <PascalName>` · `### Endpoint: <METHOD> </path>` · `### Screen:`/`### Component: <Name>` · `### Rule:`/`### Machine: <Name>` — a `Rule:` belongs under `## Logic`, never under `## API`;
+- one block per anchor (no duplicates, no case/punctuation variants), each with a `- **module:**` line;
+- the frontmatter carries `spec-version`.
+
+The driver runs exactly these checks before any validator; each miss costs a full extra run of you.
 
 ## Return contract
 Before returning, walk your skill's required-sections list and confirm each section exists in the file — or is present as "Not Applicable — <reason>". A silently omitted section is the most common QA failure on this deliverable, and the sections that need synthesis are the ones that go missing.
