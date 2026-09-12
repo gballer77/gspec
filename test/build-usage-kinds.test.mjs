@@ -67,3 +67,31 @@ test('an unknown kind falls into initial rather than minting a bucket', () => {
   accumulate(acc, 'x', out(), 'whatever');
   assert.equal(acc.x.byKind.initial.runs, 1);
 });
+
+// --- which rules fire ---------------------------------------------------------
+
+import { lintRuleKey, tallyRules, formatRuleTally } from '../lib/usage.js';
+
+test('violations and repairs are classified into the rule they belong to', () => {
+  const cases = [
+    ['gspec/features/x/tasks.md: task anchor "#entity-ingredientline" does not resolve to a heading in arch.md', 'anchor does not resolve'],
+    ['T1: arch reference "#entity-ingredientline" → #entity-ingredient-line (the one heading it matches)', 'anchor does not resolve'],
+    ['t: T4 is marked [P] but depends on T1, T2, which are also [P] — …', '[P] honesty'],
+    ['T3: dropped [P] — it depends on T2', '[P] honesty'],
+    ['a: heading "### Rule: Pagination" does not match the anchor grammar for ## API (…)', 'anchor grammar'],
+    ['moved "### Rule: Pagination" from ## API to ## Logic — a Rule has exactly one legal section', 'anchor grammar'],
+    ['d: no <section id="screen-cart"> for screen "Cart" — every screen in the architecture must be rendered', 'screen coverage'],
+    ['t: T2 covers: "x" but that text does not appear verbatim in the PRD — …', 'covers verbatim'],
+    ['gspec/style.html is missing its first-line "<!-- spec-version: v2 -->" comment.', 'spec-version'],
+    ['t: T1 is checked but src/a.ts does not exist — a checked task is the record of work', 'missing work'],
+    ['gspec/features/x/arch.md: render /: HTTP 404, expected 200', 'render'],
+    ['something the classifier has never seen', 'other'],
+  ];
+  for (const [msg, key] of cases) assert.equal(lintRuleKey(msg), key, msg);
+});
+
+test('the tally counts occurrences and formats most-frequent first', () => {
+  const acc = tallyRules({}, ['t: task anchor "a" does not resolve to a heading in arch.md', 't: task anchor "b" does not resolve to a heading in arch.md', 't: T4 is marked [P] but depends on T1']);
+  assert.deepEqual(acc, { 'anchor does not resolve': 2, '[P] honesty': 1 });
+  assert.equal(formatRuleTally(acc), 'anchor does not resolve ×2 · [P] honesty ×1');
+});

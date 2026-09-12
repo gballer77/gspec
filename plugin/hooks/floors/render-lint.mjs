@@ -81,6 +81,17 @@ export function renderAvailable(pkgJsonText) {
   return { playwright, script };
 }
 
+// The first place the app can be rendered from: `[{ dir, pkgJsonText }]` in
+// priority order → the first with Playwright and a dev/start script, or null.
+// A three-deployable project keeps its web app in a module dir, not the root.
+export function pickRenderRoot(candidates = []) {
+  for (const c of candidates) {
+    const a = renderAvailable(c.pkgJsonText);
+    if (a.playwright && a.script) return { ...c, script: a.script };
+  }
+  return null;
+}
+
 // The switch: on by default when Playwright is present; off with
 // `render: false` in .gspec/config.json or GSPEC_RENDER=0.
 export function renderEnabled({ config = {}, env = process.env, available = { playwright: false } } = {}) {

@@ -50,11 +50,14 @@ gspec build --research "an idea"                # competitive research up front,
 gspec build --scope small "an idea"             # size the specs to the product: small · standard · large
 gspec build --parallel off "an idea"            # keep the orchestrator's serial waves (auto merges provably disjoint ones)
 gspec build --notify 'osascript …' "an idea"    # run a command on every pause, failure, crash and completion
+caffeinate -i gspec build "an idea"              # macOS: keep the machine awake for the run's duration
 ```
 
 The autonomous build has a wired engine for **Claude Code**, **Codex**, and **Pi**. On other harnesses, use the spec-by-spec workflow below.
 
 **Spec size (`--scope`).** Specs are written to a size budget, so the specification matches the product rather than the writers' appetite — a one-level game does not need a 65 KB feature PRD, and every downstream agent pays to read whatever gets written. The intake asks how big the product is and records the tier in the brief; `--scope small|standard|large` overrides it, scaling every budget by ×0.6 / ×1 / ×1.5. The driver measures each spec as it lands and prints its size against the budget. **Going over is advisory** — it is reported in the log and noted by QA as a `[minor]` finding, and never fails a stage.
+
+**Keep the machine awake.** A build is hours of engine turns, and a laptop that sleeps between them stalls the run for as long as it sleeps — a measured build spent four hours at three minutes per turn that way. On macOS run it under `caffeinate -i gspec build …`; the driver warns at start when `pmset -g` shows idle sleep under ten minutes.
 
 **Be told when it stops (`--notify`).** A long unattended build spends most of its wall clock waiting — for a spec review, a usage-limit reset, a failed gate — and until you notice, that time is lost. Pass `--notify <cmd>` (or set `"notify": "<cmd>"` in `.gspec/config.json`, or `~/.gspec/config.json`) and the build runs that shell command on every pause, failure, crash and completion, with the facts in its environment: `GSPEC_STATE` (`paused_review` · `paused_limit` · `failed` · `crashed` · `complete`), `GSPEC_STAGE`, `GSPEC_REASON`, `GSPEC_IDEA`, `GSPEC_CWD`. The command gets ten seconds and can never fail the build.
 

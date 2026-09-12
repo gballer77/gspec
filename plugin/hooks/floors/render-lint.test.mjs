@@ -81,3 +81,15 @@ test('the runner fails open — every missing precondition is a skip, never a vi
   assert.match(noModule.skipped, /playwright could not be loaded/);
   assert.deepEqual(noModule.violations, []);
 });
+
+import { pickRenderRoot } from './render-lint.mjs';
+
+test('the render root is the first candidate that can be rendered — a module dir when the root cannot', () => {
+  const root = { dir: '.', pkgJsonText: null };
+  const api = { dir: 'api', pkgJsonText: JSON.stringify({ scripts: { dev: 'tsx watch' } }) };
+  const web = { dir: 'web', pkgJsonText: JSON.stringify({ devDependencies: { playwright: '1' }, scripts: { dev: 'vite' } }) };
+  const picked = pickRenderRoot([root, api, web]);
+  assert.equal(picked.dir, 'web');
+  assert.equal(picked.script, 'dev');
+  assert.equal(pickRenderRoot([root, api]), null);
+});
