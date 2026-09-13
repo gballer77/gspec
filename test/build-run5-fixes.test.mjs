@@ -4,7 +4,8 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers.mjs';
 import { ENGINES } from '../lib/engines.js';
@@ -126,4 +127,23 @@ test('a capped run that checked nothing hands its partial work to the next run, 
   assert.match(p, /a run that ends with no box checked loses its work/);
   const impl = await readFile(join(REPO_ROOT, 'plugin', 'agents', 'implementer.md'), 'utf-8');
   assert.match(impl, /Check tasks as you land them — never at the end/);
+});
+
+test('a scope with no plan field gets its plan file inferred from the instruction or label', async () => {
+  const { inferScopePlan, splitScopesByFeature } = await import('../lib/build.js');
+  const dir = await mkdtemp(join(tmpdir(), 'gspec-infer-'));
+  try {
+    await mkdir(join(dir, 'gspec', 'features', 'pantry-and-shopping'), { recursive: true });
+    await writeFile(join(dir, 'gspec', 'features', 'pantry-and-shopping', 'tasks.md'), '- [ ] **T1** x\n');
+    await mkdir(join(dir, 'gspec', 'features', 'recipe-scaling'), { recursive: true });
+    await writeFile(join(dir, 'gspec', 'features', 'recipe-scaling', 'tasks.md'), '- [ ] **T1** y\n');
+    assert.equal(await inferScopePlan(dir, { label: 'pantry-and-shopping (T1-T12)', instruction: 'Implement all tasks in gspec/features/pantry-and-shopping/tasks.md (T1-T12): …' }), 'gspec/features/pantry-and-shopping/tasks.md');
+    assert.equal(await inferScopePlan(dir, { label: 'recipe-scaling (T1-T7)', instruction: 'Implement T1–T7.' }), 'gspec/features/recipe-scaling/tasks.md', 'a known slug at the head of the label');
+    assert.equal(await inferScopePlan(dir, { label: 'scaffold', instruction: 'Scaffold the three deployables per gspec/architecture.md.' }), null, 'a scaffold names no feature');
+    assert.equal(await inferScopePlan(dir, { label: 'both', instruction: 'gspec/features/pantry-and-shopping/tasks.md and gspec/features/recipe-scaling/tasks.md' }), null, 'two features is not one');
+    const [scope] = await splitScopesByFeature(dir, [{ label: 'pantry-and-shopping (T1-T12)', instruction: 'Implement all tasks in gspec/features/pantry-and-shopping/tasks.md.' }]);
+    assert.deepEqual(scope.plan, ['gspec/features/pantry-and-shopping/tasks.md'], 'the split scope carries the inferred plan, so it is tracked, capped and continued');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
