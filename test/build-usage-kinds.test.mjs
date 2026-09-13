@@ -78,6 +78,8 @@ test('violations and repairs are classified into the rule they belong to', () =>
     ['T1: arch reference "#entity-ingredientline" → #entity-ingredient-line (the one heading it matches)', 'anchor does not resolve'],
     ['t: T4 is marked [P] but depends on T1, T2, which are also [P] — …', '[P] honesty'],
     ['T3: dropped [P] — it depends on T2', '[P] honesty'],
+    ['T6: dropped [P] — it writes `x.ts`, which [P] task T5 also writes; running it after is always safe', '[P] file overlap'],
+    ['t: T2 and T3 are both [P] and both write `x.ts` — …', '[P] file overlap'],
     ['a: heading "### Rule: Pagination" does not match the anchor grammar for ## API (…)', 'anchor grammar'],
     ['moved "### Rule: Pagination" from ## API to ## Logic — a Rule has exactly one legal section', 'anchor grammar'],
     ['d: no <section id="screen-cart"> for screen "Cart" — every screen in the architecture must be rendered', 'screen coverage'],
