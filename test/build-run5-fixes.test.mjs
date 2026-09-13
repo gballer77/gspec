@@ -114,3 +114,16 @@ test('the validator brief calls browser-default layout a major finding', async (
   assert.match(t, /\*\*Browser-default rendering is a major finding\*\*/);
   assert.match(t, /Tokens being "in effect" .* is not the bar/);
 });
+
+test('a capped run that checked nothing hands its partial work to the next run, and the group brief comes first', async () => {
+  const loop = src.match(/async function runImplementScope[\s\S]*?\n}\n/)[0];
+  assert.match(loop, /if \(out\.capped\) \{[\s\S]*?if \(after >= before\) \{[\s\S]*?partial = partialWorkBrief\(await partialWorkEvidence/);
+  const { firstRunPrompt: frp } = await import('../lib/build.js');
+  const plan = ['---', 'feature: big', '---', '', '## Plan', '', ...Array.from({ length: 12 }, (_, i) => `- [ ] **T${i + 1}** Do ${i + 1}\n  - deps: ${i ? `T${i}` : 'none'}`)].join('\n');
+  const p = frp('BASE PROMPT', { instruction: 'Implement big end to end, tasks T1–T12.' }, [{ rel: 't', text: plan }]);
+  assert.ok(p.indexOf('THIS RUN: group 1 of') < p.indexOf('BASE PROMPT'), 'the group brief precedes the whole-feature instruction');
+  assert.match(p, /This run owns only the group above; do not start any other task/);
+  assert.match(p, /a run that ends with no box checked loses its work/);
+  const impl = await readFile(join(REPO_ROOT, 'plugin', 'agents', 'implementer.md'), 'utf-8');
+  assert.match(impl, /Check tasks as you land them — never at the end/);
+});

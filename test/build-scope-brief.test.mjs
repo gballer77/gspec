@@ -184,10 +184,10 @@ test('checked tasks are neither grouped nor counted toward the threshold', () =>
 
 test('the first-run brief names group 1 and tells the run to stop', () => {
   const brief = firstRunGroupBrief('gspec/features/big/tasks.md', bigPlan(12));
-  assert.match(brief, /group 1 of \d+ only/);
+  assert.match(brief, /THIS RUN: group 1 of \d+ of a 12-task plan/);
   assert.match(brief, /T1 — Do thing 1/);
   assert.doesNotMatch(brief, /T6 — Do thing 6/);
-  assert.match(brief, /then STOP/);
+  assert.match(brief, /return immediately/);
 });
 
 test('firstRunPrompt splits only a whole-feature scope on a large plan, never a scaffold or a task-ranged scope', () => {
