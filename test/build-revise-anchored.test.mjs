@@ -264,3 +264,18 @@ test('the driver reads files named by anchors and logs the no-findings fallback'
   assert.match(fn, /docs\[fa\.file\] = text/);
   assert.match(fn, /returned no finding in the gspec-qa shape/);
 });
+
+test('a list of line locators yields one window per line, all in one block', () => {
+  const doc = Array.from({ length: 200 }, (_, i) => `line ${i + 1}`).join('\n');
+  const verdict = 'VERDICT: FAIL\nFINDINGS:\n- [major] Styling — class missing in four places\n    evidence: "x"\n    anchor: line: 10, 100, 190\n';
+  const f = parseFindings(verdict);
+  assert.deepEqual(f[0].lines, [10, 100, 190]);
+  assert.equal(f[0].line, 10);
+  assert.equal(f[0].anchor, null);
+  const r = anchoredRevisionBlocks(verdict, doc);
+  assert.equal(r.unanchored.length, 0);
+  assert.equal(r.blocks.length, 1);
+  assert.match(r.blocks[0], /line 10 \(lines/);
+  assert.match(r.blocks[0], /line 190 \(lines/);
+  assert.doesNotMatch(r.blocks[0], /line 50\n/, 'a line between windows is not sent');
+});
