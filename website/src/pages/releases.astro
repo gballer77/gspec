@@ -108,6 +108,18 @@ const releases = [
       },
       {
         type: 'fixed',
+        description: '<strong>A scope the orchestrator emits without a <code>plan</code> field is tracked anyway.</strong> On a resumed run every scope arrived plan-less while naming its plan file in the instruction, so each ran as one uncapped agent with no continuation, no task-group split, and "built" whether or not a box was checked. When exactly one feature is named and its plan exists, the driver fills the field in and logs it; a scaffold names none and stays untracked.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>A capped run\'s unrecorded work reaches the next run, and the group brief comes first.</strong> Given "implement the feature end to end, tasks T1–T25" and, 800 words later, "group 1 only — then stop", the implementer built the whole feature and was cut at the turn cap with nothing checked, and the continuation was told nothing about the 24 files it left. The group brief now leads the prompt and says the whole-feature instruction is context; a capped run that checked nothing hands the next run the same partial-work block a retry gets; the implementer brief says to check tasks as they land, never at the end.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Revision anchors resolve in more of the shapes validators actually write.</strong> A CSS selector or a quoted state name (<code>`.in-flight-marker` rule</code>, <code>"State: live" state description</code>) is found by text search in an HTML deliverable; a line number in the finding\'s own title is a locator; a list of lines (<code>line: 427, 563, 710</code>) yields one window each. The features stage\'s own validator loop applies the format retry too.',
+      },
+      {
+        type: 'fixed',
         description: '<strong>A writer retried after a crash continues its partial draft instead of re-authoring.</strong> When the retry finds the deliverable on disk but not yet well-formed, its brief opens with "a partial draft exists at <code>&lt;path&gt;</code>; read it, keep what is correct, and complete it — do not start over", and the run is recorded as a continuation rather than a fresh attempt.',
       },
     ],
