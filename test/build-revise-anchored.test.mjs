@@ -279,3 +279,26 @@ test('a list of line locators yields one window per line, all in one block', () 
   assert.match(r.blocks[0], /line 190 \(lines/);
   assert.doesNotMatch(r.blocks[0], /line 50\n/, 'a line between windows is not sent');
 });
+
+test('a CSS-selector or quoted-state anchor in an HTML design is found by text search', () => {
+  const html = ['<!-- spec-version: v2 -->', '<style>', '.card { padding: var(--space-2); }', '.in-flight-marker { animation: spin 300ms linear; }', '</style>',
+    '<section id="screen-recipe-detail">', '  <p class="state-note">State: live — the slider drives the amounts.</p>', '</section>'].join('\n');
+  const verdict = 'VERDICT: FAIL\nFINDINGS:\n- [major] Literal motion duration\n    evidence: "300ms"\n    anchor: `.in-flight-marker` rule\n- [minor] State note includes behavior\n    evidence: "the slider drives"\n    anchor: "State: live" state description\n';
+  const r = anchoredRevisionBlocks(verdict, html);
+  assert.equal(r.unanchored.length, 0, JSON.stringify(r.unanchored.map((u) => u.reason)));
+  assert.match(r.blocks[0], /\.in-flight-marker \{ animation/);
+  assert.match(r.blocks[1], /State: live — the slider/);
+});
+
+test('a line number in the finding title is a locator when nothing else resolves', () => {
+  const doc = Array.from({ length: 40 }, (_, i) => `line ${i + 1}`).join('\n');
+  const f = parseFindings('FINDINGS:\n**[major] Line 22: Literal motion duration in animation**\n  animation: spin 300ms;\n');
+  assert.equal(f[0].line, 22);
+  assert.equal(f[0].lineFromTitle, true);
+  const r = anchoredRevisionBlocks('VERDICT: FAIL\nFINDINGS:\n**[major] Line 22: Literal motion duration**\n', doc);
+  assert.equal(r.unanchored.length, 0);
+  assert.match(r.blocks[0], /line 22/);
+  // A field anchor still wins over the title line when it resolves.
+  const r2 = anchoredRevisionBlocks('VERDICT: FAIL\nFINDINGS:\n- [major] Line 3: x\n    anchor: ### Entity: Order\n', DOC);
+  assert.match(r2.blocks[0], /### Entity: Order \(lines/);
+});
