@@ -61,6 +61,10 @@ test('the retry asks for the same verdict in the contract shape, and the driver 
   assert.match(fn, /kind: 'format-retry'/);
   assert.match(fn, /if \(g2\.verdict === 'FAIL' && !verdictContractGaps\(v2\.text\)\.reason\) return \{ v: v2, g: g2 \};/);
   assert.match(src, /let g = grade\(stage, v\.text, target\);\n  \(\{ v, g \} = await withContractShape/, 'applied in judgeOnce');
+  // The features stage runs its own validator loop and bypassed judgeOnce —
+  // observed live: a feature-validator FAIL with no readable finding went
+  // straight to the whole-document revision. Both of its call sites apply it.
+  assert.equal((src.match(/= await withContractShape\(stage, target, v, g, ctx/g) || []).length, 3, 'judgeOnce plus both features-stage call sites');
   assert.ok(USAGE_KINDS.includes('format-retry'));
 });
 
