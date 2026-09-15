@@ -281,7 +281,10 @@ test('a list of line locators yields one window per line, all in one block', () 
 });
 
 test('a CSS-selector or quoted-state anchor in an HTML design is found by text search', () => {
+  // Padded so the two ±12-line windows do not overlap — an overlapping one is
+  // deliberately referenced rather than repeated.
   const html = ['<!-- spec-version: v2 -->', '<style>', '.card { padding: var(--space-2); }', '.in-flight-marker { animation: spin 300ms linear; }', '</style>',
+    ...Array.from({ length: 40 }, (_, i) => `<div class="filler-${i}"></div>`),
     '<section id="screen-recipe-detail">', '  <p class="state-note">State: live — the slider drives the amounts.</p>', '</section>'].join('\n');
   const verdict = 'VERDICT: FAIL\nFINDINGS:\n- [major] Literal motion duration\n    evidence: "300ms"\n    anchor: `.in-flight-marker` rule\n- [minor] State note includes behavior\n    evidence: "the slider drives"\n    anchor: "State: live" state description\n';
   const r = anchoredRevisionBlocks(verdict, html);
@@ -301,4 +304,18 @@ test('a line number in the finding title is a locator when nothing else resolves
   // A field anchor still wins over the title line when it resolves.
   const r2 = anchoredRevisionBlocks('VERDICT: FAIL\nFINDINGS:\n- [major] Line 3: x\n    anchor: ### Entity: Order\n', DOC);
   assert.match(r2.blocks[0], /### Entity: Order \(lines/);
+});
+
+test('a path anchor resolves to its last segment, and a block inside an already-carried section is referenced, not repeated', () => {
+  const doc = '## Data\n\n### Entity: Order\n- **module:** api\n\nlines and a total\n\n## Logic\n\n### Rule: No Derived Copy\n- **module:** web\n\nnever cache\n\n### Rule: Import Pipeline\n- **module:** importer\n\nper-file\n';
+  const [a] = sliceSections(doc, ['## Logic / Rule: No Derived Copy']);
+  assert.equal(a.found, true);
+  assert.match(a.text, /^### Rule: No Derived Copy/);
+  assert.doesNotMatch(a.text, /Import Pipeline/, 'the last segment, not the whole H2');
+  const verdict = 'VERDICT: FAIL\nFINDINGS:\n- [major] a — x\n    anchor: ## Logic\n- [minor] b — y\n    anchor: ## Logic / Rule: Import Pipeline\n- [minor] c — z\n    anchor: ## Logic\n';
+  const r = anchoredRevisionBlocks(verdict, doc);
+  assert.equal(r.unanchored.length, 0);
+  assert.equal((r.blocks.join('\n').match(/never cache/g) || []).length, 1, 'the Logic section is carried once');
+  assert.match(r.blocks[1], /inside the ## Logic block above/);
+  assert.match(r.blocks[2], /inside the ## Logic block above/);
 });
