@@ -140,6 +140,7 @@ test('a scope with no plan field gets its plan file inferred from the instructio
     assert.equal(await inferScopePlan(dir, { label: 'pantry-and-shopping (T1-T12)', instruction: 'Implement all tasks in gspec/features/pantry-and-shopping/tasks.md (T1-T12): …' }), 'gspec/features/pantry-and-shopping/tasks.md');
     assert.equal(await inferScopePlan(dir, { label: 'recipe-scaling (T1-T7)', instruction: 'Implement T1–T7.' }), 'gspec/features/recipe-scaling/tasks.md', 'a known slug at the head of the label');
     assert.equal(await inferScopePlan(dir, { label: 'scaffold', instruction: 'Scaffold the three deployables per gspec/architecture.md.' }), null, 'a scaffold names no feature');
+    assert.equal(await inferScopePlan(dir, { label: 'scaffold', instruction: 'Scaffold api and web; the importer scaffolds itself later via gspec/features/recipe-scaling/tasks.md T1 — do not create it here.' }), null, 'a scaffold that mentions a feature is still a scaffold');
     assert.equal(await inferScopePlan(dir, { label: 'both', instruction: 'gspec/features/pantry-and-shopping/tasks.md and gspec/features/recipe-scaling/tasks.md' }), null, 'two features is not one');
     const [scope] = await splitScopesByFeature(dir, [{ label: 'pantry-and-shopping (T1-T12)', instruction: 'Implement all tasks in gspec/features/pantry-and-shopping/tasks.md.' }]);
     assert.deepEqual(scope.plan, ['gspec/features/pantry-and-shopping/tasks.md'], 'the split scope carries the inferred plan, so it is tracked, capped and continued');
