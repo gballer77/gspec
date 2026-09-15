@@ -108,11 +108,11 @@ test('the rendered brief names the tasks, sections and files, and says not to re
   assert.match(text, /Remaining tasks in gspec\/features\/checkout\/tasks\.md:/);
   assert.match(text, /T3 — Render the cart screen/);
   assert.match(text, /T4 \[P\] — Apply coupon totals/);
-  assert.match(text, /Read these sections of gspec\/features\/checkout\/arch\.md only:/);
-  assert.match(text, /### Screen: Cart/);
+  // Blocks are inlined (the pointer form is the over-budget fallback, tested below).
+  assert.match(text, /--- gspec\/features\/checkout\/arch\.md → ### Screen: Cart ---/);
+  assert.match(text, /### Screen: Cart\n- \*\*module:\*\* web/);
   assert.doesNotMatch(text, /### Entity: Order/, 'a section a checked task cited is not sent');
-  assert.match(text, /gspec\/architecture\/api\.md/);
-  assert.match(text, /do not re-read it/);
+  assert.match(text, /do not open the spec files/);
 });
 
 test('the I/O wrapper reads the sibling arch.md and lists only module files that exist', async () => {
@@ -203,4 +203,54 @@ test('firstRunPrompt splits only a whole-feature scope on a large plan, never a 
 test('parsePlanTasks tolerates bracketed and kinded arch refs', () => {
   const [, , t3] = parsePlanTasks(TASKS);
   assert.deepEqual(t3.anchors, ['screen-cart']);
+});
+
+// --- the brief carries the spec text, not pointers to it ------------------------
+
+test('the continuation brief inlines the cited blocks verbatim and says not to open the spec files', () => {
+  const b = remainingBriefFor({ tasksRel: 'gspec/features/checkout/tasks.md', tasksText: TASKS, archRel: 'gspec/features/checkout/arch.md', archText: ARCH,
+    moduleTexts: { 'gspec/architecture/api.md': '# api\n\n## Data\n\n### Entity: Coupon\n- **module:** api\n\nA coupon reduces a total by a fixed amount.\n\n### Entity: Other\n- **module:** api\n', 'gspec/architecture/web.md': '# web\n' } });
+  assert.equal(b.sectionTexts.length, 4, 'three arch.md blocks plus the Coupon definition from api.md');
+  const text = formatRemainingBrief(b);
+  assert.match(text, /--- gspec\/features\/checkout\/arch\.md → ### Screen: Cart ---\n### Screen: Cart\n- \*\*module:\*\* web/);
+  assert.match(text, /--- gspec\/architecture\/api\.md → ### Entity: Coupon ---[\s\S]*A coupon reduces a total by a fixed amount\./);
+  assert.doesNotMatch(text, /Entity: Other/, 'an uncited module block is not inlined');
+  assert.match(text, /do not open the spec files/);
+  assert.match(text, /never the spec files; their relevant blocks are above/);
+  assert.doesNotMatch(text, /Read these sections of/, 'pointers are replaced, not added to');
+});
+
+test('past the inline budget the brief falls back to naming sections', async () => {
+  const { INLINE_BUDGET_WORDS } = await import('../lib/scope-brief.js');
+  const huge = ARCH.replace('- **defined-in:** gspec/features/checkout/arch.md\n\n### Entity: Coupon', `- **defined-in:** gspec/features/checkout/arch.md\n\n${'word '.repeat(INLINE_BUDGET_WORDS + 10)}\n\n### Entity: Coupon`);
+  const b = remainingBriefFor({ tasksRel: 't', tasksText: TASKS.replace('arch: [UI > ### Screen: Cart]', 'arch: #entity-order'), archRel: 'a', archText: huge });
+  assert.ok(b.inlinedWords > INLINE_BUDGET_WORDS);
+  assert.deepEqual(b.sectionTexts, []);
+  const text = formatRemainingBrief(b);
+  assert.match(text, /Read these sections of a only:/);
+  assert.doesNotMatch(text, /do not open the spec files/);
+});
+
+test('the I/O wrapper inlines module blocks from the files that exist', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'gspec-scope-inline-'));
+  try {
+    await mkdir(join(dir, 'gspec', 'features', 'checkout'), { recursive: true });
+    await mkdir(join(dir, 'gspec', 'architecture'), { recursive: true });
+    await writeFile(join(dir, 'gspec', 'features', 'checkout', 'tasks.md'), TASKS);
+    await writeFile(join(dir, 'gspec', 'features', 'checkout', 'arch.md'), ARCH);
+    await writeFile(join(dir, 'gspec', 'architecture', 'api.md'), '# api\n\n### Rule: Totals\n- **module:** api\n\nTotals round half up.\n');
+    const [b] = await remainingTaskBrief(dir, ['gspec/features/checkout/tasks.md']);
+    assert.ok(b.sectionTexts.some((x) => x.rel === 'gspec/architecture/api.md' && /round half up/.test(x.text)));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('the continuation log line reports tasks left and inlined blocks, not a word-count shrink', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { REPO_ROOT } = await import('./helpers.mjs');
+  const src = await readFile(join(REPO_ROOT, 'lib', 'build.js'), 'utf-8');
+  assert.doesNotMatch(src, /no shrink: nothing in the plan located/);
+  assert.match(src, /continuation brief — \$\{countNoun\(left, 'task'\)\} left/);
+  assert.match(src, /inlined \(no spec file to open\)/);
 });
