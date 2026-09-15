@@ -97,3 +97,12 @@ test('the tally counts occurrences and formats most-frequent first', () => {
   assert.deepEqual(acc, { 'anchor does not resolve': 2, '[P] honesty': 1 });
   assert.equal(formatRuleTally(acc), 'anchor does not resolve ×2 · [P] honesty ×1');
 });
+
+test('a no-progress run the engine never answered is counted as free', () => {
+  const acc = {};
+  accumulate(acc, 'implementer', out(10), 'transient-retry', { progress: false }); // 11,100 tokens: a real run
+  accumulate(acc, 'implementer', { usage: { input_tokens: 12, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, output_tokens: 0 }, turns: 0, costUsd: 0 }, 'transient-retry', { progress: false });
+  const [w] = waste(acc);
+  assert.equal(w.runs, 2);
+  assert.equal(w.freeRuns, 1);
+});
