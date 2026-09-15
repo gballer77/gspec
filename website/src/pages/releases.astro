@@ -119,6 +119,14 @@ const releases = [
         description: '<strong>Revision anchors resolve in more of the shapes validators actually write.</strong> A CSS selector or a quoted state name (<code>`.in-flight-marker` rule</code>, <code>"State: live" state description</code>) is found by text search in an HTML deliverable; a line number in the finding\'s own title is a locator; a list of lines (<code>line: 427, 563, 710</code>) yields one window each. The features stage\'s own validator loop applies the format retry too.',
       },
       {
+        type: 'changed',
+        description: '<strong>A continued implementer run is handed the spec blocks it needs, verbatim, instead of section names.</strong> Told "read these sections of arch.md only", a continuation opened <code>arch.md</code>, <code>design.html</code>, <code>prd.md</code> and both module tiers whole anyway — an agent reads files, not sections (measured: ~14 spec reads per continuation). The brief now carries each cited anchor\'s block from <code>arch.md</code> and from the module files it resolves into, and says there is no spec file to open. Past 6,000 inlined words it falls back to naming sections. The log line for a continuation now states tasks left and blocks inlined rather than a word-count "shrink" that was meaningless against a short base brief.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The Waste block tells a run that read nothing from one that read a lot.</strong> Three zero-token retries during a network outage counted as three wasted runs beside a 35M one. A no-progress run under 5k input tokens is reported as "at ~0 tokens — the engine never answered".',
+      },
+      {
         type: 'fixed',
         description: '<strong>A writer retried after a crash continues its partial draft instead of re-authoring.</strong> When the retry finds the deliverable on disk but not yet well-formed, its brief opens with "a partial draft exists at <code>&lt;path&gt;</code>; read it, keep what is correct, and complete it — do not start over", and the run is recorded as a continuation rather than a fresh attempt.',
       },
