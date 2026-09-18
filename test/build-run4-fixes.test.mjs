@@ -32,6 +32,13 @@ test('a named path whose basename exists exactly once in the tree counts as pres
     const v = await implementationLint(dir, { render: false, log: (l) => notes.push(l) });
     assert.ok(!v.some((x) => /scale-servings/.test(x)), `resolved by basename, got: ${v.join(' | ')}`);
     assert.ok(v.some((x) => /missing\.ts does not exist/.test(x)), 'a file that exists nowhere is still missing');
+    // Same directory, dotted prefix dropped: `recipes.routes.ts` named, `routes.ts` written.
+    await mkdir(join(dir, 'api', 'src', 'resources', 'recipes'), { recursive: true });
+    await writeFile(join(dir, 'api', 'src', 'resources', 'recipes', 'routes.ts'), 'export const r = 1;\n');
+    await writeFile(join(dir, 'gspec', 'features', 'scaling', 'tasks.md'), '---\nfeature: scaling\n---\n\n## Plan\n\n- [x] **T3** Add the param in `api/src/resources/recipes/recipes.routes.ts`\n');
+    const v2 = await implementationLint(dir, { render: false, log: (l) => notes.push(l) });
+    assert.ok(!v2.some((x) => /recipes\.routes\.ts/.test(x)), `resolved by dropping the dotted prefix, got: ${v2.join(' | ')}`);
+    assert.ok(notes.some((n) => /recipes\.routes\.ts resolved to api\/src\/resources\/recipes\/routes\.ts \(same directory, shorter name\)/.test(n)));
     assert.ok(notes.some((n) => /scale-servings\.ts resolved to web\/src\/recipe\/scale-servings\.ts/.test(n)));
   } finally {
     await rm(dir, { recursive: true, force: true });
