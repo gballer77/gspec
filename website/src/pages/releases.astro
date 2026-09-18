@@ -127,6 +127,10 @@ const releases = [
         description: '<strong>The Waste block tells a run that read nothing from one that read a lot.</strong> Three zero-token retries during a network outage counted as three wasted runs beside a 35M one. A no-progress run under 5k input tokens is reported as "at ~0 tokens — the engine never answered".',
       },
       {
+        type: 'changed',
+        description: '<strong>The ceilings that could strand a large feature give before the build fails.</strong> A capped implementer run that checked nothing raises its cap (120 → 240 → 360 turns) before it counts as a stall, so one task bigger than the cap no longer ends a scope after two tries; a scope may take as many slices as half its open tasks, not a flat ten; a run that used every allowed turn is treated as capped even when the engine does not say so. And a deterministic finding the implementer was already sent and could not satisfy — a checked task\'s file under a name it may not change, a library\'s console error — no longer fails the stage when <code>verify.sh</code> is green: it is recorded as advisory and handed to the implementation validator to judge. Font and HTTP-status findings stay blocking.',
+      },
+      {
         type: 'fixed',
         description: '<strong>A writer retried after a crash continues its partial draft instead of re-authoring.</strong> When the retry finds the deliverable on disk but not yet well-formed, its brief opens with "a partial draft exists at <code>&lt;path&gt;</code>; read it, keep what is correct, and complete it — do not start over", and the run is recorded as a continuation rather than a fresh attempt.',
       },
