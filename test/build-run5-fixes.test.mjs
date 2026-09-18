@@ -36,11 +36,11 @@ test('the Claude adapter passes --max-turns only when asked, and marks a capped 
 test('implementer runs are capped, a capped run continues on a fresh agent, and the scope budget rose', () => {
   assert.equal(IMPLEMENTER_MAX_TURNS, 120);
   const loop = src.match(/async function runImplementScope[\s\S]*?\n}\n/)[0];
-  assert.match(loop, /maxTurns: IMPLEMENTER_MAX_TURNS/);
+  assert.match(loop, /maxTurns: cap,/, 'the cap is adaptive now — see build-ceilings.test.mjs');
   assert.match(loop, /if \(out\.capped\) \{[\s\S]*?out = \{ \.\.\.out, code: 0 \};/, 'a capped exit is normalized, not reported as an engine error');
-  assert.match(loop, /This run is capped at \$\{IMPLEMENTER_MAX_TURNS\} engine turns/, 'the implementer is told');
+  assert.match(loop, /This run is capped at \$\{cap\} engine turns/, 'the implementer is told');
   assert.match(loop, /Keep test output terse/);
-  assert.match(src, /const MAX_SCOPE_RUNS = 10;/);
+  assert.match(src, /const MAX_SCOPE_RUNS = 10;/, 'the floor; slices scale with the plan above it');
 });
 
 // --- 2. the format retry ------------------------------------------------------------------
