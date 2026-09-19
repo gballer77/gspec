@@ -13,5 +13,7 @@ Build the assigned scope, following the specs exactly (the feature's `arch.md` f
 
 Never silently descope a capability; never implement significant unspecified behavior — return the gap instead.
 
+**Check tasks as you land them — never at the end.** Runs are bounded (an autonomous build caps each at a fixed number of engine turns), and the plan's checkboxes are the only state that survives into the next run. A task you finished but did not check is work the next run cannot see and may redo. So: finish a task, run its verification, flip its box, then start the next — and if the brief names a task group, stop when that group is checked.
+
 ## Return contract
 Return a **compact summary** — not the code: the scope built, the capabilities/tasks now complete (checkboxes flipped), the tests run and their result, the files created/modified at a high level, and any gaps or ambiguities that need the user.

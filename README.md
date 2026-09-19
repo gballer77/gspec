@@ -29,7 +29,7 @@ New in 2.0: `/gspec-build` turns a plain-language idea into a working, spec-back
 
 A long unattended run has to be able to say how it ended, so it never stops in silence. Every ending gets its own exit code — `0` complete, `1` failed a gate, `2` paused for spec review, `3` crashed — and its own record in `.gspec/build/status.json`; `gspec build --status` prints it and exits with that code, so a script (or an agent watching the run) branches on a number rather than reading the log. A build killed mid-stage still leaves that record, and a run whose process is simply gone is reported as crashed rather than as still working.
 
-The quality loop is tuned to converge and to resume cheaply. A gate fails only on a **blocker/major** finding — minor/nit notes pass with the notes recorded as advisory — so it reaches a finished state instead of polishing forever. Every failing verdict, including ones a self-heal recovers from, is kept in full in `.gspec/build/qa-failures.md` so you can study and tune the loop, and each stage reports its elapsed time. On `--resume`, a stage you left failed is **re-validated in place** (honoring any hand-edit you made to unblock it) rather than restarted from scratch, and feature PRDs that already passed — or were already written — are skipped instead of regenerated.
+The quality loop is tuned to converge and to resume cheaply. A gate fails only on a **blocker/major** finding — minor/nit notes pass with the notes recorded as advisory — so it reaches a finished state instead of polishing forever. Every failing verdict, including ones a self-heal recovers from, is kept in full in `.gspec/build/qa-failures.md` so you can study and tune the loop, and each stage reports its elapsed time. The end-of-run report also names the **waste** — per agent, the runs that checked no task or wrote no deliverable, and what they read — separates **mechanical lint rounds from QA revisions**, and `gspec build --status` prints the wave plan the implement stage ran (persisted in `run.json`). On `--resume`, a stage you left failed is **re-validated in place** (honoring any hand-edit you made to unblock it) rather than restarted from scratch, and feature PRDs that already passed — or were already written — are skipped instead of regenerated.
 
 ```bash
 /gspec-build                    # in your harness — brief interview, then unattended
@@ -48,11 +48,30 @@ gspec build --no-review "an idea"               # skip the spec-review pause ent
 gspec build --qa-retries 3 "an idea"            # give each QA gate 3 self-heal revisions (default 1)
 gspec build --research "an idea"                # competitive research up front, for richer feature PRDs
 gspec build --scope small "an idea"             # size the specs to the product: small · standard · large
+gspec build --parallel off "an idea"            # keep the orchestrator's serial waves (auto merges provably disjoint ones)
+gspec build --notify 'osascript …' "an idea"    # run a command on every pause, failure, crash and completion
+caffeinate -i gspec build "an idea"              # macOS: keep the machine awake for the run's duration
 ```
 
 The autonomous build has a wired engine for **Claude Code**, **Codex**, and **Pi**. On other harnesses, use the spec-by-spec workflow below.
 
 **Spec size (`--scope`).** Specs are written to a size budget, so the specification matches the product rather than the writers' appetite — a one-level game does not need a 65 KB feature PRD, and every downstream agent pays to read whatever gets written. The intake asks how big the product is and records the tier in the brief; `--scope small|standard|large` overrides it, scaling every budget by ×0.6 / ×1 / ×1.5. The driver measures each spec as it lands and prints its size against the budget. **Going over is advisory** — it is reported in the log and noted by QA as a `[minor]` finding, and never fails a stage.
+
+**Keep the machine awake.** A build is hours of engine turns, and a laptop that sleeps between them stalls the run for as long as it sleeps — a measured build spent four hours at three minutes per turn that way. On macOS run it under `caffeinate -i gspec build …`; the driver warns at start when `pmset -g` shows idle sleep under ten minutes.
+
+**Be told when it stops (`--notify`).** A long unattended build spends most of its wall clock waiting — for a spec review, a usage-limit reset, a failed gate — and until you notice, that time is lost. Pass `--notify <cmd>` (or set `"notify": "<cmd>"` in `.gspec/config.json`, or `~/.gspec/config.json`) and the build runs that shell command on every pause, failure, crash and completion, with the facts in its environment: `GSPEC_STATE` (`paused_review` · `paused_limit` · `failed` · `crashed` · `complete`), `GSPEC_STAGE`, `GSPEC_REASON`, `GSPEC_IDEA`, `GSPEC_CWD`. The command gets ten seconds and can never fail the build.
+
+```bash
+# macOS desktop notification
+gspec build --notify 'osascript -e "display notification \"$GSPEC_REASON\" with title \"gspec: $GSPEC_STAGE ($GSPEC_STATE)\""' "an idea"
+
+# any webhook (Slack, ntfy, a pager) — the payload is whatever you build from the env
+gspec build --notify 'curl -fsS -X POST "$HOOK_URL" -H "content-type: application/json" -d "{\"text\":\"gspec $GSPEC_STATE at $GSPEC_STAGE: $GSPEC_REASON\"}"' "an idea"
+```
+
+**Render check.** When the project lists Playwright as a dependency and has a `dev` or `start` script, the implementation gate also *renders* it: the driver starts the server, visits every route a feature's `arch.md` declares (a `- **route:** /path` line on a `### Screen:` block), and checks the cheap facts no text check can — the route answers 200, the console is clean, and the style guide's sans font family is actually what `<html>`/`<body>` render in. A screenshot per route lands in `.gspec/build/screens/<slug>/` for the implementation validator to compare against the feature's `design.html`. It is fail-open: anything that stops it rendering is a logged skip, never a failure. Turn it off with `"render": false` in `.gspec/config.json` or `GSPEC_RENDER=0`.
+
+**Parallel waves (`--parallel`).** The implement stage runs the orchestrator's waves in order and fans out the scopes within a wave. The orchestrator is handed a computed file-overlap table — each feature's modules, which pairs are provably file-disjoint, which share, and the dependencies the PRDs declare — and is told that table is authoritative. With `--parallel auto` (the default) the driver also merges consecutive single-scope waves whose features are *provably* disjoint and dependency-free into one wave, at most three scopes at a time, and logs each merge. It only ever acts on proof; anything short of that stays serial. Pass `--parallel off` to run the waves exactly as the orchestrator emitted them.
 
 **Per-agent models (cost control).** The build runs each stage as its own agent, and you can assign each a model — so the checkers and the high-volume jobs can run on a cheaper model while the architecture work keeps the strong one. Add a `models` map to `.gspec/config.json` (this project) or `~/.gspec/config.json` (your global default; the project file overrides it). Selectors resolve most-specific-first — exact agent name, then role tier (`writer`, `qa`, `planner`, `implementer`, `researcher`, `inspector`), then `default`:
 
@@ -77,6 +96,7 @@ With no `models` map, every agent runs on the engine/CLI default, unchanged. The
 - **`writer` → a balanced model** — the everyday authoring (profile, stack, practices, style, feature, research PRDs).
 - **`qa` → a cheap/fast model** — every `*-validator`; checking a spec needs far less horsepower than writing one.
 - **`architecture-writer` and `feature-architect` → a strong model** — the load-bearing design jobs (the system design, each feature's own architecture), pinned by name so they beat the `writer`/`default` tier. A mistake there propagates into everything downstream and no gate catches it.
+- **`implementation-validator` → the balanced model.** The one checker kept off the cheap tier: it judges rendered captures against the design, and the cheap tier was observed passing a page in browser-default layout with the capture in hand. It runs once per build, so the cost is negligible.
 - **`implementer` → the balanced model** — deliberately *not* the strong tier on Claude. It's the highest-volume agent in a build (per scope, per wave, and again on every continuation), and the only one whose output is checked by something deterministic: the gate runs `verify.sh`, so a weak result fails rather than ships. By the time it runs, the design is settled and what's left is following it. On Codex it stays `gpt-5-codex` — the code-specialized model, not the strong tier.
 - **`default` → the balanced model** — catches the planners and anything else.
 

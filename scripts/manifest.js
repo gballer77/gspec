@@ -16,7 +16,7 @@ export const V2_SKILLS = [
   {
     name: 'gspec-qa',
     source: 'skills/personas/gspec-qa.md',
-    description: 'QA-reviewer persona — how to critique a spec against its quality bar and return a structured verdict. Preloaded by every validator agent and by /gspec-qa.',
+    description: 'QA-reviewer persona — how to critique a spec against its quality bar and return a structured verdict whose findings each carry a severity and an anchor (the heading they are about). Preloaded by every validator agent and by /gspec-qa.',
   },
   {
     name: 'gspec-product',
@@ -41,7 +41,7 @@ export const V2_SKILLS = [
   {
     name: 'gspec-engineer',
     source: 'skills/personas/gspec-engineer.md',
-    description: 'Engineer persona — decompose a PRD into an ordered plan and implement specs into working code: capability↔task↔code traceability, follow specs exactly, never descope. Preloaded by the plan-decomposer, plan-validator, and implementer agents.',
+    description: 'Engineer persona — decompose a PRD into an ordered plan and implement specs into working code: traceability, follow specs exactly, never descope, plus the mechanical plan floors the build lints for. Preloaded by the plan and implementer agents.',
   },
   {
     name: 'gspec-orchestrator',
@@ -51,7 +51,7 @@ export const V2_SKILLS = [
   {
     name: 'gspec-conventions',
     source: 'skills/conventions/gspec-conventions.md',
-    description: 'Shared gspec spec formatting: frontmatter/spec-version, "Not Applicable" handling, and the capability checkbox + acceptance-criteria format.',
+    description: 'Shared gspec spec formatting: frontmatter/spec-version, "Not Applicable" handling, the capability checkbox + acceptance-criteria format, and the mechanical floors (anchor grammar, screen coverage, token literals) the build lints for.',
   },
   {
     name: 'gspec-agnosticism',
@@ -283,7 +283,7 @@ export const V2_AGENTS = [
   {
     name: 'build-orchestrator',
     source: 'agents/build-orchestrator.md',
-    description: 'Turn the in-scope features/plans into an ordered, fan-out-aware build plan (waves of file-disjoint implementer scopes), acting with the orchestrator judgment. Read-only — plans, never builds. Delegated by the build implement stage.',
+    description: 'Turn the in-scope features/plans into an ordered, fan-out-aware build plan (waves of file-disjoint implementer scopes), acting with the orchestrator judgment over the driver\'s computed file-overlap evidence. Read-only — plans, never builds. Delegated by the build implement stage.',
     // Read-only, so it records no memory of its own; its scope/fan-out judgment
     // stays trainable through the FAIL verdicts the feedback log records for it.
     skills: ['gspec-orchestrator', 'gspec-engineer', 'gspec-conventions'],

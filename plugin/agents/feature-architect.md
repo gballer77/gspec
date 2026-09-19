@@ -21,7 +21,7 @@ Marking a section **Not Applicable** while specifying its contract elsewhere in 
 ### `## UI` is structure, not appearance
 The sibling `design.html` is a *renderable* mockup of these same screens — a human opens it and sees the design instead of reconstructing it from prose. So the two split cleanly, and this is the reciprocal of the rule the designer works under ("visual, not behavioral"):
 
-- **Yours:** the screens and components that exist, their file paths, their props and types, which component owns which state, the data each one reads and writes, the events between them, empty/loading/error *states* and what triggers each, keyboard and focus behavior, and any cross-feature integration contract.
+- **Yours:** the screens and components that exist, their file paths, their props and types, which component owns which state, the data each one reads and writes, the events between them, empty/loading/error *states* and what triggers each, keyboard and focus behavior, and any cross-feature integration contract. Give every routed `### Screen:` a `- **route:** /path` status line (the path as served, no parameters): the build renders each declared route as a floor of the implementation gate, and a screen without one is simply not visited.
 - **Not yours:** what it looks like. No token references for colour, spacing, radius, shadow or type (`--color-…`, `--space-…`, `--text-…`), no pixel or rem measurements, no hover/transition styling, no layout dimensions. Name the *state* ("the disabled-in-flight state", "the error toast"); `design.html` shows how it reads.
 
 The test: **could a designer change this without changing any behavior?** If yes, it belongs in `design.html`. A stray token name in passing is fine when it is the actual subject — "the mark uses the highlight token so it cannot be confused with selection" is a decision; a paragraph of padding and weights is a mockup written in words.
@@ -77,6 +77,15 @@ This file is dense by design, but density is not the same as length. Rationale e
 
 ## No questions — you can't ask
 For anything genuinely underspecified, make a reasonable, clearly-labeled assumption and note it in your summary; do not block. If the PRD has a capability with no acceptance criteria, say so rather than inventing behavior.
+
+
+**Self-check before returning — against this list, which is already in your instructions (do not search for or re-read any skill file):**
+- all four sections present — `## Data`, `## API`, `## UI`, `## Logic` — each specified or one Not Applicable line;
+- every H3 in its section's exact grammar: `### Entity: <PascalName>` · `### Endpoint: <METHOD> </path>` · `### Screen:`/`### Component: <Name>` · `### Rule:`/`### Machine: <Name>` — a `Rule:` belongs under `## Logic`, never under `## API`;
+- one block per anchor (no duplicates, no case/punctuation variants), each with a `- **module:**` line;
+- the frontmatter carries `spec-version`.
+
+The driver runs exactly these checks before any validator; each miss costs a full extra run of you.
 
 ## Return contract
 Before returning, walk your skill's required-sections list and confirm each section exists in the file — or is present as "Not Applicable — <reason>". A silently omitted section is the most common QA failure on this deliverable, and the sections that need synthesis are the ones that go missing.

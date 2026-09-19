@@ -14,6 +14,8 @@
 //
 // Same shape as every other floor: text in, messages out, no I/O.
 
+import { pathsNamedBy } from './named-paths.mjs';
+
 const SECTIONS = ['Data', 'API', 'UI', 'Logic'];
 
 // The exact H3 grammar each section owns. The rigidity is the point: an anchor
@@ -32,6 +34,10 @@ const ANCHOR_SHAPE = {
 };
 
 const NOT_APPLICABLE = /not\s+applicable/i;
+
+// A slug with its hyphens removed: the comparison key when a writer's
+// hyphenation differs from slugifyAnchor's (see planLintViolations).
+export const looseSlug = (slug) => String(slug).replace(/-/g, '').toLowerCase();
 
 export function slugifyAnchor(heading) {
   return String(heading)
@@ -360,15 +366,17 @@ export function designLintViolations(rel, designHtml, archText) {
   // drawn?" is a judgment call; it belongs to feature-design-validator, which
   // can read the mockup. What stays here is what regex can actually settle: a
   // screen is a place, it gets its own section, and both directions must agree.
+  // Loose on hyphens, both ways — see planLintViolations for why that is safe.
+  const idsLoose = new Set([...ids].map(looseSlug));
   for (const d of declared) {
     if (d.kind !== 'screen') continue;
-    if (!ids.has(d.id)) v.push(`${rel}: no <section id="${d.id}"> for screen "${d.name}" — every screen in the architecture must be rendered`);
+    if (!ids.has(d.id) && !idsLoose.has(looseSlug(d.id))) v.push(`${rel}: no <section id="${d.id}"> for screen "${d.name}" — every screen in the architecture must be rendered`);
   }
   for (const id of ids) {
     // Only ids that CLAIM to be a screen or component are held to the mapping;
     // a design may add its own scaffolding sections (a token swatch, a legend).
     if (!id.startsWith('screen-')) continue;   // a design may name its own sections
-    if (!declared.some((d) => d.id === id)) {
+    if (!declared.some((d) => d.id === id || looseSlug(d.id) === looseSlug(id))) {
       v.push(`${rel}: <section id="${id}"> has no matching "### Screen:" in the architecture's ## UI section`);
     }
   }
@@ -407,6 +415,12 @@ const unwrapList = (value) => {
 export function planLintViolations(rel, tasksText, archText) {
   const v = [];
   const known = new Set(headingsOf(String(archText).split('\n')).map((h) => slugifyAnchor(h)));
+  // Hyphenation is not meaning. `#entity-ingredientline` for
+  // `### Entity: IngredientLine` names the anchor unambiguously — the arch
+  // floor already rejects two headings that differ only by hyphenation as
+  // duplicates, so a loose match can never pick the wrong one. On a measured
+  // run 27 of 31 plan violations were this, each costing a writer run.
+  const knownLoose = new Set([...known].map(looseSlug));
   const lines = String(tasksText).split('\n');
   let checked = false;
   for (const line of lines) {
@@ -420,7 +434,7 @@ export function planLintViolations(rel, tasksText, archText) {
     for (const raw of unwrapList(arch[1]).split(/[,;](?![^(]*\))/)) {
       const a = normalizeAnchorRef(raw);
       if (!a) continue;
-      if (!known.has(a)) v.push(`${rel}: task anchor "${raw.trim()}" does not resolve to a heading in arch.md`);
+      if (!known.has(a) && !knownLoose.has(looseSlug(a))) v.push(`${rel}: task anchor "${raw.trim()}" does not resolve to a heading in arch.md`);
     }
   }
   return v;
@@ -547,6 +561,52 @@ export function parallelismViolations(rel, tasksText) {
       v.push(`${rel}: ${t.id} is marked [P] but depends on ${conflicting.join(', ')}, which ${conflicting.length === 1 ? 'is' : 'are'} also [P] — tasks marked to run alongside each other cannot depend on one another, so one of the markers is not honest`);
     }
     if (t.deps.includes(t.id)) v.push(`${rel}: ${t.id} lists itself in deps`);
+  }
+  return v;
+}
+
+/**
+ * Two unchecked `[P]` tasks that name the same file cannot run alongside
+ * each other — one overwrites the other. Tasks name their files in backticks,
+ * so this is regex; the plan validator was raising it by hand (twice in one
+ * run, a validator run plus a writer run each). One message per file.
+ */
+export function parallelFileOverlapViolations(rel, tasksText) {
+  const lines = String(tasksText).split('\n');
+  const blocks = []; // { id, parallel, checked, text }
+  let cur = null;
+  for (const line of lines) {
+    const t = line.match(/^\s*[-*]\s*\[([ xX])\]\s*\*\*T(\d+)\*\*(.*)$/);
+    if (t) { cur = { id: `T${t[2]}`, checked: t[1] !== ' ', parallel: /^\s*\[P\]/.test(t[3]), text: line }; blocks.push(cur); continue; }
+    if (cur) cur.text += `\n${line}`;
+  }
+  const byFile = new Map();
+  for (const b of blocks) {
+    if (b.checked || !b.parallel) continue;
+    for (const f of pathsNamedBy(b.text)) (byFile.get(f) || byFile.set(f, []).get(f)).push(b.id);
+  }
+  const v = [];
+  for (const [file, ids] of byFile) {
+    if (ids.length < 2) continue;
+    v.push(`${rel}: ${ids.join(' and ')} are both [P] and both write \`${file}\` — tasks marked to run alongside each other cannot write the same file; drop [P] from all but one, or sequence them with deps:`);
+  }
+  return v;
+}
+
+/**
+ * Every `deps:` entry on an unchecked task points strictly BACKWARDS — at a
+ * lower task number. A forward reference is a topological-order defect the
+ * plan validator raised twice in one run, each time costing a validator run
+ * plus a writer run for what is a numeric comparison. No auto-repair: the
+ * fix (renumber, or reorder) is the writer's call.
+ */
+export function forwardDepViolations(rel, tasksText) {
+  const v = [];
+  for (const t of parseTasks(tasksText)) {
+    if (t.checked) continue;
+    const n = Number(t.id.slice(1));
+    const forward = t.deps.filter((d) => Number(d.slice(1)) > n);
+    if (forward.length) v.push(`${rel}: ${t.id} depends on ${forward.join(', ')}, which ${forward.length === 1 ? 'comes' : 'come'} later in the plan — every dep points strictly backwards (a lower number); reorder or renumber so the prerequisite is defined first`);
   }
   return v;
 }

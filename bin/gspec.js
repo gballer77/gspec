@@ -2672,6 +2672,8 @@ program
   .option('--no-review', 'skip the spec-review pause before implementation (on by default)')
   .option('--research', 'run competitive research after the profile stage, for richer feature requirements (needs web access)')
   .option('--scope <tier>', 'how big this product is: small | standard | large — scales every spec\'s size budget (default: what the intake recorded, else standard)')
+  .option('--notify <cmd>', 'shell command to run on every pause, failure, crash and completion, with GSPEC_STATE, GSPEC_STAGE, GSPEC_REASON, GSPEC_IDEA and GSPEC_CWD in its environment (or set `notify` in .gspec/config.json)')
+  .option('--parallel <mode>', 'auto | off — auto (default) builds provably file-disjoint features concurrently by merging the orchestrator\'s single-scope waves; off keeps its serial order')
   .option('--resume', 'resume an existing run from where it paused')
   .option('--status', 'print how the current/last run ended and exit with its code (0 complete · 1 failed · 2 paused for review · 3 crashed)')
   .option('--dry-run', 'print the stage plan without invoking the engine')
@@ -2693,6 +2695,8 @@ program
         research: !!opts.research,
         scope: opts.scope,
         qaRetries: opts.qaRetries,
+        parallel: opts.parallel,
+        notify: opts.notify,
         resume: !!opts.resume,
         dryRun: !!opts.dryRun,
       });

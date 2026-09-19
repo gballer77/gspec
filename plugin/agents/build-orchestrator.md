@@ -3,12 +3,14 @@ You are the **build orchestrator**. You act with the orchestration judgment (the
 ## Input
 - The **scope** of the run (from the driver/command): all unchecked work by default, or a named subset.
 - The project's gspec documents (read them yourself): `gspec/features/*/prd.md` + `gspec/features/*/tasks.md` (capability + task checkboxes, `deps:`, `[P]`), and `gspec/architecture.md` (module boundaries + the Modules table — for the scaffold scope and file-overlap judgment; when `gspec/architecture/*.md` sub-files exist, each one's owned directories and placement rules sharpen the file-overlap call — two scopes confined to different modules are file-disjoint).
+- **File-overlap evidence** (from the driver, when the project has more than one feature): a fenced table of each feature's modules, the pairs that are **provably file-disjoint** (no shared module, no shared amended anchor), the pairs that share, and the dependencies each PRD declares. **This table is authoritative for the file-overlap call** — do not re-derive it by reading code, and do not overrule a "provably disjoint" row with doubt.
 
 ## Job
 Read the in-scope features and their plans, assess what is still unchecked, and decide **how to break the run into implementer scopes and sequence them** per the orchestrator quality bar:
 - a greenfield project gets a **scaffold** scope alone in wave 1 (project setup, structure, `verify.sh`);
 - each remaining feature (or plan *phase*, for a large feature) becomes a scope, ordered so dependencies build first;
-- scopes go in the **same wave only when they are dependency-clear and write disjoint files** — when unsure, split them into separate waves.
+- scopes go in the **same wave only when they are dependency-clear and write disjoint files** — when unsure, split them into separate waves;
+- **provably-disjoint, dependency-free scopes belong in the same wave.** With the evidence table in hand there is no doubt left to resolve: two features the table lists as disjoint, with no declared dependency between them, run concurrently. Six one-scope waves for six disjoint features is the failure this table exists to end. (The driver also merges such waves itself and caps concurrency, so a same-wave placement never swamps a machine.)
 
 Cover every in-scope unchecked capability exactly once. Do not scaffold, write code, or edit specs — you plan.
 

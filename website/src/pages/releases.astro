@@ -5,6 +5,139 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.2.0',
+    date: 'September 10, 2026',
+    title: 'Cutting build time and tokens, end to end',
+    summary: 'A measured <code>gspec build</code> spent <strong>83% of its input on the implementer</strong> — ~8M tokens a run, with an estimated four or five of twelve runs checking zero tasks — and <strong>43% of its wall clock waiting</strong> for a person nobody had told. Six of ten self-heals were mechanical lint rounds paid for with a full writer run; writer revisions cost two to three times a first draft; six disjoint features ran serially; and an app shipped in a serif fallback through 335 tests. Every item here pushes work <em>down</em> the ladder — deterministic before judgment, the rules before the gate, the remaining tasks before the whole feature — and none of them weakens a gate.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong><code>gspec build</code> reports wasted runs and lint-vs-QA rounds; the orchestrated wave plan is persisted in <code>run.json</code>.</strong> Every agent run is recorded by kind — initial, revision, lint-fix, continuation, transient-retry — and by whether it moved the build (a task checked, a deliverable written). The end-of-run report gains a <em>Waste</em> block (per agent: runs with no progress and what they read) and a <em>Lint vs QA</em> line; mechanical lint rounds are listed apart from QA feedback events instead of inflating the headline. The wave plan the implement stage actually ran is stored under <code>stages.implement.plan</code> and printed by <code>--status</code>.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Writers are told the mechanical floors they\'ll be linted against; lint fixes are sent the offending lines, not the whole spec.</strong> <code>gspec-conventions</code> and <code>gspec-engineer</code> now carry a <em>Mechanical floors</em> section stating each rule in the words its violation uses (spec-version, anchor grammar, screen coverage, token literals; anchors resolve, <code>[P]</code> honesty, verbatim <code>covers:</code>), and the plan, architecture, style and design writers self-check against it before returning. When a floor still fires, the fix prompt carries each violation with the offending lines ±3 and says to edit in place — a one-line rename no longer costs a document-sized read.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>A continued implementer run is briefed on its remaining tasks and the spec sections they cite, not the whole feature folder.</strong> A scope that outlives one agent\'s context is picked up by the next; that continuation used to re-send the full feature folder, every module tier and practices even with one task left. It now receives the unchecked tasks, the <code>arch.md</code> headings their <code>arch:</code> anchors resolve to, and only the module files those anchors live in — and is told everything else is done. On a plan with more than eight tasks, the first run is briefed on the first dependency group and told to stop, so it starts small too (never for a scaffold, never when the orchestrator already named task ids). The brief\'s size is logged against the full one.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>An implementer retry after an engine error is told which files the interrupted run already wrote.</strong> The retry used to receive the identical brief, blind to work that was written but not yet checked, and often redid it. It now arrives with a <em>Partial work found</em> block: the files unchecked tasks name that already exist, and the working tree\'s <code>git status</code> — verify and continue, do not recreate. The run is tagged <code>transient-retry</code> so the Waste block can show it; the usage-limit surface-now path and the 30/120/270s backoff are unchanged.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>QA findings name the section they\'re about; writer revisions receive those sections rather than re-reading the whole spec.</strong> The <code>gspec-qa</code> verdict contract gains an <code>anchor:</code> line per finding (the exact heading, or <code>line: n</code> for HTML). The revision prompt inlines the anchored sections, summarizes earlier rounds to one line each with every finding marked reappeared or resolved, and says the sections shown are the only ones to edit. A finding with no usable anchor falls back to its evidence quote — for that finding only — and is logged, so a validator that forgets the line is visible. The precedence and size rules are unchanged, verbatim.',
+      },
+      {
+        type: 'added',
+        description: '<strong><code>--parallel auto</code>: provably file-disjoint features build concurrently; the orchestrator is handed the module-overlap evidence.</strong> The driver computes a feature × module matrix from each <code>arch.md</code>\'s anchors, the pairs that share no module and amend no common anchor, and the dependencies each PRD declares, and inlines it into the orchestrator\'s prompt as the authoritative answer to the file-overlap call. After the plan is normalized, consecutive single-scope waves that the table proves disjoint and dependency-free are merged into one wave — at most three scopes at a time, each merge logged — and <code>--parallel off</code> keeps the orchestrator\'s order exactly. It acts on proof only; anything short of that stays serial.',
+      },
+      {
+        type: 'added',
+        description: '<strong><code>--notify &lt;cmd&gt;</code> (or <code>notify</code> in <code>.gspec/config.json</code>) runs on every pause, failure, and completion.</strong> The command gets <code>GSPEC_STATE</code> (<code>paused_review</code> · <code>paused_limit</code> · <code>failed</code> · <code>crashed</code> · <code>complete</code>), <code>GSPEC_STAGE</code>, <code>GSPEC_REASON</code>, <code>GSPEC_IDEA</code> and <code>GSPEC_CWD</code> in its environment, ten seconds to run, and can never fail the build. A usage-limit stop reads as <code>paused_limit</code> — wait, not fix. The README has a macOS notification and a webhook example.',
+      },
+      {
+        type: 'added',
+        description: '<strong>The implementation gate renders each route when Playwright is available: screenshots for the validator, and a floor that catches a font or route that silently fell back.</strong> When the project lists Playwright and has a <code>dev</code> or <code>start</code> script, the gate starts the server, visits every route a feature\'s <code>arch.md</code> declares (a <code>- **route:** /path</code> line on a <code>### Screen:</code> block — the feature architect now writes one per routed screen), and asserts HTTP 200, a clean console, and that <code>&lt;html&gt;</code>/<code>&lt;body&gt;</code> render in the style guide\'s sans family rather than a generic or serif fallback. One PNG per route lands in <code>.gspec/build/screens/&lt;slug&gt;/</code>, and the implementation validator compares them against <code>design.html</code> — a visibly wrong layout is a major finding even when tests pass. Fail-open throughout: anything that stops it rendering is a logged skip. <code>"render": false</code> in the config or <code>GSPEC_RENDER=0</code> turns it off.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>A plan file with no task checkboxes is untracked, not finished.</strong> The orchestrator was seen handing a scaffold scope <code>plan: ["gspec/architecture.md"]</code>; with no boxes to count, the driver skipped the scaffold as "every task already checked" and the next feature happened to scaffold on its own. A scope whose plan carries no task lines now runs once, like a scaffold with no plan file, and says so.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Writers are handed the exact anchors and screen ids; self-checks are inline.</strong> The plan prompt lists every <code>arch.md</code> anchor with its exact <code>arch:</code> reference (<code>#entity-ingredient-line</code>, computed with the floor\'s own slug rule) and the design prompt lists each screen\'s <code>&lt;section id&gt;</code>, so the writer copies rather than derives — 27 of 31 plan violations on a measured run were hyphenation. The writer self-checks now state their rules inline and say "already in your instructions; do not search for or re-read any skill file", after a decompose run was seen grepping the plugin tree for the skill it already had. A lint fix for an unresolved reference is handed the valid targets.',
+      },
+      {
+        type: 'added',
+        description: '<strong>The driver repairs unique mechanical violations itself before spending a writer.</strong> An anchor reference that matches exactly one heading once hyphens are ignored is rewritten; a <code>[P]</code> on a task that depends on a <code>[P]</code> task is dropped (serial is never wrong); a <code>### Rule:</code> filed under <code>## API</code> moves to <code>## Logic</code>; a <code>screen-*</code> section id off by hyphenation is renamed. Each repair is logged with ⚙, recorded in <code>qa-failures.md</code> as an autofix, and the re-lint is free. The plan and design floors also compare loosely on hyphens as the fallback — safe, because two headings that differ only by hyphenation are already rejected as duplicates.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The engineer\'s <code>[P]</code> rule agrees with the floor.</strong> The persona said a task whose deps all point backward may carry <code>[P]</code>; the floor forbids a <code>[P]</code> task depending on a <code>[P]</code> task, and writers followed the sentence. A <code>[P]</code> task\'s deps are now stated as barriers, the quality bar names three checks, and the slug rule is written down with examples.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The verdict parser reads the shapes validators actually write, and cross-file anchors resolve.</strong> Numbered-heading findings (<code>### 1. [MAJOR] …</code>), bold keys with the colon inside (<code>**Evidence:**</code>), <code>Location: Lines a–b</code> as a line locator and a fenced evidence block are all understood; one revision had read 133% of an initial run because none of them were. An anchor naming another file (<code>gspec/architecture/api.md → ### Entity: PantryItem</code>) is sliced from that file. A FAIL that yields no parsable finding is logged by validator name instead of silently taking the whole-document path.',
+      },
+      {
+        type: 'added',
+        description: '<strong>The report names which lint rules fired, and how often.</strong> <em>Lint vs QA</em> gains "rules fired: anchor does not resolve ×27 · [P] honesty ×4" and an auto-repaired line. One rule firing on most features in a run means the rule\'s statement is wrong, not the writers; that used to take grep to see.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A sleep-policy warning, and the render floor finds the web module.</strong> On macOS the run warns at start when idle sleep is under ten minutes — a measured build spent four hours at three minutes per turn because the laptop slept between them (51 suspend events in its transcripts); the README says to run under <code>caffeinate -i</code>. The render floor now looks for Playwright and a dev script in each Modules-table directory, not only the project root, so a multi-deployable project can be rendered.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The implementation floor no longer fails a build over a wildcard or a directory name.</strong> A task naming <code>fixtures/pantry-*.json</code> was reported as missing work on every round — no file can match a glob — until the gate called it non-converging and paused the stage; globs are now ignored. A path whose file name exists exactly once in the tree (<code>web/src/recipes/x.ts</code> written, <code>web/src/recipe/x.ts</code> landed) counts as present, with a note, instead of sending the implementer to create a duplicate it cannot avoid because the checked task is immutable.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>Large first runs split even when the orchestrator writes "all tasks T1–T17".</strong> The task-group split treated any task id in the scope instruction as a granularity decision, so a range covering every unchecked task — the orchestrator\'s habit — disabled it, and six features each ran as one 170–420-turn agent with a full context window. Only a proper subset of the plan now counts as the orchestrator\'s choice.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A forward-dependency floor.</strong> <code>deps:</code> naming a higher task number is a numeric comparison the plan validator was raising by hand (twice in one run, each a validator run plus a writer run). It is now a mechanical violation with the exact fix stated, listed with the other plan floors in <code>gspec-engineer</code>.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Validators are told, in their own brief, that every finding carries <code>anchor:</code>.</strong> Five of the ten validators omitted it on a measured run despite the skill\'s contract, so every revision they triggered re-read the whole document. Severity synonyms validators reach for anyway (<code>moderate</code>, <code>critical</code>, <code>low</code>) are read as the contract\'s four. An unprefixed anchor that lives in a sibling of the architecture\'s deliverable set is found there. Revisions are asked to rewrite a file in one write when a fix touches many places — one rule-class sweep was measured at 36 turns of single edits.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The render floor reaches a Vite dev server.</strong> Vite binds <code>localhost</code>, which Node resolves to <code>::1</code>; the probe hit <code>127.0.0.1</code> alone and waited the full minute on a server that was up. All three loopback spellings are tried, and once a server fails for one feature the remaining features are skipped that round instead of waiting a minute each.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Implementer runs are capped at 120 engine turns, and continue on a fresh agent.</strong> Cost is turns × a full context window, and one uncapped feature run was measured at 419 turns and 130M tokens, the context mostly re-read test output by the end. The Claude adapter passes <code>--max-turns</code>; a run stopped by the cap is not an error — whatever it checked stands and the continuation loop briefs the next agent on what is left. The implementer is told to check each task the moment it is verified and to keep test output terse. <code>GSPEC_IMPLEMENTER_MAX_TURNS</code> overrides the cap; a scope may now take up to ten slices.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A validator whose FAIL the driver cannot read is asked to restate it — once, in the contract shape.</strong> No <code>- [severity]</code> item, or no <code>anchor:</code> on any finding, used to send the writer down the whole-document path at 133–831% of an initial run. Re-asking the validator to return the same findings in the contract shape costs a validator run, an order of magnitude less; the original is kept unless the restatement is strictly better.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A <code>[P]</code> file-overlap floor.</strong> Two <code>[P]</code> tasks naming the same file in backticks cannot run alongside each other; the plan validator was raising it by hand (twice per run). It is now mechanical, and the driver repairs it by dropping the marker from the later task.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The implementation validator moves to the balanced tier in the recommended models.</strong> On the cheap tier it read four rendered captures beside the design and passed a page in browser-default layout. It runs once per build, so the cost is negligible; its brief now says browser-default rendering — unstyled controls, default margins, no spacing scale — is a major finding, tokens being in effect or not.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>A scope the orchestrator emits without a <code>plan</code> field is tracked anyway.</strong> On a resumed run every scope arrived plan-less while naming its plan file in the instruction, so each ran as one uncapped agent with no continuation, no task-group split, and "built" whether or not a box was checked. When exactly one feature is named and its plan exists, the driver fills the field in and logs it; a scaffold names none and stays untracked.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>A capped run\'s unrecorded work reaches the next run, and the group brief comes first.</strong> Given "implement the feature end to end, tasks T1–T25" and, 800 words later, "group 1 only — then stop", the implementer built the whole feature and was cut at the turn cap with nothing checked, and the continuation was told nothing about the 24 files it left. The group brief now leads the prompt and says the whole-feature instruction is context; a capped run that checked nothing hands the next run the same partial-work block a retry gets; the implementer brief says to check tasks as they land, never at the end.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Revision anchors resolve in more of the shapes validators actually write.</strong> A CSS selector or a quoted state name (<code>`.in-flight-marker` rule</code>, <code>"State: live" state description</code>) is found by text search in an HTML deliverable; a line number in the finding\'s own title is a locator; a list of lines (<code>line: 427, 563, 710</code>) yields one window each. The features stage\'s own validator loop applies the format retry too.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>A continued implementer run is handed the spec blocks it needs, verbatim, instead of section names.</strong> Told "read these sections of arch.md only", a continuation opened <code>arch.md</code>, <code>design.html</code>, <code>prd.md</code> and both module tiers whole anyway — an agent reads files, not sections (measured: ~14 spec reads per continuation). The brief now carries each cited anchor\'s block from <code>arch.md</code> and from the module files it resolves into, and says there is no spec file to open. Past 6,000 inlined words it falls back to naming sections. The log line for a continuation now states tasks left and blocks inlined rather than a word-count "shrink" that was meaningless against a short base brief.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The Waste block tells a run that read nothing from one that read a lot.</strong> Three zero-token retries during a network outage counted as three wasted runs beside a 35M one. A no-progress run under 5k input tokens is reported as "at ~0 tokens — the engine never answered".',
+      },
+      {
+        type: 'changed',
+        description: '<strong>The ceilings that could strand a large feature give before the build fails.</strong> A capped implementer run that checked nothing raises its cap (120 → 240 → 360 turns) before it counts as a stall, so one task bigger than the cap no longer ends a scope after two tries; a scope may take as many slices as half its open tasks, not a flat ten; a run that used every allowed turn is treated as capped even when the engine does not say so. And a deterministic finding the implementer was already sent and could not satisfy — a checked task\'s file under a name it may not change, a library\'s console error — no longer fails the stage when <code>verify.sh</code> is green: it is recorded as advisory and handed to the implementation validator to judge. Font and HTTP-status findings stay blocking.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>A writer retried after a crash continues its partial draft instead of re-authoring.</strong> When the retry finds the deliverable on disk but not yet well-formed, its brief opens with "a partial draft exists at <code>&lt;path&gt;</code>; read it, keep what is correct, and complete it — do not start over", and the run is recorded as a continuation rather than a fresh attempt.',
+      },
+    ],
+    migration: 'Nothing to do. Re-emit with <code>npx gspec -t &lt;target&gt;</code> to pick up the revised writer, validator and orchestrator briefs — the <code>anchor:</code> line in QA verdicts, the mechanical-floors self-check, the route line on screens, and the overlap-table guidance all live in the installed agents and skills. <code>--parallel auto</code> is the new default; pass <code>--parallel off</code> to keep serial waves. <code>--notify</code> is opt-in. The render check is on only when Playwright is a dependency of the project being built. Runs started on 3.1.0 resume normally; their usage records simply lack the new kinds and the Waste block reports nothing for them.',
+  },
+  {
     version: '3.1.1',
     date: 'August 12, 2026',
     title: 'The spec answers before the user does',

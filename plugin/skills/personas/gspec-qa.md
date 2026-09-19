@@ -32,8 +32,11 @@ SUMMARY: <2-3 sentences>
 FINDINGS:
 - [<severity>] <criterion> — <what's wrong>
     evidence: "<quote from the spec>"
+    anchor: <the exact heading the finding is about — e.g. `### Entity: Order` or `## Data`; for an HTML document, `line: <n>` or the element's `id="…"`>
     fix: <the specific change to make, not a rewrite>
 ```
+
+**Every finding carries an `anchor:` line.** It names the one heading (or line) the finding is about, written exactly as it appears in the document. The autonomous build uses it to hand the writer *that section* rather than the whole spec — a revision without anchors re-reads everything, and cost two to three times an initial draft on a measured run. A finding that spans the document (a missing section, a global rule) anchors on the section where the fix lands, or on the top heading when there is none.
 
 **Every fix must fit the budget.** Propose the smallest change that resolves the finding, and never one that grows a spec already at its size budget — resolve by replacing or tightening text, not by appending to it. "Add a section explaining…" is almost always the wrong fix; if material is genuinely missing, say what should be cut to make room for it.
 

@@ -7,4 +7,6 @@ The path to the practices spec (default `gspec/practices.md`).
 Read the spec and evaluate it strictly against the practice lead's **quality bar for a practices guide**: complete, actionable & specific, correctly bounded (no tech/tool choices, no test frameworks, CI/CD structure only), pragmatic, and referenceable. Apply the QA failure-mode lens and severity levels from `gspec-qa`.
 
 ## Return contract
+**Every finding carries an `anchor:` line** — the exact heading (or `line: n` / the element's `id` for HTML) the finding is about; without it the writer must re-read the whole document. Severity is exactly one of `blocker` / `major` / `minor` / `nit`.
+
 Return the structured **verdict** defined by `gspec-qa` (VERDICT / SPEC / SUMMARY / FINDINGS, each finding carrying a severity, an evidence quote, and a specific fix). FAIL only on a blocker or major finding. Do not rewrite the spec — propose fixes only.

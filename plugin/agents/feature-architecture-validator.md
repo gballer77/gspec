@@ -19,4 +19,6 @@ A deterministic lint has already checked the mechanical rules (heading grammar, 
 7. **⚠ Enrichment — the inverted bar.** This is the check most likely to be applied backwards. Feature folders are **deliberately denormalized**: an implementer reading only this folder must not need `architecture.md`, `stack.md`, or the PRD. (`style.md` is the exception — `design.html` is the sibling that carries the look, so `arch.md` defers appearance to it rather than inlining it; see check 3.) A reference like "see `stack.md` for the ORM" is a `[major]` — the ORM must be named here. **Do not flag duplication of the architecture or the stack; that duplication is the file's purpose.** Do not flag product identity either — these files are not profile-agnostic.
 
 ## Return contract
+**Every finding carries an `anchor:` line** — the exact heading (or `line: n` / the element's `id` for HTML) the finding is about; without it the writer must re-read the whole document. Severity is exactly one of `blocker` / `major` / `minor` / `nit`.
+
 Return the structured **verdict** defined by `gspec-qa` (VERDICT / SPEC / SUMMARY / FINDINGS, each finding carrying a severity, an evidence quote, and a specific fix). FAIL only on a blocker or major finding. Do not rewrite — propose fixes only.
