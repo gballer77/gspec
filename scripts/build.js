@@ -150,7 +150,14 @@ async function emitV2(target, outDir) {
     await target.emitAgent(outDir, body, emitMeta);
     agents++;
   }
-  for (const meta of V2_COMMANDS) { await target.emitCommand(outDir, await readSource(meta.source), meta); commands++; }
+  for (const meta of V2_COMMANDS) {
+    // Targets that skip the skill catalog (Codex) still need the persona a
+    // command's conversation runs under — "the `gspec-engineer` skill applies"
+    // must resolve to text on the machine, not dangle. Inline what the body names.
+    const body = target.emitSkills === false ? await composeCommandBody(meta) : await readSource(meta.source);
+    await target.emitCommand(outDir, body, meta);
+    commands++;
+  }
   console.log(`  + v2: ${skills} skills, ${agents} agents, ${commands} commands → dist/${target.distSubdir}/`);
 }
 
@@ -173,6 +180,28 @@ async function composeAgentBody(agent) {
   }
   parts.push('\n---\n\n# Your task\n');
   parts.push(await readSource(agent.source));
+  return parts.join('\n');
+}
+
+// Inline the skills a command's flow names into the command body, for targets
+// that cannot install the skill catalog at all (Codex: commands are emitted as
+// skills, so a standalone persona/convention catalog would collide with them in
+// the same namespace — `emitSkills: false`). The agents get their persona via
+// composeAgentBody, but the command IS the conversation with the user, and it
+// used to run bare: every persona reference in a command body dangled. The set
+// is derived from the body's backticked references (`gspec-engineer`) filtered
+// against the skill catalogs, so a command that starts naming a new skill
+// inlines it with no manifest edit.
+async function composeCommandBody(meta) {
+  const src = await readSource(meta.source);
+  const names = [...new Set([...src.matchAll(/`(gspec-[a-z-]+)`/g)].map((m) => m[1]))].filter(findSkill);
+  if (names.length === 0) return src;
+  const parts = [
+    src,
+    '\n---\n\n# Reference — persona & conventions',
+    '\n> Inlined — this platform does not install these as separate skills. Wherever the flow above names one of the skills below, its content is here; apply it throughout.',
+  ];
+  for (const name of names) parts.push(`\n## ${name}\n\n${await readSource(findSkill(name).source)}`);
   return parts.join('\n');
 }
 

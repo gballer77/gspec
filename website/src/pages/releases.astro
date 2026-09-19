@@ -138,6 +138,27 @@ const releases = [
     migration: 'Nothing to do. Re-emit with <code>npx gspec -t &lt;target&gt;</code> to pick up the revised writer, validator and orchestrator briefs — the <code>anchor:</code> line in QA verdicts, the mechanical-floors self-check, the route line on screens, and the overlap-table guidance all live in the installed agents and skills. <code>--parallel auto</code> is the new default; pass <code>--parallel off</code> to keep serial waves. <code>--notify</code> is opt-in. The render check is on only when Playwright is a dependency of the project being built. Runs started on 3.1.0 resume normally; their usage records simply lack the new kinds and the Waste block reports nothing for them.',
   },
   {
+    version: '3.1.1',
+    date: 'August 12, 2026',
+    title: 'The spec answers before the user does',
+    summary: 'A field report: a user resolved an edge case during architecture ("if the list is empty, enable everything"), watched it land in the feature\'s <code>arch.md</code> — and was then asked the same question again during implementation, and a third time when they requested changes afterward. The engine\'s own post-mortem said it plainly: <em>"I relied on my fresh interpretation of your message."</em> Three gaps lined up behind that. Nothing anywhere said a design question must be checked against the spec before it is asked; nothing governed the conversation after the final report, where change requests land; and on Codex specifically, the orchestrating conversation never received the engineer persona at all — <code>"the gspec-engineer skill applies"</code> referenced a skill that was never installed on that engine.',
+    changes: [
+      {
+        type: 'fixed',
+        description: '<strong>On Codex, commands now inline the skills their flow names.</strong> Codex commands are emitted as skills, so installing the persona/convention catalog alongside them would collide in the same namespace — and the whole catalog was skipped. The sub-agents were fine (their persona is inlined into each <code>.codex/agents/*.toml</code>), but the command bodies — the part that talks to the user through planning, phase gates and change requests — ran with every persona reference dangling, including "follow the specs exactly" and "never override an explicit spec decision." The build now composes each referenced skill into the command body it is named in, and a dist test holds the invariant for every command.',
+      },
+      {
+        type: 'added',
+        description: '<strong>A spec-recall rule in the engineer persona.</strong> Before asking the user any design question, the engineer re-opens the governing spec — the feature\'s <code>arch.md</code> (its <code>## Logic</code> section resolves exactly these edge cases), its <code>prd.md</code> acceptance criteria, and <code>architecture.md</code>. A question the spec already answers is not a gap; re-asking it tells the user their recorded decision didn\'t stick. The rule applies at the moment the question arises — including when the user challenges the design mid-conversation — and demands a fresh read of the file, not a recollection of one from earlier in a long (and, on some engines, compacted) session.',
+      },
+      {
+        type: 'added',
+        description: '<strong><code>/gspec-implement</code> now has a change-request protocol.</strong> The flow used to end at "verify &amp; report," leaving the conversation that follows — where users actually ask for changes — unguided. A change request now starts with re-reading the feature\'s <code>arch.md</code> and <code>prd.md</code>: if the spec already decides the question, follow it and cite the anchor; if the request conflicts with a documented decision, surface the conflict, and when the user changes the decision, update the anchor in the same change so spec and code move together; only what neither the request nor the specs decide is a genuine question.',
+      },
+    ],
+    migration: 'Nothing to do — <code>npx gspec -t &lt;target&gt;</code> to reinstall. Codex users should reinstall even if nothing else in this release concerns them: it is the engine where the orchestrating conversation was running without its persona.',
+  },
+  {
     version: '3.1.0',
     date: 'August 10, 2026',
     title: 'Adding a feature to a product that already has an architecture',
