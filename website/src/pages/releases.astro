@@ -5,6 +5,19 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.2.1',
+    date: 'October 3, 2026',
+    title: 'Profiles keep competitive claims in one place',
+    summary: 'A small quality-bar fix from a real profile QA round: the writer restated the same competitor gaps and positioning facts across four sections, and the validator had to cite the generic one-canonical-home rule to catch it.',
+    changes: [
+      {
+        type: 'changed',
+        description: '<strong>The profile quality bar says where competitive claims live.</strong> <code>gspec-product</code> item 4 (<em>Differentiated value</em>) now states that Value Proposition pillars describe the product\'s own properties, comparative "no competitor does X" claims belong only in Market & Competition, and recurring positioning facts get a single home. The profile writer gets it right on the first draft and the validator has a profile-specific rule to cite, instead of only the general <code>gspec-conventions</code> one-canonical-home rule.',
+      },
+    ],
+    migration: 'Nothing to do. Re-emit with <code>npx gspec -t &lt;target&gt;</code> to pick up the revised <code>gspec-product</code> skill; existing profiles are unaffected until they are next revised.',
+  },
+  {
     version: '3.2.0',
     date: 'September 10, 2026',
     title: 'Cutting build time and tokens, end to end',
