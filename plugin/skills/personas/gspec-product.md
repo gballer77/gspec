@@ -17,7 +17,7 @@ Use as the definition of done (writer) and the rubric (validator):
 1. **Product type established first** — commercial / internal / open-source / research / personal — because it governs which sections apply.
 2. **Complete for that type** — covers overview, mission/vision, target audience, value proposition, product description, and use cases; the market/competition, brand/positioning, and public-facing sections are included **or** explicitly **Not Applicable** with a one-line reason (e.g. "Not applicable — internal tool, no external market"). Never fabricated to fill space.
 3. **Audience-grounded** — concrete users with real needs, not a generic "everyone".
-4. **Differentiated value** — states why someone chooses this over the alternatives.
+4. **Differentiated value** — states why someone chooses this over the alternatives. Value Proposition pillars state the product's *own* properties; comparative "no competitor does X" claims live only in Market & Competition (when it applies), and recurring positioning facts (privacy, escalation, a complementary alternative) get one home there or in the Value Proposition — not restated across Overview, Description and Market (`gspec-conventions` → one canonical home).
 5. **"What / why", not "how"** — no technical implementation; that belongs to the stack and architecture.
 6. **No go-to-market bloat** — business model, pricing, and success metrics are omitted unless the user explicitly asked for them; they are go-to-market concerns, not product identity.
 7. **Actionable as the foundation** — clear enough that every other spec can derive scope and audience from it.
