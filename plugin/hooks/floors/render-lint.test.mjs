@@ -78,8 +78,58 @@ test('the runner fails open — every missing precondition is a skip, never a vi
   const noScript = await renderChecks('/nonexistent', ['/'], {}, { pkgJsonText: JSON.stringify({ devDependencies: { playwright: '1' } }) });
   assert.match(noScript.skipped, /no `dev` or `start` script/);
   const noModule = await renderChecks('/nonexistent', ['/'], {}, { pkgJsonText: JSON.stringify({ devDependencies: { playwright: '1' }, scripts: { dev: 'x' } }) });
-  assert.match(noModule.skipped, /playwright could not be loaded/);
+  // Where a global playwright is resolvable (NODE_PATH), loading succeeds and
+  // the skip comes one step later, when the server cannot start in a cwd that
+  // does not exist. Either way it is a skip, never a violation or a crash.
+  assert.match(noModule.skipped, /playwright could not be loaded|server could not be started|server exited before answering/);
   assert.deepEqual(noModule.violations, []);
+});
+
+import { EventEmitter } from 'node:events';
+import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+async function projectWithPlaywright() {
+  const dir = await mkdtemp(join(tmpdir(), 'gspec-render-'));
+  await mkdir(join(dir, 'node_modules', 'playwright'), { recursive: true });
+  await writeFile(join(dir, 'node_modules', 'playwright', 'index.js'), 'module.exports = {};');
+  return dir;
+}
+
+function fakeServer(behaviour) {
+  return () => {
+    const child = new EventEmitter();
+    child.pid = undefined;
+    child.kill = () => {};
+    child.stdout = new EventEmitter(); child.stderr = new EventEmitter();
+    setImmediate(() => behaviour(child));
+    return child;
+  };
+}
+const runnable = JSON.stringify({ devDependencies: { playwright: '1' }, scripts: { dev: 'x' } });
+
+test('a server that fails to spawn is a skip, not an uncaught exception', async () => {
+  const pwDir = await projectWithPlaywright();
+  const err = Object.assign(new Error('spawn npm ENOENT'), { code: 'ENOENT' });
+  const r = await renderChecks(pwDir, ['/'], {}, {
+    pkgJsonText: runnable, startTimeoutMs: 30_000, fetchFn: async () => { throw new Error('down'); },
+    spawnFn: fakeServer((c) => c.emit('error', err)),
+  });
+  assert.deepEqual(r.violations, []);
+  assert.match(r.skipped, /could not be started \(spawn npm ENOENT\)/);
+});
+
+test('a server that exits before answering is a skip found at once, not after the start timeout', async () => {
+  const dir = await projectWithPlaywright();
+  const started = Date.now();
+  const r = await renderChecks(dir, ['/'], {}, {
+    pkgJsonText: runnable, startTimeoutMs: 30_000, fetchFn: async () => { throw new Error('down'); },
+    spawnFn: fakeServer((c) => c.emit('exit', 1, null)),
+  });
+  assert.deepEqual(r.violations, []);
+  assert.match(r.skipped, /exited before answering \(code 1\)/);
+  assert.ok(Date.now() - started < 5_000, 'did not wait out the start timeout');
 });
 
 import { pickRenderRoot } from './render-lint.mjs';
