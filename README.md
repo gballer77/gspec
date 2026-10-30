@@ -346,11 +346,9 @@ When you next run `npx gspec` in a project, the installer copies the built-in sk
 
 ## Memory
 
-Everything gspec remembers lives under `.gspec/memory/`, in two tiers.
+gspec agents don't learn on their own. You teach them: **`/gspec-teach <what the agent should do differently>`** hands your correction to the `memorizer`, which finds where it belongs and drafts the smallest edit. Nothing changes until you approve it.
 
-**Pending** — when a QA gate or a correction from you sends an agent back to fix its work, the agent records the generalizable memory to `.gspec/memory/pending/<agent>/<file>.md`, one file per memory. Nothing there changes any behavior: a pending memory is a queue entry, not a rule. It works on every engine, because recording is just writing a file.
-
-**Committed** — `/gspec-teach` and `/gspec-memorize` commit a pending memory (or a correction you state directly) to a store that *is* composed back into the relevant skill on every install, so it survives a gspec upgrade instead of being overwritten by it. Each memory is a `## ` heading plus a sentence or two, and its scope decides the store:
+Each approved memory is a `## ` heading plus a sentence or two. Its scope decides where it's stored:
 
 | scope | store | composed into skills | shared with |
 | --- | --- | --- | --- |
@@ -358,22 +356,22 @@ Everything gspec remembers lives under `.gspec/memory/`, in two tiers.
 | personal | `~/.gspec/memory/<skill>.md` | yes | you, on every project |
 | gspec | `~/.gspec/memory/gspec/<slug>.md` | **no** — it's a report | the gspec maintainers, if you file it |
 
+Project and personal memories are composed back into the relevant skill on every install, so they survive a gspec upgrade instead of being overwritten by it.
+
 ```bash
-gspec memory                      # What's composed into each skill, plus anything pending review
+gspec memory                      # What's composed into each skill
 gspec memory apply                # Recompose into the installed skills (no full re-install)
 gspec memory report               # Reports about gspec itself + a prefilled issue link each
 gspec memory filed <name> <url>   # Record that you submitted one
 ```
 
-`pending/` is a subdirectory rather than a sibling file on purpose — the composer only reads `*.md` directly inside a memory store, so an unreviewed memory cannot reach a skill by accident. Committing stays a decision you make. Pending memories are committed to version control by default so your team sees what runs have been learning; add `.gspec/memory/pending/` to `.gitignore` if you'd rather keep them local.
-
-Read-only agents — validators, planners — have no `Write` tool and so record nothing. Their failing verdicts land in `.gspec/agent-runs/feedback-log.md`, which `/gspec-memorize` reads as corroborating evidence.
-
-**The third category is for defects in gspec itself** — a check that fires falsely, a persona whose quality bar misses something. No text composed onto your machine fixes that, so it's stored as a report instead. `gspec memory report` prints a **prefilled GitHub issue URL**: gspec stores no token and posts nothing, so the report stays on your machine until you open the link and submit it yourself. `/gspec-teach` and `/gspec-memorize` recommend a category from context and you override freely.
+**The third category is for defects in gspec itself** — a check that fires falsely, a persona whose quality bar misses something. No text composed onto your machine fixes that, so it's stored as a report instead. `gspec memory report` prints a **prefilled GitHub issue URL**: gspec stores no token and posts nothing, so the report stays on your machine until you open the link and submit it yourself. `/gspec-teach` recommends a category from context and you override freely.
 
 The installer composes the gspec source skill first, then your personal memory, then your project memory — **project wins**, being the more specific of the two. The pass is idempotent, so repeated installs never stack duplicates, and a memory file naming a skill that isn't installed is reported rather than silently ignored.
 
 Editing an installed skill under `.claude/skills/` directly is *not* durable — that file is regenerated on every install. Put the guidance in a memory store instead.
+
+> **Upgrading from before 3.4.0?** Agents used to record memories to `.gspec/memory/pending/` automatically, for review with `/gspec-memorize`. Both are gone. The installer removes the old command and hooks, but leaves `pending/` on disk and tells you once. Teach anything still worth keeping with `/gspec-teach`, then delete the directory.
 
 ## Output Structure
 

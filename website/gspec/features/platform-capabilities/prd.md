@@ -6,7 +6,7 @@ spec-version: v2
 
 ## Overview
 
-A dedicated page that shows, harness by harness, which gspec capabilities each supported AI coding tool can deliver — and where the gaps are. gspec works across many harnesses, but they are not equivalent: some enforce spec integrity with hard, deterministic guarantees while others can only offer the same conventions as guidance, and support for the autonomous build and the learning loop varies by tool.
+A dedicated page that shows, harness by harness, which gspec capabilities each supported AI coding tool can deliver — and where the gaps are. gspec works across many harnesses, but they are not equivalent: some enforce spec integrity with hard, deterministic guarantees while others can only offer the same conventions as guidance, and support for the autonomous build varies by tool.
 
 Prospective and current users need to make an informed choice of harness (or set the right expectations for the one they already use). Today that disparity is invisible — the marketing surface implies uniform "works everywhere" support, which oversells weaker harnesses and undersells the strongest. A capability comparison page makes the real differences legible so users can pick the right tool for the guarantees they need.
 
@@ -52,7 +52,7 @@ Prospective and current users need to make an informed choice of harness (or set
 
 - [x] **P0**: Page presents a comparison matrix of supported harnesses against gspec capabilities
   - All currently supported harnesses appear as columns (or rows) with a clear, identifiable label
-  - Product-level capabilities are the primary axis: at minimum spec authoring, autonomous build, competitive research (interactive and build-path), hard enforcement on the interactive path, hard enforcement on the build path, and the learning loop / memory
+  - Product-level capabilities are the primary axis: at minimum spec authoring, autonomous build, competitive research (interactive and build-path), hard enforcement on the interactive path, and hard enforcement on the build path
   - Every intersection shows an unambiguous support state, not a blank
   - The matrix is legible at a glance without reading prose
 

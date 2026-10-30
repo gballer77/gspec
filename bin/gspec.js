@@ -59,6 +59,20 @@ const LEGACY_V1_SKILL_NAMES = new Set([
   'gspec-tasks',
 ]);
 
+// Artifacts earlier versions installed and this one no longer emits — the
+// automatic memory recording removed in 3.4.0 (the gspec-memory convention
+// skill and the /gspec-memorize command). Per target, relative to the project
+// root. The installer only overwrites, so without this an upgraded install
+// keeps a /gspec-memorize that points agents at a store nothing reads.
+const RETIRED_ARTIFACTS = {
+  claude: ['.claude/skills/gspec-memory', '.claude/commands/gspec-memorize.md'],
+  cursor: ['.cursor/skills/gspec-memory', '.cursor/commands/gspec-memorize.md'],
+  antigravity: ['.agents/skills/gspec-memory', '.agents/workflows/gspec-memorize.md'],
+  codex: ['.agents/skills/gspec-memory', '.agents/skills/gspec-memorize'],
+  opencode: ['.opencode/skills/gspec-memory', '.opencode/command/gspec-memorize.md'],
+  pi: ['.pi/skills/gspec-memory', '.pi/prompts/gspec-memorize.md'],
+};
+
 const TARGET_CHOICES = [
   { name: 'claude', label: 'Claude Code' },
   { name: 'cursor', label: 'Cursor' },
@@ -711,6 +725,16 @@ async function cleanupStaleV1Skills(target, cwd) {
   return removed;
 }
 
+async function cleanupRetiredArtifacts(targetName, cwd) {
+  const removed = [];
+  for (const rel of RETIRED_ARTIFACTS[targetName] || []) {
+    try { await stat(join(cwd, rel)); } catch (e) { if (e.code === 'ENOENT') continue; throw e; }
+    await rm(join(cwd, rel), { recursive: true, force: true });
+    removed.push(rel);
+  }
+  return removed;
+}
+
 async function install(targetName, cwd) {
   const target = TARGETS[targetName];
   if (!target) {
@@ -775,6 +799,13 @@ async function install(targetName, cwd) {
     for (const name of removedStale) {
       console.log(`  ${chalk.red('-')} ${name}`);
     }
+    console.log();
+  }
+
+  const retired = await cleanupRetiredArtifacts(targetName, cwd);
+  if (retired.length > 0) {
+    console.log(chalk.bold(`  Removed ${retired.length} artifact${retired.length === 1 ? '' : 's'} this version no longer ships:\n`));
+    for (const rel of retired) console.log(`  ${chalk.red('-')} ${rel}`);
     console.log();
   }
 
@@ -884,13 +915,10 @@ async function installPreamble(targetName, cwd) {
 // gspec ships model-free hook guards (Claude Code only). They live in the
 // package's hooks/claude/ dir (the claude/ folder marks them Claude-specific and
 // is stripped on install) and install to .claude/hooks/, registered per lifecycle
-// event in .claude/settings.json. PostToolUse guards flag after a write; the
-// PreToolUse memory guard blocks an untagged pending-memory write before it
-// lands (the learning loop's address-tag hook).
+// event in .claude/settings.json. PostToolUse guards flag after a write;
+// PreToolUse guards block a write before it lands.
 // Each hook declares its lifecycle event and matcher. Tool hooks match tool
-// names (Write|Edit|MultiEdit); the SubagentStop capture hook matches agent_type
-// (`*` = every subagent — it filters internally on a FAIL verdict); the Stop
-// reconcile hook pairs with the reconcile-marker PostToolUse hook to nudge a
+// names (Write|Edit|MultiEdit); the Stop reconcile hook pairs with the reconcile-marker PostToolUse hook to nudge a
 // spec update when a session wrote source code but nothing under gspec/.
 const TOOL_MATCHER = 'Write|Edit|MultiEdit';
 const HOOK_SPECS = [
@@ -898,13 +926,16 @@ const HOOK_SPECS = [
   { file: 'gspec-token-literals.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-spec-integrity.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-reconcile-marker.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
-  { file: 'gspec-memory-address-tag.mjs', event: 'PreToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-skill-write-guard.mjs', event: 'PreToolUse', matcher: TOOL_MATCHER },
   { file: 'gspec-task-immutability.mjs', event: 'PreToolUse', matcher: TOOL_MATCHER },
-  { file: 'gspec-subagent-capture.mjs', event: 'SubagentStop', matcher: '*' },
   { file: 'gspec-reconcile.mjs', event: 'Stop', matcher: '*' },
   { file: 'gspec-practices-enforce.mjs', event: 'PostToolUse', matcher: TOOL_MATCHER },
 ];
+
+// Hooks earlier versions installed and this one no longer ships (the automatic
+// memory recording removed in 3.4.0). Deleted from .claude/hooks/ on install —
+// gspec-named, so never a user's file — and their settings.json entries pruned.
+const RETIRED_HOOKS = ['gspec-memory-address-tag.mjs', 'gspec-subagent-capture.mjs'];
 
 // Engine-neutral floor modules (plugin/hooks/floors/) that the entry-point hooks
 // import at runtime. Copied into <hooks-dir>/floors/ on every target that installs
@@ -927,6 +958,7 @@ async function installHooks(targetName, cwd) {
   for (const spec of HOOK_SPECS) {
     await writeFile(join(hooksDest, spec.file), await readFile(join(hooksSrc, spec.file), 'utf-8'), 'utf-8');
   }
+  for (const file of RETIRED_HOOKS) await rm(join(hooksDest, file), { force: true });
   await copyFloors(hooksDest);
 
   // Merge into .claude/settings.json — create or merge, never clobber other
@@ -944,8 +976,11 @@ async function installHooks(targetName, cwd) {
   );
   const hookCmd = (s) => ({ type: 'command', command: `node "$CLAUDE_PROJECT_DIR/.claude/hooks/${s.file}"`, timeout: 10 });
   // One gspec entry per (event, matcher); idempotent (drop prior gspec entries
-  // per event, keeping any non-gspec hooks the user has).
+  // per event, keeping any non-gspec hooks the user has). An event gspec no
+  // longer hooks at all is visited too, with no specs, so a retired hook's
+  // entry is dropped rather than left pointing at a deleted file.
   const byEvent = {};
+  for (const event of Object.keys(settings.hooks)) byEvent[event] = [];
   for (const spec of HOOK_SPECS) (byEvent[spec.event] = byEvent[spec.event] || []).push(spec);
   for (const [event, specs] of Object.entries(byEvent)) {
     const existing = Array.isArray(settings.hooks[event]) ? settings.hooks[event] : [];
@@ -955,7 +990,8 @@ async function installHooks(targetName, cwd) {
     for (const [matcher, ms] of Object.entries(byMatcher)) {
       kept.push({ matcher, hooks: ms.map(hookCmd) });
     }
-    settings.hooks[event] = kept;
+    if (kept.length) settings.hooks[event] = kept;
+    else delete settings.hooks[event];
   }
   await writeFile(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
   console.log(`  ${chalk.green('+')} Installed ${HOOK_SPECS.length} gspec hooks → .claude/hooks/ + settings.json`);
@@ -1960,11 +1996,10 @@ program
 
     await installExtensions(targetName, process.cwd());
 
-    // Sweep the pre-3.7 stores first — the renamed lessons/ directories and any
-    // per-agent memory silo — so nothing recorded under the old scheme is
-    // stranded, and a renamed store composes on this very install.
+    // Sweep the renamed lessons/ directories first, so a renamed store composes
+    // on this very install.
     await migrateLessonsDirs(process.cwd());
-    await migrateMemorySilos(process.cwd());
+    await noticeRetiredPending(process.cwd());
 
     // After extensions, so a memory can be composed into an extension skill too.
     await applyMemory(targetName, process.cwd());
@@ -2021,14 +2056,13 @@ program
     }
   });
 
-// --- Memory (the durable half of the learning loop) ---
+// --- Memory (what /gspec-teach commits) ---
 //
-// A committed memory — one approved through /gspec-memorize or /gspec-teach —
+// A committed memory — one approved through /gspec-teach —
 // used to be written straight into `.claude/skills/<name>/SKILL.md`, which the
 // next install overwrites. That put the DURABLE store and the COMMITTED store
-// the wrong way round: the review step deletes the pending copy once a memory
-// graduates, so committing it moved it from the file that survives an upgrade
-// into the file that does not, then deleted the surviving copy.
+// the wrong way round: committing a memory put it in the one file an upgrade
+// does not preserve.
 //
 // Memory now lives outside the overwrite path, in one of two homes by scope, and
 // is composed back into the skill on every install. That makes an upgrade
@@ -2042,13 +2076,9 @@ program
 // word, matching how gspec already treats project config as more specific than
 // global.
 //
-// Upstream of both sits the PENDING tier, `<cwd>/.gspec/memory/pending/`, where
-// agents record raw memories mid-run (see the gspec-memory skill). It is a
-// SUBDIRECTORY, deliberately: readMemoryFrom only reads `*.md` files, so an
-// unreviewed memory can never be composed into a skill by accident — committing
-// stays the reviewed path through /gspec-memorize. One file per memory, under a
-// per-agent dir, because same-wave agents run concurrently and a shared file
-// would silently lose whichever write landed first.
+// `<cwd>/.gspec/memory/pending/` is what agents used to record into before
+// 3.4.0 removed automatic recording. Nothing reads it now; the installer only
+// says so (noticeRetiredPending), and never deletes it.
 const MEMORY_DIR = join(GSPEC_HOME, 'memory');
 const projectMemoryDir = (cwd) => join(cwd, '.gspec', 'memory');
 const pendingMemoryDir = (cwd) => join(cwd, '.gspec', 'memory', 'pending');
@@ -2058,7 +2088,7 @@ const pendingMemoryDir = (cwd) => join(cwd, '.gspec', 'memory', 'pending');
 // also matches the pre-rename `gspec:lessons:` marker, so `gspec memory apply`
 // on a skill composed by an older install replaces that block instead of
 // stacking a second one beside it.
-const MEMORY_START = '<!-- gspec:memory:start — managed by /gspec-teach and /gspec-memorize; edit the files in .gspec/memory/ or ~/.gspec/memory/ -->';
+const MEMORY_START = '<!-- gspec:memory:start — managed by /gspec-teach; edit the files in .gspec/memory/ or ~/.gspec/memory/ -->';
 const MEMORY_END = '<!-- gspec:memory:end -->';
 const MEMORY_FENCE_RE = /\n*<!-- gspec:(?:memory|lessons):start[\s\S]*?<!-- gspec:(?:memory|lessons):end -->\n*/g;
 
@@ -2094,8 +2124,7 @@ async function loadMemory(cwd) {
 // The block appended to a skill. Personal first, project second — later text is
 // what a reader (and a model) carries forward, and the precedence is stated in
 // the prose too rather than left to ordering alone.
-// A store file writes one memory per `## ` heading — the same shape a pending
-// memory uses, so a memory reads identically wherever it lives. Composed, those
+// A store file writes one memory per `## ` heading. Composed, those
 // sit two levels down under `### Personal` / `### Project`, so demote them;
 // leaving them at `##` would make each memory a sibling of "Remembered" and
 // silently break the section it is supposed to belong to. Only fenced-code-free
@@ -2112,7 +2141,7 @@ function demoteHeadings(body, by = 2) {
 
 function composeMemoryBlock({ personal, project }) {
   const parts = [MEMORY_START, '', '## Remembered',
-    'What `/gspec-teach` or `/gspec-memorize` committed to memory for this skill. It is part of the skill: apply it as you would anything above. Where a project memory and a personal one conflict, **the project memory wins** — it is the more specific of the two.'];
+    'What `/gspec-teach` committed to memory for this skill. It is part of the skill: apply it as you would anything above. Where a project memory and a personal one conflict, **the project memory wins** — it is the more specific of the two.'];
   if (personal) parts.push('', '### Personal — carried across every project', '', demoteHeadings(personal));
   if (project) parts.push('', '### Project — this repository, and it overrides the personal memories above', '', demoteHeadings(project));
   parts.push('', MEMORY_END);
@@ -2154,105 +2183,23 @@ async function applyMemory(targetName, cwd) {
   }
 }
 
-// --- The pending tier ------------------------------------------------------
-
-// One memory per file, so read the tree rather than parse one document.
-// Returns { agentName -> [{ file, heading }] } for everything under pending/.
-async function loadPendingMemories(cwd) {
+// --- Retired: the pending tier ---
+//
+// Before 3.4.0, agents recorded memories to `.gspec/memory/pending/` on their
+// own and /gspec-memorize reviewed them. Both are gone; a leftover pending/ is
+// the user's data, so it is left in place and named once — the project config
+// remembers the notice was shown, so later installs stay quiet.
+async function noticeRetiredPending(cwd) {
   const root = pendingMemoryDir(cwd);
-  let agents;
-  try { agents = await readdir(root, { withFileTypes: true }); }
-  catch (e) { if (e.code === 'ENOENT') return new Map(); throw e; }
-
-  const out = new Map();
-  for (const ent of agents) {
-    if (!ent.isDirectory()) continue;
-    let files;
-    try { files = (await readdir(join(root, ent.name))).filter((f) => f.endsWith('.md')); }
-    catch { continue; }
-    const memories = [];
-    for (const file of files) {
-      let body = '';
-      try { body = await readFile(join(root, ent.name, file), 'utf-8'); } catch { continue; }
-      // The `## ` line is the memory's one-liner; fall back to the filename so a
-      // malformed one is still visible rather than silently uncounted.
-      const heading = (body.match(/^##\s+(\S.*)$/m) || [])[1]?.trim() || basename(file, '.md');
-      memories.push({ file, heading });
-    }
-    if (memories.length) out.set(ent.name, memories);
-  }
-  return out;
+  try { await stat(root); } catch { return; } // nothing recorded — the normal case
+  if ((await readProjectConfig(cwd)).retiredPendingNoticeShown) return;
+  console.log(chalk.yellow(`  ! ${root} is no longer read — gspec stopped recording memories automatically in 3.4.0.`));
+  console.log(chalk.dim('    Nothing was deleted. Teach anything still worth keeping with /gspec-teach, then remove the directory.'));
+  await writeProjectConfig(cwd, { retiredPendingNoticeShown: true });
 }
 
-// --- Migration: pre-3.7 stores ---------------------------------------------
+// --- Migration: pre-3.7 store name ---
 //
-// Two things moved in 3.7.0 and both are swept on the next install rather than
-// left stranded:
-//
-//   1. Claude's per-agent `memory:` silo (`.claude/agent-memory*/<agent>/
-//      MEMORY.md`) — one file per agent, many `## ` blocks in it, Claude-only.
-//      Each block becomes its own pending memory, and the MEMORY.md is RENAMED
-//      rather than deleted: nothing is destroyed, and the rename is what stops a
-//      re-sweep on the next install.
-//   2. `.gspec/lessons/` and `~/.gspec/lessons/` — the store's former name.
-//      A plain directory rename, since the contents and format are unchanged.
-const OLD_MEMORY_DIRS = ['.claude/agent-memory', '.claude/agent-memory-local'];
-
-// Split a MEMORY.md into its `## ` blocks (heading + body, verbatim).
-function splitMemoryLessons(md) {
-  const out = [];
-  let current = null;
-  for (const line of String(md).split('\n')) {
-    const m = line.match(/^##\s+(\S.*)$/);
-    if (m) {
-      if (current) out.push(current);
-      current = { heading: m[1].trim(), lines: [] };
-    } else if (current) current.lines.push(line);
-  }
-  if (current) out.push(current);
-  return out.map(({ heading, lines }) => ({ heading, body: lines.join('\n').trim() }));
-}
-
-async function migrateMemorySilos(cwd) {
-  let migrated = 0;
-  const agentsSeen = new Set();
-
-  for (const dir of OLD_MEMORY_DIRS) {
-    let entries;
-    try { entries = await readdir(join(cwd, dir), { withFileTypes: true }); }
-    catch { continue; } // no silo here — the normal case
-    for (const ent of entries) {
-      if (!ent.isDirectory()) continue;
-      const memPath = join(cwd, dir, ent.name, 'MEMORY.md');
-      let text;
-      try { text = await readFile(memPath, 'utf-8'); } catch { continue; }
-
-      const blocks = splitMemoryLessons(text);
-      const destDir = join(pendingMemoryDir(cwd), ent.name);
-      if (blocks.length) await mkdir(destDir, { recursive: true });
-      for (const [i, block] of blocks.entries()) {
-        // The old format carried `- target:`/`- layer:` bullets inside the body;
-        // they satisfy the address-tag contract as-is, so the block moves across
-        // verbatim under frontmatter that records where it came from.
-        const name = `migrated-${String(i + 1).padStart(2, '0')}-${slugifyTitle(block.heading)}.md`;
-        const file = join(destDir, name);
-        // Never clobber a memory that is already there — a re-run is a no-op.
-        try { await stat(file); continue; } catch { /* absent, write it */ }
-        const front = ['---', `agent: ${ent.name}`, `migrated-from: ${dir}/${ent.name}/MEMORY.md`, '---', ''].join('\n');
-        await writeFile(file, `${front}\n## ${block.heading}\n\n${block.body}\n`, 'utf-8');
-        migrated++;
-      }
-      await rename(memPath, `${memPath}.migrated`).catch(() => {});
-      agentsSeen.add(ent.name);
-    }
-  }
-
-  if (migrated > 0) {
-    console.log(`  ${chalk.green('+')} Migrated ${chalk.bold(migrated)} memor${migrated === 1 ? 'y' : 'ies'} from ${agentsSeen.size} agent memory silo(s) → .gspec/memory/pending/`);
-    console.log(chalk.dim('    Each old MEMORY.md was renamed to MEMORY.md.migrated, not deleted. Review with /gspec-memorize.'));
-  }
-}
-
 // `.gspec/lessons/` → `.gspec/memory/` (and the same under ~). A rename, not a
 // merge: if the destination already exists the old directory is left untouched
 // and named, because silently merging two stores could resurrect a memory the
@@ -2295,8 +2242,6 @@ const REPORTS_DIR = join(MEMORY_DIR, 'gspec');
 const ISSUE_URL_BUDGET = 6000;
 
 const repoUrl = () => String(pkg.repository?.url || '').replace(/^git\+/, '').replace(/\.git$/, '');
-
-const slugifyTitle = (title) => String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'report';
 
 async function loadReports() {
   let entries;
@@ -2367,38 +2312,23 @@ async function memoryFiled(name, url) {
   console.log(chalk.green(`\n  ✓ Recorded ${name} as filed → ${url}\n`));
 }
 
-// Count the `## ` headings in a store file — the same one-entry-per-heading
-// shape a pending memory uses, so a memory reads identically wherever it is.
+// Count the `## ` headings in a store file — one memory per heading.
 const countMemories = (body) => (String(body).match(/^##\s+\S/gm) || []).length;
 
 async function memoryList(cwd) {
   const memory = await loadMemory(cwd);
   const reports = await loadReports();
-  const pending = await loadPendingMemories(cwd);
   const reportLine = () => {
     if (reports.length === 0) return;
     const unsent = reports.filter((r) => r.fields.status !== 'filed').length;
     console.log(chalk.dim(`  gspec    → ${REPORTS_DIR} (${reports.length} report${reports.length === 1 ? '' : 's'}${unsent ? `, ${chalk.yellow(`${unsent} unsent`)}` : ''}) — see: gspec memory report`));
-  };
-  // Recorded but not yet reviewed — these change nothing until committed, so
-  // they are reported separately from what is actually composed into a skill.
-  const pendingBlock = () => {
-    if (pending.size === 0) return;
-    const total = [...pending.values()].reduce((n, l) => n + l.length, 0);
-    console.log(chalk.bold(`\n  ${chalk.yellow(total)} pending memor${total === 1 ? 'y' : 'ies'} awaiting review, from ${pending.size} agent${pending.size === 1 ? '' : 's'}:\n`));
-    for (const [agent, items] of [...pending].sort(([a], [b]) => a.localeCompare(b))) {
-      console.log(`  ${chalk.yellow('✎')} ${chalk.bold(agent)}`);
-      for (const it of items) console.log(chalk.dim(`      · ${it.heading}`));
-    }
-    console.log(chalk.dim(`\n  pending  → ${pendingMemoryDir(cwd)} — commit them with /gspec-memorize.`));
   };
   if (memory.size === 0) {
     console.log(chalk.dim('\n  Nothing composed into skills yet.'));
     console.log(chalk.dim(`  personal → ${MEMORY_DIR}`));
     console.log(chalk.dim(`  project  → ${projectMemoryDir(cwd)}`));
     reportLine();
-    pendingBlock();
-    console.log(chalk.dim('  Add one with /gspec-teach, or commit a pending one with /gspec-memorize.\n'));
+    console.log(chalk.dim('  Add one with /gspec-teach.\n'));
     return;
   }
   console.log(chalk.bold(`\n  Memory composed into ${memory.size} skill${memory.size === 1 ? '' : 's'}:\n`));
@@ -2411,7 +2341,6 @@ async function memoryList(cwd) {
   console.log(chalk.dim(`\n  personal → ${MEMORY_DIR}`));
   console.log(chalk.dim(`  project  → ${projectMemoryDir(cwd)}`));
   reportLine();
-  pendingBlock();
   console.log(chalk.dim('\n  Project memories override personal ones. Re-run the installer to recompose.\n'));
 }
 
@@ -2621,11 +2550,11 @@ program
 
 const memoryCmd = program
   .command('memory')
-  .description('Show what gspec remembers: composed into your skills (personal + project), plus anything pending review');
+  .description('Show what gspec remembers: composed into your skills (personal + project)');
 
 memoryCmd
   .command('list', { isDefault: true })
-  .description('List memory in ~/.gspec/memory/ (personal) and .gspec/memory/ (project), plus anything pending')
+  .description('List memory in ~/.gspec/memory/ (personal) and .gspec/memory/ (project)')
   .action(async () => {
     await memoryList(process.cwd());
   });

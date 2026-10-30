@@ -12,10 +12,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { V2_COMMANDS, V2_SKILLS, MEMORY_SKILLS } from '../scripts/manifest.js';
+import { V2_COMMANDS, V2_SKILLS } from '../scripts/manifest.js';
 import { REPO_ROOT } from './helpers.mjs';
 
-const skillNames = new Set([...V2_SKILLS, ...MEMORY_SKILLS].map((s) => s.name));
+const skillNames = new Set(V2_SKILLS.map((s) => s.name));
 
 const referencedSkills = (src) =>
   [...new Set([...src.matchAll(/`(gspec-[a-z-]+)`/g)].map((m) => m[1]))].filter((n) => skillNames.has(n));

@@ -6,7 +6,7 @@ spec-version: v2
 
 ## Overview
 
-A dedicated page explaining gspec's v2 architecture — the agent-team model that makes everything else possible. It presents the five layers (skills, agents, commands, runtime, hooks) around a single organizing idea, then explains the two properties that most set gspec apart: the producer ≠ checker quality model and the self-improving learning loop.
+A dedicated page explaining gspec's v2 architecture — the agent-team model that makes everything else possible. It presents the five layers (skills, agents, commands, runtime, hooks) around a single organizing idea, then explains the two properties that most set gspec apart: the producer ≠ checker quality model and teachable agents.
 
 Where the build page shows *what* the autonomous build does, this page explains *why* it produces trustworthy output. It gives technically-minded evaluators the mental model behind the product and a reason to believe the quality claims.
 
@@ -16,7 +16,7 @@ Where the build page shows *what* the autonomous build does, this page explains 
 
 1. **Understanding the model** — A visitor learns the five layers and how they relate, via the "brains / hands / conversations / driver / floors" framing.
 2. **Believing the quality claims** — A skeptical reader learns that producers never grade their own work and that gates are backed by deterministic checks.
-3. **Grasping the learning loop** — A visitor sees how corrections become durable skill improvements rather than one-off fixes.
+3. **Grasping teaching** — A visitor sees how a correction they teach becomes a durable skill improvement rather than a one-off fix.
 
 ## Scope
 
@@ -26,9 +26,9 @@ Where the build page shows *what* the autonomous build does, this page explains 
 - A hero stating the organizing principle in plain language
 - A per-layer breakdown with a short description and a representative count for each layer
 - A producer ≠ checker section explaining the quality model
-- A learning-loop section (capture → distill → improve)
+- A teaching section (teach → review → improve)
 - A "Claude-first, degrade gracefully" note linking to platform capabilities
-- Inline caveats on any capability whose support is not uniform across harnesses (the runtime/autonomous build, the enforcement hooks, the hard-enforcement side of the quality gate, and the learning loop), each linking to the platform capabilities page
+- Inline caveats on any capability whose support is not uniform across harnesses (the runtime/autonomous build, the enforcement hooks, and the hard-enforcement side of the quality gate), each linking to the platform capabilities page
 - Cross-links to the build page and platform capabilities
 - Navigation entries (primary nav + footer)
 
@@ -41,7 +41,7 @@ Where the build page shows *what* the autonomous build does, this page explains 
 ### Deferred
 
 - An interactive architecture diagram
-- A dedicated learning-loop deep-dive page
+- A dedicated teaching deep-dive page
 
 ## Capabilities
 
@@ -62,16 +62,16 @@ Where the build page shows *what* the autonomous build does, this page explains 
   - Communicates that the writing agent is never the approving agent
   - Notes that validators are read-only and that gates are backed by deterministic checks
 
-### Learning Loop
+### Teaching
 
 - [x] **P1**: Page explains how gspec improves over time
-  - Presents the capture → distill → improve flow
+  - Presents the teach → review → improve flow
   - Frames corrections as durable skill improvements
 
 ### Harness-Support Caveats
 
 - [x] **P0**: Capabilities that are not uniform across harnesses are caveated in place
-  - Each harness-limited capability (runtime/autonomous build, enforcement hooks, the hard-enforcement side of the quality gate, and the learning loop) carries a visible caveat rather than implying uniform support
+  - Each harness-limited capability (runtime/autonomous build, enforcement hooks, and the hard-enforcement side of the quality gate) carries a visible caveat rather than implying uniform support
   - Every caveat links to the platform capabilities page for the harness-by-harness detail
   - Caveats are visually consistent and do not overwhelm the primary explanation
 
@@ -85,7 +85,7 @@ Where the build page shows *what* the autonomous build does, this page explains 
 ### Responsive Layout
 
 - [x] **P1**: The page renders correctly across screen sizes
-  - Layer breakdown, quality-model grid, and learning-loop flow adapt without horizontal overflow
+  - Layer breakdown, quality-model grid, and teaching flow adapt without horizontal overflow
 
 ## Dependencies
 
