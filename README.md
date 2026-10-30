@@ -307,6 +307,36 @@ That's it. The commands are immediately available in your AI tool.
 
 If you have saved specs in `~/.gspec/` from a previous project, the installer will offer to seed your new project from them — either from a playbook or by picking individual specs.
 
+## Configuration
+
+Install writes `.gspec/config.json` with **every setting spelled out at its default**. Edit a value to change how gspec behaves in this project — there's no command to learn. Re-installing or upgrading only adds settings that are missing; a value you changed is never overwritten.
+
+```json
+{
+  "git": { "checkpoint": "commit", "commitPerPhase": false, "branch": "none", "commitPrefix": "chore:" },
+  "qa": { "enabled": true, "retries": 1 },
+  "build": { "engine": null, "scope": null, "parallel": "auto", "research": false, "review": true }
+}
+```
+
+| Setting | Default | What it does |
+|---|---|---|
+| `git.checkpoint` | `commit` | Before `/gspec-implement` writes code: `commit` a dirty tree, `ask` first, or `off` |
+| `git.commitPerPhase` | `false` | Commit after each implement phase that passes its gate (and, in `gspec build`, after each stage and wave). Only the files gspec changed are committed — anything already dirty when the run started stays out |
+| `git.branch` | `none` | `new` starts implementation on its own branch: `feat/<slug>`, `chore/<slug>`, or `gspec/build-<idea>` |
+| `git.commitPrefix` | `chore:` | Starts every commit message gspec writes |
+| `qa.enabled` | `true` | `false` skips the validator gates in every command and in `gspec build` |
+| `qa.retries` | `1` | `gspec build`: self-heal revisions per QA gate before it pauses |
+| `build.engine` | `null` | `claude` · `codex` · `pi` — `null` uses the install target |
+| `build.scope` | `null` | `small` · `standard` · `large` — `null` lets the intake decide |
+| `build.parallel` | `auto` | `off` keeps the build's waves serial |
+| `build.research` | `false` | `true` runs competitive research in every build |
+| `build.review` | `true` | `false` skips the spec-review pause before implementation |
+
+- **Precedence:** a command-line flag › `.gspec/config.json` › `~/.gspec/config.json` › the default. Put personal defaults in the home file.
+- **A bad value never stops work:** gspec warns, names the file and key, and uses the default.
+- The same file also holds `models` (per-agent models, below) and `notify`.
+
 ## Save & Restore
 
 Once you've built specs you're happy with, save them for reuse across projects:

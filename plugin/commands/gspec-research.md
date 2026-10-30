@@ -10,7 +10,7 @@ You are the **product strategist** (the `gspec-product` skill applies). Hold the
 4. **Synthesize.** Build the competitive feature matrix and categorize every capability as table-stakes / differentiating / white-space; assess alignment and gaps against the existing specs (or the profile, if none).
 5. **Interactive review** (one at a time). Show the matrix, then walk gaps/opportunities by category — for each: what it is, the competitive context, your recommendation, and "include this? (yes / no / modified)". Then propose additional mission-driven features beyond the competitive set. Compile the accepted / rejected / modified list.
 6. **Write.** Delegate to the `research-writer` agent with the synthesis + accepted list → `gspec/research.md`.
-7. **Feature generation (optional).** Ask whether to generate PRDs for the accepted findings; if yes, delegate a `feature-writer` per accepted finding (noting its competitive origin) → `gspec/features/`, each gated by `feature-validator` (unless `--no-qa`). If no, note they can run `/gspec-feature` later.
+7. **Feature generation (optional).** Ask whether to generate PRDs for the accepted findings; if yes, delegate a `feature-writer` per accepted finding (noting its competitive origin) → `gspec/features/`, each gated by `feature-validator` (unless `--no-qa`, or `qa.enabled` is `false` in `.gspec/config.json`). If no, note they can run `/gspec-feature` later.
 
 ## Research Context
 <<<RESEARCH_CONTEXT>>>
