@@ -5,6 +5,31 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.4.0',
+    date: 'October 29, 2026',
+    title: 'Agents learn when you teach them, not on their own',
+    summary: 'Agents used to record a memory to <code>.gspec/memory/pending/</code> whenever a QA gate failed them, for later review with <code>/gspec-memorize</code>. In practice that queue filled with noise, and every revision prompt paid for the instruction to record it. Automatic recording is removed. <code>/gspec-teach</code> stays as the way agents learn: you state a correction, the memorizer drafts the smallest edit, and you approve it.',
+    changes: [
+      {
+        type: 'removed',
+        description: '<strong>Automatic memory recording and <code>/gspec-memorize</code>.</strong> Agents no longer write to <code>.gspec/memory/pending/</code>. The <code>gspec-memory</code> convention skill is no longer preloaded into agents, and QA revision and repair prompts no longer tell agents to record a memory. The <code>/gspec-memorize</code> command is gone on every target.',
+      },
+      {
+        type: 'removed',
+        description: '<strong>The <code>gspec-memory-address-tag</code> and <code>gspec-subagent-capture</code> hooks</strong> (Claude Code). These guarded pending writes and logged failing verdicts to <code>.gspec/agent-runs/feedback-log.md</code> for <code>/gspec-memorize</code>. The migration from Claude\'s old per-agent memory silos is removed with them.',
+      },
+      {
+        type: 'changed',
+        description: '<strong><code>/gspec-teach</code> is how agents learn.</strong> The memorizer now works only from a correction you state. Project and personal memories in <code>.gspec/memory/</code> and <code>~/.gspec/memory/</code> are still composed into skills on every install, and <code>gspec memory</code>, <code>apply</code>, <code>report</code> and <code>filed</code> are unchanged apart from no longer listing pending memories. The build\'s end-of-run <em>Recorded this run</em> report now lists only QA feedback.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Reinstalling removes what this version no longer ships.</strong> The installer deletes the old <code>gspec-memorize</code> command, the <code>gspec-memory</code> skill and the two hook files on every target. It also prunes their <code>.claude/settings.json</code> entries, including on a hook event gspec no longer uses, while keeping your own hooks.',
+      },
+    ],
+    migration: 'Run <code>npx gspec -t &lt;target&gt;</code> to reinstall. Your committed memories are untouched and still apply. If <code>.gspec/memory/pending/</code> exists, the installer says so once and deletes nothing. Teach anything there still worth keeping with <code>/gspec-teach</code>, then remove the directory. Runs started on 3.3.0 resume normally.',
+  },
+  {
     version: '3.3.0',
     date: 'October 9, 2026',
     title: 'Safer unattended builds and installs',

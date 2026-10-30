@@ -1,4 +1,4 @@
-// The memory store, both tiers.
+// The memory store /gspec-teach commits to.
 //
 // A committed memory used to be written into `.claude/skills/<name>/SKILL.md`,
 // which the next install overwrites — while the review step deleted the pending
@@ -8,10 +8,9 @@
 // is composed back in on every install, so an upgrade is idempotent rather than
 // destructive.
 //
-// Recording then joined it: `.gspec/memory/pending/` replaced the Claude-only
-// per-agent memory silo, so the loop runs on every engine. The second half of
-// this file pins the property that keeps the two tiers honest — pending is a
-// SUBDIRECTORY the composer never reads, so nothing reaches a skill unreviewed.
+// Agents used to record memories on their own into `.gspec/memory/pending/`,
+// reviewed by /gspec-memorize. 3.4.0 removed that; the tail of this file pins
+// that an upgrade retires it cleanly and leaves the user's files alone.
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -183,18 +182,15 @@ test('an oversized report is truncated to a usable url, and says so', async (t) 
   assert.match(r.output, /truncated/, 'a silently shortened report is worse than one that admits it');
 });
 
-// --- The pending tier ---
-//
-// Pending is a SUBDIRECTORY of the memory store, not a sibling file, precisely so
-// the composer cannot reach it. An unreviewed memory composing into a skill would
-// be auto-committing — the exact thing producer≠checker exists to prevent.
+// --- Retired: automatic recording (removed in 3.4.0) ---
 
 const seedPending = async (dir, agent, file, body) => {
   await mkdir(join(dir, '.gspec', 'memory', 'pending', agent), { recursive: true });
   await writeFile(join(dir, '.gspec', 'memory', 'pending', agent, file), body, 'utf-8');
 };
 
-test('a pending memory is never composed into a skill', async (t) => {
+// A leftover pending/ is the user's data: never composed, never deleted.
+test('a leftover pending memory is never composed into a skill, and is kept', async (t) => {
   const dir = await makeProject();
   t.after(() => cleanup(dir));
   await install(dir);
@@ -203,7 +199,8 @@ test('a pending memory is never composed into a skill', async (t) => {
   await install(dir);
 
   const skill = await readFile(join(dir, SKILL), 'utf-8');
-  assert.doesNotMatch(skill, /NEVER_COMPOSE_PENDING/, 'committing is the reviewed path, not a directory scan');
+  assert.doesNotMatch(skill, /NEVER_COMPOSE_PENDING/);
+  await readFile(join(dir, '.gspec', 'memory', 'pending', 'practices-writer', 'auth--never-compose.md'), 'utf-8');
 });
 
 // A stray `pending.md` beside the real stores would otherwise be read as a memory
@@ -221,66 +218,82 @@ test('a stray pending.md is not composed either', async (t) => {
   assert.doesNotMatch(r.output, /"pending\.md" matches no installed skill/, 'skipped outright, not reported as an orphan');
 });
 
-test('memory list surfaces pending memories separately from composed ones', async (t) => {
+test('a leftover pending/ is named on the next install, then not again', async (t) => {
   const dir = await makeProject();
   t.after(() => cleanup(dir));
   await install(dir);
-  await seedPending(dir, 'practices-writer', 'auth--require-a-readme.md',
-    '---\ntarget: gspec-practices\nlayer: skill\n---\n\n## Always require a root README\nBody.\n');
+  await seedPending(dir, 'practices-writer', 'x.md', '## Something\nBody.\n');
 
-  const r = await runCli(['memory'], dir);
-  assert.match(r.output, /1 pending memory/);
-  assert.match(r.output, /practices-writer/);
-  assert.match(r.output, /Always require a root README/, 'the heading is what a human reads, not the filename');
-  assert.match(r.output, /awaiting review/, 'pending changes nothing until committed — say so');
+  const first = await install(dir);
+  assert.match(first.output, /is no longer read/);
+  assert.match(first.output, /Nothing was deleted/);
+  const second = await install(dir);
+  assert.doesNotMatch(second.output, /is no longer read/, 'one notice, not one per install');
 });
 
-// Capture moved off the Claude-only memory silo so the loop runs everywhere. A
-// target that INLINES skills rather than preloading them resolves them by name,
-// and gspec-memory lives in its own catalog — so it is exactly the thing a
-// V2_SKILLS-only lookup drops silently, leaving those engines with no loop at all.
-test('a non-preloading target inlines the capture convention into its writers', async (t) => {
+test('no installed agent is told to record memories', async (t) => {
   const dir = await makeProject();
   t.after(() => cleanup(dir));
+  await install(dir);
   await runCli(['-t', 'opencode', '--models', 'none'], dir, {}, 'y\n');
 
-  const agent = await readFile(join(dir, '.opencode', 'agent', 'practices-writer.md'), 'utf-8');
-  assert.match(agent, /gspec-memory/, 'the convention must be inlined, not dropped');
-  assert.match(agent, /\.gspec\/memory\/pending\//, 'and it must name where a memory goes');
-
-  const validator = await readFile(join(dir, '.opencode', 'agent', 'practices-validator.md'), 'utf-8');
-  assert.doesNotMatch(validator, /## gspec-memory/, 'a read-only agent has no Write tool and so cannot record');
+  for (const agent of [join('.claude', 'agents', 'practices-writer.md'), join('.opencode', 'agent', 'practices-writer.md')]) {
+    const body = await readFile(join(dir, agent), 'utf-8');
+    assert.doesNotMatch(body, /gspec-memory/, agent);
+    assert.doesNotMatch(body, /\.gspec\/memory\/pending\//, agent);
+  }
 });
 
-// --- Migration off the pre-3.7 per-agent memory silos ---
-
-test('a pre-3.7 memory silo is swept into pending, one file per memory', async (t) => {
+// The installer only overwrites, so an upgraded project would otherwise keep a
+// /gspec-memorize command and the two hooks pointing at a removed feature.
+test('an upgrade removes the retired command, skill and hooks', async (t) => {
   const dir = await makeProject();
   t.after(() => cleanup(dir));
   await install(dir);
-  const silo = join(dir, '.claude', 'agent-memory', 'practices-writer');
-  await mkdir(silo, { recursive: true });
-  await writeFile(join(silo, 'MEMORY.md'),
-    '# practices-writer\n\n## Always require a root README\n- target: gspec-practices\n- layer: skill\n\n## Pin the package manager\n- target: gspec-architect\n- layer: skill\n', 'utf-8');
+  const stale = [
+    join('.claude', 'commands', 'gspec-memorize.md'),
+    join('.claude', 'skills', 'gspec-memory', 'SKILL.md'),
+    join('.claude', 'hooks', 'gspec-memory-address-tag.mjs'),
+    join('.claude', 'hooks', 'gspec-subagent-capture.mjs'),
+  ];
+  for (const rel of stale) {
+    await mkdir(join(dir, rel, '..'), { recursive: true });
+    await writeFile(join(dir, rel), 'old\n', 'utf-8');
+  }
+  const settingsPath = join(dir, '.claude', 'settings.json');
+  const settings = JSON.parse(await readFile(settingsPath, 'utf-8'));
+  settings.hooks.SubagentStop = [
+    { matcher: '*', hooks: [{ type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/gspec-subagent-capture.mjs"' }] },
+  ];
+  await writeFile(settingsPath, JSON.stringify(settings), 'utf-8');
 
-  const r = await install(dir);
-  assert.match(r.output, /Migrated 2 memories/);
+  await install(dir);
 
-  const pendingDir = join(dir, '.gspec', 'memory', 'pending', 'practices-writer');
-  const files = (await readdir(pendingDir)).sort();
-  assert.equal(files.length, 2, 'one file per memory, not one file per silo');
-  const first = await readFile(join(pendingDir, files[0]), 'utf-8');
-  assert.match(first, /## Always require a root README/);
-  assert.match(first, /target: gspec-practices/, 'the old address tag carries across verbatim');
-
-  // Nothing destroyed, and the rename is what stops a second sweep.
-  await assert.rejects(readFile(join(silo, 'MEMORY.md'), 'utf-8'), /ENOENT/);
-  assert.match(await readFile(join(silo, 'MEMORY.md.migrated'), 'utf-8'), /Always require a root README/);
-
-  const again = await install(dir);
-  assert.doesNotMatch(again.output, /Migrated \d+ memor/, 're-running the installer is a no-op');
-  assert.equal((await readdir(pendingDir)).length, 2, 'and never duplicates what it already swept');
+  for (const rel of stale) {
+    await assert.rejects(readFile(join(dir, rel), 'utf-8'), { code: 'ENOENT' }, rel);
+  }
+  const after = JSON.parse(await readFile(settingsPath, 'utf-8'));
+  assert.equal(after.hooks.SubagentStop, undefined, 'the retired hook entry is pruned, not left dangling');
+  assert.ok(after.hooks.PreToolUse?.length, 'live gspec hooks are still registered');
 });
+
+// A user's own hook on an event gspec no longer uses must survive the prune.
+test('a user hook on an event gspec stopped using is kept', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  await install(dir);
+  const settingsPath = join(dir, '.claude', 'settings.json');
+  const settings = JSON.parse(await readFile(settingsPath, 'utf-8'));
+  settings.hooks.SubagentStop = [{ matcher: '*', hooks: [{ type: 'command', command: 'echo mine' }] }];
+  await writeFile(settingsPath, JSON.stringify(settings), 'utf-8');
+
+  await install(dir);
+
+  const after = JSON.parse(await readFile(settingsPath, 'utf-8'));
+  assert.equal(after.hooks.SubagentStop?.[0]?.hooks?.[0]?.command, 'echo mine');
+});
+
+// --- Migration: the pre-3.7 store name ---
 
 // The store's own rename. A project sitting on the old path would otherwise stop
 // composing silently — the loader looks only at `memory/`, so nothing would error.
@@ -314,19 +327,6 @@ test('a lessons/ store beside an existing memory/ store is left alone and named'
   const skill = await readFile(join(dir, SKILL), 'utf-8');
   assert.match(skill, /KEPT/);
   assert.doesNotMatch(skill, /RESURRECTED/, 'only the memory/ store is read');
-});
-
-test('migrated memories are still not composed into a skill', async (t) => {
-  const dir = await makeProject();
-  t.after(() => cleanup(dir));
-  await install(dir);
-  const silo = join(dir, '.claude', 'agent-memory-local', 'practices-writer');
-  await mkdir(silo, { recursive: true });
-  await writeFile(join(silo, 'MEMORY.md'), '## Migrated memory\n- target: gspec-practices\n- layer: skill\nNEVER_COMPOSE_MIGRATED\n', 'utf-8');
-  await install(dir);
-
-  const skill = await readFile(join(dir, SKILL), 'utf-8');
-  assert.doesNotMatch(skill, /NEVER_COMPOSE_MIGRATED/, 'a migrated memory lands in the review queue, not in a skill');
 });
 
 test('memory list names each skill and both store paths', async (t) => {

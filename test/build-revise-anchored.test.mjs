@@ -126,7 +126,7 @@ test('the prompt inlines the anchored section and not the whole document', () =>
   // The hard-won rules survive verbatim.
   assert.match(prompt, /Precedence, when two of these rules pull against each other/);
   assert.match(prompt, /~10%/);
-  assert.match(prompt, /gspec-memory/);
+  assert.doesNotMatch(prompt, /gspec-memory/, 'agents no longer record memories');
   assert.ok(prompt.indexOf('Precedence') < prompt.indexOf('~10%'));
 });
 

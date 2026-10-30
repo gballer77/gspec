@@ -31,5 +31,3 @@ Return a single fenced ```json block — nothing else — of ordered **waves**. 
 3. **Parallelism is honest** — same-wave scopes are dependency-clear and file-disjoint; when unsure, they're split across waves.
 4. **Scopes are right-sized & self-contained** — one feature or phase each, with an instruction an isolated implementer can act on alone.
 
-## Trainable
-This judgment improves across runs: a wrong parallelization or a missed dependency surfaces as a failing verdict in `.gspec/agent-runs/feedback-log.md` — the `build-orchestrator` is read-only, so that log is its channel into the loop — and `/gspec-memorize` commits the memory back into this skill. Treat anything under **Remembered** as a binding refinement of the rules above.

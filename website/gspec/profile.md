@@ -15,7 +15,7 @@ spec-version: v2
 
 ### Mission Statement
 
-gspec gives development teams a structured way to define and maintain product specifications — profile, style, stack, practices, features, and architecture — so that AI coding tools have the context they need to produce accurate, consistent output. In 2.0 it goes further: an agent team executes that workflow, with an autonomous build that can take an idea to working code, quality gates that catch their own mistakes, and a learning loop that improves future runs. It solves the twin problems of AI tools making uninformed assumptions and specifications drifting out of sync with code.
+gspec gives development teams a structured way to define and maintain product specifications — profile, style, stack, practices, features, and architecture — so that AI coding tools have the context they need to produce accurate, consistent output. In 2.0 it goes further: an agent team executes that workflow, with an autonomous build that can take an idea to working code, quality gates that catch their own mistakes, and agents you can teach so future runs improve. It solves the twin problems of AI tools making uninformed assumptions and specifications drifting out of sync with code.
 
 ### Vision Statement
 
@@ -58,7 +58,7 @@ gspec turns scattered product knowledge into structured, version-controlled Mark
 3. **Structured product thinking** — Role-based commands (Business Strategist, UI Designer, Architect, etc.) guide teams through comprehensive product definition.
 4. **Autonomous build** — A deterministic runtime can take an idea and drive the whole workflow — specs, plan, and code — as a resumable, self-healing run.
 5. **Quality that's enforced, not assumed** — Producer ≠ checker: independent validators gate every stage, backed by a generated build-and-test script and deterministic enforcement hooks.
-6. **Gets better over time** — A learning loop captures corrections and distills them back into the agents' skills, so future runs start smarter.
+6. **Gets better over time** — Corrections you teach are distilled back into the agents' skills, so future runs start smarter.
 7. **Platform-agnostic** — Works with Claude Code, Cursor, Codex, Antigravity, Open Code, and Pi from a single source tree.
 8. **Zero lock-in** — Specs are plain Markdown files in your repo. No proprietary formats, no hosted service, no account required.
 
@@ -147,7 +147,7 @@ For small development teams using AI coding tools, gspec is the open-source spec
 
 - **Homepage headline:** "Living specs. Autonomous builds."
 - **Subheadline:** "gspec gives your AI coding tools the structured product context they need — then an agent team that can take an idea all the way to working code."
-- **About us summary:** gspec is an open-source CLI tool and agent-team framework that installs into AI coding tools like Claude Code, Cursor, Codex, Antigravity, Open Code, and Pi. It helps teams define their product once, keep that definition current as the codebase evolves, and — on supported harnesses — autonomously build from it with quality gates and a learning loop.
+- **About us summary:** gspec is an open-source CLI tool and agent-team framework that installs into AI coding tools like Claude Code, Cursor, Codex, Antigravity, Open Code, and Pi. It helps teams define their product once, keep that definition current as the codebase evolves, and — on supported harnesses — autonomously build from it with quality gates and agents you can teach.
 
 ### Social Media Presence
 
