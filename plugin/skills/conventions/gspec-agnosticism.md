@@ -11,7 +11,7 @@ Identity leaks through more than prose — sweep every one of these sites:
 
 Why: it makes specs portable (a stack or style can be reused across projects) and keeps each spec's concern clean.
 
-This applies to stack, practices, style, architecture, research, and feature specs. It does **not** apply to `profile.md`, whose entire job is product identity.
+This applies to stack, practices, style, architecture, research, and feature specs. It does **not** apply to `profile.md`, whose entire job is product identity, nor to a chore (`gspec/chores/<slug>/`), which is a one-off technical record of work on this codebase, not a portable spec.
 
 ## Technology-agnosticism (feature specs / PRDs only)
 Feature PRDs describe *what* the product does, not *how* it's built — so they avoid specific technology names. Say "a data store", "an authentication mechanism", "a background job", not "PostgreSQL", "Auth0", "a Redis queue". Technology choices live in `stack.md`; structure lives in `architecture.md`.

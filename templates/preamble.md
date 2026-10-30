@@ -16,6 +16,7 @@ Use this mapping whenever the user's intent matches:
 - **Building an entire product from an idea, end-to-end and mostly unattended** — run `gspec-build` (`gspec build "<idea>"`), which drives profile → stack → practices → style → features → architecture → plan → implementation, gating each spec through QA and pausing once before implementation for a human spec review (skip with `--no-review`). Best for greenfield "build me X" requests; it generates only the specs that are missing.
 - **Defining the product, users, or vision** — invoke `gspec-profile`.
 - **Planning or writing a new feature / PRD** — invoke `gspec-feature`.
+- **Planning a large refactor, migration, module extraction, or other sizeable change to *how* the code is built (not *what* it does)** — invoke `gspec-chore`. It writes a one-off chore (`gspec/chores/<slug>/`) with the specs it will affect and an ordered plan; run it with `gspec-implement chore <slug>`. Chores are records, not living specs — never update a done one.
 - **Producing an ordered plan from a feature PRD (with explicit dependencies and parallel-execution markers)** — invoke `gspec-plan`. Run before `gspec-implement` for non-trivial features; when a plan file exists, `gspec-implement` skips its own plan-mode step.
 - **Choosing or revising the tech stack** — invoke `gspec-stack`.
 - **Defining visual design, tokens, or theme** — invoke `gspec-style`.

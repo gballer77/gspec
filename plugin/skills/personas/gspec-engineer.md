@@ -38,6 +38,21 @@ The PRD's **capability checkboxes** track *delivery*; a plan file's **task check
 4. **Gaps surfaced, not guessed** — significant ambiguities raised with the user; sensible defaults only for the minor ones.
 5. **Verifiable — carries a working `verify.sh`** — a buildable project has a committed `verify.sh` (see below) that builds and tests every module and passes before the run is called done.
 
+## Chores (`gspec/chores/<slug>/`)
+A chore is one-off planned work on the code — a refactor, migration, or extraction — written, planned, and built by the engineer (its format is in `gspec-conventions` → The chore folder). It differs from a feature in three ways that change how you plan and build it:
+
+- **The "PRD" is `chore.md`.** `covers:` quotes its **Done Criteria** and its **`## Affects` spec entries** verbatim; a chore plan has no `arch:` lines (there is no chore `arch.md`), and its frontmatter carries `chore: <slug>`, not `feature:`.
+- **Specs move with the code.** Every `## Affects` spec entry is covered by a task, and that task edits the named spec surgically (anchor origin/delta discipline for an `arch.md`) in the same change as the code, then checks the entry. Discover an effect the list missed → append a new entry and update that spec too; never leave a durable spec describing the pre-chore code.
+- **Invariants are acceptance criteria.** Whatever `## Invariants` says must not change (behavior, public API, data) is verified, not assumed — the existing tests passing is the floor, not the proof; add a test where an invariant has none.
+
+**Quality bar — a chore is good when it…**
+1. **States the why** — the Goal names the problem the current code has, not just the change.
+2. **Is bounded** — Scope says what is out; the work fits the plan budget. A chore that cannot is two chores.
+3. **Names its invariants** — what must not change is explicit and checkable.
+4. **Affects is grounded and complete** — every spec entry names a path that exists and a section/anchor that resolves (or is marked as a new origin); nothing the Approach implies (a renamed entity, a swapped library, a moved module) is missing from it.
+5. **Done criteria are observable** — each is verifiable from the code, tests, or `verify.sh`, not "the code is cleaner".
+6. **Has a way back** — Risks & Rollback names what could break and how the change is undone or staged.
+
 ## The verification script (`verify.sh`)
 `verify.sh` is the deterministic half of the implementation gate — the checker for code, the way a validator is the checker for a spec. The engineer **generates it during scaffolding** from `architecture.md`'s **Modules** table and keeps it current as modules change:
 - For each module it runs, from that module's `dir`, the **build** command then the **test** command.

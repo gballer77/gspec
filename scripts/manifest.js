@@ -215,7 +215,7 @@ export const V2_AGENTS = [
   {
     name: 'plan-decomposer',
     source: 'agents/plan-decomposer.md',
-    description: 'Decompose a feature PRD into an ordered, dependency-aware plan ([P] markers, deps, covers, arch anchors), acting as the engineer. Writes gspec/features/<slug>/tasks.md; delegated by /gspec-plan.',
+    description: 'Decompose a feature PRD (or a chore) into an ordered, dependency-aware plan ([P] markers, deps, covers, arch anchors), acting as the engineer. Writes gspec/features/<slug>/tasks.md or gspec/chores/<slug>/tasks.md; delegated by /gspec-plan and /gspec-chore.',
     skills: ['gspec-engineer', 'gspec-conventions'],
     tools: 'Read, Write, Edit, Glob, Grep',
     model: 'opus',
@@ -223,7 +223,24 @@ export const V2_AGENTS = [
   {
     name: 'plan-validator',
     source: 'agents/plan-validator.md',
-    description: 'Validate a feature plan against the engineer plan quality bar (coverage, acyclic deps, safe [P], stable IDs). Read-only; returns a structured verdict.',
+    description: 'Validate a feature or chore plan against the engineer plan quality bar (coverage — incl. every chore Affects entry — acyclic deps, safe [P], stable IDs). Read-only; returns a structured verdict.',
+    skills: ['gspec-qa', 'gspec-engineer', 'gspec-conventions'],
+    tools: 'Read, Grep, Glob',
+    model: 'opus',
+  },
+  {
+    name: 'chore-writer',
+    source: 'agents/chore-writer.md',
+    description: 'Write one gspec/chores/<slug>/chore.md (a refactor/migration planned ahead: goal, scope, approach, invariants, Affects, done criteria) from a resolved brief, acting as the engineer; grounds the Affects list in the specs on disk. Delegated by /gspec-chore; returns a summary.',
+    // Technical by nature — no gspec-agnosticism. Reads code to ground Affects.
+    skills: ['gspec-engineer', 'gspec-conventions'],
+    tools: 'Read, Write, Edit, Glob, Grep',
+    model: 'opus',
+  },
+  {
+    name: 'chore-validator',
+    source: 'agents/chore-validator.md',
+    description: 'Validate a chore (gspec/chores/<slug>/chore.md) against the engineer chore quality bar — bounded scope, checkable invariants, observable done criteria, and an Affects list that resolves on disk and misses nothing. Read-only; returns a structured verdict.',
     skills: ['gspec-qa', 'gspec-engineer', 'gspec-conventions'],
     tools: 'Read, Grep, Glob',
     model: 'opus',
@@ -231,7 +248,7 @@ export const V2_AGENTS = [
   {
     name: 'implementer',
     source: 'agents/implementer.md',
-    description: 'Implement an assigned scope (one PRD / a phase / all) into working code, acting as the engineer: follow the specs, write and run tests, flip checkboxes. Delegated by /gspec-implement and the build; returns a summary.',
+    description: 'Implement an assigned scope (one PRD / a chore / a phase / all) into working code, acting as the engineer: follow the specs, write and run tests, flip checkboxes; for a chore, update the specs its Affects list names alongside the code. Delegated by /gspec-implement and the build; returns a summary.',
     // One agent, scope is a runtime parameter (not split per-type). The only agent with Bash.
     skills: ['gspec-engineer', 'gspec-practices', 'gspec-conventions'],
     tools: 'Read, Write, Edit, Glob, Grep, Bash',
@@ -249,7 +266,7 @@ export const V2_AGENTS = [
   {
     name: 'implementation-validator',
     source: 'agents/implementation-validator.md',
-    description: 'The producer≠checker gate for code: run verify.sh (build+test) and judge in-scope acceptance criteria + Definition of Done, returning a structured verdict. Read-only; delegated by /gspec-implement and the build implement gate.',
+    description: 'The producer≠checker gate for code: run verify.sh (build+test) and judge in-scope acceptance criteria + Definition of Done (for a chore: done criteria, invariants, and that every checked Affects spec was actually changed since base-sha), returning a structured verdict. Read-only; delegated by /gspec-implement and the build implement gate.',
     // Reads code + runs verify.sh, so it needs Bash — but never Write/Edit (it judges, doesn't fix).
     skills: ['gspec-qa', 'gspec-engineer', 'gspec-practices'],
     tools: 'Read, Grep, Glob, Bash',
@@ -357,14 +374,19 @@ export const V2_COMMANDS = [
     description: 'Define or update gspec/architecture.md — structure, data model, API, components. Resolves technical gaps, delegates architecture-writer, gates on architecture-validator (--no-qa skips). TRIGGER to design codebase structure before building.',
   },
   {
+    name: 'gspec-chore',
+    source: 'commands/gspec-chore.md',
+    description: 'Plan a chore — a large refactor or migration planned ahead — as gspec/chores/<slug>/: chore.md (incl. the specs it Affects) + tasks.md. One-off, never kept current. QA-gated (--no-qa skips). TRIGGER to plan a refactor, migration, or big cleanup.',
+  },
+  {
     name: 'gspec-plan',
     source: 'commands/gspec-plan.md',
-    description: 'Decompose a feature PRD into an ordered plan (gspec/features/<slug>/tasks.md) with parallel markers. Delegates plan-decomposer, plan-mode approval, gates on plan-validator (--no-qa skips). TRIGGER to sequence work or build a plan from a PRD.',
+    description: 'Decompose a feature PRD (or re-plan a chore) into an ordered plan (<slug>/tasks.md) with parallel markers. Delegates plan-decomposer, plan-mode approval, gates on plan-validator (--no-qa skips). TRIGGER to sequence work or build a plan from a PRD.',
   },
   {
     name: 'gspec-implement',
     source: 'commands/gspec-implement.md',
-    description: 'Implement software defined by gspec specs — phased, tested, checkpointed. Assesses progress, plans build order (or reuses plan files), delegates implementer per phase. STRONGLY TRIGGER to build, implement, code, scaffold, or ship specced work.',
+    description: 'Implement software defined by gspec specs (or a named chore) — phased, tested, checkpointed. Plans build order (or reuses plan files), delegates implementer per phase. STRONGLY TRIGGER to build, implement, code, scaffold, or ship specced work.',
   },
   {
     name: 'gspec-audit',
@@ -419,6 +441,7 @@ export const DEGRADE_CAPABILITIES = [
   // sub-agents there is nowhere to fan out to, so all three writers and all
   // three checkers compose into the single /gspec-plan document.
   { command: 'gspec-plan',      produce: 'feature-architect',   check: ['feature-architecture-validator', 'feature-design-validator', 'plan-validator'], also: ['feature-designer', 'plan-decomposer'] },
+  { command: 'gspec-chore',     produce: 'chore-writer', check: ['chore-validator', 'plan-validator'], also: 'plan-decomposer' },
   { command: 'gspec-implement', produce: 'implementer', check: 'implementation-validator', alsoSkills: ['gspec-orchestrator'] },
   { command: 'gspec-analyze',   produce: 'spec-cross-referencer' },
   { command: 'gspec-audit',     produce: 'codebase-inspector' },

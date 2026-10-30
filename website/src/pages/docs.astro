@@ -17,6 +17,7 @@ const sections = [
   { id: 'feature', label: 'feature', group: 'Specify' },
   { id: 'architect', label: 'architect', group: 'Architect' },
   { id: 'plan', label: 'plan', group: 'Plan' },
+  { id: 'chore', label: 'chore', group: 'Plan' },
   { id: 'analyze', label: 'analyze', group: 'Analyze' },
   { id: 'audit', label: 'audit', group: 'Analyze' },
   { id: 'build', label: 'build', group: 'Build' },
@@ -423,6 +424,39 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
       { name: 'architect', relation: 'Plan reads architecture for ordering signals (e.g., schema before API, API before UI)' },
       { name: 'implement', relation: 'When a plan file exists for every in-scope feature, implement skips plan mode and executes the plan directly — respecting deps and [P] markers — updating task checkboxes as work completes' },
       { name: 'analyze', relation: 'Analyze validates that every PRD capability is covered by at least one task and that no task references a missing capability' },
+    ]}
+  />
+
+  <!-- Chore -->
+  <CommandSection
+    id="chore"
+    name="chore"
+    role="Engineering Lead"
+    description="Plans a chore: a large refactor, a library or framework migration, a module extraction, or any sizeable change to how the code is built rather than what it does. A chore is planned ahead like a feature but is not a living spec. Once it is done, it stays as a frozen record and is never updated to track the code. Its Affects section names every durable spec the work will change (a feature's arch.md anchor, architecture.md, stack.md, and so on). The plan covers each one with a task, so the specs move with the code."
+    produces="A folder at gspec/chores/<slug>/ with chore.md (Goal, Scope, Approach, Invariants, Affects, Done Criteria, Risks & Rollback) and tasks.md (an ordered plan in the same grammar as a feature plan). chore.md's frontmatter tracks the lifecycle. status runs open → in-progress → done. /gspec-implement records base-sha, the commit before any chore code, and records completed when the chore closes."
+    invocation={'/gspec-chore "extract billing into its own module"\n# then:\n/gspec-implement chore extract-billing-module'}
+    questions={[
+      'What problem the current code has, and what is in and out of scope',
+      'The approach: big-bang or staged, and any ordering constraints',
+      'The invariants: behavior, public API or data that must not change',
+      'How you will know it is done, and how it is rolled back',
+    ]}
+    bestPractices={[
+      'Review the Affects list the writer produces. It is what keeps the durable specs honest after the code moves',
+      'Keep a chore inside one plan (≤ 25 tasks). Split larger work into sequenced chores',
+      'State invariants as things a test can check, not "nothing should break"',
+      'Run /gspec-audit after a chore closes as a backstop for any effect the Affects list missed',
+    ]}
+    pitfalls={[
+      'Using a chore for new user-visible capability. That is a feature, and it belongs in /gspec-feature',
+      'Editing a done chore to match later code. A done chore is a record, and audit, analyze and migrate all skip it',
+      'Batching every spec edit into a final "update docs" task. Each spec moves in the task that changes the code it describes',
+    ]}
+    related={[
+      { name: 'implement', relation: 'Runs the chore when you name it, records base-sha at its checkpoint, gates each phase, and marks the chore done when every task, Affects entry and done criterion is checked' },
+      { name: 'plan', relation: 'Chore reuses the plan decomposer and validator; /gspec-plan chore <slug> regenerates a chore plan' },
+      { name: 'audit', relation: 'Audit never reads chores, but it is the backstop for spec drift a chore left behind' },
+      { name: 'feature', relation: 'Features change what the product does and stay current; chores change how it is built and are one-off' },
     ]}
   />
 

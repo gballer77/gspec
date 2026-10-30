@@ -120,7 +120,7 @@ test('countNoun pluralizes fix as fixes', () => {
 test('every validator brief asks for the anchor line, and the engineer skill names the forward-dep floor', async () => {
   const { readdir } = await import('node:fs/promises');
   const agents = (await readdir(join(REPO_ROOT, 'plugin', 'agents'))).filter((f) => f.endsWith('-validator.md'));
-  assert.equal(agents.length, 10);
+  assert.equal(agents.length, 11);
   for (const a of agents) {
     const t = await readFile(join(REPO_ROOT, 'plugin', 'agents', a), 'utf-8');
     assert.match(t, /Every finding carries an `anchor:` line/, a);

@@ -1158,6 +1158,26 @@ async function collectGspecFiles(gspecDir) {
     }
   }
 
+  // Open chores only. A done chore is a frozen record of work already shipped —
+  // it is never migrated, so flagging it as outdated would be noise forever.
+  try {
+    for (const slug of await readdir(join(gspecDir, 'chores'), { withFileTypes: true })) {
+      if (!slug.isDirectory()) continue;
+      const dir = join(gspecDir, 'chores', slug.name);
+      let chore;
+      try { chore = await readFile(join(dir, 'chore.md'), 'utf-8'); } catch { continue; }
+      if (/^status:\s*done\s*$/m.test(chore.split(/\n---\s*\n/)[0])) continue;
+      for (const name of ['chore.md', 'tasks.md']) {
+        try {
+          await stat(join(dir, name));
+          files.push({ path: join(dir, name), label: `gspec/chores/${slug.name}/${name}` });
+        } catch { /* tasks.md not written yet */ }
+      }
+    }
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+  }
+
   return files;
 }
 

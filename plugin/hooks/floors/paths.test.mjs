@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import {
   norm, isRootSpec, isProfile, isModuleArch, moduleName, isFeaturePrd,
   isLegacyPlan, isEnrichedDoc, isFeatureDesign, isFeatureTasks, isPlanDoc, featureSlug,
-  isGspecSpec,
+  isGspecSpec, isChoreDoc, isChoreTasks, choreSlug,
 } from './paths.mjs';
 
 test('paths are normalized before matching', () => {
@@ -66,6 +66,8 @@ test('isPlanDoc covers BOTH plan layouts — the hard block must never stop firi
   // every consumer derives from this one predicate.
   assert.equal(isPlanDoc('gspec/features/auth/tasks.md'), true);  // current
   assert.equal(isPlanDoc('gspec/tasks/auth.md'), true);           // legacy, still live
+  assert.equal(isPlanDoc('gspec/chores/drop-orm/tasks.md'), true); // a chore's plan freezes too
+  assert.equal(isPlanDoc('gspec/chores/drop-orm/chore.md'), false);
   assert.equal(isPlanDoc('gspec/features/auth/prd.md'), false);
   assert.equal(isPlanDoc('gspec/features/auth/arch.md'), false);
   assert.equal(isPlanDoc('gspec/architecture.md'), false);
@@ -84,6 +86,7 @@ test('isGspecSpec is the union — and excludes mockups, READMEs, and outsiders'
     'gspec/architecture.md', 'gspec/architecture/web.md',
     'gspec/features/auth.md', 'gspec/tasks/auth.md',
     'gspec/features/auth/prd.md', 'gspec/features/auth/arch.md',
+    'gspec/chores/drop-orm/chore.md', 'gspec/chores/drop-orm/tasks.md',
   ]) assert.equal(isGspecSpec(p), true, `${p} should be a gspec spec`);
 
   for (const p of [
@@ -92,5 +95,19 @@ test('isGspecSpec is the union — and excludes mockups, READMEs, and outsiders'
     'src/index.js',
     'docs/architecture.md',       // same basename, outside gspec/
     'vendor/gspec/architecture.md',
+    'gspec/chores/drop-orm/notes.md', // a chore folder holds exactly chore.md + tasks.md
   ]) assert.equal(isGspecSpec(p), false, `${p} should not be a gspec spec`);
+});
+
+test('a chore folder is exactly chore.md + tasks.md, keyed by its own slug', () => {
+  assert.equal(isChoreDoc('gspec/chores/drop-orm/chore.md'), true);
+  assert.equal(isChoreDoc('gspec/chores/drop-orm/tasks.md'), true);
+  assert.equal(isChoreDoc('gspec/chores/drop-orm/arch.md'), false);
+  assert.equal(isChoreDoc('gspec/features/drop-orm/tasks.md'), false);
+  assert.equal(isChoreTasks('gspec/chores/drop-orm/tasks.md'), true);
+  assert.equal(isChoreTasks('gspec/chores/drop-orm/chore.md'), false);
+  assert.equal(choreSlug('gspec/chores/drop-orm/chore.md'), 'drop-orm');
+  assert.equal(choreSlug('gspec/features/auth/prd.md'), null);
+  // A chore is not a feature: it must never resolve to a feature slug.
+  assert.equal(featureSlug('gspec/chores/drop-orm/chore.md'), null);
 });

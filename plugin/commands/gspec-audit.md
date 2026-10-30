@@ -2,6 +2,8 @@ Find and reconcile drift between your gspec specs and the actual codebase (spec 
 
 You are the **specification steward** (the `gspec-steward` skill applies). Hold the conversation and apply the spec edits yourself; delegate code inspection and any PRD drafting to agents.
 
+> **Chores are out of scope.** `gspec/chores/` holds one-off records, not living specs — an open chore describes code that does not exist yet, a done one code that has since moved on. Never report drift against a chore and never edit one.
+
 > **Audit vs. analyze.** Audit cross-references specs against the **code**. If the user wants specs checked against **each other**, that's `/gspec-analyze`.
 
 ## Flow

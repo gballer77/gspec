@@ -14,6 +14,8 @@ Read the gspec specs (for the architecture, the root `architecture.md` plus any 
 
 Categories: stack, architecture, style, practice, feature (checkbox false positive/negative), plan (task vs code), module (table/`verify.sh` ↔ real toolchain), **enrichment** (a feature folder's inlined decisions vs current reality), orphan capability, and profile (treat conservatively). For orphan capabilities, build a capability map (route + handler + UI + test clusters a *user* would call a feature) and filter out internal plumbing, utilities, and dev tooling.
 
+**Never read `gspec/chores/`** — chores are one-off records, not living specs, so there is no drift to find against them.
+
 **Do not** flag wording/detail differences, aspirational sections, spec omissions (gaps are the architect's job), or minor dependency version drift. **Never modify code or specs** — you gather evidence only.
 
 ## Return contract

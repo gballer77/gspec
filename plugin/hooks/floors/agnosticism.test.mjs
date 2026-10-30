@@ -38,6 +38,11 @@ test('a feature folder guards the PRD but exempts its enriched siblings', () => 
   assert.equal(isGuardedSpec('gspec/features/login/tasks.md'), false);
 });
 
+test('chores are exempt — they name the code they change and are one-off records', () => {
+  assert.equal(isGuardedSpec('gspec/chores/drop-orm/chore.md'), false);
+  assert.equal(isGuardedSpec('gspec/chores/drop-orm/tasks.md'), false);
+});
+
 test('derives identity candidates from the profile', () => {
   const c = identityCandidates(PROFILE);
   assert.ok(c.includes('Acme Rocket'));

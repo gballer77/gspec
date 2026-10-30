@@ -6,7 +6,7 @@
 // it catches the common case of the product name leaking. Entry points read
 // profile.md + the file and signal the violation.
 
-import { isGspecSpec, isProfile, isEnrichedDoc } from './paths.mjs';
+import { isGspecSpec, isProfile, isEnrichedDoc, isChoreDoc } from './paths.mjs';
 
 // Which paths this floor governs: every gspec spec except the two kinds that are
 // SUPPOSED to carry product identity.
@@ -17,6 +17,9 @@ import { isGspecSpec, isProfile, isEnrichedDoc } from './paths.mjs';
 //   • a feature folder's enriched siblings are deliberately denormalized, so an
 //     implementer can work from that folder alone. Nagging them toward
 //     agnosticism would defeat the reason they exist.
+//   • a chore (gspec/chores/<slug>/) is technical by nature — it names the code,
+//     modules, and libraries it changes — and is a one-off record, not a
+//     portable spec.
 // The PRD sitting beside those siblings is NOT exempt — the boundary runs
 // between basenames inside one folder, which is exactly why it lives in one
 // shared predicate rather than being re-derived per floor.
@@ -27,6 +30,7 @@ export function isGuardedSpec(rel) {
   if (!isGspecSpec(rel)) return false;
   if (isProfile(rel)) return false;
   if (isEnrichedDoc(rel)) return false;
+  if (isChoreDoc(rel)) return false;
   return true;
 }
 
