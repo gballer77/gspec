@@ -43,6 +43,8 @@ The budgets below are for a **standard**-scope product. The brief states the pro
 | `architecture.md` | 1,500 words (the system tier alone — every project now has a module-tier file, so the 600 a single-module project used to carry here moved out with it) |
 | `architecture/<name>.md` | 2,000 words (prose *plus* the module's spine: the anchors more than one feature references — a short list, roughly ten blocks, not a catalogue) |
 | `features/<slug>/tasks.md` | ≤ 25 tasks, ≤ 3 per capability, one sentence each |
+| `chores/<slug>/chore.md` | 1,800 words |
+| `chores/<slug>/tasks.md` | ≤ 25 tasks, one sentence each |
 
 How to apply them:
 
@@ -64,6 +66,47 @@ Everything about one feature lives in `gspec/features/<slug>/`:
 | `tasks.md` | the ordered plan | no |
 
 The PRD and its three siblings sit on opposite sides of the agnosticism boundary **on purpose**. The three are deliberately **enriched**: an implementer reading only this folder must not need `architecture.md`, `stack.md`, or `style.md`, so concrete technology names and decisions are *inlined* rather than referenced. This is the one place the single-source-of-truth rule above is deliberately inverted — the cost is paid once per feature, and every implementer run afterwards reads less. Product identity is welcome in these three; it is still excluded from `prd.md`.
+
+## The chore folder (one-off work, not kept current)
+A **chore** is a planned body of work against the code — a large refactor, a library or framework migration, a module extraction, a cleanup — that changes *how* the product is built, not *what* it does. It lives in `gspec/chores/<slug>/` and holds exactly two files:
+
+| file | holds |
+| --- | --- |
+| `chore.md` | the chore itself — sections below |
+| `tasks.md` | its ordered plan, in the same grammar as a feature plan (frontmatter `chore: <slug>` instead of `feature:`, no `arch:` lines) |
+
+A chore is **not a living spec.** Once done it is a frozen record, never updated to track the code: audit and analyze skip every chore, and migrate skips done ones. The durable specs it changes are updated *by the chore's own tasks* — that is what the `## Affects` section is for. A chore is technical by nature, so it is exempt from agnosticism: name the code, modules, and libraries it touches.
+
+**Frontmatter** — `spec-version`, plus the lifecycle fields:
+
+```
+---
+spec-version: <<<SPEC_VERSION>>>
+status: open            # open | in-progress | done
+base-sha: <sha>         # set by /gspec-implement at its checkpoint: HEAD before any chore code
+completed: <YYYY-MM-DD> # set when status becomes done
+---
+```
+
+The writer sets only `status: open`. `/gspec-implement` writes `base-sha` and `status: in-progress` when it starts the chore, and `status: done` + `completed` when every task, every Affects box, and every done criterion is checked. Never change `base-sha` once it is set — it is the "before" of the record.
+
+**Required sections** (exhaustive, in order): `## Goal` (what changes and why) · `## Scope` (in / out) · `## Approach` (the strategy and any ordering constraint) · `## Invariants` (what must *not* change — behavior, public API, data) · `## Affects` · `## Done Criteria` · `## Risks & Rollback`.
+
+**`## Affects`** names every durable spec the chore will change, then the code it touches:
+
+```
+## Affects
+### Specs
+- [ ] `gspec/features/checkout/arch.md` § `### Entity: Order` — move line items into a new `### Entity: LineItem` (delta)
+- [ ] `gspec/stack.md` § Data — the ORM changes
+### Code
+- modules: `api`, `billing` (new)
+- dirs: `apps/api/src/orders/**`
+```
+
+Each spec entry is a checkbox naming a real path (backticked), the section or anchor it changes (`§ …`), and the change in one clause. An `arch.md` change follows the anchor origin/delta discipline below — a new anchor is an origin, an edit to an existing one is a delta in the feature that owns it. The plan covers every spec entry with a task; the implementer edits that spec in the covering task and checks the entry. An effect discovered during implementation is **appended** as a new entry (never left unlisted). "No spec changes" is a legitimate `### Specs` — say so in one line.
+
+**`## Done Criteria`** uses the capability checkbox format (`- [ ] **P0**: …` with 2–4 observable criteria), so a task's `covers:` quotes it verbatim exactly as it would a PRD capability. A task covering an Affects entry quotes that entry's text. **Never restate Affects as a done criterion** ("the specs describe the post-chore code") — the Affects checkboxes already track spec updates, and a second copy is one more box to drift.
 
 ## Plan-folder anchors (`arch.md`)
 `arch.md` has exactly four H2 concern sections — `## Data`, `## API`, `## UI`, `## Logic` — each specified or marked **Not Applicable**. Every *item* is an **H3** under the section that owns it, in exact form, because the anchor has to be a line-anchored regex a `grep` can find:

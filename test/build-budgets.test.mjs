@@ -58,6 +58,10 @@ test('budgetLabel maps paths onto table rows, and non-deliverables onto nothing'
   // The label resolves; budgetFor is what returns null (asserted below).
   assert.equal(budgetLabel('gspec/features/user-auth/tasks.md'), 'features/<slug>/tasks.md');
   assert.equal(SPEC_BUDGETS['features/<slug>/tasks.md'], undefined);
+  // A chore is budgeted like a PRD; its plan, like every plan, in tasks.
+  assert.equal(budgetLabel('gspec/chores/drop-orm/chore.md'), 'chores/<slug>/chore.md');
+  assert.equal(budgetLabel('gspec/chores/drop-orm/tasks.md'), 'chores/<slug>/tasks.md');
+  assert.equal(budgetFor('gspec/chores/drop-orm/tasks.md'), null);
   // Not budgeted at all: the legacy plan location, anything outside gspec/.
   assert.equal(budgetLabel('gspec/tasks/user-auth.md'), null);
   assert.equal(budgetLabel('src/index.js'), null);

@@ -233,6 +233,14 @@ Use `/gspec-architect` when your feature involves significant technical complexi
 
 Use `/gspec-plan` after `/gspec-feature` (and after `/gspec-architect` when it exists) for any feature large enough that build order matters or that has work which could legitimately run in parallel. The output is what `/gspec-implement` consumes — when every in-scope feature has a plan file, `/gspec-implement` skips its own plan-mode step and executes the plan file directly (the plan was already approved during `/gspec-plan`). Trivial features can skip this step and go straight to `/gspec-implement`, which falls back to PRD-checkbox-driven planning with its own plan-mode approval.
 
+**Chores** *(optional)*: plan a large refactor or migration ahead of time.
+
+| Command | Role | What it produces |
+|---|---|---|
+| `/gspec-chore` | Engineering Lead | A `gspec/chores/<slug>/` folder holding `chore.md` (goal, scope, approach, invariants, the specs it **Affects**, done criteria, rollback) and an ordered `tasks.md` |
+
+Use `/gspec-chore` for work that changes *how* the code is built rather than *what* it does: a module extraction, an ORM or framework migration, a large cleanup. A chore is **one-off**. Unlike a feature, it isn't kept current once it's done; it stays as a frozen record, and audit, analyze and migrate skip it. Its **Affects** list names every durable spec the work will change, and the plan covers each with a task, so specs move with the code. Run it with `/gspec-implement chore <slug>`, which records the commit the chore started from (`base-sha`), checks at each gate that every claimed spec update actually happened, and marks the chore `done` at the end.
+
 **6. Analyze & Audit** *(optional)* — Reconcile discrepancies before building, and keep specs honest as the codebase evolves.
 
 | Command | Role | What it does |

@@ -5,6 +5,35 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.5.0',
+    date: 'October 29, 2026',
+    title: 'Chores: plan a refactor ahead, then let it go',
+    summary: 'A new kind of spec for work that changes <em>how</em> the code is built rather than <em>what</em> it does, such as a module extraction, a framework migration or a large cleanup. <code>/gspec-chore</code> writes <code>gspec/chores/&lt;slug&gt;/chore.md</code> and an ordered <code>tasks.md</code>, and <code>/gspec-implement chore &lt;slug&gt;</code> runs it. Unlike a feature, a chore is not kept current. Once done, it is a frozen record of what was changed and the commit it started from.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong><code>/gspec-chore</code></strong> interviews you (goal, scope, approach, invariants, done criteria, rollback). It delegates the new <code>chore-writer</code>, gates on the new <code>chore-validator</code>, then plans the chore with <code>plan-decomposer</code> behind the usual plan-mode approval and <code>plan-validator</code> gate. <code>--no-qa</code> skips both gates.',
+      },
+      {
+        type: 'added',
+        description: '<strong>The <code>## Affects</code> section.</strong> Every chore lists the durable specs it will change: a feature <code>arch.md</code> anchor, <code>architecture.md</code>, <code>stack.md</code> and so on. The writer grounds each entry in what is on disk, and the validator fails a chore that misses one. The plan covers each entry with a task, and the implementer edits that spec in the same task as the code. At each gate, the implementation validator checks that every checked spec actually changed since the chore began (<code>git diff &lt;base-sha&gt;</code>).',
+      },
+      {
+        type: 'added',
+        description: '<strong>Chore lifecycle in frontmatter.</strong> <code>status</code> runs <code>open</code> → <code>in-progress</code> → <code>done</code>. <code>/gspec-implement</code> records <code>base-sha</code> (HEAD at its pre-implement checkpoint) when it starts a chore, and <code>completed</code> when it closes it.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Every command knows chores aren\'t living specs.</strong> <code>/gspec-audit</code> and <code>/gspec-analyze</code> never read chores. <code>/gspec-migrate</code> and the install-time outdated-spec check skip done chores. <code>/gspec-implement</code> lists open chores but runs one only when you name it. <code>/gspec-plan chore &lt;slug&gt;</code> regenerates a chore plan, and <code>/gspec-qa chore &lt;slug&gt;</code> validates one. The always-on preamble routes refactor and migration requests to <code>/gspec-chore</code>.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Hooks cover chore plans.</strong> Checked tasks in <code>gspec/chores/&lt;slug&gt;/tasks.md</code> are immutable, the same as feature plans, on Claude Code and on Codex. Chores are exempt from the profile-agnosticism guard because they name the code they change.',
+      },
+    ],
+    migration: 'None needed. Existing specs are unchanged and <code>spec-version</code> stays <code>v2</code>. Run <code>npx gspec -t &lt;target&gt;</code> to install the new command and agents.',
+  },
+  {
     version: '3.4.0',
     date: 'October 29, 2026',
     title: 'Agents learn when you teach them, not on their own',

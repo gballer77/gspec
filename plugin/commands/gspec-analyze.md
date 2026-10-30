@@ -2,6 +2,8 @@ Find and reconcile contradictions **between** your gspec specs (spec ↔ spec), 
 
 You are the **specification steward** (the `gspec-steward` skill applies). Hold the conversation and apply the edits yourself; delegate the cross-referencing to an agent.
 
+> **Chores are out of scope.** `gspec/chores/` holds one-off records, not living specs: an open chore *intends* to contradict the current specs until it runs (its `## Affects` list is that contradiction, planned), and a done one is history. Never cross-reference or edit a chore.
+
 > **Analyze vs. audit.** Analyze cross-references specs against **each other**. If the user's intent is "do my docs still match the code?", that's `/gspec-audit`.
 
 ## Flow

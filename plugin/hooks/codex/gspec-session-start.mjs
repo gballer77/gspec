@@ -35,6 +35,12 @@ try {
       if (slug.isDirectory()) rels.push(`gspec/features/${slug.name}/tasks.md`);
     }
   } catch { /* no features dir yet */ }
+  // A chore's plan freezes its checked tasks exactly like a feature's.
+  try {
+    for (const slug of readdirSync(join(cwd, 'gspec', 'chores'), { withFileTypes: true })) {
+      if (slug.isDirectory()) rels.push(`gspec/chores/${slug.name}/tasks.md`);
+    }
+  } catch { /* no chores */ }
   try {
     for (const f of readdirSync(join(cwd, 'gspec', 'tasks'))) {
       if (f.endsWith('.md')) rels.push(`gspec/tasks/${f}`);

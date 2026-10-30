@@ -10,6 +10,8 @@ Read the specs in scope and find **substantive cross-spec conflicts** — two do
 
 Read (all-specs mode): `profile`, `stack`, `style` (`style.md` or `style.html`), `practices`, `architecture` (+ `architecture/*.md` sub-files when present), `research`, every `features/*/prd.md`, and each `features/*/tasks.md`; note which features carry a `design.html`. (Scoped mode: the target PRD + its plan + the foundations only.)
 
+**Never read `gspec/chores/`** — chores are one-off records, not living specs; an open chore contradicts the current specs on purpose until it runs.
+
 **Do not** flag wording/tone/detail differences, gaps that belong to another spec, or intentional "Out of Scope"/"Deferred" items. **Do not** run a single-PRD ambiguity sweep — that is QA's job (the feature validator), not cross-referencing.
 
 If fewer than two specs exist, report that there is nothing to cross-reference.

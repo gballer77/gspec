@@ -15,6 +15,8 @@
 //   gspec/architecture/<name>.md       module tier (multi-module only)
 //   gspec/features/<slug>.md           feature PRD
 //   gspec/tasks/<slug>.md              plan  ← relocates into the feature folder in v3.2
+//   gspec/chores/<slug>/chore.md       chore (one-off planned work; not kept current)
+//   gspec/chores/<slug>/tasks.md       chore plan
 //
 // The v3.2 feature-folder predicates below are written but not yet reachable:
 // nothing produces those paths until the feature-folder release, at which point
@@ -110,7 +112,7 @@ export function isFeatureTasks(rel) {
 // layouts can never disagree — the flat form stays recognized for as long as
 // projects exist that have not migrated.
 export function isPlanDoc(rel) {
-  return isFeatureTasks(rel) || isLegacyPlan(rel);
+  return isFeatureTasks(rel) || isLegacyPlan(rel) || isChoreTasks(rel);
 }
 
 // The feature slug a path belongs to, whichever layout it is in, or null.
@@ -125,6 +127,34 @@ export function featureSlug(rel) {
   return plan ? plan[1] : null;
 }
 
+// --- chore vocabulary -------------------------------------------------------
+//
+// A chore is a planned, one-off body of work against the code (a large
+// refactor, a migration) that is NOT kept current afterwards: gspec/chores/<slug>/
+// holds exactly chore.md + tasks.md. Its plan is a plan like any other — checked
+// tasks freeze — so chore tasks fold into isPlanDoc. Chores are technical by
+// nature (they name code, modules, libraries), so like the enriched feature
+// siblings they sit outside the agnosticism guard.
+const CHORE_FILES = new Set(['chore.md', 'tasks.md']);
+
+export function isChoreDoc(rel) {
+  const t = tail(rel);
+  const m = t && t.match(/^chores\/[^/]+\/([^/]+)$/);
+  return Boolean(m && CHORE_FILES.has(m[1]));
+}
+
+export function isChoreTasks(rel) {
+  const t = tail(rel);
+  return t !== null && /^chores\/[^/]+\/tasks\.md$/.test(t);
+}
+
+// The chore slug a path belongs to, or null.
+export function choreSlug(rel) {
+  const t = tail(rel);
+  const m = t && t.match(/^chores\/([^/]+)\/[^/]+$/);
+  return m ? m[1] : null;
+}
+
 // --- the union -------------------------------------------------------------
 
 // Is this path a gspec spec at all? README files are documentation about the
@@ -137,5 +167,5 @@ export function isGspecSpec(rel) {
   const base = t.split('/').pop();
   if (base.toLowerCase() === 'readme.md') return false;
   return isRootSpec(rel) || isModuleArch(rel) || isFeaturePrd(rel)
-    || isLegacyPlan(rel) || isEnrichedDoc(rel);
+    || isLegacyPlan(rel) || isEnrichedDoc(rel) || isChoreDoc(rel);
 }

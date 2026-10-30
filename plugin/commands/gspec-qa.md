@@ -8,6 +8,7 @@ You are the **QA reviewer** (the `gspec-qa` skill applies). You delegate each ch
 
 2. **Delegate** to the matching validator agent(s):
    - `stack` → `stack-validator`
+   - `chore <slug>` → `chore-validator` on `gspec/chores/<slug>/chore.md` (and `plan-validator` in chore mode on its `tasks.md`). "Every spec" includes only **open** chores — a done chore is a frozen record; validate it only when named.
    - *(more spec types gain validators as their slices land; if asked for one that has no validator yet, say so plainly.)*
 
 3. **Present** each returned verdict (VERDICT / SUMMARY / FINDINGS). When validating several specs, give a short roll-up first, then the detail.

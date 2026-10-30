@@ -8,6 +8,7 @@ Read the file and reformat it to the current structure, following the migration 
 - **Preserve all content** — never discard information; relocate content whose section was removed to the right new section, or keep it under a "Legacy Content" heading; if a now-required section has no source content, add it with "To be defined"/"Not applicable".
 - **Maintain the document's voice** — restructure and reformat, don't rewrite prose.
 - **Version marker** — Markdown: ensure `---\nspec-version: <<<SPEC_VERSION>>>\n---` at the very top (rename a legacy `gspec-version` field; preserve other frontmatter fields). HTML `style.html`: first line `<!-- spec-version: <<<SPEC_VERSION>>> -->`, updated in place.
+- **Chores** — preserve every checkbox state, the `status`, `base-sha`, and `completed` frontmatter fields, and the `## Affects` entries exactly. (The command never sends a `status: done` chore.)
 - **Feature PRDs** — preserve checkbox states, priorities, and task IDs exactly; add unchecked boxes / placeholder acceptance criteria where the current format requires them.
 - **Architecture specs — apply the `deployable` → `module` rename** when the command asks for it: the **Deployables & Verification** heading becomes **Modules & Verification**, and a sub-file's `deployable:` frontmatter key becomes `module:` (its value, the row name, is unchanged). Rename only — never restructure the table, re-key its rows, or change which file holds what.
 
