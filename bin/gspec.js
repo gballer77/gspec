@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
-import { readdir, readFile, writeFile, mkdir, stat, unlink, rm, rename } from 'node:fs/promises';
+import { readdir, readFile, stat, rename } from 'node:fs/promises';
+import { writeFileContained as writeFile, mkdirContained as mkdir, unlinkContained as unlink, rmContained as rm, isSafeName } from '../lib/safe-fs.js';
 import { join, dirname, basename } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -1004,7 +1005,9 @@ async function installCodexHooks(targetName, cwd) {
   // Absolute path: Codex hook commands take a literal command, and there is no
   // documented project-dir variable, so we bake the installed absolute path.
   const cmd = (f) => ({ command: `node "${join(cwd, '.codex', 'hooks', f)}"` });
-  const isGspecEntry = (e) => typeof e?.command === 'string' && e.command.includes('/.codex/hooks/gspec-');
+  // Match either separator: on Windows join() writes backslashes, and a
+  // forward-slash-only test re-added the Stop gate on every reinstall.
+  const isGspecEntry = (e) => typeof e?.command === 'string' && /[\\/]\.codex[\\/]hooks[\\/]gspec-/.test(e.command);
   for (const spec of CODEX_HOOK_SPECS) {
     const existing = Array.isArray(cfg.hooks[spec.event]) ? cfg.hooks[spec.event] : [];
     const kept = existing.filter((e) => !isGspecEntry(e));
@@ -1243,6 +1246,8 @@ const RESTORE_DEST_MAP = {
 // Given a save-type folder and a saved slug, resolve the actual filename in ~/.gspec/<type>/.
 // Styles can be stored as .md or .html; all others are .md.
 async function resolveSavedSpecFilename(type, slug) {
+  // A playbook line names a file in the library; it must not name one outside it.
+  if (!isSafeName(type) || !isSafeName(slug)) return null;
   const dir = join(GSPEC_HOME, type);
   const candidates = type === 'styles'
     ? [`${slug}.md`, `${slug}.html`]
@@ -1426,7 +1431,10 @@ async function saveSpec(cwd) {
   // Read source content and look for an existing name in frontmatter
   let content = await readFile(selected.path, 'utf-8');
   const { fields: sourceFields } = parseFrontmatter(content);
-  const existingName = sourceFields.name;
+  // The name comes from the project's own spec, which may not be the user's:
+  // a "../" in it would place the saved copy outside ~/.gspec. Ask instead.
+  const existingName = isSafeName(sourceFields.name) ? sourceFields.name : null;
+  if (sourceFields.name && !existingName) console.log(chalk.yellow(`\n  ! Ignoring frontmatter name "${sourceFields.name}" — it is not a safe file name.`));
 
   let name;
   let overwriteConfirmed = false;
@@ -1463,6 +1471,10 @@ async function saveSpec(cwd) {
     }
     if (/\s/.test(answered)) {
       console.error(chalk.red('\n  Name cannot contain spaces. Use hyphens instead (e.g. my-saas-stack).'));
+      process.exit(1);
+    }
+    if (!isSafeName(answered)) {
+      console.error(chalk.red(`\n  "${answered}" is not a valid name. ${'Use letters, digits, dots, hyphens or underscores — no spaces, slashes or ".."'}.`));
       process.exit(1);
     }
     name = answered;
@@ -1558,6 +1570,10 @@ async function restoreSpec(specPath, cwd) {
       process.exit(1);
     }
     const [type, name] = parts;
+    if (!isSafeName(type) || !isSafeName(name)) {
+      console.error(chalk.red(`\n  Invalid spec path "${specPath}". ${'Use letters, digits, dots, hyphens or underscores — no spaces, slashes or ".."'}.\n`));
+      process.exit(1);
+    }
     if (type === 'playbook' || type === 'playbooks') {
       await restorePlaybook(name, cwd);
     } else {
@@ -1725,6 +1741,10 @@ async function createPlaybook() {
     console.error(chalk.red('\n  Name cannot contain spaces. Use hyphens instead (e.g. my-saas-starter).'));
     process.exit(1);
   }
+  if (!isSafeName(name)) {
+    console.error(chalk.red(`\n  "${name}" is not a valid name. ${'Use letters, digits, dots, hyphens or underscores — no spaces, slashes or ".."'}.`));
+    process.exit(1);
+  }
 
   // Prompt for description
   const description = await promptInput('Description (short summary):');
@@ -1806,6 +1826,10 @@ function parsePlaybook(content) {
 }
 
 async function restorePlaybook(name, cwd) {
+  if (!isSafeName(name)) {
+    console.error(chalk.red(`\n  Invalid playbook name "${name}".\n`));
+    process.exit(1);
+  }
   const srcPath = join(GSPEC_HOME, 'playbooks', `${name}.md`);
 
   try {
@@ -2550,6 +2574,10 @@ async function extensionRemove(name) {
 
   if (!name) {
     console.error(chalk.red('\n  Usage: gspec extension remove <name>\n'));
+    process.exit(1);
+  }
+  if (!EXTENSION_NAME_RE.test(name)) {
+    console.error(chalk.red(`\n  Invalid extension name "${name}" (lowercase letters, digits and hyphens).\n`));
     process.exit(1);
   }
 

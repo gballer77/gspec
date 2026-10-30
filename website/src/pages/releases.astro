@@ -5,6 +5,39 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.3.0',
+    date: 'October 9, 2026',
+    title: 'Safer unattended builds and installs',
+    summary: 'A review of the build runtime and the installer found places where the documented guarantees did not hold: scopes the wave plan never proved disjoint ran at the same time, a torn <code>run.json</code> could make a run impossible to resume, engine runs could hang a build forever or outlive it, the render check could crash the build it was meant to skip, and an install or a build in a cloned repository could be steered by that repository into writing outside it or running a shell command. Each is fixed here, with tests; none weakens a gate or changes a spec format.',
+    changes: [
+      {
+        type: 'fixed',
+        description: '<strong>Scopes that share a wave are always provably file-disjoint.</strong> When the orchestrator gave one scope several features, the driver split it into sibling scopes in the same wave and ran them concurrently — even under <code>--parallel off</code> — without checking the overlap table, so two implementers could edit the same files. Every wave is now split, in order, into sub-waves whose scopes are pairwise disjoint and dependency-free; scaffolds, multi-feature and unknown scopes run alone. Each split is logged. It only ever removes concurrency.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong><code>run.json</code> and <code>status.json</code> are written atomically and in order.</strong> Concurrent manifest saves from parallel scopes and the feature fan-out, or a crash mid-write, could leave invalid JSON that made <code>--resume</code> throw. Writes now go to a temp file that is renamed over the target, queued per file in call order.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>Engine runs have a time limit, and no subprocess outlives the build.</strong> A stalled <code>claude</code>, <code>codex</code> or <code>pi</code> run hung the build forever with status <code>running</code>; it is now stopped after four hours (<code>GSPEC_ENGINE_TIMEOUT_MIN</code> to change) and fails the stage with exit 124, so the bounded retries apply. On SIGINT/SIGTERM, a crash, or a failed parallel wave, engine runs and <code>verify.sh</code> (by process group) are stopped instead of continuing to edit the project.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>The render check fails open when the dev server cannot start.</strong> A spawn failure (no <code>npm</code> on PATH, a missing directory) was an uncaught exception that crashed the build; a server that exited at once was waited on for the full start timeout. Both are now logged skips.',
+      },
+      {
+        type: 'fixed',
+        description: '<strong>Installs never write or delete outside the project and <code>~/.gspec</code>.</strong> A repository could commit a skill path, <code>CLAUDE.md</code> or <code>.claude/settings.json</code> as a symlink to a file elsewhere (or a <code>../</code> in a spec, playbook or extension name) and an install would write through it. Every write, directory creation and delete now resolves symlinks first and refuses a real path outside those two roots, with a message naming the path; in-project links such as <code>CLAUDE.md</code> → <code>AGENTS.md</code> keep working. Saved-spec, playbook, restore and extension names are validated as single file names. On Windows, reinstalling Codex no longer appends a duplicate Stop hook.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>A <code>notify</code> command in a project\'s own <code>.gspec/config.json</code> no longer runs unless you trust it.</strong> The command runs through a shell, and a project config is whatever the repository commits. <code>--notify</code> and <code>notify</code> in <code>~/.gspec/config.json</code> are unchanged; a project command runs only when <code>~/.gspec/config.json</code> sets <code>"trustProjectNotify": true</code> or names the same command, and is otherwise ignored with a warning.',
+      },
+    ],
+    migration: 'Nothing to do for most projects — <code>npx gspec -t &lt;target&gt;</code> to reinstall. If you set <code>notify</code> in a project\'s <code>.gspec/config.json</code>, move it to <code>~/.gspec/config.json</code>, pass <code>--notify</code>, or add <code>"trustProjectNotify": true</code> to <code>~/.gspec/config.json</code>. If an install now stops with "refusing to write", the named path is a symlink leading outside the project — replace it with a regular file. Runs started on 3.2.0 resume normally.',
+  },
+  {
     version: '3.2.0',
     date: 'September 10, 2026',
     title: 'Cutting build time and tokens, end to end',

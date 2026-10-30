@@ -155,9 +155,20 @@ export async function renderChecks(cwd, routes = [], expectations = {}, opts = {
   // PORT in the environment is the widely-honored signal; `--port` covers the
   // dev servers that read only their flags. A server that ignores both still
   // announces its URL, which is sniffed below.
-  const server = spawnFn('npm', ['run', avail.script, '--', '--port', String(port)], {
-    cwd, env: { ...process.env, PORT: String(port), CI: '1', BROWSER: 'none' }, stdio: ['ignore', 'pipe', 'pipe'], detached: true,
-  });
+  let server;
+  try {
+    server = spawnFn('npm', ['run', avail.script, '--', '--port', String(port)], {
+      cwd, env: { ...process.env, PORT: String(port), CI: '1', BROWSER: 'none' }, stdio: ['ignore', 'pipe', 'pipe'], detached: true,
+    });
+  } catch (e) { return skip(`the ${avail.script} server could not be started (${String(e?.message || e).split('\n')[0]})`); }
+  // A spawn that fails (npm not on PATH, a cwd that is gone) reports through
+  // an 'error' event; with no listener Node throws it as an uncaught
+  // exception and takes the whole build down — the opposite of failing open.
+  // A server that exits before answering is likewise a skip, found now
+  // rather than after the full start timeout.
+  let ended = null;
+  server.on?.('error', (e) => { ended = ended || `the ${avail.script} server could not be started (${String(e?.message || e).split('\n')[0]})`; });
+  server.on?.('exit', (code, signal) => { ended = ended || `the ${avail.script} server exited before answering (${signal || `code ${code}`})`; });
   let announced = null;
   const sniff = (d) => { const m = String(d).match(/https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0):\d+/); if (m && !announced) announced = m[0].replace('0.0.0.0', '127.0.0.1').replace('localhost', '127.0.0.1'); };
   server.stdout?.on('data', sniff); server.stderr?.on('data', sniff);
@@ -170,10 +181,11 @@ export async function renderChecks(cwd, routes = [], expectations = {}, opts = {
     const spellings = [base, `http://localhost:${port}`, `http://[::1]:${port}`];
     let origin = null;
     const until = Date.now() + startTimeoutMs;
-    while (!origin && Date.now() < until) {
+    while (!origin && !ended && Date.now() < until) {
       for (const u of spellings) if (await waitFor(u, 1, fetchFn)) { origin = u; break; }
       if (!origin) await new Promise((r) => setTimeout(r, 500));
     }
+    if (!origin && ended) return skip(ended);
     if (!origin && announced && await waitFor(announced, 5_000, fetchFn)) origin = announced;
     if (!origin) return skip(`the ${avail.script} server did not answer within ${Math.round(startTimeoutMs / 1000)}s`);
 

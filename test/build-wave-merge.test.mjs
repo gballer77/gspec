@@ -7,7 +7,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { disjointnessTable, formatOverlapTable, mergeWaves, PARALLEL_CAP } from '../lib/wave-merge.js';
+import { disjointnessTable, formatOverlapTable, mergeWaves, separateOverlapping, PARALLEL_CAP } from '../lib/wave-merge.js';
 import { prdDependencies, scopeSlug, PARALLEL_MODES } from '../lib/build.js';
 
 const scope = (slug) => ({ label: slug, instruction: `Build ${slug}.`, plan: [`gspec/features/${slug}/tasks.md`] });
@@ -102,4 +102,49 @@ test('scopeSlug is the single feature a scope is confined to', () => {
   assert.equal(scopeSlug(scope('auth')), 'auth');
   assert.equal(scopeSlug({ label: 'scaffold' }), null);
   assert.equal(scopeSlug({ plan: ['gspec/features/a/tasks.md', 'gspec/features/b/tasks.md'] }), null);
+});
+
+// A wave runs its scopes concurrently, so every wave — not only the merged
+// ones — must hold only provably disjoint scopes.
+
+test('a split scope whose features share a module becomes serial waves', () => {
+  // The orchestrator emitted ONE scope spanning a and b; splitScopesByFeature
+  // made them siblings in one wave. They share `api`, so they must not run at once.
+  const table = disjointnessTable([
+    { slug: 'a', modules: ['api'], amends: [], deps: [] },
+    { slug: 'b', modules: ['api'], amends: [], deps: [] },
+  ]);
+  const { waves, splits } = separateOverlapping([[scope('a'), scope('b')]], table, { slugOf: scopeSlug });
+  assert.deepEqual(waves.map((w) => w.map((s) => s.label)), [['a'], ['b']]);
+  assert.deepEqual(splits, [{ wave: 0, into: 2, labels: ['a', 'b'] }]);
+});
+
+test('disjoint siblings keep running together; only the overlapping one is moved out', () => {
+  const table = disjointnessTable([...FEATURES, { slug: 'billing', modules: ['api'], amends: [], deps: [] }]);
+  const { waves } = separateOverlapping([[scope('auth'), scope('catalog'), scope('billing'), scope('reports')]], table, { slugOf: scopeSlug });
+  assert.deepEqual(waves.map((w) => w.map((s) => s.label)), [['auth', 'catalog', 'reports'], ['billing']]);
+});
+
+test('a declared dependency separates two otherwise disjoint scopes', () => {
+  const table = disjointnessTable([
+    { slug: 'auth', modules: ['api'], amends: [], deps: [] },
+    { slug: 'catalog', modules: ['web'], amends: [], deps: ['auth'] },
+  ]);
+  const { waves } = separateOverlapping([[scope('auth'), scope('catalog')]], table, { slugOf: scopeSlug });
+  assert.equal(waves.length, 2);
+});
+
+test('a scaffold, a multi-feature scope and an unknown feature each run alone', () => {
+  const table = disjointnessTable(FEATURES);
+  const scaffold = { label: 'scaffold', instruction: 'set up', plan: [] };
+  const multi = { label: 'both', instruction: 'x', plan: ['gspec/features/auth/tasks.md', 'gspec/features/catalog/tasks.md'] };
+  const { waves } = separateOverlapping([[scaffold, scope('auth'), multi, scope('ghost'), scope('catalog')]], table, { slugOf: scopeSlug });
+  assert.deepEqual(waves.map((w) => w.map((s) => s.label)), [['scaffold'], ['auth', 'catalog'], ['both'], ['ghost']]);
+});
+
+test('single-scope waves and an absent table pass through unchanged or fully serial', () => {
+  const plan = [single('auth'), single('catalog')];
+  assert.deepEqual(separateOverlapping(plan, disjointnessTable(FEATURES), { slugOf: scopeSlug }).waves, plan);
+  const { waves } = separateOverlapping([[scope('auth'), scope('catalog')]], null, { slugOf: scopeSlug });
+  assert.equal(waves.length, 2, 'no evidence is not proof');
 });
