@@ -5,6 +5,31 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.6.0',
+    date: 'October 30, 2026',
+    title: 'Configuration: one file to tune git, QA and build defaults',
+    summary: 'Install now writes every setting into <code>.gspec/config.json</code> at its default, so the file shows what you can change. Edit a value and both the interactive commands and <code>gspec build</code> follow it. Checkpoint commits, per-phase commits, a branch per run, QA gates and the build flags are now all project settings.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>Git settings.</strong> <code>git.checkpoint</code> (<code>commit</code> · <code>ask</code> · <code>off</code>) controls the pre-implement checkpoint commit. <code>git.commitPerPhase</code> commits the files each implement phase changed once it passes its gate, leaving your own uncommitted work alone. <code>git.branch: new</code> starts implementation on <code>feat/&lt;slug&gt;</code>, <code>chore/&lt;slug&gt;</code> or <code>gspec/build-&lt;idea&gt;</code>. <code>git.commitPrefix</code> starts every commit message. The defaults keep today\'s behavior.',
+      },
+      {
+        type: 'added',
+        description: '<strong><code>gspec build</code> can commit.</strong> With <code>git.commitPerPhase</code> on, the build commits after each stage and each implement wave, so a long run leaves a history you can bisect or roll back. Only what the run changed is committed: files already dirty when it started, and the build\'s own run state (<code>.gspec/build/</code>), stay out. Off by default: the build still never touches git unless you ask.',
+      },
+      {
+        type: 'added',
+        description: '<strong>QA and build defaults.</strong> <code>qa.enabled</code> turns the validator gates off in every command and in the build. <code>qa.retries</code>, <code>build.engine</code>, <code>build.scope</code>, <code>build.parallel</code>, <code>build.research</code> and <code>build.review</code> set the defaults for the matching <code>gspec build</code> flags. A typed flag still wins.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Settings resolve flag › project › home › default.</strong> <code>~/.gspec/config.json</code> holds personal defaults under the project file. A bad value never stops work: gspec warns, names the file and key, and uses the default.',
+      },
+    ],
+    migration: 'Run <code>npx gspec -t &lt;target&gt;</code>. It adds the new settings to your existing <code>.gspec/config.json</code> and leaves every value you already set alone. Nothing changes until you edit a setting.',
+  },
+  {
     version: '3.5.0',
     date: 'October 29, 2026',
     title: 'Chores: plan a refactor ahead, then let it go',

@@ -11,7 +11,7 @@ import { promptSelect, promptMultiSelect, promptConfirm, promptInput } from '../
 import { TARGETS as EMITTER_TARGETS } from '../lib/emitters.js';
 import { runBuild, reportBuildStatus, EXIT } from '../lib/build.js';
 import {
-  writeProjectConfig, PROJECT_CONFIG_PATH, readProjectConfig, readGlobalConfig,
+  writeProjectConfig, PROJECT_CONFIG_PATH, readProjectConfig, readGlobalConfig, seedProjectSettings,
   recommendedModels, hasModelsConfigured,
 } from '../lib/config.js';
 import { SPEC_VERSION } from '../lib/spec-version.js';
@@ -2012,7 +2012,16 @@ program
     // fixed failed the same stage seven times. Without a stamp the build has no
     // way to notice.
     await writeProjectConfig(process.cwd(), { target: targetName, gspecVersion: pkg.version });
-    console.log(chalk.dim(`  Recorded install target and v${pkg.version} in ${PROJECT_CONFIG_PATH}\n`));
+    console.log(chalk.dim(`  Recorded install target and v${pkg.version} in ${PROJECT_CONFIG_PATH}`));
+    // Every project setting, spelled out with its default, so the file is the
+    // place to change gspec's behavior. Only missing keys are written — a
+    // value the user changed survives every re-install and upgrade.
+    const addedSettings = await seedProjectSettings(process.cwd());
+    if (addedSettings.length) {
+      console.log(chalk.dim(`  Added settings to ${PROJECT_CONFIG_PATH}: ${addedSettings.join(', ')} — edit them to change git, QA, and build defaults\n`));
+    } else {
+      console.log('');
+    }
 
     await installExtensions(targetName, process.cwd());
 
@@ -2654,7 +2663,11 @@ program
   .option('--resume', 'resume an existing run from where it paused')
   .option('--status', 'print how the current/last run ended and exit with its code (0 complete · 1 failed · 2 paused for review · 3 crashed)')
   .option('--dry-run', 'print the stage plan without invoking the engine')
-  .action(async (idea, opts) => {
+  .action(async (idea, opts, command) => {
+    // A flag the user did not type must not reach runBuild: commander fills in
+    // `--no-qa`'s default (qa: true) either way, and that default would mask a
+    // project setting. Only typed flags override .gspec/config.json.
+    const typed = (name) => (command.getOptionValueSource(name) === 'cli' ? opts[name] : undefined);
     // --status is a read: report the run's terminal state and exit with the
     // code that describes it, so a watcher branches on a number, not on prose.
     if (opts.status) {
@@ -2667,9 +2680,9 @@ program
         cwd: process.cwd(),
         engine: opts.engine,
         piPermissionLevel: opts.piPermissionLevel,
-        noQa: !opts.qa,
-        noReview: !opts.review,
-        research: !!opts.research,
+        noQa: typed('qa') === undefined ? undefined : !opts.qa,
+        noReview: typed('review') === undefined ? undefined : !opts.review,
+        research: typed('research'),
         scope: opts.scope,
         qaRetries: opts.qaRetries,
         parallel: opts.parallel,

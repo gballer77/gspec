@@ -9,6 +9,7 @@ const sections = [
   { id: 'workflow', label: 'Workflow Overview' },
   { id: 'save-restore', label: 'Save & Restore' },
   { id: 'extensions', label: 'Extensions' },
+  { id: 'configuration', label: 'Configuration' },
   { id: 'profile', label: 'profile', group: 'Define' },
   { id: 'style', label: 'style', group: 'Define' },
   { id: 'stack', label: 'stack', group: 'Define' },
@@ -162,6 +163,53 @@ gspec extension remove my-deploy      # Delete from ~/.gspec/extensions/`} lang=
     <h3>Install behavior</h3>
     <p>
       When you run <code>npx gspec</code> in a project, the installer first copies the built-in skills, then scans <code>~/.gspec/extensions/</code> and emits each valid extension into the same install directory using the same per-platform formatting as core skills. Invalid extensions (missing frontmatter, name collisions, malformed names) are skipped with a warning. Two extensions claiming the same <code>name</code> resolve last-write-wins, also with a warning.
+    </p>
+  </section>
+
+  <section id="configuration">
+    <h2>Configuration</h2>
+    <p>
+      Install writes <code>.gspec/config.json</code> with every setting at its default, so the file itself shows what you can change. Edit a value; there is no command to learn. Re-installing or upgrading adds only missing settings and never overwrites one you changed.
+    </p>
+    <CodeBlock code={`{
+  "git": {
+    "checkpoint": "commit",
+    "commitPerPhase": false,
+    "branch": "none",
+    "commitPrefix": "chore:"
+  },
+  "qa": { "enabled": true, "retries": 1 },
+  "build": {
+    "engine": null,
+    "scope": null,
+    "parallel": "auto",
+    "research": false,
+    "review": true
+  }
+}`} lang="json" />
+
+    <h3>Git</h3>
+    <ul>
+      <li><code>git.checkpoint</code> — before <code>/gspec-implement</code> writes code: <code>commit</code> a dirty tree (default), <code>ask</code> first, or <code>off</code>.</li>
+      <li><code>git.commitPerPhase</code> — <code>true</code> commits after each implement phase that passes its gate. In <code>gspec build</code> it commits after each stage and each implement wave. Only the files gspec changed are committed: anything already modified, staged or untracked when the run started stays out. Default <code>false</code>.</li>
+      <li><code>git.branch</code> — <code>new</code> starts implementation on its own branch: <code>feat/&lt;slug&gt;</code>, <code>chore/&lt;slug&gt;</code>, or <code>gspec/build-&lt;idea&gt;</code>. Default <code>none</code>.</li>
+      <li><code>git.commitPrefix</code> — starts every commit message gspec writes. Default <code>chore:</code>.</li>
+    </ul>
+
+    <h3>QA</h3>
+    <ul>
+      <li><code>qa.enabled</code> — <code>false</code> skips the validator gates in every command and in <code>gspec build</code>, as if you passed <code>--no-qa</code> each time.</li>
+      <li><code>qa.retries</code> — <code>gspec build</code>: self-heal revisions per QA gate before the run pauses. Default <code>1</code>.</li>
+    </ul>
+
+    <h3>Build</h3>
+    <p>
+      Defaults for <code>gspec build</code> flags: <code>build.engine</code>, <code>build.scope</code>, <code>build.parallel</code>, <code>build.research</code>, and <code>build.review</code> (<code>false</code> is the same as <code>--no-review</code>). <code>null</code> means gspec decides, as it does without the flag.
+    </p>
+
+    <h3>Precedence</h3>
+    <p>
+      A command-line flag beats <code>.gspec/config.json</code>, which beats <code>~/.gspec/config.json</code>, which beats the default. A bad value never stops work: gspec warns, names the file and key, and uses the default. The same file also holds <code>models</code> (per-agent models) and <code>notify</code>.
     </p>
   </section>
 

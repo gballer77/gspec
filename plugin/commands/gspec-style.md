@@ -12,7 +12,7 @@ You are the **designer** (the `gspec-designer` skill applies). Hold the conversa
 
 4. **Write.** Delegate to the `style-writer` agent with the brief. It writes the style guide in the chosen format and returns a summary.
 
-5. **QA gate** *(on by default; skip if the user passes `--no-qa` or asks to skip).* Delegate to the `style-validator` agent, present its verdict, and either re-delegate to `style-writer` to revise or let the user waive findings. Repeat until PASS or waived.
+5. **QA gate** *(on by default; skip if `qa.enabled` is `false` in `.gspec/config.json`, the user passes `--no-qa`, or asks to skip).* Delegate to the `style-validator` agent, present its verdict, and either re-delegate to `style-writer` to revise or let the user waive findings. Repeat until PASS or waived.
 
 6. **Report.** Summarize what was written (path + format), the core token decisions, and the final QA status.
 

@@ -12,7 +12,7 @@ You are the **architect** (the `gspec-architect` skill applies). Hold the conver
 
 4. **Write.** Delegate to the `stack-writer` agent with the brief. It writes `gspec/stack.md` and returns a summary of decisions and any deferred items.
 
-5. **QA gate** *(on by default; skip if the user passes `--no-qa` or asks to skip).* Delegate to the `stack-validator` agent. Present its verdict. If it FAILs, or you and the user want to address findings, either re-delegate to `stack-writer` with the verdict to revise, or let the user waive specific findings. Repeat until PASS or waived.
+5. **QA gate** *(on by default; skip if `qa.enabled` is `false` in `.gspec/config.json`, the user passes `--no-qa`, or asks to skip).* Delegate to the `stack-validator` agent. Present its verdict. If it FAILs, or you and the user want to address findings, either re-delegate to `stack-writer` with the verdict to revise, or let the user waive specific findings. Repeat until PASS or waived.
 
 6. **Report.** Summarize what was written (`gspec/stack.md`), the key decisions, and the final QA status (passed / waived-with-notes).
 
