@@ -1060,6 +1060,61 @@ async function installCodexHooks(targetName, cwd) {
   console.log(`  ${chalk.green('+')} Installed ${CODEX_HOOK_SPECS.length} gspec Codex hooks → .codex/hooks/ + hooks.json (enabled codex_hooks in config.toml)`);
 }
 
+// Cursor enforcement floors (Cursor only). Cursor has native lifecycle hooks
+// (.cursor/hooks.json) with a blocking preToolUse, so — unlike Codex — the write
+// floors run per write: pre-write blocks skill/memory writes and checked-task
+// edits, post-write feeds the advisory floors back as additional_context, and
+// the stop hook re-scans gspec/ against the session-start baseline as a
+// backstop and nudges a spec reconcile (see plugin/hooks/cursor/). Native
+// format rather than Cursor's Claude-hooks import, so a Cursor-only project
+// needs no .claude/ directory.
+const CURSOR_HOOK_SPECS = [
+  { file: 'gspec-session-start.mjs', event: 'sessionStart' },
+  { file: 'gspec-pre-write.mjs', event: 'preToolUse', matcher: 'Write' },
+  { file: 'gspec-post-write.mjs', event: 'postToolUse', matcher: 'Write' },
+  { file: 'gspec-stop.mjs', event: 'stop', loop_limit: 3 },
+];
+
+async function installCursorHooks(targetName, cwd) {
+  if (targetName !== 'cursor') return;
+
+  const src = join(__dirname, '..', 'plugin', 'hooks', 'cursor');
+  const dest = join(cwd, '.cursor', 'hooks');
+  await mkdir(dest, { recursive: true });
+  for (const f of (await readdir(src)).filter((f) => f.endsWith('.mjs') && !f.endsWith('.test.mjs'))) {
+    await writeFile(join(dest, f), await readFile(join(src, f), 'utf-8'), 'utf-8');
+  }
+  await copyFloors(dest);
+
+  // .cursor/hooks.json — merge, drop prior gspec entries, keep the user's own.
+  const hooksJsonPath = join(cwd, '.cursor', 'hooks.json');
+  let cfg = {};
+  try { cfg = JSON.parse(await readFile(hooksJsonPath, 'utf-8')); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+  cfg.version = cfg.version ?? 1;
+  cfg.hooks = cfg.hooks || {};
+  // Project hooks run from the project root, so a relative path stays valid
+  // when the project moves (Codex needs an absolute one; Cursor does not).
+  const isGspecEntry = (e) => typeof e?.command === 'string' && /\.cursor[\\/]hooks[\\/]gspec-/.test(e.command);
+  // Visit every event already configured too, so an entry for an event gspec
+  // no longer hooks is pruned rather than left pointing at a stale script.
+  const events = new Set([...Object.keys(cfg.hooks), ...CURSOR_HOOK_SPECS.map((s) => s.event)]);
+  for (const event of events) {
+    const existing = Array.isArray(cfg.hooks[event]) ? cfg.hooks[event] : [];
+    const kept = existing.filter((e) => !isGspecEntry(e));
+    for (const spec of CURSOR_HOOK_SPECS.filter((s) => s.event === event)) {
+      const entry = { command: `node .cursor/hooks/${spec.file}`, timeout: 10 };
+      if (spec.matcher) entry.matcher = spec.matcher;
+      if (spec.loop_limit) entry.loop_limit = spec.loop_limit;
+      kept.push(entry);
+    }
+    if (kept.length) cfg.hooks[event] = kept;
+    else delete cfg.hooks[event];
+  }
+  await writeFile(hooksJsonPath, JSON.stringify(cfg, null, 2) + '\n', 'utf-8');
+
+  console.log(`  ${chalk.green('+')} Installed ${CURSOR_HOOK_SPECS.length} gspec Cursor hooks → .cursor/hooks/ + hooks.json`);
+}
+
 const MIGRATE_COMMANDS = {
   claude: '/gspec-migrate',
   cursor: '/gspec-migrate',
@@ -2042,6 +2097,8 @@ program
     await offerRecommendedModels(targetName, process.cwd(), opts.models);
 
     await installCodexHooks(targetName, process.cwd());
+
+    await installCursorHooks(targetName, process.cwd());
 
     await checkGspecFiles(process.cwd(), targetName);
 

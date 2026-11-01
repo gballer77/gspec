@@ -9,41 +9,21 @@
 // {"decision":"block","reason":...}; Codex injects the reason as the next user
 // message, forcing the agent to fix the specs before finishing.
 //
-// A block-count guard (baseline.mjs) stops after MAX_BLOCKS so a genuinely
+// A block-count guard (floors/session.mjs) stops after MAX_BLOCKS so a genuinely
 // unfixable violation cannot trap the session. No-ops outside a gspec project
 // and fails OPEN on any error.
 //
-// NOTE: ./floors/ and ./baseline.mjs resolve at the installed location
-// (.codex/hooks/); this file is not executed from the source tree.
+// NOTE: ./floors/ resolves at the installed location
+// (.codex/hooks/floors/); this file is not executed from the source tree.
 
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { scanGspecTree } from './floors/scan.mjs';
-import { readBaseline, bumpBlockCount, clearBlockCount } from './baseline.mjs';
+import { readBaseline, bumpBlockCount, clearBlockCount, walkSpecs } from './floors/session.mjs';
 
 const MAX_BLOCKS = 3;
 
 function emit(obj) { process.stdout.write(JSON.stringify(obj)); process.exit(0); }
-
-// Every .md/.html under gspec/ as { rel, content }.
-function walkSpecs(cwd) {
-  const specs = [];
-  const stack = [join(cwd, 'gspec')];
-  while (stack.length) {
-    let entries;
-    const dir = stack.pop();
-    try { entries = readdirSync(dir, { withFileTypes: true }); } catch { continue; }
-    for (const e of entries) {
-      const full = join(dir, e.name);
-      if (e.isDirectory()) { stack.push(full); continue; }
-      if (!(e.name.endsWith('.md') || e.name.endsWith('.html'))) continue;
-      let content;
-      try { content = readFileSync(full, 'utf-8'); } catch { continue; }
-      specs.push({ rel: relative(cwd, full).replace(/\\/g, '/'), content });
-    }
-  }
-  return specs;
-}
 
 try {
   let evt = {};

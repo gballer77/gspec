@@ -9,16 +9,15 @@
 // any error just emits an empty decision and the session proceeds.
 //
 // It must cover the SAME set of paths the Stop gate scans. If this snapshot
-// misses a layout the gate checks, the baseline for those files is absent and
-// task-immutability silently never runs for them — a gate that reports clean
-// because it had nothing to compare against.
+// missed a layout the gate checks, the baseline for those files would be absent
+// and task-immutability would silently never run for them — so the plan-path
+// list lives once, in floors/session.mjs, shared with the Cursor hooks.
 //
-// NOTE: ./baseline.mjs resolves as a sibling both in source and at the installed
-// location (.codex/hooks/); floors/ is copied alongside for the Stop gate.
+// NOTE: ./floors/ resolves at the installed location (.codex/hooks/floors/);
+// this file is not executed from the source tree.
 
-import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { writeBaseline } from './baseline.mjs';
+import { readFileSync } from 'node:fs';
+import { writeBaseline, snapshotPlans } from './floors/session.mjs';
 
 function emit(obj) { process.stdout.write(JSON.stringify(obj)); process.exit(0); }
 
@@ -27,30 +26,7 @@ try {
   try { evt = JSON.parse(readFileSync(0, 'utf-8')); } catch { emit({}); }
   const cwd = evt.cwd || process.env.CODEX_PROJECT_DIR || process.cwd();
 
-  // Both layouts: gspec/features/<slug>/tasks.md, and the legacy flat
-  // gspec/tasks/<slug>.md that projects carry until they migrate.
-  const rels = [];
-  try {
-    for (const slug of readdirSync(join(cwd, 'gspec', 'features'), { withFileTypes: true })) {
-      if (slug.isDirectory()) rels.push(`gspec/features/${slug.name}/tasks.md`);
-    }
-  } catch { /* no features dir yet */ }
-  // A chore's plan freezes its checked tasks exactly like a feature's.
-  try {
-    for (const slug of readdirSync(join(cwd, 'gspec', 'chores'), { withFileTypes: true })) {
-      if (slug.isDirectory()) rels.push(`gspec/chores/${slug.name}/tasks.md`);
-    }
-  } catch { /* no chores */ }
-  try {
-    for (const f of readdirSync(join(cwd, 'gspec', 'tasks'))) {
-      if (f.endsWith('.md')) rels.push(`gspec/tasks/${f}`);
-    }
-  } catch { /* no legacy plans */ }
-
-  const snapshot = {};
-  for (const rel of rels) {
-    try { snapshot[rel] = readFileSync(join(cwd, rel), 'utf-8'); } catch { /* absent or unreadable */ }
-  }
+  const snapshot = snapshotPlans(cwd);
   writeBaseline(cwd, evt.session_id, snapshot);
   emit({}); // nothing to inject; the snapshot is the whole job
 } catch {

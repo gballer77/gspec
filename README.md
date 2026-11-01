@@ -284,7 +284,7 @@ The CLI will ask which platform you're installing for:
 | Platform | Install path |
 |---|---|
 | Claude Code | `.claude/skills/` |
-| Cursor | `.cursor/commands/` |
+| Cursor | `.cursor/commands/` + `.cursor/skills/` + `.cursor/agents/` + `.cursor/hooks/` |
 | Antigravity | `.agent/skills/` |
 | Codex | `.agents/skills/` |
 | Open Code | `.opencode/commands/` + `.opencode/skills/` |
@@ -467,7 +467,7 @@ Most specs are Markdown. The style guide can also be a self-contained HTML file 
 | Platform | Version | Status |
 |---|---|---|
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Skills format | Supported |
-| [Cursor](https://www.cursor.com/) | Commands format | Supported |
+| [Cursor](https://www.cursor.com/) | Commands + skills + agents + hooks | Supported |
 | [Antigravity](https://www.antigravity.dev/) | Skills format | Supported |
 | [Codex](https://developers.openai.com/codex/cli/) | Skills format | Supported |
 | [Open Code](https://opencode.ai/) | Commands + skills | Supported |

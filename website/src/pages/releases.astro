@@ -5,6 +5,23 @@ import Footer from '../components/Footer.astro';
 
 const releases = [
   {
+    version: '3.7.0',
+    date: 'November 1, 2026',
+    title: 'Cursor gets the guardrails',
+    summary: 'A Cursor install now wires gspec\'s enforcement hooks into <code>.cursor/hooks.json</code>, so Cursor projects get the same guardrails as Claude Code: checked-off tasks can\'t be rewritten, installed skills can\'t be edited around <code>/gspec-teach</code>, specs are checked as they are written, and a turn that changed code but no spec ends with a reconcile prompt.',
+    changes: [
+      {
+        type: 'added',
+        description: '<strong>Cursor hooks.</strong> <code>gspec -t cursor</code> installs four hooks to <code>.cursor/hooks/</code>. <code>preToolUse</code> blocks writes to installed skills, to the committed memory store and to checked-off tasks. <code>postToolUse</code> runs spec-integrity, profile-agnosticism, style-token and <code>practices.md</code> checks on each write and hands findings back to the agent. <code>stop</code> re-scans <code>gspec/</code> against a session-start snapshot, which catches a spec changed through the shell, and asks once for a spec update when only code changed. The stop hook gives up after three follow-ups, so a session is never trapped.',
+      },
+      {
+        type: 'changed',
+        description: '<strong>Shared hook logic.</strong> The session snapshot and the reconcile marker now live in one module used by the Claude, Codex and Cursor hooks, so the three can no longer drift apart. Claude and Codex behavior is unchanged.',
+      },
+    ],
+    migration: 'Cursor: run <code>npx gspec -t cursor</code>. It merges gspec\'s entries into <code>.cursor/hooks.json</code> and keeps any hooks of your own. Claude Code and Codex: reinstall to pick up the shared modules. Nothing else changes.',
+  },
+  {
     version: '3.6.0',
     date: 'October 30, 2026',
     title: 'Configuration: one file to tune git, QA and build defaults',
