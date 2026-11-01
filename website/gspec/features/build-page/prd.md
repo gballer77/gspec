@@ -75,7 +75,7 @@ The autonomous build is the single biggest thing that changed between v1 and v2,
 ### Platform Availability
 
 - [x] **P1**: Page states where the build runs today
-  - Names the harnesses with a wired engine (Claude Code, Codex, Pi)
+  - Names the harnesses with a wired engine (Claude Code, Codex, Pi, Cursor)
   - Links to the platform capabilities page for the full picture
 
 ### Discovery & Navigation
@@ -102,7 +102,7 @@ The autonomous build is the single biggest thing that changed between v1 and v2,
 ### Assumptions
 
 - The nine-stage pipeline (plus the spec-review gate) and its grouping are stable enough to present publicly.
-- Naming the three harnesses with wired engines is accurate at publish time and maintained alongside the parity reference.
+- Naming the harnesses with wired engines is accurate at publish time and maintained alongside the parity reference.
 
 ### Risks
 

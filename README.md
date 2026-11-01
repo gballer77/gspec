@@ -40,7 +40,7 @@ It also runs headless from the CLI, for CI or scripted project setup:
 
 ```bash
 gspec build "a URL shortener"                   # engine defaults to the installed target
-gspec build "a URL shortener" --engine codex    # or pick one: claude · codex · pi
+gspec build "a URL shortener" --engine codex    # or pick one: claude · codex · pi · cursor
 gspec build --dry-run "an idea"                 # preview the stage plan
 gspec build --resume                            # continue a paused run (or approve the spec review)
 gspec build --status                            # how did the last run end? exits 0/1/2/3 to say so

@@ -14,7 +14,7 @@ import { STAGES } from '../lib/build.js';
 import { ENGINES } from '../lib/engines.js';
 import { REPO_ROOT, exists } from './helpers.mjs';
 
-const AGENT_EXT = { claude: '.md', codex: '.toml', pi: '.md' };
+const AGENT_EXT = { claude: '.md', codex: '.toml', pi: '.md', cursor: '.md' };
 
 const stageAgents = [...new Set(
   STAGES.flatMap((s) => [s.writer, s.validator, s.agent, s.orchestrator, s.planner, s.researcher]).filter(Boolean)
@@ -39,7 +39,7 @@ for (const engine of Object.keys(ENGINES)) {
   });
 
   test(`${engine} adapter resolves agent files where the installer puts them`, () => {
-    const installedDir = { claude: '.claude', codex: '.codex', pi: '.pi' }[engine];
+    const installedDir = { claude: '.claude', codex: '.codex', pi: '.pi', cursor: '.cursor' }[engine];
     const path = ENGINES[engine].agentFile('profile-writer');
     assert.equal(path, join(installedDir, 'agents', `profile-writer${AGENT_EXT[engine]}`));
   });

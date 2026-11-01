@@ -1151,7 +1151,7 @@ function parseSpecVersion(content) {
 async function offerRecommendedModels(targetName, cwd, mode) {
   if (mode === 'none') return;
   const models = recommendedModels(targetName);
-  if (!models) return; // cursor/opencode don't run these agents; pi moves too fast to table
+  if (!models) return; // opencode doesn't run these agents; pi and cursor move too fast to table
 
   // Never second-guess a user who has configured this.
   if (hasModelsConfigured(await readProjectConfig(cwd), await readGlobalConfig())) {
@@ -2707,8 +2707,8 @@ extensionCmd
 
 program
   .command('build [idea]')
-  .description('Run the autonomous "idea → built" build on Claude Code, Codex, or Pi')
-  .option('--engine <name>', 'execution engine: claude | codex | pi (default: the target this project was installed for, else claude)')
+  .description('Run the autonomous "idea → built" build on Claude Code, Codex, Pi, or Cursor')
+  .option('--engine <name>', 'execution engine: claude | codex | pi | cursor (default: the target this project was installed for, else claude)')
   .option('--pi-permission-level <level>', 'Pi only: value for PI_PERMISSION_LEVEL if a stage stalls on tool approval')
   .option('--no-qa', 'skip the QA validator gates (on by default)')
   .option('--qa-retries <n>', 'self-heal revisions each QA gate may attempt before pausing (default: 1)')

@@ -26,7 +26,7 @@ Developers who install gspec face a cold-start problem: they have a set of comma
 - Single page with a sidebar progress navigation and a right-hand table of contents
 - A shared top: introduction (explaining the two paths) and a single install section used by both
 - A tabbed path selector letting the user choose between the autonomous-build path and the spec-by-spec path
-- **Autonomous build path** — when-to-use framing that calls out greenfield as the primary use case, how to run `/gspec-build` (intake → nine stages, with a skippable human spec-review pause before implementation → verified code), and what the run produces; notes the harnesses with a wired engine (Claude Code, Codex, Pi)
+- **Autonomous build path** — when-to-use framing that calls out greenfield as the primary use case, how to run `/gspec-build` (intake → nine stages, with a skippable human spec-review pause before implementation → verified code), and what the run produces; notes the harnesses with a wired engine (Claude Code, Codex, Pi, Cursor)
 - **Spec-by-spec path** — a walkthrough over a fictional example project covering profile → style → stack → practices → feature → implement, with abbreviated example output for profile and implement
 - Cross-links between the two paths so users can switch at any time
 - Each spec-by-spec section covers: what the command does, what the user runs, what to expect
@@ -85,7 +85,7 @@ Developers who install gspec face a cold-start problem: they have a set of comma
 
 - [x] **P0**: Page teaches the autonomous-build path
   - Explains when to use it, explicitly calling out greenfield (new project / prototype) as the primary use case, and noting it also works on existing projects via skip-if-present foundation
-  - States the harnesses with a wired engine (Claude Code, Codex, Pi) and points other harnesses to the spec-by-spec path
+  - States the harnesses with a wired engine (Claude Code, Codex, Pi, Cursor) and points other harnesses to the spec-by-spec path
   - Shows both ways to run it — the `/gspec-build` slash command in the harness and the headless `gspec build` script — and that the idea can be passed directly as an argument or captured via the intake interview
   - Shows the nine pipeline stages in order
   - Explains the quality gates (independent validator per stage, verify.sh, a configurable self-heal budget via `--qa-retries`), the optional competitive-research stage (`--research`, feeding auto-accepted findings into the feature PRDs), the spec-review pause before implementation (resume to approve, `--no-review` to skip), and what the finished run produces

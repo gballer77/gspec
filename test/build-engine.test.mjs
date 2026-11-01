@@ -22,6 +22,17 @@ test('engine defaults to the installed target (pi) and dry-runs pi commands', as
   assert.match(r.output, /would run: pi /, 'stages must run on pi, not claude');
 });
 
+test('engine defaults to the installed target (cursor) and dry-runs Cursor\'s agent CLI', async (t) => {
+  const dir = await makeProject();
+  t.after(() => cleanup(dir));
+  await seedInstall(dir, 'cursor', { agentFiles: ['.cursor/agents/profile-writer.md'] });
+
+  const r = await runCli(['build', '--dry-run', 'an idea'], dir);
+  assert.equal(r.code, 0, r.output);
+  assert.match(r.output, /engine: cursor/);
+  assert.match(r.output, /would run: agent -p --output-format json --force --trust /);
+});
+
 test('installed target without agent files fails fast and pins nothing', async (t) => {
   const dir = await makeProject();
   t.after(() => cleanup(dir));
@@ -34,14 +45,14 @@ test('installed target without agent files fails fast and pins nothing', async (
   assert.ok(!(await exists(join(dir, RUN_JSON))), 'preflight failure must not write a run manifest');
 });
 
-test('non-engine install target (cursor) demands an explicit --engine', async (t) => {
+test('non-engine install target (opencode) demands an explicit --engine', async (t) => {
   const dir = await makeProject();
   t.after(() => cleanup(dir));
-  await seedInstall(dir, 'cursor');
+  await seedInstall(dir, 'opencode');
 
   const r = await runCli(['build', 'an idea'], dir);
   assert.equal(r.code, 1);
-  assert.match(r.output, /installed for "cursor"/);
+  assert.match(r.output, /installed for "opencode"/);
   assert.match(r.output, /--engine/);
   assert.ok(!(await exists(join(dir, RUN_JSON))));
 });
@@ -53,7 +64,7 @@ test('no config, no agents anywhere: engine-neutral fail-fast guidance', async (
   const r = await runCli(['build', 'an idea'], dir);
   assert.equal(r.code, 1);
   assert.match(r.output, /not installed for any build engine/);
-  assert.match(r.output, /npx gspec -t <claude\|codex\|pi>/);
+  assert.match(r.output, /npx gspec -t <claude\|codex\|pi\|cursor>/);
   assert.ok(!(await exists(join(dir, RUN_JSON))));
 });
 

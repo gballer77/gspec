@@ -411,7 +411,7 @@ export const V2_COMMANDS = [
   {
     name: 'gspec-build',
     source: 'commands/gspec-build.md',
-    description: 'Run the autonomous "idea → built" build: holds the one-time intake here, then runs `gspec build` over every stage (profile → … → implement) unattended, on Claude Code, Codex, or Pi (--engine). TRIGGER to autonomously build an idea.',
+    description: 'Run the autonomous "idea → built" build: holds the one-time intake here, then runs `gspec build` over every stage (profile → … → implement) unattended, on Claude Code, Codex, Pi, or Cursor (--engine). TRIGGER to autonomously build an idea.',
   },
 ];
 

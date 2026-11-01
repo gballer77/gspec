@@ -7,9 +7,13 @@ const releases = [
   {
     version: '3.7.0',
     date: 'November 1, 2026',
-    title: 'Cursor gets the guardrails',
-    summary: 'A Cursor install now wires gspec\'s enforcement hooks into <code>.cursor/hooks.json</code>, so Cursor projects get the same guardrails as Claude Code: checked-off tasks can\'t be rewritten, installed skills can\'t be edited around <code>/gspec-teach</code>, specs are checked as they are written, and a turn that changed code but no spec ends with a reconcile prompt.',
+    title: 'Cursor: the guardrails and the autonomous build',
+    summary: 'Cursor is now a build engine: <code>gspec build</code> runs every stage on Cursor\'s headless <code>agent</code> CLI. A Cursor install also wires gspec\'s enforcement hooks into <code>.cursor/hooks.json</code>, so Cursor projects get the same guardrails as Claude Code: checked-off tasks can\'t be rewritten, installed skills can\'t be edited around <code>/gspec-teach</code>, specs are checked as they are written, and a turn that changed code but no spec ends with a reconcile prompt.',
     changes: [
+      {
+        type: 'added',
+        description: '<strong><code>gspec build --engine cursor</code>.</strong> Each stage runs as <code>agent -p --force --trust --output-format json</code> with the installed agent\'s persona from <code>.cursor/agents/</code>, and per-agent <code>models</code> from <code>.gspec/config.json</code> pass through as <code>--model</code>. A project installed for Cursor builds on Cursor by default, and <code>build.engine: "cursor"</code> is a valid setting. Two Claude features have no Cursor equivalent: there is no turn cap (a stage ends at the engine timeout), and the build\'s token report stays empty because the CLI does not report usage. Cursor has no per-tool permission flag, so every stage may run shell commands unless your Cursor CLI permissions deny them.',
+      },
       {
         type: 'added',
         description: '<strong>Cursor hooks.</strong> <code>gspec -t cursor</code> installs four hooks to <code>.cursor/hooks/</code>. <code>preToolUse</code> blocks writes to installed skills, to the committed memory store and to checked-off tasks. <code>postToolUse</code> runs spec-integrity, profile-agnosticism, style-token and <code>practices.md</code> checks on each write and hands findings back to the agent. <code>stop</code> re-scans <code>gspec/</code> against a session-start snapshot, which catches a spec changed through the shell, and asks once for a spec update when only code changed. The stop hook gives up after three follow-ups, so a session is never trapped.',
@@ -19,7 +23,7 @@ const releases = [
         description: '<strong>Shared hook logic.</strong> The session snapshot and the reconcile marker now live in one module used by the Claude, Codex and Cursor hooks, so the three can no longer drift apart. Claude and Codex behavior is unchanged.',
       },
     ],
-    migration: 'Cursor: run <code>npx gspec -t cursor</code>. It merges gspec\'s entries into <code>.cursor/hooks.json</code> and keeps any hooks of your own. Claude Code and Codex: reinstall to pick up the shared modules. Nothing else changes.',
+    migration: 'Cursor: install the <a href="https://cursor.com/docs/cli/overview">Cursor CLI</a> (<code>agent</code>) to build, then run <code>npx gspec -t cursor</code>. It merges gspec\'s entries into <code>.cursor/hooks.json</code> and keeps any hooks of your own. A Cursor project used to need an explicit <code>--engine</code> to build; it now builds on Cursor by default (pass <code>--engine claude</code> to build on Claude Code instead). Claude Code and Codex: reinstall to pick up the shared modules. Nothing else changes.',
   },
   {
     version: '3.6.0',
